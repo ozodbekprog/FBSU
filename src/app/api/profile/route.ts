@@ -49,7 +49,15 @@ export async function PATCH(request: Request) {
       return Response.json({ ok: false, error: "Parol ma'lumotlari xato" }, { status: 400 });
     }
 
-    const valid = await bcrypt.compare(parsed.data.currentPassword, user.passwordHash);
+    const credentials = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { passwordHash: true },
+    });
+    if (!credentials) {
+      return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const valid = await bcrypt.compare(parsed.data.currentPassword, credentials.passwordHash);
     if (!valid) {
       return Response.json({ ok: false, error: "Joriy parol noto'g'ri" }, { status: 400 });
     }
