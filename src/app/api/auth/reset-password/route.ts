@@ -66,11 +66,28 @@ export async function POST(request: Request) {
     );
   }
 
+  const claim = await prisma.passwordResetToken.updateMany({
+    where: { id: record.id, usedAt: null, expiresAt: { gt: new Date() } },
+    data: { usedAt: new Date() },
+  });
+  if (claim.count !== 1) {
+    await createAuditLog({
+      action: "PASSWORD_RESET_FAILED",
+      meta: { reason: "invalid_or_expired_token" },
+      ip: clientInfo.ip,
+      userAgent: clientInfo.userAgent,
+    });
+    return Response.json(
+      { ok: false, error: "Havola yaroqsiz yoki muddati o'tgan" },
+      { status: 400 },
+    );
+  }
+
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
 
   await prisma.$transaction([
     prisma.passwordResetToken.updateMany({
-      where: { userId: record.userId },
+      where: { userId: record.userId, usedAt: null },
       data: { usedAt: new Date() },
     }),
     prisma.user.update({
