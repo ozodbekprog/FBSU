@@ -31,5 +31,9 @@ export async function sendMail({
     return;
   }
 
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("SMTP sozlanmagan");
+  }
+
   console.log(`DEV EMAIL\nTo: ${to}\nSubject: ${subject}\n\n${text}`);
 }
