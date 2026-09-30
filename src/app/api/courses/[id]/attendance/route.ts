@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canManageCourse } from "@/components/courses/course-access";
+import { logAudit } from "@/server/audit";
 
 const bulkSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD ko'rinishida bo'lishi kerak"),
@@ -140,6 +141,22 @@ export async function POST(
     ),
   );
 
+  await logAudit({
+    actorId: user.id,
+    action: "attendance.bulk",
+    entity: "Attendance",
+    entityId: course.id,
+    meta: {
+      courseId: course.id,
+      date: parsed.data.date,
+      count: uniqueEntries.length,
+      entries: uniqueEntries.map((entry) => ({
+        studentId: entry.studentId,
+        status: entry.status,
+      })),
+    },
+  });
+
   return Response.json({
     ok: true,
     data: { date: parsed.data.date, count: uniqueEntries.length },
@@ -182,6 +199,18 @@ export async function DELETE(
   if (removed.count === 0) {
     return Response.json({ ok: false, error: "Yozuv topilmadi" }, { status: 404 });
   }
+
+  await logAudit({
+    actorId: user.id,
+    action: "attendance.delete",
+    entity: "Attendance",
+    entityId: course.id,
+    meta: {
+      courseId: course.id,
+      date: parsed.data.date,
+      studentId: parsed.data.studentId,
+    },
+  });
 
   return Response.json({
     ok: true,
