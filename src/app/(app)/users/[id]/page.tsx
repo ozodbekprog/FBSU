@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireUser } from "@/lib/auth";
+import { isStaff, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ButtonLink } from "@/components/ui";
 import { ProfileDetails } from "@/components/profile/ProfileDetails";
@@ -14,6 +14,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
   if (!profile || !profile.isActive) notFound();
 
   const isOwn = profile.id === current.id;
+  if (!isOwn && !isStaff(current.role)) notFound();
 
   return (
     <>
