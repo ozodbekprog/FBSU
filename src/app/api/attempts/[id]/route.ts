@@ -8,6 +8,7 @@ import {
   publicError,
 } from "@/components/quiz/server";
 import { autoScore, toQuestionFull, totalPoints } from "@/components/quiz/shared";
+import { logAudit } from "@/server/audit";
 
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -91,6 +92,19 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       );
     }
     const updated = await prisma.quizAttempt.update({ where: { id }, data: { score } });
+    await logAudit({
+      actorId: user.id,
+      action: "attempt.score",
+      entity: "QuizAttempt",
+      entityId: updated.id,
+      meta: {
+        quizId: attempt.quizId,
+        studentId: attempt.studentId,
+        oldScore: attempt.score,
+        score,
+        maxScore,
+      },
+    });
     return Response.json({ ok: true, data: { id: updated.id, score: updated.score } });
   } catch (error) {
     return Response.json({ ok: false, error: publicError(error) }, { status: 500 });
