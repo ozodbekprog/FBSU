@@ -4,7 +4,8 @@ export type CsvValue = string | number | null | undefined;
 
 export function csvCell(value: CsvValue) {
   if (value === null || value === undefined) return "";
-  const text = String(value);
+  let text = String(value);
+  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
   if (/[",\n\r]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
   return text;
 }
