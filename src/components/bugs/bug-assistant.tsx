@@ -9,7 +9,7 @@ import { apiFetch } from "@/lib/api";
 import { friendlyBugLine } from "./bug-utils";
 import { BUG_ASSISTANT_EVENT } from "./report";
 
-type ChatMessage = { role: "ai" | "user"; text: string; time: string };
+type ChatMessage = { role: "ai" | "user"; text: string; time: string; shot?: string };
 type Captured = { message: string; stack?: string; url: string };
 
 function fmtClock(value: Date) {
@@ -142,13 +142,13 @@ export function BugAssistant() {
     [aiSay],
   );
 
-  const sendReport = useCallback(async (): Promise<void> => {
+  const sendReport = useCallback(async (overrideMessage?: string): Promise<void> => {
     setBusy(true);
     try {
       const res = await apiFetch("/api/bugs", {
         method: "POST",
         body: JSON.stringify({
-          message: captured.current?.message ?? "Foydalanuvchi AI yordamchi orqali yubordi",
+          message: overrideMessage?.trim() || captured.current?.message || "Foydalanuvchi AI yordamchi orqali yubordi",
           stack: captured.current?.stack,
           url: captured.current?.url ?? window.location.pathname,
           note: messages
@@ -246,13 +246,19 @@ export function BugAssistant() {
   async function handleSend() {
     const value = input.trim();
     if (!value || busy) return;
-    const pending: ChatMessage[] = [...messages, { role: "user", text: value, time: fmtClock(new Date()) }];
+    const pending: ChatMessage[] = [
+      ...messages,
+      { role: "user", text: value, time: fmtClock(new Date()), shot: shot?.dataUrl },
+    ];
     setMessages(pending);
     setInput("");
     setBusy(true);
     const reply = await askAiReply(pending);
     setBusy(false);
     aiSay(reply);
+    if (shot && !sent) {
+      await sendReport(value);
+    }
   }
 
   if (!mounted) return null;
@@ -306,6 +312,13 @@ export function BugAssistant() {
                 )}
               >
                 {message.text}
+                {message.shot ? (
+                  <img
+                    src={message.shot}
+                    alt="Biriktirilgan skrinshot"
+                    className="mt-1.5 max-h-32 rounded-lg border border-white/40"
+                  />
+                ) : null}
                 <span
                   className={cn(
                     "mt-0.5 block text-right text-[10px]",
