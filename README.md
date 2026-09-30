@@ -3,6 +3,11 @@
 Turin Politexnika Universiteti uchun kompakt o'quv boshqaruv tizimi (LMS).
 Moodle'ga alternativa: sodda, tez, mobil-qulay.
 
+## Ferma auto-fix (test)
+
+Bu bo'lim avtomatik tuzatuvchi tizimni tekshirish uchun qo'shildi.
+Matn keyinchalik olib tashlanishi mumkin.
+
 ## Tez boshlash (yangi kompyuterda)
 
 ```bash
