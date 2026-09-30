@@ -45,9 +45,17 @@ describe("haversineMeters", () => {
 });
 
 describe("clientIpFromHeaders", () => {
-  it("x-forwarded-for dagi birinchi qiymatni qaytaradi", () => {
+  it("x-forwarded-for dagi oxirgi hopni qaytaradi (soxtalashtirishga qarshi)", () => {
     const headers = new Headers({ "x-forwarded-for": " 8.8.8.8, 10.0.0.1" });
-    expect(clientIpFromHeaders(headers)).toBe("8.8.8.8");
+    expect(clientIpFromHeaders(headers)).toBe("10.0.0.1");
+  });
+
+  it("x-real-ip x-forwarded-for dan ustun turadi", () => {
+    const headers = new Headers({
+      "x-real-ip": "8.8.4.4",
+      "x-forwarded-for": " 1.1.1.1, 10.0.0.1",
+    });
+    expect(clientIpFromHeaders(headers)).toBe("8.8.4.4");
   });
 
   it("x-forwarded-for yo'q bo'lsa x-real-ip ishlatadi", () => {

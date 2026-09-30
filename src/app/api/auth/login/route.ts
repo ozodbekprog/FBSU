@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/auth";
 import { checkRateLimit, clearRateLimit } from "@/lib/rate-limit";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
+import { getClientIp as getClientIpFromHeaders } from "@/lib/client-ip";
 
 const schema = z.object({
   email: z.string().email(),
@@ -15,7 +16,7 @@ const LOGIN_MAX_ATTEMPTS = 10;
 const DUMMY_HASH = "$2b$10$vabGzMWs78G4gDK4w4uNiO.wWPeTboNzwBwuVLU5Ht1xJQBWXtiZS";
 
 function getClientIp(request: Request) {
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  return getClientIpFromHeaders(request.headers) ?? "local";
 }
 
 export async function POST(request: Request) {

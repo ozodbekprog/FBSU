@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import { getClientIp } from "@/lib/client-ip";
 
 function isInternalRequest(request: Request): boolean {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  const clientIp = forwardedFor?.split(",")[0]?.trim() || "unknown";
+  const clientIp = getClientIp(request.headers) ?? "unknown";
 
   const internalIps = [
     "127.0.0.1",

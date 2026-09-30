@@ -7,6 +7,7 @@ import { userSelect } from "./select";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
+import { getClientIp as getClientIpFromHeaders } from "@/lib/client-ip";
 
 const ROLES = ["ADMIN", "TEACHER", "STUDENT"] as const;
 
@@ -19,7 +20,7 @@ const createSchema = z.object({
 });
 
 function getClientIp(request: Request) {
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  return getClientIpFromHeaders(request.headers) ?? "local";
 }
 
 export async function GET(request: Request) {

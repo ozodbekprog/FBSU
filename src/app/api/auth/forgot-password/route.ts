@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getAppUrl, sendMail } from "@/server/mailer";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
+import { getClientIp as getClientIpFromHeaders } from "@/lib/client-ip";
 
 const schema = z.object({
   email: z.string().email(),
@@ -18,7 +19,7 @@ function hashToken(token: string) {
 }
 
 function getClientIp(request: Request) {
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  return getClientIpFromHeaders(request.headers) ?? "local";
 }
 
 export async function POST(request: Request) {

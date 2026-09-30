@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getClientIp } from "@/lib/client-ip";
 import {
   QR_GEO_ACCURACY_LIMIT_M,
   QR_GEO_RADIUS_M,
@@ -37,9 +38,7 @@ export function haversineMeters(a: GeoPoint, b: GeoPoint): number {
 }
 
 export function clientIpFromHeaders(headers: Headers): string | null {
-  const forwarded = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  if (forwarded) return forwarded;
-  return headers.get("x-real-ip")?.trim() || null;
+  return getClientIp(headers);
 }
 
 function isRecord(value: unknown): value is JsonRecord {

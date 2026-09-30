@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
+import { getClientIp as getClientIpFromHeaders } from "@/lib/client-ip";
 
 const schema = z.object({
   name: z.string().min(2).max(80),
@@ -15,7 +16,7 @@ const REGISTER_WINDOW_MS = 60 * 60 * 1000;
 const REGISTER_MAX_ATTEMPTS = 5;
 
 function getClientIp(request: Request) {
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  return getClientIpFromHeaders(request.headers) ?? "local";
 }
 
 export async function POST(request: Request) {

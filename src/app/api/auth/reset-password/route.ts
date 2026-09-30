@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
+import { getClientIp as getClientIpFromHeaders } from "@/lib/client-ip";
 
 const schema = z.object({
   token: z.string().min(1),
@@ -15,7 +16,7 @@ function hashToken(token: string) {
 }
 
 function getClientIp(request: Request) {
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  return getClientIpFromHeaders(request.headers) ?? "local";
 }
 
 export async function POST(request: Request) {

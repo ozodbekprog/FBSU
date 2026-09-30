@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { getClientIp } from "@/lib/client-ip";
 
 export type AuditAction =
   | "LOGIN_SUCCESS"
@@ -56,9 +57,7 @@ export async function createAuditLog(data: AuditLogData): Promise<void> {
 }
 
 export function getClientInfo(request: Request): { ip: string; userAgent: string } {
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "unknown";
+  const ip = getClientIp(request.headers) ?? "unknown";
   const userAgent = request.headers.get("user-agent") || "unknown";
   return { ip, userAgent };
 }
