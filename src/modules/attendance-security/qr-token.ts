@@ -1,8 +1,21 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { QR_TOKEN_GRACE_SECONDS, QR_TOKEN_TTL_SECONDS } from "./config";
 import type { GeoPoint, QrTokenPayload } from "./types";
 
 const TOKEN_PREFIX = "v1";
+
+type StoredLocation = {
+  location: GeoPoint;
+  exp: number;
+};
+
+const locationStore = new Map<string, StoredLocation>();
+
+function pruneLocations(now: number): void {
+  for (const [jti, entry] of locationStore) {
+    if (entry.exp < now) locationStore.delete(jti);
+  }
+}
 
 function getSecret(): string {
   const secret = process.env.QR_TOKEN_SECRET || process.env.AUTH_SECRET;
@@ -22,9 +35,8 @@ function isQrTokenPayload(value: unknown): value is QrTokenPayload {
   if (typeof value !== "object" || value === null) return false;
   const record = value as Record<string, unknown>;
   if (typeof record.sid !== "string" || typeof record.cid !== "string") return false;
+  if (typeof record.jti !== "string" || record.jti.length === 0) return false;
   if (typeof record.iat !== "number" || typeof record.exp !== "number") return false;
-  if (record.lat !== undefined && typeof record.lat !== "number") return false;
-  if (record.lng !== undefined && typeof record.lng !== "number") return false;
   return true;
 }
 
@@ -35,14 +47,19 @@ export async function signQrToken(input: {
 }): Promise<string> {
   const secret = getSecret();
   const iat = Math.floor(Date.now() / 1000);
+  const exp = iat + QR_TOKEN_TTL_SECONDS;
+  const jti = randomUUID();
   const payload: QrTokenPayload = {
     sid: input.sessionId,
     cid: input.courseId,
+    jti,
     iat,
-    exp: iat + QR_TOKEN_TTL_SECONDS,
+    exp,
   };
-  if (input.location?.lat !== undefined) payload.lat = input.location.lat;
-  if (input.location?.lng !== undefined) payload.lng = input.location.lng;
+  if (input.location) {
+    pruneLocations(iat);
+    locationStore.set(jti, { location: input.location, exp });
+  }
   const payloadB64 = encodePayload(payload);
   const signature = signatureFor(payloadB64, secret).toString("base64url");
   return `${TOKEN_PREFIX}.${payloadB64}.${signature}`;
@@ -69,6 +86,11 @@ export async function verifyQrToken(token: string): Promise<QrTokenPayload | nul
   } catch {
     return null;
   }
+}
+
+export function lookupQrLocation(jti: string): GeoPoint | undefined {
+  pruneLocations(Math.floor(Date.now() / 1000));
+  return locationStore.get(jti)?.location;
 }
 
 export function checkInUrl(origin: string, token: string): string {

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { verifyQrToken } from "@/modules/attendance-security/qr-token";
+import { lookupQrLocation, verifyQrToken } from "@/modules/attendance-security/qr-token";
 import {
   clientIpFromHeaders,
   evaluateCheckInRisk,
@@ -109,10 +109,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const tokenLocation =
-    payload && typeof payload.lat === "number" && typeof payload.lng === "number"
-      ? { lat: payload.lat, lng: payload.lng }
-      : undefined;
+  const tokenLocation = payload ? lookupQrLocation(payload.jti) : undefined;
   const studentLocation =
     typeof parsed.data.lat === "number" && typeof parsed.data.lng === "number"
       ? {

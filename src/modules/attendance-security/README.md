@@ -35,6 +35,7 @@ Shubhali belgilanish `Attendance.status = SUSPICIOUS` (yangi enum) va
 ```ts
 signQrToken(input: { sessionId: string; courseId: string; location?: GeoPoint }): Promise<string>
 verifyQrToken(token: string): Promise<QrTokenPayload | null>
+lookupQrLocation(jti: string): GeoPoint | undefined
 checkInUrl(origin: string, token: string): string
 
 haversineMeters(a: GeoPoint, b: GeoPoint): number

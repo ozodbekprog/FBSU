@@ -1,6 +1,6 @@
 import { beforeAll, afterEach, describe, expect, it, vi } from "vitest";
 import { QR_TOKEN_GRACE_SECONDS, QR_TOKEN_TTL_SECONDS } from "./config";
-import { checkInUrl, signQrToken, verifyQrToken } from "./qr-token";
+import { checkInUrl, lookupQrLocation, signQrToken, verifyQrToken } from "./qr-token";
 
 const SESSION_ID = "session-1";
 const COURSE_ID = "course-1";
@@ -15,14 +15,18 @@ afterEach(() => {
 });
 
 describe("qr-token", () => {
-  it("sign va verify roundtrip sid/cid/lat/lng ni qaytaradi", async () => {
+  it("sign va verify roundtrip sid/cid/jti ni qaytaradi, geo payloadda bo'lmaydi", async () => {
     const token = await signQrToken({
       sessionId: SESSION_ID,
       courseId: COURSE_ID,
       location: { lat: 41.3111, lng: 69.2797 },
     });
     const payload = await verifyQrToken(token);
-    expect(payload).toMatchObject({ sid: SESSION_ID, cid: COURSE_ID, lat: 41.3111, lng: 69.2797 });
+    expect(payload).toMatchObject({ sid: SESSION_ID, cid: COURSE_ID });
+    expect(typeof payload?.jti).toBe("string");
+    expect(payload).not.toHaveProperty("lat");
+    expect(payload).not.toHaveProperty("lng");
+    expect(lookupQrLocation(payload?.jti ?? "")).toEqual({ lat: 41.3111, lng: 69.2797 });
   });
 
   it("buzilgan token null qaytaradi", async () => {

@@ -7,8 +7,7 @@ export type GeoPoint = {
 export type QrTokenPayload = {
   sid: string;
   cid: string;
-  lat?: number;
-  lng?: number;
+  jti: string;
   iat: number;
   exp: number;
 };
