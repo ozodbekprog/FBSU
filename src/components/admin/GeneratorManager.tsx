@@ -4,11 +4,11 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Button, Card, CardBody, CardHeader, Input, Label, Progress } from "@/components/ui";
 import { cn } from "@/lib/utils";
-import type { GenerateResult, GeneratorStats } from "@/server/generator";
+import type { GenerateCountKey, GenerateResult, GeneratorStats } from "@/server/generator";
 
 type ApiResponse = { ok: boolean; data?: GenerateResult; error?: string };
 
-const RESULT_ITEMS: { key: keyof GenerateResult; label: string; hint: string; tone: string; icon: ReactNode }[] = [
+const RESULT_ITEMS: { key: GenerateCountKey; label: string; hint: string; tone: string; icon: ReactNode }[] = [
   {
     key: "subjects",
     label: "Fanlar",
@@ -176,8 +176,8 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
             <p className="font-semibold tracking-tight text-amber-900">Ogohlantirish</p>
             <p className="mt-0.5 text-sm leading-relaxed text-amber-800/90">
               Bu amal bazaga yangi demo ma&apos;lumotlarni qo&apos;shadi. Mavjud yozuvlar o&apos;chirilmaydi va
-              takroriy generatsiya dublikat yaratmaydi. Yaratilgan foydalanuvchilarga standart demo parol
-              o&apos;rnatiladi.
+              takroriy generatsiya dublikat yaratmaydi. Yaratilgan foydalanuvchilar uchun bir martalik tasodifiy
+              parol generatsiya qilinadi va natijada ko&apos;rsatiladi.
             </p>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {RESULT_ITEMS.map((item) => (
@@ -403,6 +403,27 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
                   {resultItems.filter((item) => item.value > 0).length} turdagi resurs
                 </Badge>
               </div>
+            </CardBody>
+          </Card>
+
+          <Card className="relative mb-4 overflow-hidden border-amber-200/70 bg-amber-50/40">
+            <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-400 via-gold-400 to-amber-500" />
+            <CardBody className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-gold-500 text-white shadow-lg shadow-gold-500/25">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="10" rx="2.5" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </span>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Yaratilgan akkauntlar uchun vaqtinchalik parol</p>
+                  <p className="mt-0.5 font-mono text-xl font-semibold tracking-tight text-brand-950">
+                    {result.password}
+                  </p>
+                </div>
+              </div>
+              <Badge tone="amber">Bir marta ko&apos;rsatiladi</Badge>
             </CardBody>
           </Card>
 

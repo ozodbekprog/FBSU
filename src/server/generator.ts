@@ -1,4 +1,5 @@
 import "server-only";
+import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import type { AttendanceStatus, Prisma, Subject } from "@prisma/client";
@@ -9,6 +10,7 @@ export type GenerateOptions = {
 };
 
 export type GenerateResult = {
+  password: string;
   subjects: number;
   teachers: number;
   groups: number;
@@ -17,6 +19,8 @@ export type GenerateResult = {
   scheduleEntries: number;
   attendance: number;
 };
+
+export type GenerateCountKey = Exclude<keyof GenerateResult, "password">;
 
 export type GeneratorCheck = {
   key: string;
@@ -42,8 +46,9 @@ type TeacherLite = { id: string; name: string };
 type GroupLite = { id: string; name: string };
 type CourseLite = { id: string; slug: string; subjectId: string | null };
 
-const PASSWORD = "ttpu1234";
 const COURSE_LIMIT = 10;
+const PASSWORD_LENGTH = 16;
+const PASSWORD_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*";
 
 const SUBJECT_NAMES = [
   "Programming",
@@ -199,6 +204,15 @@ function randomInt(min: number, max: number) {
   return min + Math.floor(Math.random() * (max - min + 1));
 }
 
+function generatePassword(length = PASSWORD_LENGTH) {
+  const bytes = randomBytes(length);
+  let password = "";
+  for (let index = 0; index < length; index += 1) {
+    password += PASSWORD_ALPHABET[bytes[index] % PASSWORD_ALPHABET.length];
+  }
+  return password;
+}
+
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -241,7 +255,8 @@ function lastWorkingDays(count: number): Date[] {
 export async function generateBaseData(opts: GenerateOptions = {}): Promise<GenerateResult> {
   const groupCount = Math.min(Math.max(Math.trunc(opts.groups ?? 5), 1), GROUP_NAMES.length);
   const perGroup = Math.min(Math.max(Math.trunc(opts.studentsPerGroup ?? 8), 4), 20);
-  const passwordHash = await bcrypt.hash(PASSWORD, 10);
+  const password = generatePassword();
+  const passwordHash = await bcrypt.hash(password, 10);
 
   let subjectsCreated = 0;
   const subjectRecords: Subject[] = [];
@@ -474,6 +489,7 @@ export async function generateBaseData(opts: GenerateOptions = {}): Promise<Gene
   }
 
   return {
+    password,
     subjects: subjectsCreated,
     teachers: teachersCreated,
     groups: groupsCreated,
