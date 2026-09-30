@@ -1,4 +1,5 @@
 import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { buildTranscript } from "@/components/transcript/transcript-data";
 
 export async function GET(request: Request) {
@@ -9,16 +10,49 @@ export async function GET(request: Request) {
 
   const requestedId = new URL(request.url).searchParams.get("studentId")?.trim() || null;
 
-  if (user.role === "STUDENT" && requestedId && requestedId !== user.id) {
-    return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (user.role === "STUDENT") {
+    if (requestedId && requestedId !== user.id) {
+      return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+    }
+    const data = await buildTranscript(user.id);
+    if (!data) {
+      return Response.json({ ok: false, error: "Talaba topilmadi" }, { status: 404 });
+    }
+    return Response.json({ ok: true, data });
   }
 
-  const studentId = user.role === "STUDENT" ? user.id : requestedId;
-  if (!studentId) {
+  if (!requestedId) {
     return Response.json({ ok: false, error: "studentId parametri kerak" }, { status: 400 });
   }
 
-  const data = await buildTranscript(studentId);
+  const student = await prisma.user.findUnique({
+    where: { id: requestedId },
+    select: { id: true, role: true },
+  });
+  if (!student || student.role !== "STUDENT") {
+    return Response.json({ ok: false, error: "Talaba topilmadi" }, { status: 404 });
+  }
+
+  if (user.role === "ADMIN") {
+    const data = await buildTranscript(requestedId);
+    if (!data) {
+      return Response.json({ ok: false, error: "Talaba topilmadi" }, { status: 404 });
+    }
+    return Response.json({ ok: true, data });
+  }
+
+  const ownedCourses = await prisma.course.findMany({
+    where: { teacherId: user.id, enrollments: { some: { userId: requestedId } } },
+    select: { id: true },
+  });
+  if (ownedCourses.length === 0) {
+    return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
+
+  const data = await buildTranscript(
+    requestedId,
+    ownedCourses.map((course) => course.id),
+  );
   if (!data) {
     return Response.json({ ok: false, error: "Talaba topilmadi" }, { status: 404 });
   }

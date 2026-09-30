@@ -31,7 +31,10 @@ export function transcriptSerial(studentId: string) {
   return `TTPU-TR-${studentId.slice(-8).toUpperCase()}`;
 }
 
-export async function buildTranscript(studentId: string): Promise<TranscriptData | null> {
+export async function buildTranscript(
+  studentId: string,
+  courseIds?: string[],
+): Promise<TranscriptData | null> {
   const student = await prisma.user.findUnique({
     where: { id: studentId },
     select: {
@@ -45,32 +48,36 @@ export async function buildTranscript(studentId: string): Promise<TranscriptData
   if (!student || student.role !== "STUDENT") return null;
 
   const enrollments = await prisma.enrollment.findMany({
-    where: { userId: studentId },
+    where: { userId: studentId, ...(courseIds ? { courseId: { in: courseIds } } : {}) },
     select: {
       course: {
         select: { id: true, title: true, teacher: { select: { name: true } } },
       },
     },
   });
-  const courseIds = enrollments.map((enrollment) => enrollment.course.id);
+  const enrolledCourseIds = enrollments.map((enrollment) => enrollment.course.id);
 
   const [submissions, attempts, attendance, gpaSummary] = await Promise.all([
     prisma.submission.findMany({
-      where: { studentId, score: { not: null }, assignment: { courseId: { in: courseIds } } },
+      where: {
+        studentId,
+        score: { not: null },
+        assignment: { courseId: { in: enrolledCourseIds } },
+      },
       select: { score: true, assignment: { select: { courseId: true, maxScore: true } } },
     }),
     prisma.quizAttempt.findMany({
-      where: { studentId, score: { not: null }, quiz: { courseId: { in: courseIds } } },
+      where: { studentId, score: { not: null }, quiz: { courseId: { in: enrolledCourseIds } } },
       select: {
         score: true,
         quiz: { select: { courseId: true, questions: { select: { points: true } } } },
       },
     }),
     prisma.attendance.findMany({
-      where: { studentId, courseId: { in: courseIds } },
+      where: { studentId, courseId: { in: enrolledCourseIds } },
       select: { courseId: true, status: true },
     }),
-    getStudentGpa(studentId, courseIds),
+    getStudentGpa(studentId, enrolledCourseIds),
   ]);
 
   const assignmentTotals = new Map<string, { score: number; max: number }>();
