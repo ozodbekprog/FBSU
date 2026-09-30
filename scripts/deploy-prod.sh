@@ -96,7 +96,7 @@ if [ ! -f "$ENV_FILE" ]; then
   cat > "$ENV_FILE" <<EOF
 DATABASE_URL="postgresql://${APP_USER}:${DB_PASS}@localhost:5432/${PG_DB}?schema=public"
 AUTH_SECRET="${AUTH_SECRET}"
-UPLOAD_DIR="./public/uploads"
+UPLOAD_DIR="./uploads"
 TELEGRAM_BOT_TOKEN=""
 APP_URL="https://${DOMAIN}"
 SMTP_HOST=""
@@ -111,8 +111,8 @@ else
   log "5/7 .env mavjud — o'zgartirilmadi ($ENV_FILE)"
 fi
 
-mkdir -p "$APP_DIR/public/uploads"
-chown -R "$APP_USER:$APP_USER" "$APP_DIR/public/uploads"
+mkdir -p "$APP_DIR/uploads"
+chown -R "$APP_USER:$APP_USER" "$APP_DIR/uploads"
 
 log "6/7 Ilova: npm ci + prisma + build"
 run_app "npm ci"

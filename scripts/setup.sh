@@ -16,7 +16,7 @@ if [ ! -f .env ]; then
   cat > .env <<EOF
 DATABASE_URL="postgresql://$USER@localhost:${PGPORT:-5433}/ttpu_lms?schema=public"
 AUTH_SECRET="$SECRET"
-UPLOAD_DIR="./public/uploads"
+UPLOAD_DIR="./uploads"
 EOF
   chmod 600 .env
   echo "   .env yaratildi"
