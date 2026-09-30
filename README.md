@@ -190,3 +190,7 @@ bot/                 # Telegram bot (mustaqil)
 scripts/             # setup.sh, db.sh, deploy.sh, deploy-prod.sh, backup.sh
 deploy/              # Caddyfile + systemd unitlar (VPS deploy)
 ```
+
+## Ferma test 3
+
+Bu bolim avtomatik tekshiruv uchun qoshildi.
