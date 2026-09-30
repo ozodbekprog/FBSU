@@ -30,7 +30,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     "Testlar %",
     "Davomat %",
     "Umumiy %",
-    "Davomat %",
     "Imtihon ruxsati (Ha/Yo'q)",
   ];
 
@@ -56,7 +55,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       student.quizAverage,
       student.attendanceRate,
       student.overall,
-      attendance.percent,
       attendance.eligible ? "Ha" : "Yo'q",
     ]);
   }
