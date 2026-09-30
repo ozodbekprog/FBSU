@@ -1,11 +1,15 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { verifyQrToken } from "@/modules/attendance-security/qr-token";
 import {
   clientIpFromHeaders,
   evaluateCheckInRisk,
 } from "@/modules/attendance-security/verify";
+
+const CHECK_IN_WINDOW_MS = 10 * 60 * 1000;
+const CHECK_IN_MAX_ATTEMPTS = 10;
 
 const checkInSchema = z
   .object({
@@ -26,6 +30,24 @@ export async function POST(request: Request) {
   }
   if (user.role !== "STUDENT") {
     return Response.json({ ok: false, error: "Faqat talabalar belgilanishi mumkin" }, { status: 403 });
+  }
+
+  const ip = clientIpFromHeaders(request.headers);
+  const rateLimit = await checkRateLimit(`check-in:${ip ?? "local"}:${user.id}`, {
+    windowMs: CHECK_IN_WINDOW_MS,
+    maxAttempts: CHECK_IN_MAX_ATTEMPTS,
+    keyPrefix: "attendance",
+  });
+  if (!rateLimit.allowed) {
+    return Response.json(
+      { ok: false, error: "Juda ko'p urinish. Keyinroq qayta urinib ko'ring" },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)),
+        },
+      },
+    );
   }
 
   const body = await request.json().catch(() => null);
@@ -99,7 +121,6 @@ export async function POST(request: Request) {
           accuracy: parsed.data.accuracy,
         }
       : undefined;
-  const ip = clientIpFromHeaders(request.headers);
   const risk = await evaluateCheckInRisk({
     studentId: user.id,
     sessionId: session.id,
