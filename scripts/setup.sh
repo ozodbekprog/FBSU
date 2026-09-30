@@ -18,6 +18,7 @@ DATABASE_URL="postgresql://$USER@localhost:${PGPORT:-5433}/ttpu_lms?schema=publi
 AUTH_SECRET="$SECRET"
 UPLOAD_DIR="./public/uploads"
 EOF
+  chmod 600 .env
   echo "   .env yaratildi"
 else
   echo "   .env allaqachon mavjud — o'zgartirilmadi"
