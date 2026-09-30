@@ -32,6 +32,8 @@ export function BugAssistant() {
   const captured = useRef<Captured | null>(null);
   const lastAutoAt = useRef(0);
   const listRef = useRef<HTMLDivElement | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [shot, setShot] = useState<{ dataUrl: string; name: string } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -109,6 +111,37 @@ export function BugAssistant() {
     [router],
   );
 
+  const attachImage = useCallback(
+    async (file: File) => {
+      if (!file.type.startsWith("image/")) {
+        aiSay("Faqat rasm (skrinshot) biriktirish mumkin.");
+        return;
+      }
+      try {
+        const bitmap = await createImageBitmap(file);
+        const maxSide = 1600;
+        const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("canvas");
+        ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        if (dataUrl.length > 3_500_000) {
+          aiSay("Rasm juda katta — kichikroq skrinshot tanlang.");
+          return;
+        }
+        setShot({ dataUrl, name: file.name });
+        setSent(false);
+        aiSay("📎 Skrinshot biriktirildi. Yuborganingizda u ham adminga boradi.");
+      } catch {
+        aiSay("Rasmni o'qib bo'lmadi — boshqa rasm bilan urinib ko'ring.");
+      }
+    },
+    [aiSay],
+  );
+
   const sendReport = useCallback(async (): Promise<void> => {
     setBusy(true);
     try {
@@ -123,18 +156,20 @@ export function BugAssistant() {
             .map((message) => message.text)
             .join(" | ")
             .slice(0, 1000),
+          attachment: shot?.dataUrl,
         }),
       });
       const json = (await res.json().catch(() => null)) as { ok?: boolean } | null;
       if (!res.ok || !json?.ok) throw new Error("failed");
       setSent(true);
+      setShot(null);
       aiSay("✅ Adminga yuborildi. Tafsilotlar faqat administratorga ko'rinadi. Boshqa savolingiz bo'lsa — yozib turing, yordam beraman.");
     } catch {
       aiSay("Adminga yuborishda muammo bo'ldi. Birozdan so'ng qayta urinib ko'ring.");
     } finally {
       setBusy(false);
     }
-  }, [aiSay, messages]);
+  }, [aiSay, messages, shot]);
 
   const capture = useCallback(
     (message: string, stack?: string, label?: string, autoSend = false) => {
@@ -289,7 +324,34 @@ export function BugAssistant() {
           </div>
 
           <div className="space-y-2 border-t border-slate-100 px-4 py-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:pb-3">
+            {shot ? (
+              <div className="flex items-center gap-2">
+                <img
+                  src={shot.dataUrl}
+                  alt="Biriktirilgan skrinshot"
+                  className="h-12 w-20 rounded-lg border border-slate-200 object-cover"
+                />
+                <span className="min-w-0 flex-1 truncate text-[11px] text-slate-500">{shot.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setShot(null)}
+                  className="text-xs text-slate-500 transition-colors hover:text-slate-700"
+                >
+                  ✖ Olib tashlash
+                </button>
+              </div>
+            ) : null}
             <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={busy}
+                title="Skrinshot biriktirish"
+                aria-label="Skrinshot biriktirish"
+                className="rounded-lg border border-slate-200 px-2.5 text-sm text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
+              >
+                📎
+              </button>
               <Input
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
@@ -299,6 +361,19 @@ export function BugAssistant() {
                     void handleSend();
                   }
                 }}
+                onPaste={(event) => {
+                  const items = Array.from(event.clipboardData?.items ?? []);
+                  for (const item of items) {
+                    if (item.type.startsWith("image/")) {
+                      const file = item.getAsFile();
+                      if (file) {
+                        event.preventDefault();
+                        void attachImage(file);
+                        return;
+                      }
+                    }
+                  }
+                }}
                 placeholder="Xabar yozing..."
                 aria-label="AI yordamchiga xabar"
               />
@@ -306,6 +381,17 @@ export function BugAssistant() {
                 Yuborish
               </Button>
             </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void attachImage(file);
+                event.target.value = "";
+              }}
+            />
             <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
@@ -318,7 +404,7 @@ export function BugAssistant() {
                     : "text-brand-700 hover:text-brand-900 hover:underline",
                 )}
               >
-                {sent ? "✅ Adminga yuborilgan" : "📤 Muammoni adminga yuborish"}
+                {sent ? "✅ Adminga yuborilgan" : shot ? "📤 Muammoni adminga yuborish (📎 1 rasm)" : "📤 Muammoni adminga yuborish"}
               </button>
               <span className="text-[10px] text-slate-600">Tafsilotlar faqat adminga ko&apos;rinadi</span>
             </div>

@@ -1,4 +1,7 @@
 import { z } from "zod";
+import path from "node:path";
+import { randomUUID } from "node:crypto";
+import { mkdir, writeFile } from "node:fs/promises";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
@@ -11,7 +14,49 @@ const reportSchema = z.object({
   stack: z.string().trim().max(8000).optional(),
   url: z.string().trim().max(600).optional(),
   note: z.string().trim().max(1500).optional(),
+  attachment: z
+    .string()
+    .trim()
+    .max(4_500_000)
+    .regex(/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/)
+    .optional(),
 });
+
+const IMAGE_EXTENSIONS: Record<string, string> = { png: "png", jpeg: "jpg", webp: "webp" };
+
+function matchesImageSignature(extension: string, buffer: Buffer): boolean {
+  if (buffer.length < 12) return false;
+  if (extension === "png") {
+    return buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47;
+  }
+  if (extension === "jpg") {
+    return buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  }
+  if (extension === "webp") {
+    return (
+      buffer.subarray(0, 4).toString("ascii") === "RIFF" &&
+      buffer.subarray(8, 12).toString("ascii") === "WEBP"
+    );
+  }
+  return false;
+}
+
+async function saveAttachment(dataUrl: string): Promise<string | null> {
+  const match = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl);
+  if (!match) return null;
+  const extension = IMAGE_EXTENSIONS[match[1]];
+  if (!extension) return null;
+  const buffer = Buffer.from(match[2], "base64");
+  if (buffer.length === 0 || buffer.length > 3_500_000) return null;
+  if (!matchesImageSignature(extension, buffer)) return null;
+  const baseDir = process.env.UPLOAD_DIR
+    ? path.resolve(process.env.UPLOAD_DIR)
+    : path.join(process.cwd(), "uploads");
+  await mkdir(baseDir, { recursive: true });
+  const fileName = `bug-${randomUUID().replace(/-/g, "")}.${extension}`;
+  await writeFile(path.join(baseDir, fileName), buffer);
+  return `/api/uploads/${fileName}`;
+}
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -41,6 +86,10 @@ export async function POST(request: Request) {
     );
   }
 
+  const attachmentUrl = parsed.data.attachment
+    ? await saveAttachment(parsed.data.attachment).catch(() => null)
+    : null;
+
   const report = await prisma.bugReport.create({
     data: {
       userId: user.id,
@@ -49,6 +98,7 @@ export async function POST(request: Request) {
       stack: parsed.data.stack ?? null,
       meta: {
         note: parsed.data.note ?? null,
+        attachment: attachmentUrl,
         userName: user.name,
         userRole: user.role,
         ip: clientInfo.ip,

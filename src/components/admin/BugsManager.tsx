@@ -131,6 +131,8 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
           files?: number;
           log?: string;
         } | null;
+        const attachment =
+          typeof item.meta?.attachment === "string" ? (item.meta.attachment as string) : null;
         const statusMeta = STATUS_META[item.status];
         const busy = busyId === item.id;
         return (
@@ -193,6 +195,16 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
                   ) : null}
                   {fix.log ? <p className="text-xs text-emerald-900/70">Log: {fix.log}</p> : null}
                 </div>
+              ) : null}
+
+              {attachment ? (
+                <a href={attachment} target="_blank" rel="noreferrer" className="block w-fit">
+                  <img
+                    src={attachment}
+                    alt="Foydalanuvchi skrinshoti"
+                    className="max-h-52 rounded-xl border border-slate-200 shadow-sm"
+                  />
+                </a>
               ) : null}
 
               <div className="grid gap-1.5 text-xs text-slate-500 sm:grid-cols-2">
