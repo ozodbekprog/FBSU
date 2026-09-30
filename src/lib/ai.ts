@@ -22,6 +22,14 @@ export type BugAnalysis = {
   severity: string;
 };
 
+function sanitizeText(value: string, maxLength: number): string {
+  const withoutQuery = value.replace(/https?:\/\/[^\s"'`)]+/g, (url) => {
+    const [base] = url.split(/[?#]/);
+    return base;
+  });
+  return withoutQuery.slice(0, maxLength);
+}
+
 export async function askAi(
   messages: AiMessage[],
   options?: { timeoutMs?: number; maxTokens?: number },
@@ -126,7 +134,7 @@ export async function analyzeBug(input: {
       },
       {
         role: "user",
-        content: `Sahifa: ${input.url ?? "-"}\nXatolik: ${input.message}\nTafsilot: ${(input.stack ?? "").slice(0, 2500)}`,
+        content: `Sahifa: ${sanitizeText(input.url ?? "-", 300)}\nXatolik: ${sanitizeText(input.message, 500)}\nTafsilot: ${sanitizeText(input.stack ?? "", 2500)}`,
       },
     ],
     { maxTokens: 350, timeoutMs: 20000 },
