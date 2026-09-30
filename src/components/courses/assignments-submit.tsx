@@ -289,7 +289,7 @@ export function AssignmentsSubmit({
           value={fileUrl}
           onChange={(event) => setFileUrl(event.target.value)}
           maxLength={500}
-          placeholder="https://... yoki /uploads/fayl.pdf"
+          placeholder="https://... yoki /api/uploads/fayl.pdf"
         />
       </div>
 

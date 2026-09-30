@@ -20,7 +20,7 @@ export function isValidHttpUrl(value: string) {
 }
 
 export function isAllowedFileUrl(value: string) {
-  return isValidHttpUrl(value) || /^\/uploads\/\S+$/.test(value);
+  return isValidHttpUrl(value) || /^\/(api\/)?uploads\/\S+$/.test(value);
 }
 
 export function materialRuleError(
@@ -35,7 +35,7 @@ export function materialRuleError(
   }
   if (type === "FILE" && !fileUrl) return "Fayl havolasi (URL) kiritilishi shart";
   if (type === "FILE" && fileUrl && !isAllowedFileUrl(fileUrl)) {
-    return "Fayl havolasi http://, https:// yoki /uploads/ bilan boshlanishi kerak";
+    return "Fayl havolasi http://, https:// yoki /api/uploads/ bilan boshlanishi kerak";
   }
   return null;
 }

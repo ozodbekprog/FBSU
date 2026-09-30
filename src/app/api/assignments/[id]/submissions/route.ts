@@ -13,7 +13,7 @@ const submitSchema = z
       .nullable()
       .optional()
       .refine((value) => !value || isAllowedFileUrl(value), {
-        message: "Fayl havolasi http://, https:// yoki /uploads/ bilan boshlanishi kerak",
+        message: "Fayl havolasi http://, https:// yoki /api/uploads/ bilan boshlanishi kerak",
       }),
   })
   .refine((value) => Boolean(value.text?.length || value.fileUrl?.length), {

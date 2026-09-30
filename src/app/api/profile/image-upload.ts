@@ -97,7 +97,7 @@ export async function handleProfileImageUpload(
   await mkdir(uploadDir, { recursive: true });
   await writeFile(path.join(uploadDir, fileName), processed);
 
-  const url = `/uploads/${options.subdir}/${fileName}`;
+  const url = `/api/uploads/${options.subdir}/${fileName}`;
   if (options.field === "avatarUrl") {
     await prisma.user.update({ where: { id: user.id }, data: { avatarUrl: url } });
   } else {
