@@ -200,7 +200,7 @@ export function BankImportModal({
               value={randomCount}
               onChange={(event) => setRandomCount(event.target.value)}
               placeholder="N"
-              className="h-8 w-20 px-2.5 py-1 text-xs"
+              className="h-8 w-20! px-2.5! py-1! text-xs!"
             />
             <Button size="sm" variant="secondary" onClick={pickRandom} disabled={items.length === 0}>
               Tasodifiy N ta tanlash

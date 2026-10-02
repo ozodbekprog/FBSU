@@ -152,7 +152,7 @@ export default function AuditLogTable({
                     <button
                       type="button"
                       onClick={() => setExpandedId(expanded ? null : log.id)}
-                      className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-brand-600 transition-colors duration-150 hover:text-brand-800"
+                      className="-ml-1 mt-1 inline-flex min-h-8 items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium text-brand-600 transition-colors duration-150 hover:bg-brand-50 hover:text-brand-800"
                     >
                       {expanded ? "Yopish" : "Batafsil"}
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={expanded ? "rotate-180 transition-transform duration-150" : "transition-transform duration-150"}>

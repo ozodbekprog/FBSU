@@ -126,7 +126,7 @@ export default async function CertificatesPage({
         subtitle={selected.title}
         action={
           <form method="get" className="flex items-center gap-2">
-            <Select name="courseId" defaultValue={selected.id} className="w-52 sm:w-64">
+            <Select name="courseId" defaultValue={selected.id} className="w-52! sm:w-64!">
               {courses.map((course) => (
                 <option key={course.id} value={course.id}>
                   {course.title}

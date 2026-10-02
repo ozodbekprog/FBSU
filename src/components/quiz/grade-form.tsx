@@ -47,7 +47,7 @@ export function GradeForm({
           value={value}
           onChange={(event) => setValue(event.target.value)}
           placeholder={`0-${maxScore}`}
-          className="w-24"
+          className="w-24!"
         />
         <Button size="sm" variant="secondary" onClick={() => void save()} disabled={loading}>
           {loading ? "..." : "Baholash"}

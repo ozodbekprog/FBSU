@@ -525,7 +525,7 @@ export default async function GradesPage({
         subtitle={selected.title}
         action={
           <form method="get" className="flex items-end gap-2">
-            <Select name="courseId" defaultValue={selected.id} className="w-56 sm:w-64">
+            <Select name="courseId" defaultValue={selected.id} className="w-56! sm:w-64!">
               {courses.map((course) => (
                 <option key={course.id} value={course.id}>
                   {course.title}

@@ -66,7 +66,7 @@ export default async function AdminUsersPage({
               </span>
               <Input name="q" defaultValue={q} placeholder="Ism yoki email..." className="pl-9" />
             </div>
-            <Select name="role" defaultValue={role} className="w-full sm:w-48">
+            <Select name="role" defaultValue={role} className="w-full sm:w-48!">
               <option value="">Barcha rollar</option>
               <option value="STUDENT">Talaba</option>
               <option value="TEACHER">O&apos;qituvchi</option>

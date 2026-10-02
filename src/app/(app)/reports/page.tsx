@@ -74,7 +74,7 @@ export default async function ReportsPage({
               </svg>
               Kurs
             </span>
-            <Select name="courseId" defaultValue={selected.id} className="w-64">
+            <Select name="courseId" defaultValue={selected.id} className="w-64!">
               {courses.map((course) => (
                 <option key={course.id} value={course.id}>
                   {course.title}

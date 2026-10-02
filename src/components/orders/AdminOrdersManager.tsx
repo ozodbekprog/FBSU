@@ -226,7 +226,7 @@ export default function AdminOrdersManager({ orders }: { orders: AdminOrderItem[
             <Select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
-              className="w-full sm:w-52"
+              className="w-full sm:w-52!"
             >
               <option value="ALL">Barcha turlar</option>
               {ORDER_TYPES.map((value) => (

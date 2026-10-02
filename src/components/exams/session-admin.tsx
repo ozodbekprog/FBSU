@@ -202,7 +202,7 @@ export function SheetManager({ sessionId, rows }: { sessionId: string; rows: Ses
                           onChange={(event) => patchDraft(row.studentId, { seat: event.target.value })}
                           maxLength={20}
                           placeholder="A-1"
-                          className="w-24 px-2.5 py-1.5 text-sm"
+                          className="w-24! px-2.5! py-1.5!"
                         />
                       ) : (
                         <span className="text-slate-500">—</span>
@@ -214,7 +214,7 @@ export function SheetManager({ sessionId, rows }: { sessionId: string; rows: Ses
                           <Select
                             value={draft.status}
                             onChange={(event) => patchDraft(row.studentId, { status: event.target.value })}
-                            className="w-36 px-2.5 py-1.5 text-sm"
+                            className="w-36! px-2.5! py-1.5!"
                           >
                             {SHEET_STATUSES.map((status) => (
                               <option key={status} value={status}>
@@ -229,7 +229,7 @@ export function SheetManager({ sessionId, rows }: { sessionId: string; rows: Ses
                             value={draft.score}
                             onChange={(event) => patchDraft(row.studentId, { score: event.target.value })}
                             placeholder="Ball"
-                            className="w-20 px-2.5 py-1.5 text-sm"
+                            className="w-20! px-2.5! py-1.5!"
                           />
                         </div>
                       ) : (

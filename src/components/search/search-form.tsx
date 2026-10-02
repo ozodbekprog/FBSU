@@ -22,7 +22,7 @@ export function SearchForm({ defaultValue }: { defaultValue: string }) {
               defaultValue={defaultValue}
               autoFocus
               placeholder="Kurs, material, topshiriq, test yoki foydalanuvchi qidirish"
-              className="h-12 pl-12 text-base"
+              className="h-12 pl-12 text-base!"
             />
           </div>
           <Button type="submit" size="lg" className="h-12 gap-2 px-6">

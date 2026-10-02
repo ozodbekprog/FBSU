@@ -309,7 +309,7 @@ export function AssignmentsGrade({
                         value={score}
                         onChange={(event) => setScore(event.target.value)}
                         required
-                        className="text-lg font-semibold"
+                        className="text-lg! font-semibold"
                       />
                     </div>
                     <div>

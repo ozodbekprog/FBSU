@@ -370,7 +370,7 @@ export default function SettingsManager({
                 </p>
               </div>
               <Select
-                className="w-28 shrink-0"
+                className="w-28! shrink-0"
                 value={preferences.reminderHour}
                 disabled={hourBusy}
                 aria-label="Eslatma vaqti"

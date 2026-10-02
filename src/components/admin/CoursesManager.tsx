@@ -247,7 +247,7 @@ export default function CoursesManager({
                           value={course.teacher.id}
                           disabled={busyId === course.id}
                           onChange={(e) => assignTeacher(course, e.target.value)}
-                          className="max-w-44 rounded-lg py-1.5 text-xs"
+                          className="max-w-44 rounded-lg! py-1.5! text-xs!"
                         >
                           {!currentTeacher ? (
                             <option value={course.teacher.id}>{course.teacher.name}</option>

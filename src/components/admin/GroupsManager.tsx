@@ -538,7 +538,7 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
                                             onChange={(event) =>
                                               void assignStudent(group.id, student.id, event.target.value)
                                             }
-                                            className="h-8 py-0 text-xs"
+                                            className="h-8 py-0! text-xs!"
                                           >
                                             <option value="">Kichik guruhsiz</option>
                                             {data.subGroups.map((item) => (

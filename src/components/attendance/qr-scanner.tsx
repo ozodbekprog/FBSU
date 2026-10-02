@@ -132,11 +132,14 @@ export function QrScanner({
       } catch (err) {
         window.clearTimeout(slowTimer);
         const name = err instanceof DOMException ? err.name : "Error";
-        let message: string;
         if (name === "NotAllowedError" || name === "SecurityError") {
-          message =
-            "Kameraga ruxsat berilmagan. Manzil qatoridagi kamera belgisidan ruxsat bering (yoki brauzer sozlamalarida sayt uchun kamerani yoqing) va «Qayta urinish»ni bosing.";
-        } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+          setError(
+            "Kameraga ruxsat berilmagan. Ruxsat oynasida «Ruxsat berish»ni tanlang yoki manzil qatoridagi kamera belgisidan ruxsat bering, so'ng «Qayta urinish»ni bosing.",
+          );
+          return;
+        }
+        let message: string;
+        if (name === "NotFoundError" || name === "DevicesNotFoundError") {
           message = "Qurilmada kamera topilmadi. Kamera ulanganini tekshiring.";
         } else if (name === "NotReadableError" || name === "TrackStartError") {
           message = "Kamera boshqa dastur tomonidan band. Uni yopib, qayta urinib ko'ring.";

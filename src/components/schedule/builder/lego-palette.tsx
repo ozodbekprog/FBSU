@@ -67,7 +67,7 @@ export function LegoPalette({
               value={teacherValue}
               disabled={disabled}
               onChange={(event) => onTeacherChange(event.target.value)}
-              className="h-9 py-0 text-xs"
+              className="h-9 py-0! text-xs!"
             >
               <option value="">
                 {selected && selected.teacherChoices.length > 0 ? "Fan o'qituvchisi" : "Kurs o'qituvchisi"}

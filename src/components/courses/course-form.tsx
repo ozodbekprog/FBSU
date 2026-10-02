@@ -175,7 +175,7 @@ export function CourseForm({ course }: { course?: CourseFormData }) {
                   value={coverColor}
                   onChange={(e) => setCoverColor(e.target.value)}
                   pattern="^#[0-9a-fA-F]{6}$"
-                  className="w-28"
+                  className="w-28!"
                 />
               </div>
             </div>
