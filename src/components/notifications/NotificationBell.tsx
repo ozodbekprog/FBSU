@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cn, fmtDateTime } from "@/lib/utils";
+import { ensureCsrfToken } from "@/lib/api";
 import type { NotificationItem } from "./shared";
 import { NotificationIcon, notificationKind, notificationStyle } from "./shared";
 
@@ -55,9 +56,12 @@ export function NotificationBell() {
     setItems((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
     setUnreadCount((prev) => Math.max(0, prev - 1));
     try {
+      const token = await ensureCsrfToken();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["x-csrf-token"] = token;
       const res = await fetch("/api/notifications", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ ids: [id] }),
       });
       if (!res.ok) {

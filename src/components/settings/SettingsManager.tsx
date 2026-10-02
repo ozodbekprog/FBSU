@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Button, Card, CardBody, Select } from "@/components/ui";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, ensureCsrfToken } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
   REMINDER_HOURS,
@@ -177,9 +177,12 @@ export default function SettingsManager({
     setError(null);
     setNotice(null);
     try {
+      const token = await ensureCsrfToken();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["x-csrf-token"] = token;
       const res = await fetch("/api/user-settings", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(patch),
       });
       const json = (await res.json().catch(() => null)) as ApiResult | null;

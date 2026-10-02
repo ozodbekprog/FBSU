@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
+import { ensureCsrfToken } from "@/lib/api";
 
 export function MarkAllReadButton() {
   const router = useRouter();
@@ -13,9 +14,12 @@ export function MarkAllReadButton() {
     setLoading(true);
     setError(null);
     try {
+      const token = await ensureCsrfToken();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["x-csrf-token"] = token;
       const res = await fetch("/api/notifications", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ all: true }),
       });
       const json = (await res.json().catch(() => null)) as {

@@ -4,7 +4,14 @@ export async function getCsrfToken(): Promise<string | null> {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+let csrfTokenCache: { token: string; expiresAt: number } | null = null;
+
 export async function ensureCsrfToken(): Promise<string> {
+  const now = Date.now();
+  if (csrfTokenCache && csrfTokenCache.expiresAt > now) {
+    return csrfTokenCache.token;
+  }
+
   let token = await getCsrfToken();
   if (!token) {
     try {
@@ -16,6 +23,11 @@ export async function ensureCsrfToken(): Promise<string> {
     } catch {
       // ignore
     }
+  }
+
+  if (token) {
+    // Token 1 soat amal qiladi; muddatidan oldin yangilab turamiz.
+    csrfTokenCache = { token, expiresAt: now + 50 * 60 * 1000 };
   }
   return token || "";
 }

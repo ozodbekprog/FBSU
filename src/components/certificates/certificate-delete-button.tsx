@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
+import { ensureCsrfToken } from "@/lib/api";
 
 type ApiResult = { ok?: boolean; error?: string } | null;
 
@@ -24,7 +25,13 @@ export function CertificateDeleteButton({
     setBusy(true);
     setError(null);
     try {
-      const response = await fetch(`/api/certificates/${certificateId}`, { method: "DELETE" });
+      const token = await ensureCsrfToken();
+      const headers: Record<string, string> = {};
+      if (token) headers["x-csrf-token"] = token;
+      const response = await fetch(`/api/certificates/${certificateId}`, {
+        method: "DELETE",
+        headers,
+      });
       const json = (await response.json().catch(() => null)) as ApiResult;
       if (!response.ok || !json?.ok) {
         setError(json?.error ?? "Bekor qilishda xatolik yuz berdi");

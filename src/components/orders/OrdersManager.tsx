@@ -15,6 +15,7 @@ import {
   Textarea,
 } from "@/components/ui";
 import { cn, fmtDateTime } from "@/lib/utils";
+import { ensureCsrfToken } from "@/lib/api";
 import {
   ORDER_STATUS_DOT,
   ORDER_STATUS_HINT,
@@ -154,9 +155,12 @@ export default function OrdersManager({
     setError(null);
     setNotice(null);
     try {
+      const token = await ensureCsrfToken();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["x-csrf-token"] = token;
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(body),
       });
       const json = (await res.json().catch(() => null)) as ApiResult | null;

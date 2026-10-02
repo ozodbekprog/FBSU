@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, CardBody, CardHeader, Input, Label, Select } from "@/components/ui";
+import { ensureCsrfToken } from "@/lib/api";
 
 type ApiResult = { ok?: boolean; error?: string } | null;
 
@@ -64,9 +65,12 @@ export function IssueCertificateForm({
     setError(null);
     setMessage(null);
     try {
+      const token = await ensureCsrfToken();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["x-csrf-token"] = token;
       const response = await fetch("/api/certificates", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ courseId, studentId, grade: parsedGrade }),
       });
       const json = (await response.json().catch(() => null)) as ApiResult;

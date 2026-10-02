@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent, MouseEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { ensureCsrfToken } from "@/lib/api";
 import {
   Badge,
   Button,
@@ -286,7 +287,13 @@ function cellBackground(isToday: boolean, isNowPair: boolean) {
 
 async function apiRequest<T>(url: string, init?: RequestInit): Promise<ApiResponse<T>> {
   try {
-    const response = await fetch(url, init);
+    const method = (init?.method || "GET").toString().toUpperCase();
+    const headers: Record<string, string> = { ...((init?.headers as Record<string, string>) ?? {}) };
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+      const token = await ensureCsrfToken();
+      if (token) headers["x-csrf-token"] = token;
+    }
+    const response = await fetch(url, { ...init, headers });
     const payload = (await response.json().catch(() => null)) as ApiResponse<T> | null;
     if (!payload) return { ok: false, error: "Server bilan aloqa xatosi" };
     if (payload.ok) return payload;

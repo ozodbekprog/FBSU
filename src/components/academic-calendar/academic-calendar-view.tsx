@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Card, CardBody, CardHeader, EmptyState, Input, Label, Skeleton, Textarea } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
+import { ensureCsrfToken } from "@/lib/api";
 
 export type AcademicEventType = "SEMESTER" | "HOLIDAY" | "EXAM" | "EVENT";
 
@@ -311,9 +312,12 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
   async function request(url: string, method: "POST" | "PATCH" | "DELETE", body?: unknown): Promise<RequestResult> {
     setBusy(true);
     try {
+      const token = await ensureCsrfToken();
+      const headers: Record<string, string> = { ...(body ? { "Content-Type": "application/json" } : {}) };
+      if (token) headers["x-csrf-token"] = token;
       const response = await fetch(url, {
         method,
-        headers: body ? { "Content-Type": "application/json" } : undefined,
+        headers,
         body: body ? JSON.stringify(body) : undefined,
       });
       const json = (await response.json().catch(() => null)) as { ok: boolean; error?: string } | null;

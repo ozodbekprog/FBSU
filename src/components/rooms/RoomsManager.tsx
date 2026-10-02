@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, CardBody, CardHeader, EmptyState, Input, Label, Textarea } from "@/components/ui";
 import { RoomCard, type RoomItem } from "@/components/rooms/room-card";
+import { ensureCsrfToken } from "@/lib/api";
 
 type ApiResult = { ok: boolean; error?: string };
 
@@ -52,9 +53,12 @@ export default function RoomsManager({ rooms }: { rooms: RoomItem[] }) {
     setError(null);
     setNotice(null);
     try {
+      const token = await ensureCsrfToken();
+      const headers: Record<string, string> = { ...(body ? { "Content-Type": "application/json" } : {}) };
+      if (token) headers["x-csrf-token"] = token;
       const res = await fetch(url, {
         method,
-        headers: body ? { "Content-Type": "application/json" } : undefined,
+        headers,
         body: body ? JSON.stringify(body) : undefined,
       });
       const json = (await res.json().catch(() => null)) as ApiResult | null;

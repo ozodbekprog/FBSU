@@ -1,3 +1,5 @@
+import { ensureCsrfToken } from "@/lib/api";
+
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
 export async function apiFetch<T = unknown>(
@@ -5,9 +7,15 @@ export async function apiFetch<T = unknown>(
   method: "GET" | "POST" | "PATCH" | "DELETE",
   body?: unknown,
 ): Promise<ApiResult<T>> {
+  const headers: Record<string, string> = {};
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (method !== "GET") {
+    const token = await ensureCsrfToken();
+    if (token) headers["x-csrf-token"] = token;
+  }
   const response = await fetch(url, {
     method,
-    headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+    headers: Object.keys(headers).length ? headers : undefined,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const json = (await response.json().catch(() => null)) as ApiResult<T> | null;
