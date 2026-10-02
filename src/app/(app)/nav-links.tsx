@@ -101,7 +101,7 @@ export function MobileTabBar({ tabs }: { tabs: MobileTab[] }) {
               {tab.badge ? (
                 <span
                   inert
-                  className="pointer-events-none absolute top-1.5 right-1/2 translate-x-3 [&_a]:size-0 [&_svg]:hidden"
+                  className="pointer-events-none absolute top-1.5 right-1/2 translate-x-3 [&>span]:size-0 [&_svg]:hidden"
                 >
                   {tab.badge}
                 </span>
