@@ -660,3 +660,18 @@ model BugReport {
 
   @@index([status, createdAt])
 }
+
+model UpdateLog {
+  id        String   @id @default(cuid())
+  title     String
+  summary   String?
+  commit    String?
+  branch    String?
+  bugId     String?
+  node      String?
+  author    String?
+  changes   Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

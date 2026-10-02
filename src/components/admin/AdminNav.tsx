@@ -126,6 +126,27 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
       </svg>
     ),
   },
+  {
+    href: "/admin/bounty",
+    label: "Bug bounty",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="9" r="5" />
+        <path d="M8.5 13.3 7 22l5-2.6L17 22l-1.5-8.7" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/updates",
+    label: "Yangilanishlar",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 12a9 9 0 1 0 2.6-6.4" />
+        <path d="M3 4v5h5" />
+        <path d="M12 8v4l3 2" />
+      </svg>
+    ),
+  },
 ];
 
 export default function AdminNav() {
