@@ -38,7 +38,8 @@ faqat `.env` dagi `DATABASE_URL` manzilida PostgreSQL ishlab turishi kerak.
 ## Buyruqlar
 
 - `/start` — salomlashish va imkoniyatlar ro'yxati
-- email yuborish (masalan `ozodbek@ttpu.uz`) — chatni foydalanuvchiga bog'laydi
+- Saytda (Sozlamalar → Aloqa) olingan 6 xonali kodni yuborish — chatni foydalanuvchiga bog'laydi.
+  Kod 10 daqiqa amal qiladi va bir marta ishlatiladi
 - `/jadval` — bugungi darslar: `📅` sarlavha, kun nomi va sana, har dars
   `🕘 vaqt | 📚 fan | 🚪 xona | 👨‍🏫 o'qituvchi` ko'rinishida, darslar orasida bo'sh qator
 - `/ertaga` — ertangi darslar (xuddi shu ko'rinishda)
@@ -76,6 +77,9 @@ Eslatma bir kunda takroran yuborilmasligi uchun oxirgi yuborilgan sana
 - `/davomat` va o'qituvchi eslatmasidagi havolalar `http://localhost:3000` ga ishora qiladi.
 - `bot/data.json` — `{ "links": { chatId: email }, "lastReminderDate": "YYYY-MM-DD" }`.
   Eski (faqat chatId → email) fayl ham o'qiladi va keyingi saqlashda yangi formatga o'tadi.
+  Fayl gitga qo'shilmaydi (`.gitignore` da).
+- `bot/pending.json` — vaqtinchalik tasdiqlash kodlari
+  (`{ "123456": { email, userId, expiresAt } }`). Sayt kodi yaratadi, bot tekshirib o'chiradi.
   Fayl gitga qo'shilmaydi (`.gitignore` da).
 - Token yo'q bo'lsa skript aniq xato xabari bilan chiqadi (crash emas).
 - Telegram xatolarida bot 5 sekund kutib qayta urinadi.

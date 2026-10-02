@@ -2,7 +2,8 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Badge, Card, CardBody, Select } from "@/components/ui";
+import { Badge, Button, Card, CardBody, Select } from "@/components/ui";
+import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
   REMINDER_HOURS,
@@ -11,6 +12,8 @@ import {
 } from "@/components/settings/preferences";
 
 type ApiResult = { ok: boolean; data?: { preferences: UserPreferences }; error?: string };
+
+type CodeResult = { ok: boolean; data?: { code: string; expiresAt: string }; error?: string };
 
 type ToggleKey = "reminderBot" | "deadlineReminder" | "emailNotify" | "showCharts" | "scheduleListView";
 
@@ -153,6 +156,9 @@ export default function SettingsManager({
   const [busyKey, setBusyKey] = useState<BusyKey | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [code, setCode] = useState<string | null>(null);
+  const [codeExpires, setCodeExpires] = useState<string | null>(null);
+  const [codeBusy, setCodeBusy] = useState(false);
 
   useEffect(() => {
     if (!notice) return;
@@ -211,6 +217,31 @@ export default function SettingsManager({
       `Eslatma vaqti ${reminderHourLabel(hour)} ga o'zgartirildi`,
     );
   }
+
+  async function requestTelegramCode() {
+    setCodeBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await apiFetch("/api/settings/telegram-code", { method: "POST" });
+      const json = (await res.json().catch(() => null)) as CodeResult | null;
+      if (!res.ok || !json?.ok || !json.data) {
+        setError(json?.error ?? "Kodni olib bo'lmadi");
+        return;
+      }
+      setCode(json.data.code);
+      setCodeExpires(json.data.expiresAt);
+      setNotice("Tasdiqlash kodi yaratildi");
+    } catch {
+      setError("Tarmoqda xatolik");
+    } finally {
+      setCodeBusy(false);
+    }
+  }
+
+  const codeUntil = codeExpires
+    ? new Date(codeExpires).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })
+    : null;
 
   function renderToggle(item: ToggleItem) {
     const enabled = preferences[item.key];
@@ -417,7 +448,7 @@ export default function SettingsManager({
               <p className="mt-1 text-xs leading-relaxed text-slate-500">
                 {telegramLinked
                   ? "Bot eslatmalari quyidagi email orqali bog'langan."
-                  : "Botga ulanish uchun botga /start yuborib, quyidagi emailni kiriting."}
+                  : "Botga ulanish uchun saytda bir martalik kod oling va uni botga yuboring."}
               </p>
               <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1 text-sm font-medium text-slate-700 ring-1 ring-inset ring-slate-200/70">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-slate-600">
@@ -426,6 +457,24 @@ export default function SettingsManager({
                 </svg>
                 {email}
               </p>
+              {!telegramLinked ? (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Button type="button" size="sm" disabled={codeBusy} onClick={() => void requestTelegramCode()}>
+                    {codeBusy ? "Kod olinmoqda..." : "Tasdiqlash kodi olish"}
+                  </Button>
+                  {code ? (
+                    <span className="inline-flex items-center rounded-lg bg-brand-50 px-3 py-1 text-base font-semibold tracking-[0.3em] text-brand-800 ring-1 ring-inset ring-brand-100">
+                      {code}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
+              {!telegramLinked && code ? (
+                <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                  Telegram botga /start yuborib, shu kodni yuboring.
+                  {codeUntil ? ` Kod ${codeUntil} gacha amal qiladi.` : ""}
+                </p>
+              ) : null}
             </div>
           </CardBody>
         </Card>

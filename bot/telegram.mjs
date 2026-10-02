@@ -6,6 +6,7 @@ import { PrismaClient } from "@prisma/client";
 const BOT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.join(BOT_DIR, "..");
 const DATA_FILE = path.join(BOT_DIR, "data.json");
+const PENDING_FILE = path.join(BOT_DIR, "pending.json");
 const POLL_TIMEOUT = 30;
 const RETRY_DELAY_MS = 5000;
 
@@ -24,7 +25,7 @@ const DAY_NAMES = ["yakshanba", "dushanba", "seshanba", "chorshanba", "payshanba
 const DAY_TITLES = ["Yakshanba", "Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba"];
 const SEPARATOR = "━━━━━━━━━━━━━━━━━━";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const CODE_RE = /^\d{6}$/;
 
 try {
   if (typeof process.loadEnvFile === "function") {
@@ -54,6 +55,29 @@ function loadData() {
 function saveData() {
   const payload = { links, lastReminderDate };
   writeFileSync(DATA_FILE, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+}
+
+function loadPending() {
+  if (!existsSync(PENDING_FILE)) return {};
+  try {
+    const parsed = JSON.parse(readFileSync(PENDING_FILE, "utf8"));
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    return parsed;
+  } catch {
+    return {};
+  }
+}
+
+function savePending(pending) {
+  const now = Date.now();
+  const active = {};
+  for (const [code, entry] of Object.entries(pending)) {
+    if (!entry || typeof entry !== "object") continue;
+    if (typeof entry.expiresAt !== "string") continue;
+    if (new Date(entry.expiresAt).getTime() <= now) continue;
+    active[code] = entry;
+  }
+  writeFileSync(PENDING_FILE, `${JSON.stringify(active, null, 2)}\n`, "utf8");
 }
 
 function getPrisma() {
@@ -443,7 +467,7 @@ function startReminderLoop() {
 
 const HELP_TEXT = [
   "📋 Buyruqlar:",
-  "• /start — boshlash va emailni bog'lash",
+  "• /start — boshlash va tasdiqlash kodi haqida ma'lumot",
   "• /jadval — bugungi darslar",
   "• /ertaga — ertangi darslar",
   "• /hafta — haftalik jadval (kun-kun)",
@@ -451,7 +475,7 @@ const HELP_TEXT = [
   "• /imtihon — kelayotgan imtihonlar (30 kun)",
   "• /help — shu yordam",
   "",
-  "📧 Email manzilingizni yuborsangiz (masalan: ozodbek@ttpu.uz), jadval guruhingizga bog'lanadi.",
+  "🔐 Bog'lanish uchun saytga kirib, Sozlamalar → Aloqa bo'limidan 6 xonali kod oling va shu yerga yuboring.",
 ].join("\n");
 
 function startText(name) {
@@ -466,7 +490,7 @@ function startText(name) {
     "• /davomat — o'qituvchilar uchun davomat havolalari",
     "• /help — yordam",
     "",
-    "📧 Boshlash uchun email manzilingizni yuboring (masalan: ozodbek@ttpu.uz).",
+    "🔐 Boshlash uchun saytga kirib, Sozlamalar → Aloqa bo'limidan 6 xonali kod oling va shu yerga yuboring.",
   ].join("\n");
 }
 
@@ -476,20 +500,39 @@ function parseCommand(text) {
   return first.slice(1).split("@")[0].toLowerCase();
 }
 
-async function linkEmail(chatId, email) {
-  const user = await getPrisma().user.findUnique({ where: { email }, include: { group: true } });
+async function linkCode(chatId, code) {
+  const pending = loadPending();
+  const entry = pending[code];
+  if (!entry || typeof entry !== "object" || typeof entry.email !== "string") {
+    await sendMessage(chatId, "❌ Kod topilmadi yoki eskirgan. Saytdagi Sozlamalar bo'limidan yangi kod oling.");
+    return;
+  }
+  if (typeof entry.expiresAt !== "string" || new Date(entry.expiresAt).getTime() <= Date.now()) {
+    delete pending[code];
+    savePending(pending);
+    await sendMessage(chatId, "❌ Kod muddati tugagan. Saytdagi Sozlamalar bo'limidan yangi kod oling.");
+    return;
+  }
+  const user =
+    typeof entry.userId === "string"
+      ? await getPrisma().user.findUnique({ where: { id: entry.userId }, include: { group: true } })
+      : await getPrisma().user.findUnique({ where: { email: entry.email }, include: { group: true } });
   if (!user) {
-    await sendMessage(chatId, `"${email}" bazada topilmadi. Emailni tekshirib, qayta yuboring.`);
+    delete pending[code];
+    savePending(pending);
+    await sendMessage(chatId, `"${entry.email}" bazada topilmadi. Saytdagi Sozlamalar bo'limidan yangi kod oling.`);
     return;
   }
   links[String(chatId)] = user.email;
+  delete pending[code];
+  savePending(pending);
   saveData();
   const groupLine = user.group
     ? `Guruh: ${user.group.name}.`
     : "Sizga guruh biriktirilmagan, /jadval ishlamaydi.";
   await sendMessage(
     chatId,
-    `Saqlandi: ${user.name} (${user.email}).\n${groupLine}\n\nEndi /jadval bilan bugungi darslarni ko'ring.`,
+    `✅ Saqlandi: ${user.name} (${user.email}).\n${groupLine}\n\nEndi /jadval bilan bugungi darslarni ko'ring.`,
   );
 }
 
@@ -666,11 +709,14 @@ async function handleMessage(message) {
     await sendMessage(chatId, `Noma'lum buyruq: /${command}.\n\n${HELP_TEXT}`);
     return;
   }
-  if (EMAIL_RE.test(text)) {
-    await linkEmail(chatId, text.toLowerCase());
+  if (CODE_RE.test(text)) {
+    await linkCode(chatId, text);
     return;
   }
-  await sendMessage(chatId, "Tushunmadim. Email manzilingizni yuboring yoki /help ni ko'ring.");
+  await sendMessage(
+    chatId,
+    "Tushunmadim. Saytdan olingan 6 xonali tasdiqlash kodini yuboring yoki /help ni ko'ring.",
+  );
 }
 
 async function poll() {
