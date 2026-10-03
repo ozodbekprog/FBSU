@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Badge, ButtonLink, Card } from "@/components/ui";
 import { Logo } from "@/components/brand/logo";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 export const revalidate = 300;
 
@@ -376,6 +377,7 @@ export default function HomePage() {
             ))}
           </nav>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <ButtonLink href="/login" variant="ghost" size="sm" className="max-sm:hidden">
               Kirish
             </ButtonLink>

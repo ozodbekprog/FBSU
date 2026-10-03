@@ -5,6 +5,7 @@ import { getDictionary, getLocale } from "@/i18n";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { Avatar } from "@/components/ui";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { UnreadBadge } from "@/components/chat/UnreadBadge";
 import { Logo } from "@/components/brand/logo";
 import { MobileTabBar, NavLinks, type MobileTab, type MobileTabIcon } from "./nav-links";
@@ -99,12 +100,15 @@ export default async function AppLayout({
   return (
     <LocaleProvider locale={locale} dictionary={dictionary}>
       <div className="flex min-h-screen">
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-200/70 bg-white md:flex">
+      <aside className="sticky top-0 z-30 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-200/70 bg-white md:flex">
         <div className="flex h-16 items-center justify-between border-b border-slate-100 px-5">
           <Link href="/dashboard" className="transition-opacity hover:opacity-80">
             <Logo />
           </Link>
-          <NotificationBell />
+          <div className="flex items-center gap-1">
+            <NotificationBell align="left" />
+            <ThemeToggle />
+          </div>
         </div>
         <NavLinks groups={groups} />
         <div className="border-t border-slate-100 p-3">
@@ -139,7 +143,8 @@ export default async function AppLayout({
             <Logo size={28} withText={false} />
           </Link>
           <div className="flex items-center gap-1">
-            <NotificationBell />
+            <NotificationBell align="right" />
+            <ThemeToggle />
             <Link
               href="/profile"
               aria-label="Profil"

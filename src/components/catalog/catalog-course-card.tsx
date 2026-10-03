@@ -118,7 +118,7 @@ export function CatalogCourseCard({
       )}
     >
       <div
-        className="relative h-24 shrink-0 overflow-hidden"
+        className="relative isolate h-20 shrink-0 overflow-hidden"
         style={{ background: `linear-gradient(125deg, ${course.coverColor} 0%, #131f3c 94%)` }}
       >
         <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_-10%,rgba(255,255,255,0.28),transparent_55%)]" />
@@ -138,10 +138,16 @@ export function CatalogCourseCard({
       </div>
 
       <CardBody className="flex flex-1 flex-col">
-        <div className="flex items-start gap-3">
-          <Avatar name={course.teacherName} className="-mt-10 size-12 text-sm ring-4 ring-white" />
-          <div className="min-w-0 flex-1 pt-0.5">
-            <h3 className="truncate font-semibold tracking-tight text-slate-900">
+        <div className="relative z-10 flex items-start gap-3">
+          <Avatar
+            name={course.teacherName}
+            className="relative z-10 -mt-11 size-13 shrink-0 text-sm shadow-md ring-4 ring-white"
+          />
+          <div className="min-w-0 flex-1 pt-1">
+            <h3
+              title={course.title}
+              className="truncate text-[15px] leading-snug font-semibold tracking-tight text-slate-900"
+            >
               <Link
                 href={`/courses/${course.slug}`}
                 className="transition-colors duration-150 hover:text-brand-700"
@@ -156,10 +162,12 @@ export function CatalogCourseCard({
         </div>
 
         {course.description ? (
-          <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-slate-500">
+          <p className="mt-3 line-clamp-2 min-h-10 text-sm leading-relaxed break-words text-slate-500">
             {course.description}
           </p>
-        ) : null}
+        ) : (
+          <p className="mt-3 min-h-10 text-sm leading-relaxed text-slate-400">Tavsif kiritilmagan</p>
+        )}
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-500 ring-1 ring-inset ring-slate-200/70">
@@ -178,7 +186,7 @@ export function CatalogCourseCard({
               href={`/courses/${course.slug}`}
               variant="secondary"
               size="sm"
-              className="group/action w-full"
+              className="group/action w-full justify-center"
             >
               Boshqarish
               <ArrowIcon />
@@ -193,7 +201,7 @@ export function CatalogCourseCard({
                 href={`/courses/${course.slug}`}
                 variant="secondary"
                 size="sm"
-                className="group/action flex-1"
+                className="group/action min-w-32 flex-1 justify-center"
               >
                 Kursga o&apos;tish
                 <ArrowIcon />

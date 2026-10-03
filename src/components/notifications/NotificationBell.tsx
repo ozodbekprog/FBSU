@@ -14,7 +14,7 @@ type NotificationsResponse = {
   error?: string;
 };
 
-export function NotificationBell() {
+export function NotificationBell({ align = "right" }: { align?: "left" | "right" }) {
   const router = useRouter();
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -48,8 +48,15 @@ export function NotificationBell() {
         setOpen(false);
       }
     }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
     document.addEventListener("mousedown", onDocumentClick);
-    return () => document.removeEventListener("mousedown", onDocumentClick);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onDocumentClick);
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, [open]);
 
   async function markRead(id: string) {
@@ -83,8 +90,8 @@ export function NotificationBell() {
   }
 
   const sections = [
-    { key: "unread", label: "Yangi", entries: items.filter((n) => !n.isRead).slice(0, 4) },
-    { key: "read", label: "O'qilgan", entries: items.filter((n) => n.isRead).slice(0, 4) },
+    { key: "unread", label: "Yangi", entries: items.filter((n) => !n.isRead).slice(0, 3) },
+    { key: "read", label: "O'qilgan", entries: items.filter((n) => n.isRead).slice(0, 3) },
   ].filter((section) => section.entries.length > 0);
 
   return (
@@ -121,8 +128,15 @@ export function NotificationBell() {
       </button>
 
       {open ? (
-        <div className="animate-fade-up absolute right-0 z-50 mt-2 w-80 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-lift">
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+        <div
+          className={cn(
+            "animate-fade-up z-50 max-h-[calc(100dvh-6rem)] overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-lift",
+            align === "left"
+              ? "fixed left-[17rem] top-[4.5rem] w-96 origin-top-left"
+              : "fixed inset-x-3 top-[4.25rem] origin-top sm:inset-x-auto sm:right-4 sm:top-[4.5rem] sm:w-96 sm:origin-top-right",
+          )}
+        >
+          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-100 px-4 py-2.5">
             <p className="text-sm font-semibold text-brand-950">Bildirishnomalar</p>
             {unreadCount > 0 ? (
               <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">
@@ -147,7 +161,7 @@ export function NotificationBell() {
               </div>
             </div>
           ) : (
-            <div className="max-h-96 overflow-y-auto">
+            <div className="max-h-[min(20rem,50dvh)] overflow-x-hidden overflow-y-auto overscroll-contain">
               {sections.map((section, sectionIndex) => (
                 <div key={section.key} className={cn(sectionIndex > 0 && "border-t border-slate-100")}>
                   <p className="px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600">
@@ -167,7 +181,7 @@ export function NotificationBell() {
                             type="button"
                             onClick={() => void onItemClick(n)}
                             className={cn(
-                              "flex w-full items-start gap-3 px-4 py-3 text-left transition-colors duration-150",
+                              "flex w-full min-w-0 items-start gap-3 px-4 py-3 text-left transition-colors duration-150 active:bg-brand-50/60",
                               n.isRead ? "hover:bg-slate-50" : "bg-brand-50/40 hover:bg-brand-50/70",
                             )}
                           >
@@ -179,26 +193,26 @@ export function NotificationBell() {
                             >
                               <NotificationIcon kind={kind} />
                             </span>
-                            <span className="min-w-0 flex-1">
+                            <span className="min-w-0 flex-1 overflow-hidden">
                               <span className="flex items-center gap-2">
                                 <span
                                   className={cn(
-                                    "min-w-0 flex-1 truncate text-sm",
+                                    "min-w-0 flex-1 truncate text-sm leading-snug",
                                     n.isRead ? "font-medium text-slate-600" : "font-semibold text-brand-950",
                                   )}
                                 >
                                   {n.title}
                                 </span>
                                 {n.isRead ? null : (
-                                  <span className="size-1.5 shrink-0 rounded-full bg-brand-900" />
+                                  <span className={cn("size-1.5 shrink-0 rounded-full", style.dot)} />
                                 )}
                               </span>
                               {n.body ? (
-                                <span className="mt-0.5 block truncate text-xs text-slate-500">
+                                <span className="mt-0.5 block line-clamp-2 text-xs leading-relaxed break-words text-slate-500">
                                   {n.body}
                                 </span>
                               ) : null}
-                              <span className="mt-1 block text-[11px] text-slate-600">
+                              <span className="mt-1 block text-[11px] tabular-nums text-slate-600">
                                 {fmtDateTime(n.createdAt)}
                               </span>
                             </span>

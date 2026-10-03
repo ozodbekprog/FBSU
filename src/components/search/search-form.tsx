@@ -10,8 +10,7 @@ const SEARCH_ICON = (
 export function SearchForm({ defaultValue }: { defaultValue: string }) {
   return (
     <form action="/search" method="get" className="mb-7">
-      <div className="group relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-2.5 shadow-card transition-all duration-200 focus-within:border-brand-300 focus-within:shadow-lift focus-within:ring-4 focus-within:ring-brand-500/10 sm:p-3">
-        <span className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
+      <div className="group relative rounded-2xl border border-slate-200/70 bg-white p-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.05),0_12px_32px_-16px_rgba(29,52,96,0.18)] transition-all duration-200 focus-within:border-brand-300 focus-within:shadow-lift focus-within:ring-4 focus-within:ring-brand-500/10 sm:p-3">
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="relative flex-1">
             <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-600 transition-colors duration-200 group-focus-within:text-brand-600">

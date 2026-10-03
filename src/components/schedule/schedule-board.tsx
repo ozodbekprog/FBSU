@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { DragEvent, MouseEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { ensureCsrfToken } from "@/lib/api";
@@ -386,6 +387,9 @@ export function ScheduleBoard({
   const [roomQuery, setRoomQuery] = useState("");
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [panelId, setPanelId] = useState<string | null>(null);
+  const cardRefs = useRef(new Map<string, HTMLElement>());
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null);
   const [hover, setHover] = useState<CellRef | null>(null);
   const [snapId, setSnapId] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -486,6 +490,72 @@ export function ScheduleBoard({
     ? paletteBlocks.find((block) => block.id === selectedBlockId) ?? null
     : null;
   const panelEntry = panelId ? entries.find((entry) => entry.id === panelId) ?? null : null;
+
+  useLayoutEffect(() => {
+    if (!panelId) {
+      setPanelPos(null);
+      return;
+    }
+
+    function place() {
+      const card = cardRefs.current.get(panelId!);
+      const panel = panelRef.current;
+      if (!card || !panel) return;
+      const cardRect = card.getBoundingClientRect();
+      // panel hali ko'rinmas bo'lsa o'lchov 0 bo'ladi — o'z o'lchamini olish uchun vaqtinchalik ko'rsatamiz
+      const prevVisibility = panel.style.visibility;
+      const prevTop = panel.style.top;
+      const prevLeft = panel.style.left;
+      panel.style.visibility = "hidden";
+      panel.style.top = "0px";
+      panel.style.left = "0px";
+      const panelRect = panel.getBoundingClientRect();
+      const gap = 8;
+      const margin = 12;
+
+      let left: number;
+      let top: number;
+
+      if (window.innerWidth < 640) {
+        // mobil: kartaning ostida yoki ustida, markazlashgan
+        left = Math.min(
+          Math.max(margin, cardRect.left + cardRect.width / 2 - panelRect.width / 2),
+          window.innerWidth - panelRect.width - margin,
+        );
+        const below = cardRect.bottom + gap;
+        const above = cardRect.top - panelRect.height - gap;
+        top = below + panelRect.height + margin <= window.innerHeight ? below : above;
+        if (top < margin) top = Math.min(below, window.innerHeight - panelRect.height - margin);
+      } else {
+        left = cardRect.right + gap;
+        if (left + panelRect.width > window.innerWidth - margin) {
+          left = cardRect.left - panelRect.width - gap;
+        }
+        left = Math.min(Math.max(margin, left), window.innerWidth - panelRect.width - margin);
+        top = cardRect.top;
+        top = Math.min(top, window.innerHeight - panelRect.height - margin);
+        top = Math.max(margin, top);
+      }
+
+      panel.style.visibility = prevVisibility || "";
+      panel.style.top = prevTop || "";
+      panel.style.left = prevLeft || "";
+
+      setPanelPos({ top, left });
+    }
+
+    place();
+    const raf = requestAnimationFrame(place);
+    const raf2 = requestAnimationFrame(() => requestAnimationFrame(place));
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      cancelAnimationFrame(raf);
+      cancelAnimationFrame(raf2);
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [panelId, entries, pending, view]);
 
   const exportQuery = `groupId=${encodeURIComponent(selectedGroupId ?? "")}&week=${weekStart}`;
 
@@ -1041,6 +1111,11 @@ export function ScheduleBoard({
                               return (
                                 <div
                                   key={entry.id}
+                                  data-entry-card={entry.id}
+                                  ref={(node) => {
+                                    if (node) cardRefs.current.set(entry.id, node);
+                                    else cardRefs.current.delete(entry.id);
+                                  }}
                                   draggable={canDrop && manageable}
                                   onDragStart={
                                     canDrop && manageable
@@ -1524,8 +1599,17 @@ export function ScheduleBoard({
         </>
       )}
 
-      {canEdit && panelEntry ? (
-        <div className="fixed bottom-4 right-4 z-40 w-[calc(100vw-2rem)] max-w-xs animate-fade-in">
+      {canEdit && panelEntry
+        ? createPortal(
+            <div
+              ref={panelRef}
+              style={
+                panelPos
+                  ? { top: panelPos.top, left: panelPos.left, position: "fixed" }
+                  : { visibility: "hidden", position: "fixed", top: 0, left: 0 }
+              }
+              className="z-40 w-[calc(100vw-2rem)] max-w-xs"
+            >
           <Card className="border-brand-200 shadow-xl">
             <CardHeader
               title={panelEntry.subject}
@@ -1567,8 +1651,10 @@ export function ScheduleBoard({
               </Button>
             </CardBody>
           </Card>
-        </div>
-      ) : null}
+            </div>,
+            document.body,
+          )
+        : null}
 
       <BuilderToast
         toast={toast}

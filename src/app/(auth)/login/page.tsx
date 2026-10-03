@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button, Card, Input, Label } from "@/components/ui";
 import { Logo } from "@/components/brand/logo";
 import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { apiFetch } from "@/lib/api";
 
@@ -169,6 +170,7 @@ export default function LoginPage() {
               <Logo size={44} />
             </div>
             <LanguageSwitcher locale={locale} className="ml-auto" />
+            <ThemeToggle />
           </div>
           <Card className="mt-6 p-7 sm:p-9">
             <div className="text-center">

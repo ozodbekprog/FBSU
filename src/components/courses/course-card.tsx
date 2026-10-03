@@ -19,26 +19,28 @@ export function CourseCard({ course, staff = false }: { course: CourseCardData; 
     <Link href={`/courses/${course.slug}`} className="group block h-full rounded-2xl focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20">
       <Card className="flex h-full flex-col overflow-hidden transition-all duration-300 group-hover:-translate-y-1.5 group-hover:border-brand-200 group-hover:shadow-lift">
         <div
-          className="relative h-28 shrink-0 overflow-hidden"
+          className="relative h-20 shrink-0 overflow-hidden"
           style={{ background: `linear-gradient(125deg, ${course.coverColor} 0%, #131f3c 94%)` }}
         >
           <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_-10%,rgba(255,255,255,0.28),transparent_55%)]" />
           <span className="pointer-events-none absolute -right-10 -top-16 size-40 rounded-full bg-white/10 blur-2xl transition-transform duration-500 group-hover:scale-125" />
           <span className="pointer-events-none absolute -bottom-16 left-1/3 size-36 rounded-full bg-gold-400/10 blur-2xl" />
           <span className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/15 to-transparent" />
-          <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80 ring-1 ring-inset ring-white/20 backdrop-blur">
-            Kurs
-          </span>
-          {staff && !course.isPublished ? (
-            <span className="absolute right-4 top-4">
-              <Badge tone="gold" className="shadow-sm ring-1 ring-inset ring-white/25">
-                Qoralama
-              </Badge>
+          <div className="absolute inset-x-0 top-4 flex items-center justify-between gap-2 px-4">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80 ring-1 ring-inset ring-white/20 backdrop-blur">
+              Kurs
             </span>
-          ) : null}
-          <span className="absolute bottom-4 left-4 inline-flex size-11 items-center justify-center rounded-2xl bg-white/15 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-white/25 backdrop-blur transition-transform duration-300 group-hover:scale-105">
-            {initials(course.title)}
-          </span>
+            <span className="flex shrink-0 items-center gap-2">
+              {staff && !course.isPublished ? (
+                <Badge tone="gold" className="shadow-sm ring-1 ring-inset ring-white/25">
+                  Qoralama
+                </Badge>
+              ) : null}
+              <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-xl bg-white/15 px-2 text-xs font-bold text-white shadow-sm ring-1 ring-inset ring-white/25 backdrop-blur transition-transform duration-300 group-hover:scale-105">
+                {initials(course.title)}
+              </span>
+            </span>
+          </div>
         </div>
         <div className="flex flex-1 flex-col p-5">
           <h3 className="text-base font-semibold tracking-tight text-slate-900 transition-colors duration-150 group-hover:text-brand-800">

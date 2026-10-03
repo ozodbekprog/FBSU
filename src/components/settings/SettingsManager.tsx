@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Button, Card, CardBody, Select } from "@/components/ui";
 import { apiFetch, ensureCsrfToken } from "@/lib/api";
+import { ThemePicker } from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/utils";
 import {
   REMINDER_HOURS,
@@ -354,37 +355,42 @@ export default function SettingsManager({
           {REMINDER_ITEMS.map(renderToggle)}
           <Card className="group relative overflow-hidden border-brand-200/70 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
             <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
-            <CardBody className="flex items-center gap-4">
-              <span
-                className={cn(
-                  "inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg transition-transform duration-200 group-hover:scale-105",
-                  HOUR_TONE,
-                )}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M12 7v5l3 2" />
-                </svg>
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold tracking-tight text-brand-950">Eslatma vaqti</p>
-                <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                  Bot eslatmalari yuboriladigan vaqt (07:00–10:00).
-                </p>
+            <CardBody className="flex flex-col gap-3">
+              <div className="flex items-center gap-4">
+                <span
+                  className={cn(
+                    "inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg transition-transform duration-200 group-hover:scale-105",
+                    HOUR_TONE,
+                  )}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 7v5l3 2" />
+                  </svg>
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold tracking-tight text-brand-950">Eslatma vaqti</p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                    Bot eslatmalari yuboriladigan vaqt (07:00–10:00).
+                  </p>
+                </div>
               </div>
-              <Select
-                className="w-28! shrink-0"
-                value={preferences.reminderHour}
-                disabled={hourBusy}
-                aria-label="Eslatma vaqti"
-                onChange={(e) => changeHour(Number(e.target.value))}
-              >
-                {REMINDER_HOURS.map((hour) => (
-                  <option key={hour} value={hour}>
-                    {reminderHourLabel(hour)}
-                  </option>
-                ))}
-              </Select>
+              <label className="flex items-center gap-2.5 rounded-xl bg-slate-50 px-3 py-2 ring-1 ring-inset ring-slate-200/70">
+                <span className="text-xs font-medium text-slate-500">Soat</span>
+                <Select
+                  className="h-11 flex-1 cursor-pointer text-center text-base font-semibold tabular-nums"
+                  value={preferences.reminderHour}
+                  disabled={hourBusy}
+                  aria-label="Eslatma vaqti"
+                  onChange={(e) => changeHour(Number(e.target.value))}
+                >
+                  {REMINDER_HOURS.map((hour) => (
+                    <option key={hour} value={hour}>
+                      {reminderHourLabel(hour)}
+                    </option>
+                  ))}
+                </Select>
+              </label>
             </CardBody>
           </Card>
         </div>
@@ -399,10 +405,29 @@ export default function SettingsManager({
             </SectionIcon>
           }
           title="Ko'rinish"
-          note={`${VIEW_ITEMS.length} ta sozlama`}
+          note={`${VIEW_ITEMS.length + 1} ta sozlama`}
         />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {VIEW_ITEMS.map(renderToggle)}
+          <Card className="group relative overflow-hidden border-brand-200/70 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+            <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
+            <CardBody className="flex flex-col gap-3">
+              <div className="flex items-center gap-4">
+                <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 text-white shadow-lg">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+                  </svg>
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold tracking-tight text-brand-950">Mavzu</p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                    Yorug&apos;, tungi yoki tizim rejimini tanlang.
+                  </p>
+                </div>
+              </div>
+              <ThemePicker />
+            </CardBody>
+          </Card>
         </div>
       </section>
 

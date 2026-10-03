@@ -1,3 +1,5 @@
+import { getCsrfClientToken } from "@/lib/csrf-client";
+
 export async function getCsrfToken(): Promise<string | null> {
   if (typeof document === "undefined") return null;
   const match = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/);
@@ -11,7 +13,10 @@ export async function ensureCsrfToken(): Promise<string> {
   if (csrfTokenCache && csrfTokenCache.expiresAt > now) {
     return csrfTokenCache.token;
   }
-
+  if (typeof window !== "undefined") {
+    const cached = await getCsrfClientToken();
+    if (cached) return cached;
+  }
   let token = await getCsrfToken();
   if (!token) {
     try {
