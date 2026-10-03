@@ -236,3 +236,40 @@ body {
 .dark .\[\&\>div\]\:from-white > div { --tw-gradient-from: #0e1729; }
 
 .dark .ring-white { --tw-ring-color: #0e1729; }
+
+/* Sidebar yopiq holati: faqat 3D ikonkalar qoladi.
+   aside layout.tsx da (muzlatilgan fayl) — o'lcham shu yerda :has() orqali
+   boshqariladi, React faqat [data-nav-shell][data-collapsed] belgisini qo'yadi.
+   Yopiq holatda logo yashiriladi (joy qongiroqcha + oyga qoladi), hamburger
+   esa nav ichidagi sticky birinchi qatorga ko'chadi. */
+aside:has(> [data-nav-shell]) {
+  width: 20.5rem;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) {
+  width: 5rem;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) > div:first-child {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) > div:first-child > a {
+  display: none;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) > div:last-child > a {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) > div:last-child > a > div {
+  display: none;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) > div:last-child form button {
+  justify-content: center;
+  gap: 0;
+  font-size: 0;
+}
