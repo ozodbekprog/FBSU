@@ -12,6 +12,7 @@ type Slot = {
   key: string;
   href: string;
   Icon: ComponentType;
+  order: number;
   x: number;
   y: number;
   active: boolean;
@@ -21,6 +22,8 @@ type Slot = {
 const ICON_SCALE = 9.4;
 const ICON_SCALE_HOVER = 12.4;
 const ICON_SCALE_ACTIVE = 10.6;
+const INTRO_DURATION = 0.55;
+const INTRO_STAGGER = 0.035;
 
 function hashPhase(value: string) {
   let hash = 0;
@@ -57,41 +60,62 @@ function Nav3DItem({
   centerX: number;
   centerY: number;
 }) {
-  const group = useRef<THREE.Group>(null);
+  const anchor = useRef<THREE.Group>(null);
+  const anim = useRef<THREE.Group>(null);
+  const born = useRef<number | null>(null);
   const { Icon } = slot;
   const spinning = nav3DIsSpinning(slot.href);
   const phase = useMemo(() => hashPhase(slot.key), [slot.key]);
 
   useFrame((state) => {
-    const node = group.current;
-    if (!node) return;
+    const base = anchor.current;
+    const node = anim.current;
+    if (!base || !node) return;
     const time = state.clock.elapsedTime;
-    const current = node.scale.x / ICON_SCALE;
+    if (born.current === null) born.current = time + slot.order * INTRO_STAGGER;
+    const intro = reduced ? 1 : Math.min(Math.max((time - born.current) / INTRO_DURATION, 0), 1);
+    const eased = 1 - (1 - intro) ** 3;
+
+    base.position.x += (slot.x - centerX - base.position.x) * 0.3;
+    base.position.y += (centerY - slot.y - base.position.y) * 0.3;
+    base.position.z = hovered ? 14 : 0;
+
     const wanted =
       (hovered ? ICON_SCALE_HOVER : slot.active ? ICON_SCALE_ACTIVE : ICON_SCALE) *
       (slot.visible ? 1 : 0);
-    node.scale.setScalar(ICON_SCALE * (current + (wanted / ICON_SCALE - current) * 0.14));
+    const current = node.scale.x / ICON_SCALE;
+    node.scale.setScalar(
+      ICON_SCALE * (current + (wanted / ICON_SCALE - current) * 0.14) * eased,
+    );
+
     if (reduced) {
       node.rotation.set(0, 0, 0);
-      node.position.z = 0;
+      node.position.set(0, 0, 0);
       return;
     }
-    node.position.x += (slot.x - centerX - node.position.x) * 0.3;
-    node.position.y += (centerY - slot.y - node.position.y) * 0.3;
-    node.position.z = hovered ? 14 : 0;
-    node.rotation.x = Math.cos(time * 0.7 + phase) * 0.1;
-    node.rotation.y = Math.sin(time * 0.9 + phase) * (hovered ? 0.62 : 0.26);
-    node.rotation.z = spinning ? time * 0.5 + phase : Math.sin(time * 0.5 + phase) * 0.05;
+
+    const strength = eased * (hovered ? 1 : slot.active ? 0.85 : 1);
+    node.position.set(
+      Math.cos(time * 0.9 + phase) * 1.1 * strength,
+      Math.sin(time * 1.5 + phase) * 2.2 * strength,
+      0,
+    );
+    node.rotation.x = Math.cos(time * 0.85 + phase) * 0.2 * strength;
+    node.rotation.y =
+      Math.sin(time * 1.15 + phase) * (hovered ? 0.95 : slot.active ? 0.6 : 0.46) * strength;
+    node.rotation.z = spinning ? time * 0.95 + phase : Math.sin(time * 0.55 + phase) * 0.08;
   });
 
   return (
-    <group ref={group} position={[slot.x - centerX, centerY - slot.y, 0]} scale={0.0001}>
-      <Icon />
-      {slot.active ? (
-        <mesh position={[0, 0, -1]} material={NAV3D_MATERIALS.halo}>
-          <circleGeometry args={[1.7, 32]} />
-        </mesh>
-      ) : null}
+    <group ref={anchor} position={[slot.x - centerX, centerY - slot.y, 0]}>
+      <group ref={anim} scale={0.0001}>
+        <Icon />
+        {slot.active ? (
+          <mesh position={[0, 0, -1]} material={NAV3D_MATERIALS.halo}>
+            <circleGeometry args={[1.7, 32]} />
+          </mesh>
+        ) : null}
+      </group>
     </group>
   );
 }
@@ -155,6 +179,7 @@ export function Nav3DLayer({ containerRef }: { containerRef: RefObject<HTMLDivEl
         key: `${href}::${node.dataset.nav3dKey ?? ""}`,
         href,
         Icon,
+        order: next.length,
         x: rect.left - rootRect.left + rect.width / 2,
         y: rect.top - rootRect.top + rect.height / 2,
         active: node.dataset.nav3dActive === "true",
