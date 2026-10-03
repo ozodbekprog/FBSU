@@ -51,7 +51,7 @@ export function CertificateCard({ certificate }: { certificate: CertificateCardD
           }}
         />
         <span className="pointer-events-none absolute -right-5 -top-8 select-none font-serif text-[86px] font-bold leading-none text-white/[0.06]">
-          TTPU
+          FBSU
         </span>
         <span className="absolute left-4 top-3.5">
           <MiniSeal />

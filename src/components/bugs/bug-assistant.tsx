@@ -19,7 +19,7 @@ function fmtClock(value: Date) {
 }
 
 const GREETING =
-  "Salom! 😊 Men AI yordamchiman. TTPU LMS saytida qanday yordam bera olaman? Muammo yoki savolingizni yozing — birgalikda hal qilamiz.";
+  "Salom! 😊 Men AI yordamchiman. FBSU LMS saytida qanday yordam bera olaman? Muammo yoki savolingizni yozing — birgalikda hal qilamiz.";
 
 export function BugAssistant() {
   const router = useRouter();

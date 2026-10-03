@@ -43,7 +43,7 @@ export default async function CertificatesPage({
     return (
       <>
         <PageHeader
-          eyebrow="TTPU LMS"
+          eyebrow="FBSU LMS"
           title="Sertifikatlarim"
           subtitle={`${certificates.length} ta sertifikat`}
         />
@@ -79,7 +79,7 @@ export default async function CertificatesPage({
   if (!selected) {
     return (
       <>
-        <PageHeader eyebrow="TTPU LMS" title="Sertifikatlar" subtitle="O'qituvchi paneli" />
+        <PageHeader eyebrow="FBSU LMS" title="Sertifikatlar" subtitle="O'qituvchi paneli" />
         <CertificateEmptyState
           title="Kurslar yo'q"
           description="Sertifikat berish uchun avval kurs yaratib, talabalarni unga yozing."
@@ -121,7 +121,7 @@ export default async function CertificatesPage({
   return (
     <>
       <PageHeader
-        eyebrow="TTPU LMS"
+        eyebrow="FBSU LMS"
         title="Sertifikatlar"
         subtitle={selected.title}
         action={

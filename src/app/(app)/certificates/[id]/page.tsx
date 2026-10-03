@@ -71,7 +71,7 @@ function GoldSeal() {
         fill="#a9871f"
         letterSpacing="1.6"
       >
-        TTPU
+        FBSU
       </text>
     </svg>
   );
@@ -161,7 +161,7 @@ export default async function CertificatePage({
         <div className="cert-card relative w-full overflow-hidden rounded-2xl border-[10px] border-brand-950 bg-white shadow-xl md:aspect-[297/210] print:aspect-auto print:h-full print:rounded-none print:border-[6px] print:shadow-none">
           <div className="pointer-events-none absolute inset-0 flex select-none items-center justify-center">
             <span className="font-serif text-[120px] font-bold tracking-widest text-brand-950/[0.04] sm:text-[220px]">
-              TTPU
+              FBSU
             </span>
           </div>
 
@@ -171,14 +171,14 @@ export default async function CertificatePage({
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gold-400/60 bg-gradient-to-r from-brand-950 via-brand-900 to-brand-950 px-4 py-3 text-white sm:px-8 sm:py-3.5">
               <div className="flex items-center gap-3">
                 <span className="flex size-10 items-center justify-center rounded-lg border border-gold-400/50 bg-white/5 text-[11px] font-bold tracking-wider text-white sm:size-11">
-                  TTPU
+                  FBSU
                 </span>
                 <div>
                   <p className="font-serif text-base font-semibold leading-tight sm:text-lg">
                     Turin Politexnika Universiteti
                   </p>
                   <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.4em] text-gold-300">
-                    TTPU LMS
+                    FBSU LMS
                   </p>
                 </div>
               </div>

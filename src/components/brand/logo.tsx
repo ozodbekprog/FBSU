@@ -13,7 +13,7 @@ export function Logo({
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <img
         src="/logo.svg"
-        alt="TTPU"
+        alt="FBSU"
         width={size}
         height={size}
         className="shrink-0 rounded-full"
@@ -21,7 +21,7 @@ export function Logo({
       />
       {withText ? (
         <span className="leading-tight">
-          <span className="block text-sm font-bold tracking-tight text-brand-900">TTPU LMS</span>
+          <span className="block text-sm font-bold tracking-tight text-brand-900">FBSU LMS</span>
           <span className="block text-[10px] font-medium uppercase tracking-[0.14em] text-slate-600">
             Turin Polytechnic
           </span>

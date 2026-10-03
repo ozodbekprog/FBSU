@@ -14,7 +14,7 @@ export function canManageCertificate(
 }
 
 export function certificateSerial(id: string) {
-  return `TTPU-${id.slice(-8).toUpperCase()}`;
+  return `FBSU-${id.slice(-8).toUpperCase()}`;
 }
 
 export type CertificateGradeTone = "green" | "blue" | "amber" | "slate";

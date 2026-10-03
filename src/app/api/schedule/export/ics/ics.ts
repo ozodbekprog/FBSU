@@ -97,7 +97,7 @@ export function buildIcs(
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//TTPU LMS//Dars jadvali//UZ",
+    "PRODID:-//FBSU LMS//Dars jadvali//UZ",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     `X-WR-CALNAME:${escapeText(group.name)} — dars jadvali`,

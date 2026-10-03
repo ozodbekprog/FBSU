@@ -59,7 +59,7 @@ export function PwaRegister() {
       <img src="/logo.svg" alt="" width={40} height={40} className="shrink-0 rounded-full" />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-slate-800">Ilovani o&apos;rnatish</p>
-        <p className="text-xs text-slate-500">TTPU LMS ni ilova sifatida ochish</p>
+        <p className="text-xs text-slate-500">FBSU LMS ni ilova sifatida ochish</p>
       </div>
       <button
         type="button"

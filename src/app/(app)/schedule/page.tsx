@@ -242,7 +242,7 @@ export default async function SchedulePage({
   return (
     <>
       <PageHeader
-        eyebrow="TTPU LMS"
+        eyebrow="FBSU LMS"
         title="Dars jadvali"
         subtitle={selectedGroup ? `${selectedGroup.name} guruhi — haftalik jadval` : undefined}
       />

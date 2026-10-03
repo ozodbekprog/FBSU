@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 const FALLBACK_SITE_URL = "https://lms.ttpu.uz";
 const SITE_DESCRIPTION = "Turin Politexnika Universiteti uchun zamonaviy o'quv platformasi";
-const DEFAULT_TITLE = "TTPU LMS — O'quv boshqaruv tizimi";
+const DEFAULT_TITLE = "FBSU LMS — O'quv boshqaruv tizimi";
 
 function resolveSiteUrl(): URL {
   const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
@@ -33,18 +33,18 @@ export const metadata: Metadata = {
   metadataBase: resolveSiteUrl(),
   title: {
     default: DEFAULT_TITLE,
-    template: "%s — TTPU LMS",
+    template: "%s — FBSU LMS",
   },
   description: SITE_DESCRIPTION,
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "TTPU LMS",
+    title: "FBSU LMS",
     statusBarStyle: "default",
   },
   openGraph: {
     type: "website",
-    siteName: "TTPU LMS",
+    siteName: "FBSU LMS",
     locale: "uz_UZ",
     title: DEFAULT_TITLE,
     description: SITE_DESCRIPTION,

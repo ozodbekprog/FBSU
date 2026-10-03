@@ -1,4 +1,4 @@
-# TTPU LMS
+# FBSU LMS
 
 Turin Politexnika Universiteti uchun kompakt o'quv boshqaruv tizimi (LMS).
 Moodle'ga alternativa: sodda, tez, mobil-qulay.

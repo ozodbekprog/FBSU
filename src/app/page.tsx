@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 export const revalidate = 300;
 
 const SITE_URL = "https://lms.ttpu.uz";
-const OG_TITLE = "TTPU LMS — O'quv boshqaruv tizimi";
+const OG_TITLE = "FBSU LMS — O'quv boshqaruv tizimi";
 const OG_DESCRIPTION =
   "Turin Politexnika Universiteti uchun zamonaviy o'quv boshqaruv tizimi: kurslar, topshiriqlar, testlar, GPA, transkript va jadval.";
 
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     url: "/",
     title: OG_TITLE,
     description: OG_DESCRIPTION,
-    siteName: "TTPU LMS",
+    siteName: "FBSU LMS",
   },
   twitter: {
     card: "summary",
@@ -35,7 +35,7 @@ const STRUCTURED_DATA = {
       "@type": "Organization",
       "@id": `${SITE_URL}/#organization`,
       name: "Turin Politexnika Universiteti",
-      alternateName: "TTPU LMS",
+      alternateName: "FBSU LMS",
       url: SITE_URL,
       email: "info@ttpu.uz",
       telephone: "+998 71 289 99 00",
@@ -48,7 +48,7 @@ const STRUCTURED_DATA = {
     {
       "@type": "WebSite",
       "@id": `${SITE_URL}/#website`,
-      name: "TTPU LMS",
+      name: "FBSU LMS",
       url: SITE_URL,
       inLanguage: "uz",
       publisher: { "@id": `${SITE_URL}/#organization` },

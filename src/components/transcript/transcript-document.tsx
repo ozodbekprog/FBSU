@@ -38,7 +38,7 @@ function Stamp() {
     <div className="flex size-24 items-center justify-center rounded-full border-2 border-dashed border-brand-900/40">
       <div className="flex size-[74px] flex-col items-center justify-center rounded-full border border-brand-900/30 text-center">
         <span className="font-serif text-[13px] font-bold tracking-[0.22em] text-brand-900/60">
-          TTPU
+          FBSU
         </span>
         <span className="mt-0.5 text-[6.5px] font-semibold uppercase tracking-[0.2em] text-brand-900/50">
           Muhr o&apos;rni
@@ -69,7 +69,7 @@ export function TranscriptDocument({ data }: { data: TranscriptData }) {
                 <div className="shrink-0 rounded-full border-2 border-gold-400 bg-white p-1">
                   <img
                     src="/logo.svg"
-                    alt="TTPU gerbi"
+                    alt="FBSU gerbi"
                     width={64}
                     height={64}
                     className="h-16 w-16"
@@ -108,7 +108,7 @@ export function TranscriptDocument({ data }: { data: TranscriptData }) {
               <Info
                 className="sm:px-5"
                 label="Talaba ID"
-                value={`TTPU-${data.student.id.slice(-8).toUpperCase()}`}
+                value={`FBSU-${data.student.id.slice(-8).toUpperCase()}`}
               />
               <Info className="sm:pl-5" label="Berilgan sana" value={fmtDate(issuedAt)} />
             </div>
@@ -266,7 +266,7 @@ export function TranscriptDocument({ data }: { data: TranscriptData }) {
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-6 py-3.5 sm:px-8">
               <p className="max-w-xl text-[10px] leading-relaxed text-slate-600">
-                Ushbu transkript TTPU LMS tizimi ma&apos;lumotlari asosida avtomatik
+                Ushbu transkript FBSU LMS tizimi ma&apos;lumotlari asosida avtomatik
                 shakllantirilgan. Faqat imzo va muhr bilan tasdiqlanganda haqiqiy hisoblanadi.
               </p>
               <p className="font-mono text-[10px] tracking-[0.14em] text-slate-600">

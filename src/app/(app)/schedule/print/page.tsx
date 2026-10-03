@@ -100,10 +100,10 @@ export default async function SchedulePrintPage({
         <div className="mb-5 flex flex-wrap items-end justify-between gap-4 border-b border-slate-200 pb-4">
           <div className="flex items-center gap-3.5">
             <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm ring-2 ring-brand-50">
-              <img src="/logo.svg" alt="TTPU" width={44} height={44} className="h-full w-full" />
+              <img src="/logo.svg" alt="FBSU" width={44} height={44} className="h-full w-full" />
             </span>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-600">TTPU LMS</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-600">FBSU LMS</p>
               <p className="text-lg font-semibold tracking-tight text-brand-950">Dars jadvali</p>
               <p className="mt-0.5 text-sm text-slate-500">
                 {group.name} guruhi · {weekLabel(monday)}

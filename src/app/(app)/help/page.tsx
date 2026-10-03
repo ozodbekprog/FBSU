@@ -12,7 +12,7 @@ import { ContactCards } from "@/components/help/contact";
 
 export const metadata: Metadata = {
   title: "Yordam markazi",
-  description: "TTPU LMS bo'yicha qo'llanmalar, savol-javoblar, bot buyruqlari va aloqa ma'lumotlari",
+  description: "FBSU LMS bo'yicha qo'llanmalar, savol-javoblar, bot buyruqlari va aloqa ma'lumotlari",
 };
 
 const QUICK_LINKS: { href: string; label: string; hint: string; icon: HelpIconName }[] = [
@@ -232,7 +232,7 @@ export default function HelpPage() {
       <PageHeader
         eyebrow="Yordam"
         title="Yordam markazi"
-        subtitle="TTPU LMS bo'yicha qo'llanmalar, savol-javoblar va aloqa ma'lumotlari"
+        subtitle="FBSU LMS bo'yicha qo'llanmalar, savol-javoblar va aloqa ma'lumotlari"
       />
 
       <section className="relative mb-12 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-950 via-brand-900 to-brand-800 px-5 py-8 shadow-lift md:px-8 md:py-10">
@@ -240,7 +240,7 @@ export default function HelpPage() {
         <span className="pointer-events-none absolute -bottom-24 left-1/3 size-56 rounded-full bg-gold-400/10 blur-3xl" />
         <div className="relative">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-300">
-            TTPU LMS qo&apos;llanmasi
+            FBSU LMS qo&apos;llanmasi
           </p>
           <h2 className="mt-2 max-w-2xl text-2xl font-semibold tracking-tight text-white md:text-3xl">
             Kerakli javob bir necha bosishda

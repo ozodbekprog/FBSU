@@ -28,7 +28,7 @@ export type TranscriptData = {
 };
 
 export function transcriptSerial(studentId: string) {
-  return `TTPU-TR-${studentId.slice(-8).toUpperCase()}`;
+  return `FBSU-TR-${studentId.slice(-8).toUpperCase()}`;
 }
 
 export async function buildTranscript(
