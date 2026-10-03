@@ -4,6 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useMediaQuery, useWebGLSupport } from "@/components/nav/nav-3d-env";
+import dynamic from "next/dynamic";
+import { useRef } from "react";
+
+const Nav3DLayer = dynamic(
+  () => import("@/components/nav/nav-3d-layer").then((mod) => mod.Nav3DLayer),
+  { ssr: false },
+);
 
 export type NavLink = { href: string; label: string; badge?: ReactNode };
 export type NavGroup = { label: string; links: NavLink[] };
@@ -116,42 +124,58 @@ export function MobileTabBar({ tabs }: { tabs: MobileTab[] }) {
 
 export function NavLinks({ groups }: { groups: NavGroup[] }) {
   const pathname = usePathname();
+  const shellRef = useRef<HTMLDivElement>(null);
+  const webgl = useWebGLSupport();
+  const desktop = useMediaQuery("(min-width: 768px)");
+  const with3d = webgl && desktop;
 
   return (
-    <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-4">
-      {groups.map((group) => (
-        <div key={group.label}>
-          <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600">
-            {group.label}
-          </p>
-          <div className="space-y-0.5">
-            {group.links.map((l) => {
-              const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
-              return (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className={cn(
-                    "group flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-150",
-                    active
-                      ? "bg-brand-900 text-white shadow-[0_6px_16px_-8px_rgba(29,52,96,0.7)]"
-                      : "text-slate-600 hover:bg-brand-50 hover:text-brand-900",
-                  )}
-                >
-                  <span
+    <div ref={shellRef} className="relative flex min-h-0 flex-1 flex-col">
+      {with3d ? <Nav3DLayer containerRef={shellRef} /> : null}
+      <nav className="relative z-10 flex-1 space-y-4 overflow-y-auto px-3 py-4">
+        {groups.map((group) => (
+          <div key={group.label}>
+            <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600">
+              {group.label}
+            </p>
+            <div className="space-y-0.5">
+              {group.links.map((l, index) => {
+                const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
+                return (
+                  <Link
+                    key={l.href}
+                    href={l.href}
                     className={cn(
-                      "size-1.5 rounded-full transition-colors",
-                      active ? "bg-gold-400" : "bg-slate-300 group-hover:bg-brand-400",
+                      "group flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-150",
+                      active
+                        ? "bg-brand-900 text-white shadow-[0_6px_16px_-8px_rgba(29,52,96,0.7)]"
+                        : "text-slate-600 hover:bg-brand-50 hover:text-brand-900",
                     )}
-                  />
-                  {l.label}
-                  {l.badge ? <span className="ml-auto">{l.badge}</span> : null}
-                </Link>
-              );
-            })}
+                  >
+                    <span
+                      data-nav3d-href={l.href}
+                      data-nav3d-key={index}
+                      data-nav3d-active={active ? "true" : "false"}
+                      className="flex size-6 shrink-0 items-center justify-center"
+                    >
+                      {!with3d ? (
+                        <span
+                          className={cn(
+                            "size-1.5 rounded-full transition-colors",
+                            active ? "bg-gold-400" : "bg-slate-300 group-hover:bg-brand-400",
+                          )}
+                        />
+                      ) : null}
+                    </span>
+                    {l.label}
+                    {l.badge ? <span className="ml-auto">{l.badge}</span> : null}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
-    </nav>
+        ))}
+      </nav>
+    </div>
   );
 }
