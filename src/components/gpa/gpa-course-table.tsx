@@ -49,6 +49,11 @@ export function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; delay?: 
                         </span>
                         <span className="mt-0.5 block text-xs text-slate-600">
                           {course.gradedCount} ta baholangan ish
+                          {course.bonusPoints > 0 ? (
+                            <span className="ml-1.5 font-medium text-emerald-700">
+                              +{course.bonusPoints.toFixed(1)} bonus
+                            </span>
+                          ) : null}
                         </span>
                       </span>
                     </Link>
@@ -112,6 +117,11 @@ export function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; delay?: 
                   </span>
                   <span className="mt-0.5 block text-xs text-slate-600">
                     {course.gradedCount} ta baholangan ish
+                    {course.bonusPoints > 0 ? (
+                      <span className="ml-1.5 font-medium text-emerald-700">
+                        +{course.bonusPoints.toFixed(1)} bonus
+                      </span>
+                    ) : null}
                   </span>
                 </span>
                 <LetterBadge letter={course.letter} />

@@ -3,7 +3,23 @@ import { prisma } from "@/lib/prisma";
 
 export const GPA_CREDITS = 6;
 
+/**
+ * O'qituvchi bonus ballari chegarasi (4.0 shkalasi).
+ * Saqlashda butun songa ×10 ishlatiladi: 0.6 → 6, 4.0 → 40.
+ */
+export const BONUS_MIN_TENTHS = 6;
+export const BONUS_MAX_TENTHS = 40;
+
 export type GpaLetter = "A" | "B" | "C" | "D" | "F";
+
+export type BonusPointRecord = {
+  courseId: string;
+  courseTitle: string;
+  points: number;
+  reason: string;
+  awardedByName: string;
+  createdAt: string;
+};
 
 export type GpaCourse = {
   courseId: string;
@@ -14,6 +30,8 @@ export type GpaCourse = {
   letter: GpaLetter;
   credits: number;
   gradedCount: number;
+  bonusPoints: number;
+  bonuses: BonusPointRecord[];
 };
 
 export type StudentGpa = {
@@ -23,6 +41,7 @@ export type StudentGpa = {
   qualityPoints: number;
   overallPercent: number | null;
   gradedCount: number;
+  totalBonusPoints: number;
   courses: GpaCourse[];
 };
 
@@ -51,7 +70,7 @@ export async function getStudentGpa(
   studentId: string,
   courseIds?: string[],
 ): Promise<StudentGpa> {
-  const [submissions, attempts] = await Promise.all([
+  const [submissions, attempts, bonuses] = await Promise.all([
     prisma.submission.findMany({
       where: {
         studentId,
@@ -76,9 +95,26 @@ export async function getStudentGpa(
         quiz: { select: { courseId: true, questions: { select: { points: true } } } },
       },
     }),
+    prisma.bonusPoint.findMany({
+      where: {
+        studentId,
+        ...(courseIds ? { courseId: { in: courseIds } } : {}),
+      },
+      select: {
+        courseId: true,
+        tenths: true,
+        reason: true,
+        createdAt: true,
+        awardedBy: { select: { name: true } },
+        course: { select: { title: true } },
+      },
+      orderBy: { createdAt: "asc" },
+    }),
   ]);
 
   const totals = new Map<string, CourseTotals>();
+  const bonusByCourse = new Map<string, number>();
+  const bonusRecords = new Map<string, BonusPointRecord[]>();
 
   function add(courseId: string, score: number, max: number) {
     if (max <= 0) return;
@@ -98,6 +134,29 @@ export async function getStudentGpa(
     add(attempt.quiz.courseId, attempt.score ?? 0, quizMax);
   }
 
+  // Bonus ballar o'z fani bo'yicha, o'quvchining umumiy bonusiga qo'shiladi.
+  for (const bonus of bonuses) {
+    const value = bonus.tenths / 10;
+    bonusByCourse.set(bonus.courseId, (bonusByCourse.get(bonus.courseId) ?? 0) + value);
+    const list = bonusRecords.get(bonus.courseId) ?? [];
+    list.push({
+      courseId: bonus.courseId,
+      courseTitle: bonus.course.title,
+      points: value,
+      reason: bonus.reason,
+      awardedByName: bonus.awardedBy.name,
+      createdAt: bonus.createdAt.toISOString(),
+    });
+    bonusRecords.set(bonus.courseId, list);
+  }
+
+  // Faqat baholangan yoki bonus olgan kurslar GPA hisobiga kiradi.
+  for (const courseId of bonusByCourse.keys()) {
+    if (!totals.has(courseId)) {
+      totals.set(courseId, { score: 0, max: 0, gradedCount: 0 });
+    }
+  }
+
   if (totals.size === 0) {
     return {
       studentId,
@@ -106,6 +165,7 @@ export async function getStudentGpa(
       qualityPoints: 0,
       overallPercent: null,
       gradedCount: 0,
+      totalBonusPoints: 0,
       courses: [],
     };
   }
@@ -122,11 +182,35 @@ export async function getStudentGpa(
   let overallScore = 0;
   let overallMax = 0;
   let gradedCount = 0;
+  let totalBonusPoints = 0;
 
   for (const record of records) {
     const total = totals.get(record.id);
-    if (!total || total.max <= 0) continue;
-    const percent = Math.round((total.score / total.max) * 100);
+    if (!total) continue;
+    const bonus = bonusByCourse.get(record.id) ?? 0;
+    totalBonusPoints += bonus;
+
+    // Faqat topshiriq/test bo'lgan kurs foiz o'lchoviga kiradi; bonus o'zi yetarli.
+    if (total.max <= 0) {
+      const percent = Math.min(Math.round(bonus * 10), 100);
+      courses.push({
+        courseId: record.id,
+        title: record.title,
+        slug: record.slug,
+        percent,
+        points: gpaPoints(percent),
+        letter: letterGrade(percent),
+        credits: GPA_CREDITS,
+        gradedCount: 0,
+        bonusPoints: bonus,
+        bonuses: bonusRecords.get(record.id) ?? [],
+      });
+      continue;
+    }
+
+    // Bonus ballar 100-ballik foiz ustiga qo'shiladi (4.0 ball ≈ 40 foiz).
+    const rawPercent = (total.score / total.max) * 100 + bonus * 10;
+    const percent = Math.min(Math.round(rawPercent), 100);
     const points = gpaPoints(percent);
     qualityPoints += points * GPA_CREDITS;
     totalCredits += GPA_CREDITS;
@@ -142,6 +226,8 @@ export async function getStudentGpa(
       letter: letterGrade(percent),
       credits: GPA_CREDITS,
       gradedCount: total.gradedCount,
+      bonusPoints: bonus,
+      bonuses: bonusRecords.get(record.id) ?? [],
     });
   }
 
@@ -155,6 +241,7 @@ export async function getStudentGpa(
     qualityPoints: Math.round(qualityPoints * 100) / 100,
     overallPercent,
     gradedCount,
+    totalBonusPoints: Math.round(totalBonusPoints * 100) / 100,
     courses,
   };
 }

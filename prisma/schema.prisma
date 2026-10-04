@@ -76,6 +76,8 @@ model User {
   forumReplies         ForumReply[]
   certificatesIssued   Certificate[]      @relation("CertificateIssuedBy")
   certificatesReceived Certificate[]      @relation("CertificateStudent")
+  bonusPointsReceived  BonusPoint[]       @relation("BonusPointStudent")
+  bonusPointsAwarded   BonusPoint[]       @relation("BonusPointAwardedBy")
   attendanceSessions   AttendanceSession[]
   conversationsA       Conversation[]     @relation("ConversationA")
   conversationsB       Conversation[]     @relation("ConversationB")
@@ -144,6 +146,7 @@ model Course {
   reviews            CourseReview[]
   examSessions       ExamSession[]
   bankQuestions      BankQuestion[]
+  bonusPoints        BonusPoint[]
 
   @@index([teacherId])
 }
@@ -374,6 +377,28 @@ model Certificate {
   issuedBy User   @relation("CertificateIssuedBy", fields: [issuedById], references: [id], onDelete: Cascade)
 
   @@unique([courseId, studentId])
+}
+
+/// O'qituvchining o'z fani doirasida talabaga qo'shimcha GPA balli.
+///
+/// `tenths` — ball ×10 butun ko'rinishi (0.6 → 6, 4.0 → 40). Kasr sonlarni
+/// saqlashda yuvish xatosi bo'lmasligi uchun. Chegara: 6..40.
+model BonusPoint {
+  id          String   @id @default(cuid())
+  courseId    String
+  studentId   String
+  awardedById String
+  tenths      Int
+  reason      String
+  createdAt   DateTime @default(now())
+
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student  User   @relation("BonusPointStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  awardedBy User  @relation("BonusPointAwardedBy", fields: [awardedById], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, studentId, awardedById])
+  @@index([studentId])
+  @@index([courseId])
 }
 
 model AttendanceSession {

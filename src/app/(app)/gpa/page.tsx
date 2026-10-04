@@ -12,7 +12,12 @@ export default async function GpaPage() {
   if (user.role !== "STUDENT") {
     return (
       <>
-        <PageHeader title="GPA" subtitle="4.0 baholash tizimi" eyebrow="Akademik natija" />
+        <PageHeader
+          title="GPA"
+          subtitle="4.0 baholash tizimi"
+          eyebrow="Akademik natija"
+          action={<ButtonLink href="/bonus-points">Bonus ballar</ButtonLink>}
+        />
         <GpaEmpty
           title="Talaba hisobi kerak"
           description="GPA bo'limi talaba hisobida to'liq ko'rinadi: kurslar kesimida o'rtacha foiz, harf baho va umumiy GPA."
@@ -46,6 +51,7 @@ export default async function GpaPage() {
         title="GPA"
         subtitle={`${user.group?.name ?? "Talaba"} · 4.0 baholash tizimi`}
         eyebrow="Akademik natija"
+        action={<ButtonLink href="/bonus-points">Bonus ballarim</ButtonLink>}
       />
       <GpaHero data={data} />
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[1fr_21rem]">
