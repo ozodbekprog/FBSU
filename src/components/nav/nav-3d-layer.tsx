@@ -25,6 +25,21 @@ const ICON_SCALE_ACTIVE = 10.6;
 const INTRO_DURATION = 0.55;
 const INTRO_STAGGER = 0.035;
 
+/**
+ * 3D ikonkalarning statik rejimi.
+ *
+ * `false` — barcha uzluksiz animatsiyalar o'chiq: idle sway/tilt, aylanish
+ * (gildirak, soat, nishon, halqa), intro stagger, hover oldinga siljish.
+ * Faqat hover masshtabi qoladi — u foydalanuvchi harakati, ambient emas.
+ * `true` qilsangiz avvalgi to'liq animatsiya qaytadi.
+ */
+const NAV3D_ANIMATED: boolean = false;
+
+function iconScale(slot: Slot, hovered: boolean) {
+  const base = hovered ? ICON_SCALE_HOVER : slot.active ? ICON_SCALE_ACTIVE : ICON_SCALE;
+  return base * (slot.visible ? 1 : 0);
+}
+
 function hashPhase(value: string) {
   let hash = 0;
   for (let i = 0; i < value.length; i += 1) {
@@ -66,11 +81,23 @@ function Nav3DItem({
   const { Icon } = slot;
   const spinning = nav3DIsSpinning(slot.href);
   const phase = useMemo(() => hashPhase(slot.key), [slot.key]);
+  const still = reduced || !NAV3D_ANIMATED;
 
   useFrame((state) => {
     const base = anchor.current;
     const node = anim.current;
     if (!base || !node) return;
+
+    // Statik rejim: to'g'ridan-to'g'ri qo'yiladi, lerp ham yo'q — shuning uchun
+    // `frameloop="demand"` yetarli va kadr bo'sh turmaydi.
+    if (still) {
+      base.position.set(slot.x - centerX, centerY - slot.y, hovered ? 14 : 0);
+      node.position.set(0, 0, 0);
+      node.rotation.set(0, 0, 0);
+      node.scale.setScalar(iconScale(slot, hovered));
+      return;
+    }
+
     const time = state.clock.elapsedTime;
     if (born.current === null) born.current = time + slot.order * INTRO_STAGGER;
     const intro = reduced ? 1 : Math.min(Math.max((time - born.current) / INTRO_DURATION, 0), 1);
@@ -108,7 +135,7 @@ function Nav3DItem({
 
   return (
     <group ref={anchor} position={[slot.x - centerX, centerY - slot.y, 0]}>
-      <group ref={anim} scale={0.0001}>
+      <group ref={anim} scale={still ? iconScale(slot, hovered) : 0.0001}>
         <Icon />
         {slot.active ? (
           <mesh position={[0, 0, -1]} material={NAV3D_MATERIALS.halo}>
@@ -232,18 +259,21 @@ export function Nav3DLayer({ containerRef }: { containerRef: RefObject<HTMLDivEl
 
   if (!supported || !desktop) return null;
 
+  // Statik rejimda kadr faqat o'zgarishda chiziladi (`demand`) — bo'sh GPU yo'q.
+  const still = reduced || !NAV3D_ANIMATED;
+
   return (
     <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden" aria-hidden="true">
       <Canvas
         orthographic
         dpr={[1, 1.5]}
-        frameloop={reduced || !pageVisible ? "demand" : "always"}
+        frameloop={still || !pageVisible ? "demand" : "always"}
         camera={{ position: [0, 0, 60], zoom: 1, near: 0.1, far: 400 }}
         gl={{ alpha: true, antialias: true, powerPreference: "low-power", stencil: false }}
         onCreated={({ gl }) => gl.setClearAlpha(0)}
         style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
       >
-        <Scene slots={slots} hovered={hovered} reduced={reduced} />
+        <Scene slots={slots} hovered={hovered} reduced={still} />
       </Canvas>
     </div>
   );
