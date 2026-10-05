@@ -27,9 +27,11 @@ export type AdminUser = {
   isActive: boolean;
   createdAt: Date;
   group: { id: string; name: string } | null;
+  department: { id: string; name: string } | null;
 };
 
 export type GroupOption = { id: string; name: string };
+export type DepartmentOption = { id: string; name: string };
 
 type FormMode = "create" | "edit" | "reset";
 
@@ -39,6 +41,7 @@ type FormState = {
   password: string;
   role: Role;
   groupId: string;
+  departmentId: string;
   isActive: boolean;
 };
 
@@ -50,6 +53,7 @@ const EMPTY_FORM: FormState = {
   password: "",
   role: "STUDENT",
   groupId: "",
+  departmentId: "",
   isActive: true,
 };
 
@@ -66,10 +70,12 @@ const ROLE_META: Record<
 export default function UsersManager({
   users,
   groups,
+  departments,
   currentUserId,
 }: {
   users: AdminUser[];
   groups: GroupOption[];
+  departments: DepartmentOption[];
   currentUserId: string;
 }) {
   const router = useRouter();
@@ -98,6 +104,7 @@ export default function UsersManager({
       password: "",
       role: user.role,
       groupId: user.group?.id ?? "",
+      departmentId: user.department?.id ?? "",
       isActive: user.isActive,
     });
     setError(null);
@@ -153,6 +160,7 @@ export default function UsersManager({
       password: form.password,
       role: form.role,
       groupId: form.groupId || null,
+      departmentId: form.departmentId || null,
     });
     if (!json) return;
     closeForm();
@@ -166,6 +174,7 @@ export default function UsersManager({
       name: form.name,
       role: form.role,
       groupId: form.groupId || null,
+      departmentId: form.departmentId || null,
       isActive: form.isActive,
     });
     if (!json) return;
@@ -325,6 +334,20 @@ export default function UsersManager({
                     {groups.map((g) => (
                       <option key={g.id} value={g.id}>
                         {g.name}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <div>
+                  <Label>Kafedra</Label>
+                  <Select
+                    value={form.departmentId}
+                    onChange={(e) => update("departmentId", e.target.value)}
+                  >
+                    <option value="">Kafedrasiz</option>
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name}
                       </option>
                     ))}
                   </Select>

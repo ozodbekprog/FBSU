@@ -13,6 +13,7 @@ export type CatalogCourse = {
   materialsCount: number;
   studentsCount: number;
   isEnrolled: boolean;
+  enrollmentStatus?: "PENDING" | "ACTIVE" | "REJECTED" | null;
 };
 
 function BookIcon() {
@@ -207,6 +208,10 @@ export function CatalogCourseCard({
                 <ArrowIcon />
               </ButtonLink>
             </>
+          ) : course.enrollmentStatus === "PENDING" ? (
+            <Badge tone="amber" className="w-full justify-center px-3 py-2">
+              ⏳ Tasdiq kutilmoqda
+            </Badge>
           ) : (
             <EnrollButton courseId={course.id} />
           )}

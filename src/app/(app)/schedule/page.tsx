@@ -132,7 +132,7 @@ export default async function SchedulePage({
         }));
       } else {
         const courseRows = await prisma.course.findMany({
-          where: { teacherId: user.id, enrollments: { some: { user: { groupId: selectedGroup.id } } } },
+          where: { teacherId: user.id, enrollments: { some: { user: { groupId: selectedGroup.id }, status: "ACTIVE" } } },
           orderBy: { title: "asc" },
           select: {
             id: true,

@@ -87,7 +87,7 @@ export async function POST(request: Request) {
   }
 
   const enrolled = await prisma.enrollment.findUnique({
-    where: { courseId_userId: { courseId: session.courseId, userId: user.id } },
+    where: { courseId_userId: { courseId: session.courseId, userId: user.id }, status: "ACTIVE" },
   });
   if (!enrolled) {
     return Response.json({ ok: false, error: "Siz bu kursga yozilmagansiz" }, { status: 403 });

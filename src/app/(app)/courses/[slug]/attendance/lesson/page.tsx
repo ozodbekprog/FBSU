@@ -51,7 +51,7 @@ export default async function LessonAttendancePage({
 
   const [enrollments, attendanceRows, dayEntries, teacherCourses] = await Promise.all([
     prisma.enrollment.findMany({
-      where: { courseId: course.id },
+      where: { courseId: course.id, status: "ACTIVE" },
       include: {
         user: {
           select: {

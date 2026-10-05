@@ -85,7 +85,7 @@ export default async function ScheduleBuilderPage({
   let myGroupIds: string[] = [];
   if (user.role === "TEACHER") {
     const enrollments = await prisma.enrollment.findMany({
-      where: { course: { teacherId: user.id }, user: { groupId: { not: null } } },
+      where: { course: { teacherId: user.id }, user: { groupId: { not: null } }, status: "ACTIVE" },
       select: { user: { select: { groupId: true } } },
     });
     const taught = new Set<string>();

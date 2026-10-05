@@ -84,6 +84,17 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
     ),
   },
   {
+    href: "/admin/departments",
+    label: "Kafedralar",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 21h18" />
+        <path d="M5 21V7l7-4 7 4v14" />
+        <path d="M9 21v-4h6v4" />
+      </svg>
+    ),
+  },
+  {
     href: "/admin/import",
     label: "Import",
     icon: (

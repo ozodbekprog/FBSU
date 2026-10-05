@@ -62,7 +62,7 @@ export default async function GradesPage({
         orderBy: { startedAt: "desc" },
       }),
       getStudentAttendance(user.id),
-      prisma.enrollment.findMany({ where: { userId: user.id }, select: { courseId: true } }),
+      prisma.enrollment.findMany({ where: { userId: user.id, status: "ACTIVE" }, select: { courseId: true } }),
       memberQuery,
     ]);
 
@@ -465,7 +465,7 @@ export default async function GradesPage({
       orderBy: { createdAt: "asc" },
     }),
     prisma.enrollment.findMany({
-      where: { courseId: selected.id },
+      where: { courseId: selected.id, status: "ACTIVE" },
       include: { user: { select: { id: true, name: true } } },
       orderBy: { user: { name: "asc" } },
     }),

@@ -81,6 +81,8 @@ model User {
   bonusPointsAwarded   BonusPoint[]       @relation("BonusPointAwardedBy")
   gradeChangeRequests  GradeChangeRequest[] @relation("GradeChangeRequester")
   gradeChangeReviews   GradeChangeRequest[] @relation("GradeChangeReviewer")
+  departmentId         String?
+  department           Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   attendanceSessions   AttendanceSession[]
   conversationsA       Conversation[]     @relation("ConversationA")
   conversationsB       Conversation[]     @relation("ConversationB")
@@ -158,12 +160,14 @@ model Enrollment {
   id        String   @id @default(cuid())
   courseId  String
   userId    String
+  status    EnrollmentStatus @default(ACTIVE)
   createdAt DateTime @default(now())
 
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([courseId, userId])
+  @@index([status])
 }
 
 model Section {
@@ -344,6 +348,12 @@ enum GradeChangeStatus {
   REJECTED
 }
 
+enum EnrollmentStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+}
+
 model Notification {
   id        String   @id @default(cuid())
   userId    String
@@ -470,6 +480,8 @@ model Subject {
   courses     Course[]
   teachers    TeacherSubject[]
   bankQuestions BankQuestion[]
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 }
 
 model TeacherSubject {
@@ -555,6 +567,19 @@ model Faculty {
   code   String?
   groups Group[]
   users  User[]
+  departments Department[]
+}
+
+model Department {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  code      String?
+  facultyId String?
+  createdAt DateTime @default(now())
+
+  faculty  Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  users    User[]
+  subjects Subject[]
 }
 
 model Term {

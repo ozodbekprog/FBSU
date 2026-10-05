@@ -82,7 +82,7 @@ function percent(value: number, max: number) {
 
 export async function getStudentAnalytics(studentId: string): Promise<StudentAnalytics> {
   const enrollments = await prisma.enrollment.findMany({
-    where: { userId: studentId },
+    where: { userId: studentId, status: "ACTIVE" },
     select: { course: { select: { id: true, title: true } } },
     orderBy: { course: { title: "asc" } },
   });

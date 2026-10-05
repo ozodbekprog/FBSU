@@ -21,7 +21,7 @@ export default async function AttendanceJournalPage({
   if (!management) {
     if (user.role !== "STUDENT") notFound();
     const enrolled = await prisma.enrollment.findUnique({
-      where: { courseId_userId: { courseId: course.id, userId: user.id } },
+      where: { courseId_userId: { courseId: course.id, userId: user.id }, status: "ACTIVE" },
     });
     if (!enrolled) notFound();
   }

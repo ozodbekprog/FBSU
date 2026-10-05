@@ -45,7 +45,7 @@ export default async function ProfilePage() {
       prisma.course.count({ where: { teacherId: user.id } }),
       prisma.certificate.count({ where: { issuedById: user.id } }),
       prisma.enrollment.findMany({
-        where: { course: { teacherId: user.id } },
+        where: { course: { teacherId: user.id }, status: "ACTIVE" },
         distinct: ["userId"],
         select: { userId: true },
       }),

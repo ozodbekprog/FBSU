@@ -106,6 +106,25 @@ async function main() {
     });
   }
 
+  const programmingDept = await prisma.department.upsert({
+    where: { name: "Dasturlash kafedrasi" },
+    update: {},
+    create: { name: "Dasturlash kafedrasi", code: "DK" },
+  });
+  const scienceDept = await prisma.department.upsert({
+    where: { name: "Matematika va tabiiy fanlar kafedrasi" },
+    update: {},
+    create: { name: "Matematika va tabiiy fanlar kafedrasi", code: "MTFK" },
+  });
+  await prisma.user.updateMany({
+    where: { email: { in: ["n.mahamatov@ttpu.uz", "o.makhmudov@ttpu.uz"] } },
+    data: { departmentId: programmingDept.id },
+  });
+  await prisma.user.updateMany({
+    where: { email: { in: ["a.mamanazarov@ttpu.uz", "o.ismoilova@ttpu.uz"] } },
+    data: { departmentId: scienceDept.id },
+  });
+
   const courses = [
     {
       slug: "prog",

@@ -1,17 +1,18 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
 import { CourseCard, type CourseCardData } from "@/components/courses/course-card";
 
 export default async function CoursesPage() {
   const user = await requireUser();
 
-  const where =
+  const where: Prisma.CourseWhereInput =
     user.role === "ADMIN"
       ? {}
       : user.role === "TEACHER"
         ? { teacherId: user.id }
-        : { enrollments: { some: { userId: user.id } } };
+        : { enrollments: { some: { userId: user.id, status: "ACTIVE" } } };
 
   const courses = await prisma.course.findMany({
     where,
@@ -19,7 +20,7 @@ export default async function CoursesPage() {
     include: {
       teacher: { select: { name: true } },
       sections: { select: { _count: { select: { materials: true } } } },
-      _count: { select: { enrollments: true } },
+      _count: { select: { enrollments: { where: { status: "ACTIVE" } } } },
     },
   });
 

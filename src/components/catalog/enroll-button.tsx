@@ -111,12 +111,12 @@ export function EnrollButton({ courseId }: { courseId: string }) {
         {busy ? (
           <>
             <SpinnerIcon />
-            Yozilmoqda...
+            Yuborilmoqda...
           </>
         ) : done ? (
           <>
             <CheckIcon />
-            Yozildingiz
+            So&apos;rov yuborildi
           </>
         ) : (
           <>

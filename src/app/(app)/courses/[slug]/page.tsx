@@ -29,6 +29,7 @@ export default async function CoursePage({
         include: { materials: { orderBy: { position: "asc" } } },
       },
       enrollments: {
+        where: { status: "ACTIVE" },
         orderBy: { createdAt: "asc" },
         include: {
           user: {

@@ -31,7 +31,7 @@ export default async function CatalogPage({
       teacher: { select: { name: true } },
       sections: { select: { _count: { select: { materials: true } } } },
       _count: { select: { enrollments: true } },
-      enrollments: { where: { userId: user.id }, select: { id: true } },
+      enrollments: { where: { userId: user.id }, select: { id: true, status: true } },
     },
   });
 
@@ -46,7 +46,8 @@ export default async function CatalogPage({
     teacherName: course.teacher.name,
     materialsCount: course.sections.reduce((sum, s) => sum + s._count.materials, 0),
     studentsCount: course._count.enrollments,
-    isEnrolled: course.enrollments.length > 0,
+    isEnrolled: course.enrollments.some((enrollment) => enrollment.status === "ACTIVE"),
+    enrollmentStatus: course.enrollments[0]?.status ?? null,
   }));
 
   const searchForm = (

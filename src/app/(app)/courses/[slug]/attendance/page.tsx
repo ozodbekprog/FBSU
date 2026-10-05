@@ -62,7 +62,7 @@ export default async function CourseAttendancePage({
 
   if (user.role === "STUDENT") {
     const enrolled = await prisma.enrollment.findUnique({
-      where: { courseId_userId: { courseId: course.id, userId: user.id } },
+      where: { courseId_userId: { courseId: course.id, userId: user.id }, status: "ACTIVE" },
     });
     if (!enrolled) notFound();
 
@@ -133,7 +133,7 @@ export default async function CourseAttendancePage({
 
   const [enrollments, entries] = await Promise.all([
     prisma.enrollment.findMany({
-      where: { courseId: course.id },
+      where: { courseId: course.id, status: "ACTIVE" },
       include: { user: { select: { id: true, name: true } } },
       orderBy: { user: { name: "asc" } },
     }),

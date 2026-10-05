@@ -10,7 +10,7 @@ export default async function AdminCoursesPage() {
     prisma.course.findMany({
       include: {
         teacher: { select: { id: true, name: true } },
-        _count: { select: { enrollments: true } },
+        _count: { select: { enrollments: { where: { status: "ACTIVE" } } } },
       },
       orderBy: { createdAt: "desc" },
     }),

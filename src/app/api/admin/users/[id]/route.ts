@@ -14,6 +14,7 @@ const patchSchema = z.object({
   role: z.enum(["ADMIN", "REGISTRAR", "TEACHER", "STUDENT"]).optional(),
   groupId: z.string().trim().min(1).nullable().optional(),
   subGroupId: z.string().trim().min(1).nullable().optional(),
+  departmentId: z.string().trim().min(1).nullable().optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -107,6 +108,21 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     } else {
       data.subGroup = { disconnect: true };
     }
+  }
+
+  if (parsed.data.departmentId !== undefined) {
+    if (parsed.data.departmentId) {
+      const department = await prisma.department.findUnique({
+        where: { id: parsed.data.departmentId },
+        select: { id: true },
+      });
+      if (!department) {
+        return Response.json({ ok: false, error: "Kafedra topilmadi" }, { status: 400 });
+      }
+    }
+    data.department = parsed.data.departmentId
+      ? { connect: { id: parsed.data.departmentId } }
+      : { disconnect: true };
   }
 
   if (parsed.data.email !== undefined) {

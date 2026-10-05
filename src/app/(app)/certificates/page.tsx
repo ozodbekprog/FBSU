@@ -91,7 +91,7 @@ export default async function CertificatesPage({
 
   const [enrollments, certificates] = await Promise.all([
     prisma.enrollment.findMany({
-      where: { courseId: selected.id },
+      where: { courseId: selected.id, status: "ACTIVE" },
       include: { user: { select: { id: true, name: true } } },
       orderBy: { user: { name: "asc" } },
     }),

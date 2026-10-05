@@ -502,7 +502,7 @@ export default async function DashboardPage() {
             id: true,
             slug: true,
             title: true,
-            _count: { select: { enrollments: true } },
+            _count: { select: { enrollments: { where: { status: "ACTIVE" } } } },
           },
         }),
         prisma.attendance.groupBy({
@@ -707,7 +707,7 @@ export default async function DashboardPage() {
   }
 
   const enrollments = await prisma.enrollment.findMany({
-    where: { userId: user.id },
+    where: { userId: user.id, status: "ACTIVE" },
     include: {
       course: { include: { teacher: true } },
     },

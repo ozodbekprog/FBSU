@@ -50,7 +50,7 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
   } else {
     if (!quiz.isPublished) notFound();
     const enrollment = await prisma.enrollment.findUnique({
-      where: { courseId_userId: { courseId: quiz.courseId, userId: user.id } },
+      where: { courseId_userId: { courseId: quiz.courseId, userId: user.id }, status: "ACTIVE" },
       select: { id: true },
     });
     if (!enrollment) notFound();

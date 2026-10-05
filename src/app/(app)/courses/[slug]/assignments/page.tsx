@@ -101,7 +101,7 @@ export default async function CourseAssignmentsPage({
   const management = canManageCourse(user, course);
   if (user.role === "STUDENT") {
     const enrolled = await prisma.enrollment.findUnique({
-      where: { courseId_userId: { courseId: course.id, userId: user.id } },
+      where: { courseId_userId: { courseId: course.id, userId: user.id }, status: "ACTIVE" },
     });
     if (!enrolled) notFound();
   } else if (!management) {

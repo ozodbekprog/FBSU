@@ -42,7 +42,7 @@ export default async function BonusPointsPage() {
             role: "STUDENT",
             isActive: true,
             ...(isTeacher
-              ? { enrollments: { some: { courseId: { in: courseIds } } } }
+              ? { enrollments: { some: { courseId: { in: courseIds }, status: "ACTIVE" } } }
               : {}),
           },
           select: { id: true, name: true, group: { select: { name: true } } },

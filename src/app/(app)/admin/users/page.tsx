@@ -30,7 +30,7 @@ export default async function AdminUsersPage({
   }
   if (role) where.role = role;
 
-  const [users, groups] = await Promise.all([
+  const [users, groups, departments] = await Promise.all([
     prisma.user.findMany({
       where,
       select: {
@@ -41,10 +41,15 @@ export default async function AdminUsersPage({
         isActive: true,
         createdAt: true,
         group: { select: { id: true, name: true } },
+        department: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: "desc" },
     }),
     prisma.group.findMany({
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.department.findMany({
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
@@ -104,7 +109,7 @@ export default async function AdminUsersPage({
         </Card>
       </form>
 
-      <UsersManager users={users} groups={groups} currentUserId={admin.id} />
+      <UsersManager users={users} groups={groups} departments={departments} currentUserId={admin.id} />
     </>
   );
 }

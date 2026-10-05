@@ -57,7 +57,7 @@ export default async function AttendancePage() {
       title: true,
       slug: true,
       isPublished: true,
-      _count: { select: { enrollments: true, attendance: true } },
+      _count: { select: { enrollments: { where: { status: "ACTIVE" } }, attendance: true } },
     },
     orderBy: { title: "asc" },
   });
