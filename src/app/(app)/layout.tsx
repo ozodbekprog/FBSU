@@ -71,7 +71,10 @@ export default async function AppLayout({
       label: "Boshqaruv",
       links: [
         ...(user.role === "ADMIN" || user.role === "REGISTRAR"
-          ? [{ href: "/approvals", label: "Tasdiqlashlar" }]
+          ? [
+              { href: "/monitoring", label: "Monitoring" },
+              { href: "/approvals", label: "Tasdiqlashlar" },
+            ]
           : []),
         ...(isStaff(user.role) ? [{ href: "/curator", label: "Kurator paneli" }] : []),
         ...(isStaff(user.role) ? [{ href: "/reports", label: "Hisobotlar" }] : []),
