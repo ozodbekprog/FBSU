@@ -13,15 +13,16 @@ import {
   Skeleton,
 } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { apiFetch } from "@/components/quiz/api";
 import {
-  QUESTION_TYPE_LABEL,
+  QUESTION_TYPE_KEY,
   QUESTION_TYPE_TONE,
   type QuestionType,
 } from "@/components/quiz/shared";
 import { BankQuestionForm, type BankCourseOption, type BankSubjectOption } from "@/components/question-bank/form";
 import {
-  DIFFICULTY_LABEL,
+  DIFFICULTY_LABEL_KEYS,
   DIFFICULTY_TONE,
   type BankQuestionItem,
 } from "@/components/question-bank/shared";
@@ -33,6 +34,7 @@ export function QuestionBankManager({
   courses: BankCourseOption[];
   subjects: BankSubjectOption[];
 }) {
+  const { t } = useI18n();
   const [items, setItems] = useState<BankQuestionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -112,19 +114,19 @@ export function QuestionBankManager({
   function handleSaved(item: BankQuestionItem, created: boolean) {
     setFormOpen(false);
     setEditing(null);
-    setNotice(created ? "Savol bankka qo'shildi" : "Savol yangilandi");
+    setNotice(created ? t("grdQbAdded") : t("grdQbUpdated"));
     setRefreshKey((key) => key + 1);
   }
 
   async function remove(item: BankQuestionItem) {
-    if (!window.confirm("Savolni bankdan o'chirishni tasdiqlaysizmi?")) return;
+    if (!window.confirm(t("grdQbDeleteConfirm"))) return;
     const result = await apiFetch(`/api/question-bank/${item.id}`, "DELETE");
     if (!result.ok) {
       setError(result.error);
       return;
     }
     setItems((prev) => prev.filter((entry) => entry.id !== item.id));
-    setNotice("Savol o'chirildi");
+    setNotice(t("grdQbDeleted"));
   }
 
   const activeFilters = courseId !== "" || subjectId !== "" || type !== "" || difficulty !== "" || query !== "";
@@ -135,17 +137,17 @@ export function QuestionBankManager({
         <CardBody className="space-y-4">
           <div className="grid gap-3 lg:grid-cols-[1.5fr_1fr_1fr_1fr_auto]">
             <div>
-              <Label>Qidiruv</Label>
+              <Label>{t("grdQbSearch")}</Label>
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Savol matni bo'yicha..."
+                placeholder={t("grdQbSearchPlaceholder")}
               />
             </div>
             <div>
-              <Label>Kurs</Label>
+              <Label>{t("grdCourse")}</Label>
               <Select value={courseId} onChange={(event) => setCourseId(event.target.value)}>
-                <option value="">Barchasi</option>
+                <option value="">{t("grdAll")}</option>
                 {courses.map((course) => (
                   <option key={course.id} value={course.id}>
                     {course.title}
@@ -154,9 +156,9 @@ export function QuestionBankManager({
               </Select>
             </div>
             <div>
-              <Label>Fan</Label>
+              <Label>{t("grdSubject")}</Label>
               <Select value={subjectId} onChange={(event) => setSubjectId(event.target.value)}>
-                <option value="">Barchasi</option>
+                <option value="">{t("grdAll")}</option>
                 {subjects.map((subject) => (
                   <option key={subject.id} value={subject.id}>
                     {subject.name}
@@ -165,22 +167,22 @@ export function QuestionBankManager({
               </Select>
             </div>
             <div>
-              <Label>Tur</Label>
+              <Label>{t("grdQbType")}</Label>
               <Select
                 value={type}
                 onChange={(event) => setType(event.target.value as "" | QuestionType)}
               >
-                <option value="">Barchasi</option>
-                {(Object.keys(QUESTION_TYPE_LABEL) as QuestionType[]).map((value) => (
+                <option value="">{t("grdAll")}</option>
+                {(Object.keys(QUESTION_TYPE_KEY) as QuestionType[]).map((value) => (
                   <option key={value} value={value}>
-                    {QUESTION_TYPE_LABEL[value]}
+                    {t(QUESTION_TYPE_KEY[value])}
                   </option>
                 ))}
               </Select>
             </div>
             <div className="flex items-end">
               <Button onClick={openCreate} disabled={courses.length === 0 && subjects.length === 0}>
-                Yangi savol
+                {t("crsQuizNewQuestion")}
               </Button>
             </div>
           </div>
@@ -199,12 +201,12 @@ export function QuestionBankManager({
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200",
                   )}
                 >
-                  {value === "" ? "Barcha qiyinlik" : DIFFICULTY_LABEL[Number(value)]}
+                  {value === "" ? t("grdQbAllDifficulty") : t(DIFFICULTY_LABEL_KEYS[Number(value)])}
                 </button>
               );
             })}
             <span className="ml-auto text-xs text-slate-600">
-              {loading ? "Yuklanmoqda..." : `${items.length} ta savol`}
+              {loading ? t("commonLoading") : t("grdQbQuestionCount", { count: items.length })}
             </span>
           </div>
           {error ? <p className="text-sm text-rose-600">{error}</p> : null}
@@ -224,15 +226,15 @@ export function QuestionBankManager({
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          title="Savollar topilmadi"
+          title={t("grdQbNotFound")}
           description={
             activeFilters
-              ? "Filtrlarni o'zgartirib qayta urinib ko'ring."
-              : "Birinchi bank savolini qo'shish uchun 'Yangi savol' tugmasini bosing."
+              ? t("grdQbNotFoundFiltered")
+              : t("grdQbNotFoundEmpty")
           }
           action={
             <Button onClick={openCreate} disabled={courses.length === 0 && subjects.length === 0}>
-              Yangi savol
+              {t("crsQuizNewQuestion")}
             </Button>
           }
         />
@@ -241,9 +243,9 @@ export function QuestionBankManager({
           {items.map((item) => (
             <Card key={item.id} className="flex h-full flex-col p-5">
               <div className="flex flex-wrap items-center gap-1.5">
-                <Badge tone={QUESTION_TYPE_TONE[item.type]}>{QUESTION_TYPE_LABEL[item.type]}</Badge>
+                <Badge tone={QUESTION_TYPE_TONE[item.type]}>{t(QUESTION_TYPE_KEY[item.type])}</Badge>
                 <Badge tone={DIFFICULTY_TONE[item.difficulty] ?? "slate"}>
-                  {DIFFICULTY_LABEL[item.difficulty] ?? "—"}
+                  {DIFFICULTY_LABEL_KEYS[item.difficulty] ? t(DIFFICULTY_LABEL_KEYS[item.difficulty]) : "—"}
                 </Badge>
                 {item.courseTitle ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
@@ -258,7 +260,7 @@ export function QuestionBankManager({
               </div>
               <p className="mt-3 text-sm font-medium leading-relaxed text-slate-900">{item.text}</p>
               {item.type === "TEXT" ? (
-                <p className="mt-3 text-xs text-slate-600">Matnli javob — qo&apos;lda baholanadi</p>
+                <p className="mt-3 text-xs text-slate-600">{t("crsQuizTextManual")}</p>
               ) : (
                 <ul className="mt-3 space-y-1.5">
                   {item.options.map((option, index) => {
@@ -297,7 +299,7 @@ export function QuestionBankManager({
                 <span className="text-xs text-slate-600">{fmtDate(item.createdAt)}</span>
                 <div className="flex shrink-0 gap-1.5">
                   <Button size="sm" variant="secondary" onClick={() => openEdit(item)}>
-                    Tahrirlash
+                    {t("grdQbEdit")}
                   </Button>
                   <Button
                     size="sm"
@@ -305,7 +307,7 @@ export function QuestionBankManager({
                     className="text-slate-600! hover:bg-rose-50! hover:text-rose-600!"
                     onClick={() => void remove(item)}
                   >
-                    O&apos;chirish
+                    {t("grdQbDelete")}
                   </Button>
                 </div>
               </div>
@@ -318,7 +320,7 @@ export function QuestionBankManager({
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Bank savoli"
+          aria-label={t("grdQbBankQuestionAria")}
           className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-brand-950/40 p-4 backdrop-blur-sm"
         >
           <div className="w-full max-w-3xl py-4">

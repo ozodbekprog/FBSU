@@ -18,4 +18,17 @@ describe("i18n dictionaries", () => {
       expect(value.trim(), `${locale}.${key}`).not.toBe("");
     }
   });
+
+  it("barcha tillarda bir xil {placeholder} to'plamiga ega", () => {
+    const placeholders = (value: string) =>
+      [...value.matchAll(/\{(\w+)\}/g)].map((match) => match[1]).sort();
+    for (const [key, value] of Object.entries(uz)) {
+      for (const locale of ["ru", "en"] as const) {
+        expect(
+          placeholders((dictionaries[locale] as Record<string, string>)[key] ?? ""),
+          `${locale}.${key}`,
+        ).toEqual(placeholders(value));
+      }
+    }
+  });
 });

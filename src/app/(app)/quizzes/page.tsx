@@ -168,7 +168,7 @@ export default async function QuizzesPage() {
   }
 
   const enrollments = await prisma.enrollment.findMany({
-    where: { userId: user.id },
+    where: { userId: user.id, status: "ACTIVE" },
     select: { courseId: true },
   });
   const quizzes = await prisma.quiz.findMany({

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input, Label, Textarea } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type AnnouncementData = {
   id: string;
@@ -12,6 +13,7 @@ export type AnnouncementData = {
 
 export function AnnouncementsActions({ announcement }: { announcement: AnnouncementData }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(announcement.title);
   const [body, setBody] = useState(announcement.body);
@@ -36,7 +38,7 @@ export function AnnouncementsActions({ announcement }: { announcement: Announcem
 
     setSaving(false);
     if (!response.ok || !json?.ok) {
-      setError(json?.error ?? "Saqlashda xatolik yuz berdi");
+      setError(json?.error ?? t("msgSaveError"));
       return;
     }
 
@@ -45,7 +47,7 @@ export function AnnouncementsActions({ announcement }: { announcement: Announcem
   }
 
   async function handleDelete() {
-    if (!window.confirm("E'lonni o'chirishni tasdiqlaysizmi?")) return;
+    if (!window.confirm(t("msgConfirmDeleteAnnouncement"))) return;
     setDeleting(true);
     await fetch(`/api/announcements/${announcement.id}`, { method: "DELETE" });
     setDeleting(false);
@@ -56,10 +58,10 @@ export function AnnouncementsActions({ announcement }: { announcement: Announcem
     <>
       <div className="flex shrink-0 gap-2">
         <Button size="sm" variant="secondary" onClick={() => setEditing((value) => !value)}>
-          Tahrirlash
+          {t("msgEdit")}
         </Button>
         <Button size="sm" variant="danger" onClick={handleDelete} disabled={deleting}>
-          O&apos;chirish
+          {t("msgDelete")}
         </Button>
       </div>
       {editing ? (
@@ -69,7 +71,7 @@ export function AnnouncementsActions({ announcement }: { announcement: Announcem
         >
           <div className="space-y-4">
             <div>
-              <Label>Sarlavha</Label>
+              <Label>{t("msgTitleLabel")}</Label>
               <Input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
@@ -78,7 +80,7 @@ export function AnnouncementsActions({ announcement }: { announcement: Announcem
               />
             </div>
             <div>
-              <Label>Matn</Label>
+              <Label>{t("msgBodyLabel")}</Label>
               <Textarea
                 value={body}
                 onChange={(event) => setBody(event.target.value)}
@@ -91,10 +93,10 @@ export function AnnouncementsActions({ announcement }: { announcement: Announcem
           {error ? <p className="mt-3 text-sm text-rose-600">{error}</p> : null}
           <div className="mt-4 flex justify-end gap-2">
             <Button size="sm" variant="secondary" onClick={() => setEditing(false)}>
-              Bekor qilish
+              {t("commonCancel")}
             </Button>
             <Button size="sm" type="submit" disabled={saving}>
-              {saving ? "Saqlanmoqda..." : "Saqlash"}
+              {saving ? t("msgSaving") : t("commonSave")}
             </Button>
           </div>
         </form>

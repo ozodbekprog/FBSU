@@ -9,35 +9,30 @@ const BADGE_SIZES = {
 
 export const LETTER_META: Record<
   GpaLetter,
-  { label: string; gradient: string; soft: string; bar: string }
+  { gradient: string; soft: string; bar: string }
 > = {
   A: {
-    label: "A'lo",
     gradient:
       "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/30",
     soft: "border-emerald-200/70 bg-emerald-50 text-emerald-700",
     bar: "bg-emerald-400",
   },
   B: {
-    label: "Yaxshi",
     gradient: "bg-gradient-to-br from-brand-400 to-brand-700 text-white shadow-brand-500/30",
     soft: "border-brand-200/70 bg-brand-50 text-brand-700",
     bar: "bg-brand-400",
   },
   C: {
-    label: "Qoniqarli",
     gradient: "bg-gradient-to-br from-gold-300 to-gold-600 text-brand-950 shadow-gold-500/30",
     soft: "border-gold-300/70 bg-gold-300/15 text-gold-800",
     bar: "bg-gold-400",
   },
   D: {
-    label: "O'tish",
     gradient: "bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-amber-500/30",
     soft: "border-amber-200/70 bg-amber-50 text-amber-700",
     bar: "bg-amber-400",
   },
   F: {
-    label: "Qoniqarsiz",
     gradient: "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/30",
     soft: "border-rose-200/70 bg-rose-50 text-rose-700",
     bar: "bg-rose-400",

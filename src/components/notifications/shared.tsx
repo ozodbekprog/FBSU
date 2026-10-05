@@ -33,39 +33,32 @@ export function notificationKind(
 type NotificationStyle = {
   wrap: string;
   dot: string;
-  label: string;
 };
 
 const KIND_STYLES: Record<NotificationKind, NotificationStyle> = {
   message: {
     wrap: "bg-brand-50 text-brand-700 ring-brand-100",
     dot: "bg-brand-900",
-    label: "Xabar",
   },
   schedule: {
     wrap: "bg-sky-50 text-sky-600 ring-sky-100",
     dot: "bg-sky-500",
-    label: "Jadval",
   },
   grade: {
     wrap: "bg-amber-50 text-amber-600 ring-amber-100",
     dot: "bg-amber-500",
-    label: "Baho",
   },
   course: {
     wrap: "bg-emerald-50 text-emerald-600 ring-emerald-100",
     dot: "bg-emerald-500",
-    label: "Kurs",
   },
   exam: {
     wrap: "bg-purple-50 text-purple-600 ring-purple-100",
     dot: "bg-purple-500",
-    label: "Test",
   },
   system: {
     wrap: "bg-slate-100 text-slate-500 ring-slate-200/70",
     dot: "bg-slate-400",
-    label: "Tizim",
   },
 };
 

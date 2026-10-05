@@ -37,7 +37,10 @@ export function attendanceCounts(statuses: AttendanceStatus[]): AttendanceCounts
   };
   for (const status of statuses) totals[status] += 1;
   const total = statuses.length;
-  const attended = totals.PRESENT + totals.LATE + totals.EXCUSED + totals.SUSPICIOUS;
+  // Anti-fraud signals (SUSPICIOUS: VPN/proxy/geo mismatch) and teacher
+  // excusals (EXCUSED) are recorded but must NOT count as attendance —
+  // otherwise a flagged check-in still earns full credit and exam eligibility.
+  const attended = totals.PRESENT + totals.LATE;
   const percent = total > 0 ? Math.round((attended / total) * 100) : 0;
   return {
     present: totals.PRESENT,

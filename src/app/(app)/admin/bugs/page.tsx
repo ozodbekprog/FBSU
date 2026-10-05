@@ -3,9 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/ui";
 import AdminNav from "@/components/admin/AdminNav";
 import { BugsManager } from "@/components/admin/BugsManager";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 export default async function AdminBugsPage() {
   await requireRole(["ADMIN"]);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
   const reports = await prisma.bugReport.findMany({
     orderBy: { createdAt: "desc" },
@@ -32,9 +35,9 @@ export default async function AdminBugsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Admin"
-        title="Xatoliklar"
-        subtitle={`${items.length} ta xabar · ${open} ta ochiq`}
+        eyebrow={dictionary.admEyebrowAdmin}
+        title={dictionary.admBugs}
+        subtitle={translate(locale, "admBugsSubtitle", { messages: items.length, open })}
       />
       <AdminNav />
       <div className="mt-6">

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Avatar, Button, EmptyState, Input, Skeleton } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import type { ChatConversation, ChatParticipant } from "./shared";
 import { fmtListTime, previewText, roleLabel } from "./shared";
 
@@ -26,6 +27,7 @@ export function ConversationList({
   onSelect,
   onStartConversation,
 }: Props) {
+  const { t } = useI18n();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ChatParticipant[]>([]);
@@ -105,7 +107,7 @@ export function ConversationList({
     if (ok) {
       closePicker();
     } else {
-      setPickerError("Suhbat ochilmadi. Qayta urinib ko'ring.");
+      setPickerError(t("msgConversationError"));
     }
   }
 
@@ -114,7 +116,7 @@ export function ConversationList({
       <div className="border-b border-slate-100 px-4 py-3.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold text-brand-950">Suhbatlar</p>
+            <p className="text-sm font-semibold text-brand-950">{t("msgConversations")}</p>
             {conversations.length > 0 ? (
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
                 {conversations.length}
@@ -126,7 +128,7 @@ export function ConversationList({
               <path d="M12 5v14" />
               <path d="M5 12h14" />
             </svg>
-            Yangi suhbat
+            {t("msgNewConversation")}
           </Button>
         </div>
       </div>
@@ -147,11 +149,11 @@ export function ConversationList({
         ) : conversations.length === 0 ? (
           <div className="animate-fade-up p-4">
             <EmptyState
-              title="Suhbatlar yo'q"
-              description="Yangi suhbat tugmasi orqali o'qituvchi yoki talaba bilan yozishmani boshlang."
+              title={t("msgNoConversations")}
+              description={t("msgNoConversationsDesc")}
               action={
                 <Button size="sm" onClick={() => setPickerOpen(true)}>
-                  Yangi suhbat
+                  {t("msgNewConversation")}
                 </Button>
               }
             />
@@ -190,7 +192,9 @@ export function ConversationList({
                           {conversation.participant.name}
                         </span>
                         <span className={cn("shrink-0 text-[11px]", unread ? "font-medium text-brand-700" : "text-slate-600")}>
-                          {conversation.lastMessage ? fmtListTime(conversation.lastMessage.createdAt) : ""}
+                          {conversation.lastMessage
+                            ? fmtListTime(conversation.lastMessage.createdAt, t)
+                            : ""}
                         </span>
                       </span>
                       <span className="mt-0.5 flex items-center justify-between gap-2">
@@ -200,7 +204,7 @@ export function ConversationList({
                             unread ? "font-medium text-slate-700" : "text-slate-500",
                           )}
                         >
-                          {previewText(conversation, currentUserId)}
+                          {previewText(conversation, currentUserId, t)}
                         </span>
                         {unread ? (
                           <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-brand-900 text-[10px] font-semibold text-white">
@@ -227,20 +231,20 @@ export function ConversationList({
               <div
                 role="dialog"
                 aria-modal="true"
-                aria-label="Yangi suhbat"
+                aria-label={t("msgNewConversation")}
                 className="animate-fade-up relative w-full max-w-md overflow-hidden rounded-3xl border border-white/60 bg-white shadow-lift"
               >
                 <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
                   <div>
-                    <p className="text-base font-semibold text-brand-950">Yangi suhbat</p>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                      O&apos;qituvchi yoki talabani tanlang
+                    <p className="text-base font-semibold text-brand-950">
+                      {t("msgNewConversation")}
                     </p>
+                    <p className="mt-0.5 text-xs text-slate-500">{t("msgPickPerson")}</p>
                   </div>
                   <button
                     type="button"
                     onClick={closePicker}
-                    aria-label="Yopish"
+                    aria-label={t("msgClose")}
                     className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-slate-600 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-700"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -257,7 +261,7 @@ export function ConversationList({
                       setQuery(event.target.value);
                       runSearch(event.target.value);
                     }}
-                    placeholder="Ism yoki email bo'yicha qidirish..."
+                    placeholder={t("msgSearchPlaceholder")}
                   />
                   {pickerError ? (
                     <p className="mt-2 px-1 text-xs text-rose-600">{pickerError}</p>
@@ -271,7 +275,7 @@ export function ConversationList({
                             <path d="m20 20-3.5-3.5" />
                           </svg>
                         </span>
-                        <p className="text-xs text-slate-600">Qidirish uchun ism yoki email yozing</p>
+                        <p className="text-xs text-slate-600">{t("msgSearchHint")}</p>
                       </div>
                     ) : searching ? (
                       <ul className="space-y-1">
@@ -295,7 +299,7 @@ export function ConversationList({
                             <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                           </svg>
                         </span>
-                        <p className="text-xs text-slate-600">Hech kim topilmadi</p>
+                        <p className="text-xs text-slate-600">{t("msgNoResults")}</p>
                       </div>
                     ) : (
                       <ul className="space-y-1">
@@ -317,7 +321,7 @@ export function ConversationList({
                                   {person.name}
                                 </span>
                                 <span className="block text-xs text-slate-500">
-                                  {roleLabel(person.role)}
+                                  {roleLabel(person.role, t)}
                                 </span>
                               </span>
                               <svg

@@ -2,9 +2,12 @@ import { requireRole } from "@/lib/auth";
 import { PageHeader } from "@/components/ui";
 import SettingsManager, { type SettingsModule } from "@/components/admin/SettingsManager";
 import { MODULE_KEYS, MODULE_META, getModuleFlags } from "@/server/settings";
+import { getDictionary, getLocale } from "@/i18n";
 
 export default async function AdminSettingsPage() {
   await requireRole(["ADMIN"]);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const flags = await getModuleFlags();
 
   const modules: SettingsModule[] = MODULE_KEYS.map((key) => ({
@@ -16,9 +19,9 @@ export default async function AdminSettingsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Boshqaruv"
-        title="Sozlamalar"
-        subtitle="Modullarni yoqing yoki o'chiring — o'zgarish darhol kuchga kiradi"
+        eyebrow={dictionary.admEyebrowManage}
+        title={dictionary.admSettings}
+        subtitle={dictionary.admSettingsPageSubtitle}
       />
       <SettingsManager modules={modules} initialFlags={flags} />
     </>

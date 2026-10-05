@@ -1,4 +1,5 @@
 import { isStaff, requireUser } from "@/lib/auth";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { getStaffExams, getStudentExams } from "@/components/exams/data";
 import { getStaffSessions, getStudentSessions } from "@/components/exams/session-data";
 import { StaffExamCard, StudentExamCard } from "@/components/exams/cards";
@@ -8,14 +9,30 @@ import { StaffSessionCard, StudentSessionCard } from "@/components/exams/session
 import { SectionHeading } from "@/components/exams/session-badges";
 import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
 
-const GROUPS = [
-  { key: "upcoming", title: "Kelayotgan", tone: "blue", subtitle: "Rejalashtirilgan nazorat ishlari" },
-  { key: "today", title: "Bugun", tone: "amber", subtitle: "Bugun topshirilishi kerak" },
-  { key: "past", title: "O'tgan", tone: "slate", subtitle: "Yakunlangan nazorat ishlari" },
-] as const;
-
 export default async function ExamsPage() {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const groupSections = [
+    {
+      key: "upcoming",
+      title: dictionary.grdGroupUpcoming,
+      tone: "blue",
+      subtitle: dictionary.grdGroupUpcomingSubtitle,
+    },
+    {
+      key: "today",
+      title: dictionary.grdGroupToday,
+      tone: "amber",
+      subtitle: dictionary.grdGroupTodaySubtitle,
+    },
+    {
+      key: "past",
+      title: dictionary.grdGroupPast,
+      tone: "slate",
+      subtitle: dictionary.grdGroupPastSubtitle,
+    },
+  ] as const;
 
   if (isStaff(user.role)) {
     const [groups, sessions] = await Promise.all([
@@ -30,29 +47,29 @@ export default async function ExamsPage() {
     return (
       <>
         <PageHeader
-          title="Imtihonlar / Nazorat ishlari"
+          title={dictionary.grdExamsTitle}
           subtitle={
             user.role === "TEACHER"
-              ? "O'qitadigan kurslaringiz bo'yicha imtihon sessiyalari va nazorat ishlari"
-              : "Barcha kurslar bo'yicha imtihon sessiyalari va nazorat ishlari"
+              ? dictionary.grdExamsStaffSubtitleTeacher
+              : dictionary.grdExamsStaffSubtitleAdmin
           }
         />
         <SectionHeading
-          title="Imtihon sessiyalari"
-          subtitle="Haqiqiy imtihonlar: sana, xona va ruxsat ro'yxati"
+          title={dictionary.grdExamSessions}
+          subtitle={dictionary.grdExamSessionsSubtitle}
           action={
             <ButtonLink href="/exams/sessions" size="sm" variant="secondary">
-              Barcha sessiyalar
+              {dictionary.grdAllSessions}
             </ButtonLink>
           }
         />
         {sessions.length === 0 ? (
           <EmptyState
-            title="Imtihon sessiyalari yo'q"
-            description="Yangi sessiya yaratib, talabalar ro'yxatini shakllantiring."
+            title={dictionary.grdNoExamSessions}
+            description={dictionary.grdNoExamSessionsDesc}
             action={
               <ButtonLink href="/exams/sessions" size="sm">
-                Sessiya yaratish
+                {dictionary.grdCreateSession}
               </ButtonLink>
             }
           />
@@ -65,50 +82,50 @@ export default async function ExamsPage() {
         )}
 
         <SectionHeading
-          title="Nazorat ishlari"
-          subtitle="Test asosidagi nazorat ishlari (quiz)"
+          title={dictionary.grdAssessments}
+          subtitle={dictionary.grdAssessmentsSubtitle}
         />
         <div className="mb-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <ExamStat
             icon="clipboard"
-            label="Nazorat ishlari"
+            label={dictionary.grdAssessments}
             value={items.length}
-            hint={`${published} ta e'lon qilingan`}
+            hint={translate(locale, "grdPublishedCount", { count: published })}
           />
           <ExamStat
             icon="calendar"
-            label="Faol"
+            label={dictionary.grdActive}
             value={groups.upcoming.length + groups.today.length}
-            hint={`${groups.today.length} ta bugun`}
+            hint={translate(locale, "grdTodayCount", { count: groups.today.length })}
             tone="amber"
           />
           <ExamStat
             icon="users"
-            label="Topshirganlar"
+            label={dictionary.grdSubmitters}
             value={submitted}
-            hint={`${attempts} ta urinish`}
+            hint={translate(locale, "grdAttemptsCount", { count: attempts })}
             tone="emerald"
           />
           <ExamStat
             icon="check"
-            label="Bugungi yuklama"
+            label={dictionary.grdTodayLoad}
             value={groups.today.length}
-            hint="Bugun yakunlanadigan ishlar"
+            hint={dictionary.grdTodayDeadlines}
             tone="rose"
           />
         </div>
         {items.length === 0 ? (
           <EmptyState
-            title="Nazorat ishlari yo'q"
-            description="Kurslaringizda muddati belgilangan testlar mavjud emas. Yangi nazorat ishi yaratib, muddat belgilang."
+            title={dictionary.grdNoAssessments}
+            description={dictionary.grdNoAssessmentsDescStaff}
             action={
               <ButtonLink href="/quizzes/new" size="sm">
-                Nazorat ishi yaratish
+                {dictionary.grdCreateAssessment}
               </ButtonLink>
             }
           />
         ) : (
-          GROUPS.map((group) => (
+          groupSections.map((group) => (
             <ExamGroupSection
               key={group.key}
               title={group.title}
@@ -137,22 +154,26 @@ export default async function ExamsPage() {
   return (
     <>
       <PageHeader
-        title="Imtihonlar / Nazorat ishlari"
-        subtitle={`${user.group?.name ?? "Talaba"} · ${sessions.length} ta sessiya · ${items.length} ta nazorat ishi`}
+        title={dictionary.grdExamsTitle}
+        subtitle={translate(locale, "grdStudentExamsSubtitle", {
+          group: user.group?.name ?? dictionary.grdStudent,
+          sessions: sessions.length,
+          assessments: items.length,
+        })}
       />
       <SectionHeading
-        title="Mening imtihonlarim"
-        subtitle="Sana, xona, o'rindiq va ruxsat holati"
+        title={dictionary.grdMyExams}
+        subtitle={dictionary.grdMyExamsSubtitle}
         action={
           <ButtonLink href="/exams/sessions" size="sm" variant="secondary">
-            Barchasi
+            {dictionary.grdAll}
           </ButtonLink>
         }
       />
       {sessions.length === 0 ? (
         <EmptyState
-          title="Imtihon sessiyalari yo'q"
-          description="Kurslaringiz bo'yicha imtihon sessiyalari hali e'lon qilinmagan."
+          title={dictionary.grdNoExamSessions}
+          description={dictionary.grdNoExamSessionsStudentDesc}
         />
       ) : (
         <div className="mb-9 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -162,43 +183,48 @@ export default async function ExamsPage() {
         </div>
       )}
 
-      <SectionHeading title="Nazorat ishlari" subtitle="Test asosidagi nazorat ishlari (quiz)" />
+      <SectionHeading
+        title={dictionary.grdAssessments}
+        subtitle={dictionary.grdAssessmentsSubtitle}
+      />
       <div className="mb-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <ExamStat
           icon="clipboard"
-          label="Nazorat ishlari"
+          label={dictionary.grdAssessments}
           value={items.length}
-          hint={`${groups.past.length} ta yakunlangan`}
+          hint={translate(locale, "grdCompletedCount", { count: groups.past.length })}
         />
         <ExamStat
           icon="calendar"
-          label="Kelayotgan"
+          label={dictionary.grdUpcoming}
           value={groups.upcoming.length + groups.today.length}
-          hint={`${groups.today.length} ta bugun`}
+          hint={translate(locale, "grdTodayCount", { count: groups.today.length })}
           tone="amber"
         />
         <ExamStat
           icon="shieldCheck"
-          label="Ruxsat bor"
+          label={dictionary.grdHasPermission}
           value={eligible}
-          hint="Davomat talabi bajarilgan"
+          hint={dictionary.grdAttendanceRequirementMet}
           tone="emerald"
         />
         <ExamStat
           icon="check"
-          label="Topshirilgan"
+          label={dictionary.grdSubmitted}
           value={submitted}
-          hint={`${items.length - eligible} ta ruxsatsiz`}
+          hint={translate(locale, "grdNoPermissionCount", {
+            count: items.length - eligible,
+          })}
           tone="gold"
         />
       </div>
       {items.length === 0 ? (
         <EmptyState
-          title="Nazorat ishlari yo'q"
-          description="Kurslaringizda muddati belgilangan e'lon qilingan test yo'q."
+          title={dictionary.grdNoAssessments}
+          description={dictionary.grdNoAssessmentsStudentDesc}
         />
       ) : (
-        GROUPS.map((group) => (
+        groupSections.map((group) => (
           <ExamGroupSection
             key={group.key}
             title={group.title}

@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { getCurrentUser, isStaff } from "@/lib/auth";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
+import { uploadsRoot } from "@/lib/uploads";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
 
 const MAX_SIZE = 20 * 1024 * 1024;
@@ -41,10 +42,7 @@ const SIGNATURES: Record<string, (buffer: Buffer) => boolean> = {
 };
 
 function getUploadDir() {
-  const base = process.env.UPLOAD_DIR
-    ? path.resolve(process.env.UPLOAD_DIR)
-    : path.join(process.cwd(), "uploads");
-  return base;
+  return uploadsRoot();
 }
 
 export async function POST(request: Request) {

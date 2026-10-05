@@ -4,15 +4,17 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Button, Card, CardBody, CardHeader, Input, Label, Progress } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
+import type { Dictionary } from "@/i18n";
 import type { GenerateCountKey, GenerateResult, GeneratorStats } from "@/server/generator";
 
 type ApiResponse = { ok: boolean; data?: GenerateResult; error?: string };
 
-const RESULT_ITEMS: { key: GenerateCountKey; label: string; hint: string; tone: string; icon: ReactNode }[] = [
+const RESULT_ITEMS: { key: GenerateCountKey; label: keyof Dictionary; hint: keyof Dictionary; tone: string; icon: ReactNode }[] = [
   {
     key: "subjects",
-    label: "Fanlar",
-    hint: "yangi fan",
+    label: "admSubjects",
+    hint: "admGenSubjectsHint",
     tone: "from-brand-500 to-brand-900",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
@@ -23,8 +25,8 @@ const RESULT_ITEMS: { key: GenerateCountKey; label: string; hint: string; tone: 
   },
   {
     key: "teachers",
-    label: "O'qituvchilar",
-    hint: "yangi o'qituvchi",
+    label: "admColTeachers",
+    hint: "admGenTeachersHint",
     tone: "from-sky-400 to-brand-700",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
@@ -35,8 +37,8 @@ const RESULT_ITEMS: { key: GenerateCountKey; label: string; hint: string; tone: 
   },
   {
     key: "groups",
-    label: "Guruhlar",
-    hint: "yangi guruh",
+    label: "admGroups",
+    hint: "admGenGroupsHint",
     tone: "from-violet-400 to-purple-700",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
@@ -48,8 +50,8 @@ const RESULT_ITEMS: { key: GenerateCountKey; label: string; hint: string; tone: 
   },
   {
     key: "students",
-    label: "Talabalar",
-    hint: "yangi talaba",
+    label: "admStudents",
+    hint: "admGenStudentsHint",
     tone: "from-emerald-400 to-teal-600",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
@@ -62,8 +64,8 @@ const RESULT_ITEMS: { key: GenerateCountKey; label: string; hint: string; tone: 
   },
   {
     key: "courses",
-    label: "Kurslar",
-    hint: "yangi kurs",
+    label: "admCourses",
+    hint: "admGenCoursesHint",
     tone: "from-amber-300 to-gold-500",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
@@ -74,8 +76,8 @@ const RESULT_ITEMS: { key: GenerateCountKey; label: string; hint: string; tone: 
   },
   {
     key: "scheduleEntries",
-    label: "Jadval",
-    hint: "yangi dars",
+    label: "admGenSchedule",
+    hint: "admGenScheduleHint",
     tone: "from-rose-400 to-pink-600",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
@@ -86,8 +88,8 @@ const RESULT_ITEMS: { key: GenerateCountKey; label: string; hint: string; tone: 
   },
   {
     key: "attendance",
-    label: "Davomat",
-    hint: "yangi yozuv",
+    label: "admGenAttendance",
+    hint: "admGenAttendanceHint",
     tone: "from-teal-400 to-cyan-700",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
@@ -99,14 +101,15 @@ const RESULT_ITEMS: { key: GenerateCountKey; label: string; hint: string; tone: 
   },
 ];
 
-const PRESETS = [
-  { label: "Kichik", groups: "2", students: "5" },
-  { label: "Standart", groups: "5", students: "8" },
-  { label: "Katta", groups: "10", students: "15" },
+const PRESETS: { label: keyof Dictionary; groups: string; students: string }[] = [
+  { label: "admGenPresetSmall", groups: "2", students: "5" },
+  { label: "admGenPresetStandard", groups: "5", students: "8" },
+  { label: "admGenPresetLarge", groups: "10", students: "15" },
 ];
 
 export default function GeneratorManager({ initial }: { initial: GeneratorStats }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [groups, setGroups] = useState("5");
   const [studentsPerGroup, setStudentsPerGroup] = useState("8");
   const [busy, setBusy] = useState(false);
@@ -138,13 +141,13 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
       });
       const json = (await res.json().catch(() => null)) as ApiResponse | null;
       if (!res.ok || !json?.ok || !json.data) {
-        setError(json?.error ?? "Generatsiya amalga oshmadi");
+        setError(json?.error ?? t("admGenFailed"));
         return;
       }
       setResult(json.data);
       router.refresh();
     } catch {
-      setError("Tarmoqda xatolik");
+      setError(t("admNetworkError"));
     } finally {
       setBusy(false);
     }
@@ -173,12 +176,9 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
             </svg>
           </span>
           <div className="min-w-0">
-            <p className="font-semibold tracking-tight text-amber-900">Ogohlantirish</p>
+            <p className="font-semibold tracking-tight text-amber-900">{t("admGenWarning")}</p>
             <p className="mt-0.5 text-sm leading-relaxed text-amber-800/90">
-              Bu amal bazaga yangi demo ma&apos;lumotlarni qo&apos;shadi. Mavjud yozuvlar o&apos;chirilmaydi va
-              takroriy generatsiya dublikat yaratmaydi. Yaratilgan foydalanuvchilar uchun bir martalik tasodifiy
-              parol generatsiya qilinadi va natijada ko&apos;rsatiladi.
-            </p>
+{t("admGenWarningText")}</p>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {RESULT_ITEMS.map((item) => (
                 <span
@@ -186,7 +186,7 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
                   className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-0.5 text-[11px] font-medium text-amber-800 shadow-[0_0_0_1px_rgba(217,119,6,0.16)]"
                 >
                   <span className={cn("size-1.5 rounded-full bg-gradient-to-br", item.tone)} />
-                  {item.label}
+                  {t(item.label)}
                 </span>
               ))}
             </div>
@@ -197,21 +197,19 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="animate-fade-up lg:col-span-2" >
           <CardHeader
-            title="Generatsiya parametrlari"
-            subtitle="Yangi guruhlar va talabalar soni"
+            title={t("admGenParamsTitle")}
+            subtitle={t("admGenParamsSubtitle")}
             action={
               busy ? (
-                <Badge tone="amber" className="animate-pulse">
-                  Jarayonda
-                </Badge>
+                <Badge tone="amber" className="animate-pulse">{t("admGenInProgress")}</Badge>
               ) : (
-                <Badge tone="green">Tayyor</Badge>
+                <Badge tone="green">{t("admGenReady")}</Badge>
               )
             }
           />
           <CardBody className="space-y-5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium uppercase tracking-wider text-slate-600">Tayyor profil:</span>
+              <span className="text-xs font-medium uppercase tracking-wider text-slate-600">{t("admGenPresetLabel")}</span>
               {PRESETS.map((preset) => {
                 const active = groups === preset.groups && studentsPerGroup === preset.students;
                 return (
@@ -230,7 +228,7 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
                         : "border border-slate-200 bg-white text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800",
                     )}
                   >
-                    {preset.label} · {preset.groups}×{preset.students}
+                    {t(preset.label)} · {preset.groups}×{preset.students}
                   </button>
                 );
               })}
@@ -239,7 +237,7 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
                 <div className="flex items-center justify-between gap-2">
-                  <Label className="mb-1.5">Guruhlar soni (1–10)</Label>
+                  <Label className="mb-1.5">{t("admGenGroupsLabel")}</Label>
                   <span className="text-xs font-semibold tabular-nums text-brand-700">{groups || "—"}</span>
                 </div>
                 <Input
@@ -257,17 +255,15 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
                   max={10}
                   value={groups || "1"}
                   disabled={busy}
-                  aria-label="Guruhlar soni"
+                  aria-label={t("admGenGroupsAria")}
                   onChange={(event) => setGroups(event.target.value)}
                   className="mt-2.5 w-full accent-brand-900 disabled:opacity-50"
                 />
-                <p className="mt-1.5 text-xs text-slate-600">
-                  CS-25, CS-26, EE-25, ME-25, SE-25 ro&apos;yxatidan olinadi
-                </p>
+                <p className="mt-1.5 text-xs text-slate-600">{t("admGenGroupsHint")}</p>
               </div>
               <div>
                 <div className="flex items-center justify-between gap-2">
-                  <Label className="mb-1.5">Har guruhga talaba (4–20)</Label>
+                  <Label className="mb-1.5">{t("admGenStudentsLabel")}</Label>
                   <span className="text-xs font-semibold tabular-nums text-brand-700">{studentsPerGroup || "—"}</span>
                 </div>
                 <Input
@@ -285,21 +281,21 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
                   max={20}
                   value={studentsPerGroup || "4"}
                   disabled={busy}
-                  aria-label="Har guruhga talaba"
+                  aria-label={t("admGenStudentsAria")}
                   onChange={(event) => setStudentsPerGroup(event.target.value)}
                   className="mt-2.5 w-full accent-brand-900 disabled:opacity-50"
                 />
-                <p className="mt-1.5 text-xs text-slate-600">Faqat yangi yaratilgan guruhlarga qo&apos;shiladi</p>
+                <p className="mt-1.5 text-xs text-slate-600">{t("admGenStudentsHint")}</p>
               </div>
             </div>
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-medium text-slate-500">
-                  {busy ? "Generatsiya qilinmoqda..." : result ? "Yakunlandi" : "Kutilmoqda"}
+                  {busy ? t("admGenGenerating") : result ? t("admGenCompleted") : t("admGenWaiting")}
                 </span>
                 <span className="tabular-nums text-slate-600">
-                  {result ? `${createdTotal} ta yozuv qo'shildi` : `≈ ${estimate} ta yangi talaba`}
+                  {result ? t("admGenEntriesAdded", { count: createdTotal }) : t("admGenEstimate", { count: estimate })}
                 </span>
               </div>
               <div className="h-1 w-full overflow-hidden rounded-full bg-slate-100">
@@ -322,7 +318,7 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
                     <circle cx="12" cy="12" r="3.5" />
                   </svg>
                 )}
-                {busy ? "Generatsiya qilinmoqda..." : "Generatsiya qilish"}
+                {busy ? t("admGenGenerating") : t("admGenRun")}
               </Button>
               {error ? (
                 <span className="animate-fade-up inline-flex items-center gap-1.5 rounded-lg bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700">
@@ -338,7 +334,7 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
         </Card>
 
         <Card className="animate-fade-up">
-          <CardHeader title="Baza holati" subtitle="Generator tomonidan yaratiladigan resurslar" />
+          <CardHeader title={t("admGenBaseTitle")} subtitle={t("admGenBaseSubtitle")} />
           <CardBody className="space-y-3">
             {initial.checks.map((check) => {
               const pct =
@@ -351,7 +347,7 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
                 <div key={check.key} className="rounded-xl border border-slate-200/70 bg-slate-50/60 p-3.5">
                   <div className="flex items-center justify-between gap-3">
                     <span className="min-w-0 truncate text-sm font-medium text-slate-700">{check.label}</span>
-                    <Badge tone={check.done ? "green" : "amber"}>{check.done ? "Tayyor" : "To'ldirilmagan"}</Badge>
+                    <Badge tone={check.done ? "green" : "amber"}>{check.done ? t("admGenReady") : t("admGenIncomplete")}</Badge>
                   </div>
                   <div className="mt-2.5 flex items-center gap-2.5">
                     <Progress value={pct} max={100} className="flex-1" />
@@ -375,10 +371,10 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
         >
           <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
             <div>
-              <h2 className="text-lg font-semibold tracking-tight text-brand-950">Natija</h2>
-              <p className="mt-1 text-sm text-slate-500">Shu generatsiyada qo&apos;shilgan yozuvlar soni</p>
+              <h2 className="text-lg font-semibold tracking-tight text-brand-950">{t("admGenResultTitle")}</h2>
+              <p className="mt-1 text-sm text-slate-500">{t("admGenResultSubtitle")}</p>
             </div>
-            <Badge tone="purple">Jami {createdTotal}</Badge>
+            <Badge tone="purple">{t("admGenTotalBadge", { count: createdTotal })}</Badge>
           </div>
 
           <Card className="relative mb-4 overflow-hidden border-brand-200/70">
@@ -391,16 +387,16 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
                   </svg>
                 </span>
                 <div>
-                  <p className="text-sm font-medium text-slate-500">Jami yangi yozuvlar</p>
+                  <p className="text-sm font-medium text-slate-500">{t("admGenTotalNew")}</p>
                   <p className="mt-0.5 text-4xl font-semibold tabular-nums tracking-tight text-brand-950">
                     {createdTotal}
                   </p>
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge tone="green">Muvaffaqiyatli</Badge>
+                <Badge tone="green">{t("admGenSuccess")}</Badge>
                 <Badge tone="slate">
-                  {resultItems.filter((item) => item.value > 0).length} turdagi resurs
+                  {t("admGenResourceTypes", { count: resultItems.filter((item) => item.value > 0).length })}
                 </Badge>
               </div>
             </CardBody>
@@ -417,13 +413,13 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
                   </svg>
                 </span>
                 <div>
-                  <p className="text-sm font-medium text-slate-500">Yaratilgan akkauntlar uchun vaqtinchalik parol</p>
+                  <p className="text-sm font-medium text-slate-500">{t("admGenTempPassword")}</p>
                   <p className="mt-0.5 font-mono text-xl font-semibold tracking-tight text-brand-950">
                     {result.password}
                   </p>
                 </div>
               </div>
-              <Badge tone="amber">Bir marta ko&apos;rsatiladi</Badge>
+              <Badge tone="amber">{t("admGenShownOnce")}</Badge>
             </CardBody>
           </Card>
 
@@ -452,8 +448,8 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
                       {item.value}
                     </span>
                   </div>
-                  <p className="mt-3 text-sm font-medium text-slate-700">{item.label}</p>
-                  <p className="text-xs text-slate-600">{item.hint}</p>
+                  <p className="mt-3 text-sm font-medium text-slate-700">{t(item.label)}</p>
+                  <p className="text-xs text-slate-600">{t(item.hint)}</p>
                   <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
                     <div
                       className={cn("h-full rounded-full bg-gradient-to-r transition-all duration-700", item.tone)}

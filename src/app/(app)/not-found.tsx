@@ -1,6 +1,9 @@
 import { ButtonLink, Card, CardBody } from "@/components/ui";
+import { getDictionary, getLocale } from "@/i18n";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
       <Card className="w-full max-w-md">
@@ -8,12 +11,10 @@ export default function NotFound() {
           <p className="text-5xl font-bold tracking-tight text-slate-200">
             4<span className="text-blue-600">0</span>4
           </p>
-          <h1 className="text-lg font-semibold text-slate-900">Sahifa topilmadi</h1>
-          <p className="text-sm text-slate-500">
-            Siz izlagan sahifa mavjud emas, o&apos;chirilgan yoki manzil xato kiritilgan.
-          </p>
+          <h1 className="text-lg font-semibold text-slate-900">{dictionary.mscNotFoundTitle}</h1>
+          <p className="text-sm text-slate-500">{dictionary.mscNotFoundBodyApp}</p>
           <div className="mt-2">
-            <ButtonLink href="/dashboard">Dashboardga qaytish</ButtonLink>
+            <ButtonLink href="/dashboard">{dictionary.mscBackToDashboard}</ButtonLink>
           </div>
         </CardBody>
       </Card>

@@ -6,6 +6,7 @@ export async function apiFetch<T = unknown>(
   url: string,
   method: "GET" | "POST" | "PATCH" | "DELETE",
   body?: unknown,
+  fallbackError = "Server javob bermadi",
 ): Promise<ApiResult<T>> {
   const headers: Record<string, string> = {};
   if (body !== undefined) headers["Content-Type"] = "application/json";
@@ -19,6 +20,6 @@ export async function apiFetch<T = unknown>(
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const json = (await response.json().catch(() => null)) as ApiResult<T> | null;
-  if (!json) return { ok: false, error: "Server javob bermadi" };
+  if (!json) return { ok: false, error: fallbackError };
   return json;
 }

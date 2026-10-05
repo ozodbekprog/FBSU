@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Avatar, Badge, ButtonLink, Card, CardBody } from "@/components/ui";
 import { EnrollButton } from "@/components/catalog/enroll-button";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type CatalogCourse = {
   id: string;
@@ -13,6 +16,7 @@ export type CatalogCourse = {
   materialsCount: number;
   studentsCount: number;
   isEnrolled: boolean;
+  enrollmentStatus?: "PENDING" | "ACTIVE" | "REJECTED" | null;
 };
 
 function BookIcon() {
@@ -108,6 +112,7 @@ export function CatalogCourseCard({
   staff: boolean;
   variant?: "catalog" | "elective";
 }) {
+  const { t } = useI18n();
   const isElective = variant === "elective";
 
   return (
@@ -127,12 +132,12 @@ export function CatalogCourseCard({
         <span className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/20 to-transparent" />
         <span className="absolute inset-x-0 bottom-0 h-px bg-gold-400/70" />
         <span className="absolute left-4 top-3.5 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80 ring-1 ring-inset ring-white/20 backdrop-blur">
-          Kurs
+          {t("crsBadgeCourse")}
         </span>
         {isElective ? (
           <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-gradient-to-b from-gold-300 to-gold-500 px-2.5 py-1 text-[11px] font-semibold text-brand-950 shadow-sm ring-1 ring-inset ring-white/40">
             <StarIcon />
-            Tanlov fan
+            {t("crsElectiveBadge")}
           </span>
         ) : null}
       </div>
@@ -166,17 +171,17 @@ export function CatalogCourseCard({
             {course.description}
           </p>
         ) : (
-          <p className="mt-3 min-h-10 text-sm leading-relaxed text-slate-400">Tavsif kiritilmagan</p>
+          <p className="mt-3 min-h-10 text-sm leading-relaxed text-slate-400">{t("crsNoDescription")}</p>
         )}
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-500 ring-1 ring-inset ring-slate-200/70">
             <BookIcon />
-            {course.materialsCount} material
+            {t("crsMaterialsCount", { count: course.materialsCount })}
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-500 ring-1 ring-inset ring-slate-200/70">
             <UsersIcon />
-            {course.studentsCount} talaba
+            {t("crsStudentsCount", { count: course.studentsCount })}
           </span>
         </div>
 
@@ -188,14 +193,14 @@ export function CatalogCourseCard({
               size="sm"
               className="group/action w-full justify-center"
             >
-              Boshqarish
+              {t("crsManage")}
               <ArrowIcon />
             </ButtonLink>
           ) : course.isEnrolled ? (
             <>
               <Badge tone="green" className="shrink-0 gap-1">
                 <CheckIcon />
-                Yozilgansiz
+                {t("crsEnrolledBadge")}
               </Badge>
               <ButtonLink
                 href={`/courses/${course.slug}`}
@@ -203,10 +208,14 @@ export function CatalogCourseCard({
                 size="sm"
                 className="group/action min-w-32 flex-1 justify-center"
               >
-                Kursga o&apos;tish
+                {t("crsGoToCourse")}
                 <ArrowIcon />
               </ButtonLink>
             </>
+          ) : course.enrollmentStatus === "PENDING" ? (
+            <Badge tone="amber" className="w-full justify-center px-3 py-2">
+              {t("crsPendingApproval")}
+            </Badge>
           ) : (
             <EnrollButton courseId={course.id} />
           )}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { Avatar, Badge, ButtonLink, Card, CardBody, EmptyState, PageHeader } from "@/components/ui";
 import { cn, fmtDateTime } from "@/lib/utils";
 import { canManageCourse } from "@/components/courses/course-access";
@@ -15,6 +16,8 @@ export default async function CourseForumPage({
   params: Promise<{ slug: string }>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const { slug } = await params;
 
   const course = await prisma.course.findUnique({ where: { slug } });
@@ -23,7 +26,7 @@ export default async function CourseForumPage({
   const management = canManageCourse(user, course);
   if (user.role === "STUDENT") {
     const enrolled = await prisma.enrollment.findUnique({
-      where: { courseId_userId: { courseId: course.id, userId: user.id } },
+      where: { courseId_userId: { courseId: course.id, userId: user.id }, status: "ACTIVE" },
     });
     if (!enrolled) notFound();
   } else if (!management) {
@@ -42,11 +45,11 @@ export default async function CourseForumPage({
   return (
     <>
       <PageHeader
-        title="Forum"
+        title={dictionary.crsForum}
         subtitle={course.title}
         action={
           <ButtonLink href={`/courses/${course.slug}`} variant="secondary" size="sm">
-            Kurs sahifasi
+            {dictionary.crsCoursePage}
           </ButtonLink>
         }
       />
@@ -56,8 +59,8 @@ export default async function CourseForumPage({
 
       {topics.length === 0 ? (
         <EmptyState
-          title="Mavzular yo'q"
-          description="Birinchi savol yoki muhokamani boshlang."
+          title={dictionary.crsNoTopics}
+          description={dictionary.crsNoTopicsDesc}
         />
       ) : (
         <div className="space-y-3">
@@ -89,7 +92,7 @@ export default async function CourseForumPage({
                           <path d="M12 17v5" />
                           <path d="M9 10.8V4h6v6.8l2 2.2H7z" />
                         </svg>
-                        Pin
+                        {dictionary.crsPinned}
                       </Badge>
                     ) : null}
                     <Link
@@ -118,7 +121,7 @@ export default async function CourseForumPage({
                       >
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                       </svg>
-                      {topic._count.replies} javob
+                      {translate(locale, "crsRepliesCount", { count: topic._count.replies })}
                     </span>
                   </div>
                   <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-600">

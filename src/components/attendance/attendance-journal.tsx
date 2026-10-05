@@ -3,11 +3,15 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Avatar, Badge, ButtonLink, Card, CardHeader, EmptyState } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
+import { DAY_KEYS, MONTH_KEYS } from "@/components/schedule/week-utils";
 import {
   JOURNAL_MIN_PERCENT,
-  JOURNAL_STATUS_META,
+  JOURNAL_STATUS_LABEL_KEYS,
   JOURNAL_STATUS_ORDER,
+  JOURNAL_STATUS_SHORT_KEYS,
+  JOURNAL_STATUS_STYLE,
   journalDateParts,
   journalMonthKey,
   journalMonthKeys,
@@ -68,12 +72,24 @@ export function AttendanceJournal({
   canEdit: boolean;
 }) {
   const [records, setRecords] = useState(initialRecords);
+  const { t } = useI18n();
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [monthKey, setMonthKey] = useState<string | null>(null);
   const [subGroupFilter, setSubGroupFilter] = useState<string | null>(null);
   const today = useSyncExternalStore(subscribeToday, localToday, () => null);
+
+  const monthNames = useMemo(() => MONTH_KEYS.map((key) => t(key)), [t]);
+  const weekdays = useMemo(() => DAY_KEYS.map((key) => t(key)), [t]);
+
+  function statusMeta(status: JournalStatus) {
+    return {
+      ...JOURNAL_STATUS_STYLE[status],
+      short: t(JOURNAL_STATUS_SHORT_KEYS[status]),
+      label: t(JOURNAL_STATUS_LABEL_KEYS[status]),
+    };
+  }
 
   const months = useMemo(() => journalMonthKeys(dates), [dates]);
   const activeMonth = monthKey && months.includes(monthKey) ? monthKey : months[months.length - 1] ?? null;
@@ -214,10 +230,10 @@ export function AttendanceJournal({
     } | null;
     if (!response.ok || !json?.ok) {
       setStatusLocally(studentId, date, previous);
-      setError(json?.error ?? "Saqlashda xatolik yuz berdi");
+      setError(json?.error ?? t("schSaveError"));
       return;
     }
-    setMessage("Davomat saqlandi");
+    setMessage(t("schAttendanceSaved"));
   }
 
   async function clearStatus() {
@@ -239,10 +255,10 @@ export function AttendanceJournal({
     } | null;
     if (!response.ok || !json?.ok) {
       setStatusLocally(studentId, date, previous);
-      setError(json?.error ?? "O'chirishda xatolik yuz berdi");
+      setError(json?.error ?? t("schDeleteError"));
       return;
     }
-    setMessage("Yozuv tozalandi");
+    setMessage(t("schRecordCleared"));
   }
 
   const editingStudent = editor ? visibleStudents.find((student) => student.id === editor.studentId) : null;
@@ -253,8 +269,8 @@ export function AttendanceJournal({
     <>
       <Card className="overflow-hidden">
         <CardHeader
-          title="Guruh jurnali"
-          subtitle={`${visibleStudents.length} ta talaba · ${dates.length} ta dars`}
+          title={t("schGroupJournalTitle")}
+          subtitle={t("schJournalCounts", { students: visibleStudents.length, dates: dates.length })}
           action={
             months.length > 0 ? (
               <div className="flex items-center gap-2">
@@ -264,13 +280,13 @@ export function AttendanceJournal({
                     onClick={() => setMonthKey(todayMonth)}
                     className="rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 transition-colors duration-150 hover:bg-brand-100"
                   >
-                    Bugun
+                    {t("schTodayCap")}
                   </button>
                 ) : null}
                 <div className="flex items-center gap-1 rounded-full border border-slate-200/80 bg-white p-1 shadow-[0_2px_8px_-4px_rgba(29,52,96,0.25)]">
                   <button
                     type="button"
-                    aria-label="Oldingi oy"
+                    aria-label={t("schPrevMonth")}
                     disabled={monthIndex <= 0}
                     onClick={() => setMonthKey(months[monthIndex - 1] ?? activeMonth)}
                     className="flex size-7 items-center justify-center rounded-full text-slate-500 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-800 disabled:opacity-30"
@@ -289,11 +305,11 @@ export function AttendanceJournal({
                     </svg>
                   </button>
                   <span className="min-w-24 px-1 text-center text-xs font-semibold text-slate-700">
-                    {activeMonth ? journalMonthLabel(activeMonth) : ""}
+                    {activeMonth ? journalMonthLabel(activeMonth, monthNames) : ""}
                   </span>
                   <button
                     type="button"
-                    aria-label="Keyingi oy"
+                    aria-label={t("schNextMonth")}
                     disabled={monthIndex < 0 || monthIndex >= months.length - 1}
                     onClick={() => setMonthKey(months[monthIndex + 1] ?? activeMonth)}
                     className="flex size-7 items-center justify-center rounded-full text-slate-500 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-800 disabled:opacity-30"
@@ -318,7 +334,7 @@ export function AttendanceJournal({
         />
         {subGroupOptions.length > 0 ? (
           <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-100 px-6 py-2.5">
-            <span className="text-xs font-medium text-slate-500">Kichik guruh:</span>
+            <span className="text-xs font-medium text-slate-500">{t("schSubGroupColon")}</span>
             <button
               type="button"
               onClick={() => setSubGroupFilter(null)}
@@ -329,7 +345,7 @@ export function AttendanceJournal({
                   : "border-slate-200 bg-white text-slate-600 hover:border-brand-300 hover:bg-brand-50/60",
               )}
             >
-              Barchasi
+              {t("schAll")}
             </button>
             {subGroupOptions.map((name) => (
               <button
@@ -351,16 +367,16 @@ export function AttendanceJournal({
         {empty ? (
           <div className="px-6 py-6">
             <EmptyState
-              title="Jurnal ma'lumotlari yo'q"
+              title={t("schNoJournalData")}
               description={
                 canEdit
-                  ? "Davomat belgilangach jadval shu yerda paydo bo'ladi."
-                  : "Hozircha davomat belgilanmagan."
+                  ? t("schNoJournalDataDescEdit")
+                  : t("schNoJournalDataDescView")
               }
               action={
                 canEdit ? (
                   <ButtonLink href={attendanceHref} size="sm">
-                    Davomat belgilash
+                    {t("schMarkAttendance")}
                   </ButtonLink>
                 ) : null
               }
@@ -373,10 +389,10 @@ export function AttendanceJournal({
                 <thead>
                   <tr>
                     <th className="sticky left-0 top-0 z-30 min-w-32 border-b border-r border-slate-200 bg-slate-50 px-2 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 shadow-[2px_0_10px_-8px_rgba(15,23,42,0.45)] sm:min-w-44 sm:px-3">
-                      Talaba
+                      {t("schStudentCol")}
                     </th>
                     {visibleDates.map((date) => {
-                      const parts = journalDateParts(date);
+                      const parts = journalDateParts(date, weekdays);
                       const isToday = date === today;
                       return (
                         <th
@@ -401,13 +417,13 @@ export function AttendanceJournal({
                               isToday && "font-semibold text-brand-500",
                             )}
                           >
-                            {isToday ? "Bugun" : parts.weekday}
+                            {isToday ? t("schTodayCap") : parts.weekday}
                           </span>
                         </th>
                       );
                     })}
                     <th className="sticky right-0 top-0 z-30 min-w-20 border-b border-l border-slate-200 bg-slate-50 px-2 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 shadow-[-2px_0_10px_-8px_rgba(15,23,42,0.45)] sm:min-w-28 sm:px-3">
-                      Keldi %
+                      {t("schAttendancePercentCol")}
                     </th>
                   </tr>
                 </thead>
@@ -442,14 +458,14 @@ export function AttendanceJournal({
                             </span>
                             {isMe ? (
                               <span className="shrink-0 text-[10px] font-semibold text-brand-600">
-                                (siz)
+                                {t("schYou")}
                               </span>
                             ) : null}
                           </div>
                         </th>
                         {visibleDates.map((date) => {
                           const status = records[student.id]?.[date] ?? null;
-                          const meta = status ? JOURNAL_STATUS_META[status] : null;
+                          const meta = status ? statusMeta(status) : null;
                           const isToday = date === today;
                           return (
                             <td
@@ -462,7 +478,7 @@ export function AttendanceJournal({
                               <button
                                 type="button"
                                 disabled={!canEdit}
-                                title={meta ? meta.label : "Belgilanmagan"}
+                                title={meta ? meta.label : t("schNotMarked")}
                                 onClick={(event) => openEditor(event, student.id, date)}
                                 className={cn(
                                   "mx-auto flex size-8 items-center justify-center rounded-full text-[9px] font-semibold leading-none transition-all duration-150",
@@ -495,7 +511,7 @@ export function AttendanceJournal({
                               tone={rowSummary.eligible ? "green" : "rose"}
                               className="hidden px-1.5 py-0.5 text-[10px] sm:inline-flex"
                             >
-                              {rowSummary.eligible ? "Ruxsat" : "Ruxsat yo'q"}
+                              {rowSummary.eligible ? t("schEligible") : t("schNotEligible")}
                             </Badge>
                           </div>
                         </td>
@@ -506,7 +522,7 @@ export function AttendanceJournal({
                 <tfoot>
                   <tr>
                     <td className="sticky left-0 z-10 border-r border-slate-100 bg-slate-50 px-3 py-2.5 text-[11px] font-medium text-slate-500 shadow-[2px_0_10px_-8px_rgba(15,23,42,0.35)]">
-                      Keldi / jami
+                      {t("schAttendedTotal")}
                     </td>
                     {visibleDates.map((date) => {
                       const totalsForDate = totals[date] ?? { attended: 0, total: 0 };
@@ -531,9 +547,9 @@ export function AttendanceJournal({
               </table>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-100 bg-slate-50/60 px-4 py-3 text-xs text-slate-500 sm:px-6">
-              <span className="font-medium text-slate-600">Legenda:</span>
+              <span className="font-medium text-slate-600">{t("schLegend")}</span>
               {JOURNAL_STATUS_ORDER.map((status) => {
-                const meta = JOURNAL_STATUS_META[status];
+                const meta = statusMeta(status);
                 return (
                   <span key={status} className="inline-flex items-center gap-1.5">
                     <span
@@ -552,10 +568,10 @@ export function AttendanceJournal({
                 <span className="flex size-6 items-center justify-center rounded-full bg-slate-100 shadow-inner">
                   <span className="size-1.5 rounded-full bg-slate-300" />
                 </span>
-                Belgilanmagan
+                {t("schNotMarked")}
               </span>
               <span className="ml-auto hidden text-slate-600 sm:inline">
-                {canEdit ? "Tahrirlash uchun katak ustiga bosing" : "Faqat ko'rish"}
+                {canEdit ? t("schEditHint") : t("schViewOnly")}
               </span>
             </div>
           </>
@@ -574,11 +590,11 @@ export function AttendanceJournal({
                 style={editor.mobile ? undefined : { top: editor.top, left: editor.left }}
               >
             <p className="truncate px-2 pb-1.5 text-[11px] font-medium text-slate-600">
-              {editingStudent?.name ?? ""} · {journalDateParts(editor.date).label}
+              {editingStudent?.name ?? ""} · {journalDateParts(editor.date, weekdays).label}
             </p>
             <div className="flex justify-between gap-1">
               {JOURNAL_STATUS_ORDER.map((status) => {
-                const meta = JOURNAL_STATUS_META[status];
+                const meta = statusMeta(status);
                 return (
                   <button
                     key={status}
@@ -606,7 +622,7 @@ export function AttendanceJournal({
                 }}
                 className="mt-1.5 w-full rounded-lg px-2 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50"
               >
-                Tozalash
+                {t("schClear")}
               </button>
             ) : null}
           </div>

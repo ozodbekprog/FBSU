@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import {
   THEME_CHANGE_EVENT,
   applyTheme,
@@ -58,21 +59,18 @@ function MoonIcon() {
   );
 }
 
-const MODE_LABELS: Record<ThemeMode, string> = {
-  light: "Yorug' rejim",
-  dark: "Tungi rejim",
-};
-
 export function ThemeToggle({ className }: { className?: string }) {
+  const { t } = useI18n();
   const mode = useThemeMode();
   const next: ThemeMode = mode === "dark" ? "light" : "dark";
+  const label = next === "dark" ? t("shellThemeSwitchDark") : t("shellThemeSwitchLight");
 
   return (
     <button
       type="button"
       onClick={() => setStoredTheme(next)}
-      aria-label={`${MODE_LABELS[next]}ga o'tish`}
-      title={`${MODE_LABELS[next]}ga o'tish`}
+      aria-label={label}
+      title={label}
       className={cn(
         "relative inline-flex size-9 items-center justify-center rounded-xl text-slate-500 transition-colors duration-150 hover:bg-brand-50 hover:text-brand-900",
         className,
@@ -83,17 +81,17 @@ export function ThemeToggle({ className }: { className?: string }) {
   );
 }
 
-const PICKER_OPTIONS: { value: ThemeMode; label: string; icon: ReactNode }[] = [
-  { value: "light", label: "Yorug'", icon: <SunIcon /> },
-  { value: "dark", label: "Tungi", icon: <MoonIcon /> },
-];
-
 export function ThemePicker() {
+  const { t } = useI18n();
   const mode = useThemeMode();
+  const options: { value: ThemeMode; label: string; icon: ReactNode }[] = [
+    { value: "light", label: t("shellThemeLightShort"), icon: <SunIcon /> },
+    { value: "dark", label: t("shellThemeDarkShort"), icon: <MoonIcon /> },
+  ];
 
   return (
     <div className="inline-flex flex-wrap rounded-xl bg-slate-100 p-1">
-      {PICKER_OPTIONS.map((option) => (
+      {options.map((option) => (
         <button
           key={option.value}
           type="button"

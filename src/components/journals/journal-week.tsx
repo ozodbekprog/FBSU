@@ -1,19 +1,20 @@
 import { Badge, Button, ButtonLink, Card, EmptyState, Progress } from "@/components/ui";
 import { cn } from "@/lib/utils";
-import { formatShortIso, shortDayName } from "./journals-utils";
+import { getDictionary, getLocale, t as translate, type Dictionary, type Locale } from "@/i18n";
+import { formatShortIso } from "./journals-utils";
 import type { JournalLesson, JournalLessonStatus } from "./journals-utils";
 
 type BadgeTone = "slate" | "brand" | "green" | "amber" | "rose" | "blue";
 
-const STATUS_META: Record<JournalLessonStatus, { label: string; tone: BadgeTone }> = {
-  done: { label: "Belgilangan", tone: "green" },
-  partial: { label: "Qisman", tone: "amber" },
-  empty: { label: "Belgilanmagan", tone: "rose" },
+const STATUS_META: Record<JournalLessonStatus, { key: keyof Dictionary; tone: BadgeTone }> = {
+  done: { key: "schJrnStatusDone", tone: "green" },
+  partial: { key: "schJrnStatusPartial", tone: "amber" },
+  empty: { key: "schJrnStatusEmpty", tone: "rose" },
 };
 
-const SCHEDULE_META: Record<string, { label: string; tone: BadgeTone; note: string }> = {
-  CHANGED: { label: "O'zgargan", tone: "amber", note: "text-amber-700" },
-  MOVED: { label: "Ko'chirilgan", tone: "blue", note: "text-sky-700" },
+const SCHEDULE_META: Record<string, { key: keyof Dictionary; tone: BadgeTone; note: string }> = {
+  CHANGED: { key: "schJrnChanged", tone: "amber", note: "text-amber-700" },
+  MOVED: { key: "schJrnMoved", tone: "blue", note: "text-sky-700" },
 };
 
 const DOT_TONES: Record<JournalLessonStatus, string> = {
@@ -26,18 +27,22 @@ function statusView(lesson: JournalLesson, today: string) {
   if (lesson.attendanceStatus === "done") return STATUS_META.done;
   if (lesson.attendanceStatus === "partial") return STATUS_META.partial;
   if (lesson.date < today) return STATUS_META.empty;
-  if (lesson.date === today) return { label: "Bugun", tone: "brand" as BadgeTone };
-  return { label: "Kutilmoqda", tone: "slate" as BadgeTone };
+  if (lesson.date === today) return { key: "schJrnToday" as const, tone: "brand" as BadgeTone };
+  return { key: "schJrnPending" as const, tone: "slate" as BadgeTone };
 }
 
 function LessonRow({
   lesson,
   today,
   delay,
+  locale,
+  dictionary,
 }: {
   lesson: JournalLesson;
   today: string;
   delay: number;
+  locale: Locale;
+  dictionary: Dictionary;
 }) {
   const cancelled = lesson.status === "CANCELLED";
   const schedule = SCHEDULE_META[lesson.status] ?? null;
@@ -66,7 +71,7 @@ function LessonRow({
             cancelled ? "bg-rose-100/70 text-rose-700" : "bg-brand-50 text-brand-800",
           )}
         >
-          <span className="text-xs font-semibold">{lesson.slot}-par</span>
+          <span className="text-xs font-semibold">{translate(locale, "schJrnSlot", { slot: lesson.slot })}</span>
           <span className={cn("text-[10px]", cancelled ? "text-rose-500" : "text-brand-600")}>
             {lesson.time}
           </span>
@@ -96,7 +101,7 @@ function LessonRow({
         {cancelled ? null : (
           <span className="hidden w-24 shrink-0 flex-col gap-1 md:flex">
             <span className="flex items-center justify-between text-[11px] text-slate-500">
-              <span>Davomat</span>
+              <span>{dictionary.schJrnAttendance}</span>
               <span className="font-medium tabular-nums text-slate-600">
                 {lesson.attendanceCount}/{lesson.studentCount}
               </span>
@@ -107,28 +112,28 @@ function LessonRow({
         <span className="flex shrink-0 items-center gap-2.5">
           {cancelled ? (
             <>
-              <Badge tone="rose">Bekor qilindi</Badge>
+              <Badge tone="rose">{dictionary.schJrnCancelled}</Badge>
               <span className="max-w-[15rem] text-right text-xs text-rose-600">
-                {lesson.note ?? "Davomat belgilanmaydi"}
+                {lesson.note ?? dictionary.schJrnNoAttendance}
               </span>
             </>
           ) : (
             <>
-              {schedule ? <Badge tone={schedule.tone}>{schedule.label}</Badge> : null}
-              <Badge tone={view.tone}>{view.label}</Badge>
+              {schedule ? <Badge tone={schedule.tone}>{dictionary[schedule.key]}</Badge> : null}
+              <Badge tone={view.tone}>{dictionary[view.key]}</Badge>
               {lesson.courseSlug ? (
                 <ButtonLink
                   href={`/courses/${lesson.courseSlug}/attendance/lesson?date=${lesson.date}&slot=${lesson.slot}`}
                   size="sm"
                 >
-                  Kundalikni ochish
+                  {dictionary.schJrnOpen}
                 </ButtonLink>
               ) : (
                 <span className="flex items-center gap-2">
                   <Button size="sm" disabled>
-                    Kundalikni ochish
+                    {dictionary.schJrnOpen}
                   </Button>
-                  <span className="text-[11px] text-slate-600">Kurs topilmadi</span>
+                  <span className="text-[11px] text-slate-600">{dictionary.schJrnCourseNotFound}</span>
                 </span>
               )}
             </>
@@ -139,12 +144,24 @@ function LessonRow({
   );
 }
 
-export function JournalWeek({ lessons, today }: { lessons: JournalLesson[]; today: string }) {
+export async function JournalWeek({ lessons, today }: { lessons: JournalLesson[]; today: string }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const dayShorts = [
+    dictionary.schJrnDayShort1,
+    dictionary.schJrnDayShort2,
+    dictionary.schJrnDayShort3,
+    dictionary.schJrnDayShort4,
+    dictionary.schJrnDayShort5,
+    dictionary.schJrnDayShort6,
+    dictionary.schJrnDayShort7,
+  ];
+
   if (lessons.length === 0) {
     return (
       <EmptyState
-        title="Bu haftada dars yo'q"
-        description="Tanlangan hafta uchun dars jadvali topilmadi. Boshqa haftani tanlab ko'ring."
+        title={dictionary.schJrnEmptyTitle}
+        description={dictionary.schJrnEmptyBody}
       />
     );
   }
@@ -179,7 +196,7 @@ export function JournalWeek({ lessons, today }: { lessons: JournalLesson[]; toda
                       : "bg-white text-slate-600 ring-1 ring-slate-200",
                 )}
               >
-                <span>{shortDayName(first.dayOfWeek)}</span>
+                <span>{dayShorts[first.dayOfWeek - 1] ?? ""}</span>
                 <span className="text-[9px] font-medium normal-case">
                   {formatShortIso(group.date).slice(0, 5)}
                 </span>
@@ -188,13 +205,13 @@ export function JournalWeek({ lessons, today }: { lessons: JournalLesson[]; toda
                 <p className="text-sm font-semibold text-slate-800">
                   {first.day}
                   {isToday ? (
-                    <span className="ml-2 text-xs font-medium text-brand-600">Bugun</span>
+                    <span className="ml-2 text-xs font-medium text-brand-600">{dictionary.schJrnToday}</span>
                   ) : null}
                 </p>
                 <p className="text-xs text-slate-600">{formatShortIso(group.date)}</p>
               </div>
               <span className="ml-auto text-xs text-slate-600">
-                {group.items.length} ta dars
+                {translate(locale, "schJrnLessonCount", { count: group.items.length })}
               </span>
             </div>
             <ol className="ml-4 space-y-2 border-l-2 border-slate-100 pl-4">
@@ -204,6 +221,8 @@ export function JournalWeek({ lessons, today }: { lessons: JournalLesson[]; toda
                   lesson={lesson}
                   today={today}
                   delay={lessonIndex * 40}
+                  locale={locale}
+                  dictionary={dictionary}
                 />
               ))}
             </ol>

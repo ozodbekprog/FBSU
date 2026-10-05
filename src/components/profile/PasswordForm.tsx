@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button, Card, CardBody, CardHeader, Input, Label } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 type ApiResult = { ok?: boolean; error?: string } | null;
 
@@ -24,6 +25,7 @@ function PasswordInput({
   minLength?: number;
   maxLength?: number;
 }) {
+  const { t } = useI18n();
   const [visible, setVisible] = useState(false);
 
   return (
@@ -50,8 +52,8 @@ function PasswordInput({
         <button
           type="button"
           onClick={() => setVisible((current) => !current)}
-          aria-label={visible ? "Parolni yashirish" : "Parolni ko'rsatish"}
-          title={visible ? "Parolni yashirish" : "Parolni ko'rsatish"}
+          aria-label={visible ? t("mscPasswordHide") : t("mscPasswordShow")}
+          title={visible ? t("mscPasswordHide") : t("mscPasswordShow")}
           className="absolute right-1.5 top-1/2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-lg text-slate-600 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30"
         >
           {visible ? (
@@ -73,6 +75,7 @@ function PasswordInput({
 }
 
 export function PasswordForm() {
+  const { t } = useI18n();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -89,11 +92,11 @@ export function PasswordForm() {
     setSuccess(null);
 
     if (newPassword.length < 12) {
-      setError("Yangi parol kamida 12 ta belgidan iborat bo'lishi kerak");
+      setError(t("mscPasswordTooShort"));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError("Yangi parollar mos emas");
+      setError(t("mscPasswordNoMatch"));
       return;
     }
 
@@ -105,15 +108,15 @@ export function PasswordForm() {
       });
       const json = (await res.json().catch(() => null)) as ApiResult;
       if (!res.ok || !json?.ok) {
-        setError(json?.error ?? "Parolni saqlashda xatolik yuz berdi");
+        setError(json?.error ?? t("mscPasswordSaveError"));
         return;
       }
-      setSuccess("Parol yangilandi");
+      setSuccess(t("mscPasswordUpdated"));
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch {
-      setError("Tarmoq xatosi. Qayta urinib ko'ring.");
+      setError(t("commonNetworkError"));
     } finally {
       setBusy(false);
     }
@@ -131,22 +134,22 @@ export function PasswordForm() {
                 <path d="M12 14v3" />
               </svg>
             </span>
-            Parolni o'zgartirish
+            {t("mscPasswordChangeTitle")}
           </span>
         }
-        subtitle="Kamida 6 ta belgidan iborat yangi parol"
+        subtitle={t("mscPasswordChangeSubtitle")}
       />
       <CardBody>
         <form onSubmit={onSubmit} className="space-y-4">
           <PasswordInput
-            label="Joriy parol"
+            label={t("mscPasswordCurrent")}
             value={currentPassword}
             onChange={setCurrentPassword}
             autoComplete="current-password"
           />
           <div className="grid gap-4 sm:grid-cols-2">
             <PasswordInput
-              label="Yangi parol"
+              label={t("mscPasswordNew")}
               value={newPassword}
               onChange={setNewPassword}
               autoComplete="new-password"
@@ -154,7 +157,7 @@ export function PasswordForm() {
               maxLength={100}
             />
             <PasswordInput
-              label="Yangi parol (tasdiqlash)"
+              label={t("mscPasswordConfirm")}
               value={confirmPassword}
               onChange={setConfirmPassword}
               autoComplete="new-password"
@@ -169,7 +172,7 @@ export function PasswordForm() {
                 <circle cx="12" cy="12" r="9" />
                 {lengthOk ? <path d="m8.5 12.5 2.5 2.5 4.5-5" /> : <path d="M12 8v4.5" />}
               </svg>
-              Kamida 6 ta belgi
+              {t("mscPasswordMin6")}
             </span>
             {confirmPassword ? (
               <span className={cn("inline-flex items-center gap-1.5", matchOk ? "text-emerald-600" : "text-rose-500")}>
@@ -177,7 +180,7 @@ export function PasswordForm() {
                   <circle cx="12" cy="12" r="9" />
                   {matchOk ? <path d="m8.5 12.5 2.5 2.5 4.5-5" /> : <path d="M12 8v4.5M12 15.5h.01" />}
                 </svg>
-                {matchOk ? "Parollar mos" : "Parollar mos emas"}
+                {matchOk ? t("mscPasswordMatch") : t("mscPasswordMismatch")}
               </span>
             ) : null}
           </div>
@@ -212,7 +215,7 @@ export function PasswordForm() {
                 <path d="M8 10V7a4 4 0 0 1 8 0v3" />
               </svg>
             )}
-            {busy ? "Saqlanmoqda..." : "Parolni yangilash"}
+            {busy ? t("mscSaving") : t("mscPasswordUpdate")}
           </Button>
         </form>
       </CardBody>

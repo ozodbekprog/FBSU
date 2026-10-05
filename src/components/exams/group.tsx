@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { getLocale, t as translate } from "@/i18n";
 
 const TONES = {
   blue: {
@@ -42,7 +43,7 @@ function GroupIcon({ tone }: { tone: keyof typeof TONES }) {
   );
 }
 
-export function ExamGroupSection({
+export async function ExamGroupSection({
   title,
   tone,
   count,
@@ -55,6 +56,7 @@ export function ExamGroupSection({
   subtitle?: string;
   children: ReactNode;
 }) {
+  const locale = await getLocale();
   if (count === 0) return null;
   return (
     <section className="mb-9 last:mb-0">
@@ -65,7 +67,7 @@ export function ExamGroupSection({
           {subtitle ? <p className="mt-0.5 text-xs text-slate-600">{subtitle}</p> : null}
         </div>
         <span className={cn("mx-1 hidden h-px flex-1 bg-gradient-to-r to-transparent sm:block", TONES[tone].line)} />
-        <Badge tone={tone}>{count} ta</Badge>
+        <Badge tone={tone}>{translate(locale, "grdCountBadge", { count })}</Badge>
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{children}</div>
     </section>

@@ -14,8 +14,16 @@ export function getDictionary(locale: Locale): Dictionary {
   return dictionaries[locale];
 }
 
-export function t(locale: Locale, key: keyof Dictionary): string {
-  return dictionaries[locale][key];
+export function t(
+  locale: Locale,
+  key: keyof Dictionary,
+  params?: Record<string, string | number>,
+): string {
+  const template = dictionaries[locale][key];
+  if (!params) return template;
+  return template.replace(/\{(\w+)\}/g, (match, name) =>
+    name in params ? String(params[name]) : match,
+  );
 }
 
 export async function getLocale(): Promise<Locale> {

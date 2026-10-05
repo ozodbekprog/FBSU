@@ -1,30 +1,36 @@
 import Link from "next/link";
 import { Card, CardHeader, Progress, Table } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { GradeBadge } from "@/components/grades/grade-badge";
 import { GPA_CREDITS } from "@/app/api/gpa/data";
 import type { StudentGpa } from "@/app/api/gpa/data";
 import { GpaPointsBadge, LetterBadge, LETTER_META } from "./gpa-badge";
 
-export function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; delay?: number }) {
+export async function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; delay?: number }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const { courses, gpa, totalCredits } = data;
 
   return (
     <div className="animate-fade-up" style={{ animationDelay: `${delay}ms` }}>
       <Card className="h-full overflow-hidden">
         <CardHeader
-          title="Kurslar bo'yicha"
-          subtitle={`${courses.length} ta kurs · har biri ${GPA_CREDITS} kredit`}
+          title={dictionary.grdByCourses}
+          subtitle={translate(locale, "grdCoursesCreditsSubtitle", {
+            count: courses.length,
+            credits: GPA_CREDITS,
+          })}
         />
         <div className="hidden px-6 pb-5 pt-2 md:block">
           <Table>
             <thead>
               <tr className="border-b border-slate-100 text-[11px] uppercase tracking-[0.12em] text-slate-600">
-                <th className="py-3 pr-4 text-left font-medium">Kurs</th>
-                <th className="px-3 py-3 text-center font-medium">O&apos;rtacha</th>
-                <th className="px-3 py-3 text-center font-medium">Baho</th>
-                <th className="px-3 py-3 text-center font-medium">GPA ball</th>
-                <th className="px-3 py-3 text-right font-medium">Kredit</th>
+                <th className="py-3 pr-4 text-left font-medium">{dictionary.grdCourse}</th>
+                <th className="px-3 py-3 text-center font-medium">{dictionary.grdAverage}</th>
+                <th className="px-3 py-3 text-center font-medium">{dictionary.grdGrade}</th>
+                <th className="px-3 py-3 text-center font-medium">{dictionary.grdGpaScore}</th>
+                <th className="px-3 py-3 text-right font-medium">{dictionary.grdCredit}</th>
               </tr>
             </thead>
             <tbody>
@@ -48,7 +54,14 @@ export function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; delay?: 
                           {course.title}
                         </span>
                         <span className="mt-0.5 block text-xs text-slate-600">
-                          {course.gradedCount} ta baholangan ish
+                          {translate(locale, "grdGradedWorksCount", {
+                            count: course.gradedCount,
+                          })}
+                          {course.bonusPoints > 0 ? (
+                            <span className="ml-1.5 font-medium text-emerald-700">
+                              {translate(locale, "grdBonusPlus", { points: course.bonusPoints.toFixed(1) })}
+                            </span>
+                          ) : null}
                         </span>
                       </span>
                     </Link>
@@ -67,7 +80,9 @@ export function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; delay?: 
                     <span className="text-sm font-semibold tabular-nums text-slate-700">
                       {course.credits}
                     </span>
-                    <span className="ml-1 text-xs text-slate-600">kredit</span>
+                    <span className="ml-1 text-xs text-slate-600">
+                      {dictionary.grdCreditLower}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -78,13 +93,15 @@ export function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; delay?: 
                   <td colSpan={5} className="pt-4">
                     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-100 bg-gradient-to-r from-brand-50 via-white to-gold-300/10 px-4 py-3">
                       <span className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">
-                        Umumiy GPA
+                        {dictionary.grdOverallGpa}
                       </span>
                       <span className="flex items-center gap-3">
                         <GpaPointsBadge points={gpa} size="lg" digits={2} />
                         <span className="text-sm font-semibold tabular-nums text-slate-700">
                           {totalCredits}
-                          <span className="ml-1 text-xs font-normal text-slate-600">kredit</span>
+                          <span className="ml-1 text-xs font-normal text-slate-600">
+                            {dictionary.grdCreditLower}
+                          </span>
                         </span>
                       </span>
                     </div>
@@ -111,7 +128,14 @@ export function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; delay?: 
                     {course.title}
                   </span>
                   <span className="mt-0.5 block text-xs text-slate-600">
-                    {course.gradedCount} ta baholangan ish
+                    {translate(locale, "grdGradedWorksCount", {
+                      count: course.gradedCount,
+                    })}
+                    {course.bonusPoints > 0 ? (
+                      <span className="ml-1.5 font-medium text-emerald-700">
+                        {translate(locale, "grdBonusPlus", { points: course.bonusPoints.toFixed(1) })}
+                      </span>
+                    ) : null}
                   </span>
                 </span>
                 <LetterBadge letter={course.letter} />
@@ -121,13 +145,13 @@ export function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; delay?: 
                 <GradeBadge percent={course.percent} size="sm" />
               </div>
               <div className="mt-3 flex items-center justify-between text-xs text-slate-600">
-                <span>GPA ball</span>
+                <span>{dictionary.grdGpaScore}</span>
                 <span className="flex items-center gap-2">
                   <GpaPointsBadge points={course.points} size="sm" />
                   <span className="text-sm font-semibold tabular-nums text-slate-700">
                     {course.credits}
                   </span>
-                  <span>kredit</span>
+                  <span>{dictionary.grdCreditLower}</span>
                 </span>
               </div>
             </li>
@@ -137,11 +161,13 @@ export function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; delay?: 
           <div className="border-t border-brand-100/70 bg-gradient-to-r from-brand-50 via-white to-gold-300/10 px-5 py-4 md:hidden">
             <div className="flex items-center justify-between gap-3">
               <span className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">
-                Umumiy GPA
+                {dictionary.grdOverallGpa}
               </span>
               <span className="flex items-center gap-2">
                 <GpaPointsBadge points={gpa} digits={2} />
-                <span className="text-xs font-medium text-slate-500">{totalCredits} kredit</span>
+                <span className="text-xs font-medium text-slate-500">
+                  {translate(locale, "grdCreditsInline", { count: totalCredits })}
+                </span>
               </span>
             </div>
           </div>

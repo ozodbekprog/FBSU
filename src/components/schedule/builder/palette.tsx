@@ -2,6 +2,7 @@
 
 import type { DragEvent } from "react";
 import { Card, CardBody, CardHeader, Input, Label, Select } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
 import { findCourseForSubject } from "./dictionaries";
 import { LegoSurface } from "./lego";
@@ -54,7 +55,7 @@ export function BuilderPalette({
   rooms: string[];
   room: string;
   onRoom: (room: string) => void;
-  role: "TEACHER" | "ADMIN";
+  role: "TEACHER" | "ADMIN" | "REGISTRAR";
   fixedTeacher: string;
   teacherValue: string;
   onTeacher: (value: string) => void;
@@ -65,17 +66,21 @@ export function BuilderPalette({
   subGroup: string;
   onSubGroup: (value: string) => void;
 }) {
-  const teacherLabel = role === "TEACHER" ? fixedTeacher : teacherValue.trim() || "Tanlanmagan";
+  const { t } = useI18n();
+  const teacherLabel = role === "TEACHER" ? fixedTeacher : teacherValue.trim() || t("schNotSelected");
   const hasLessonType = lessonTypes.some((item) => item.name === lessonType);
 
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader title="Fanlar" subtitle={`${subjects.length} ta fan — sudrab tashlang`} />
+        <CardHeader
+          title={t("schSubjects")}
+          subtitle={t("schSubjectsSubtitle", { count: subjects.length })}
+        />
         <CardBody className="max-h-80 space-y-2 overflow-y-auto pr-2">
           {subjects.length === 0 ? (
             <p className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-600">
-              {"Fan topilmadi. Kurslar bo'limida kurs yarating."}
+              {t("schNoSubjects")}
             </p>
           ) : (
             subjects.map((subject) => {
@@ -100,7 +105,7 @@ export function BuilderPalette({
                   >
                     <p className="pr-9 text-sm font-semibold leading-snug">{subject.name}</p>
                     <p className="mt-0.5 text-[11px] opacity-70">
-                      {[room || "Xonasiz", linked?.teacherName ?? teacherLabel].filter(Boolean).join(" · ")}
+                      {[room || t("schNoRoom"), linked?.teacherName ?? teacherLabel].filter(Boolean).join(" · ")}
                     </p>
                   </LegoSurface>
                   <span className="pointer-events-none absolute right-2 top-1/2 grid -translate-y-1/2 grid-cols-2 gap-0.5 opacity-30 transition-opacity duration-150 group-hover:opacity-80">
@@ -116,10 +121,10 @@ export function BuilderPalette({
       </Card>
 
       <Card>
-        <CardHeader title="Dars sozlamalari" subtitle="Turi, xona, hafta va o'qituvchi" />
+        <CardHeader title={t("schLessonSettings")} subtitle={t("schLessonSettingsSubtitle")} />
         <CardBody className="space-y-4">
           <div>
-            <Label>Dars turi</Label>
+            <Label>{t("schLessonType")}</Label>
             <Select value={lessonType} onChange={(event) => onLessonType(event.target.value)}>
               {hasLessonType ? null : <option value={lessonType}>{lessonType}</option>}
               {lessonTypes.map((item) => (
@@ -131,10 +136,10 @@ export function BuilderPalette({
           </div>
 
           <div>
-            <Label>Xona</Label>
+            <Label>{t("schRoom")}</Label>
             <div className="flex flex-wrap gap-1.5">
               <button type="button" onClick={() => onRoom("")} className={chipClass(room === "")}>
-                Xonasiz
+                {t("schNoRoom")}
               </button>
               {rooms.map((item) => (
                 <button key={item} type="button" onClick={() => onRoom(item)} className={chipClass(room === item)}>
@@ -145,7 +150,7 @@ export function BuilderPalette({
           </div>
 
           <div>
-            <Label>Hafta turi</Label>
+            <Label>{t("schWeekType")}</Label>
             <Select
               value={parity}
               onChange={(event) => {
@@ -153,16 +158,16 @@ export function BuilderPalette({
                 onParity(value === "odd" || value === "even" ? value : "");
               }}
             >
-              <option value="">Har hafta</option>
-              <option value="odd">Toq hafta</option>
-              <option value="even">Juft hafta</option>
+              <option value="">{t("schEveryWeek")}</option>
+              <option value="odd">{t("schOddWeek")}</option>
+              <option value="even">{t("schEvenWeek")}</option>
             </Select>
           </div>
 
           <div>
-            <Label>Kichik guruh</Label>
+            <Label>{t("schSubGroup")}</Label>
             <Select value={subGroup} onChange={(event) => onSubGroup(event.target.value)}>
-              <option value="">Butun guruh</option>
+              <option value="">{t("schWholeGroup")}</option>
               {subGroups.map((item) => (
                 <option key={item} value={item}>
                   {item}
@@ -171,14 +176,14 @@ export function BuilderPalette({
             </Select>
           </div>
 
-          {role === "ADMIN" ? (
+          {role === "ADMIN" || role === "REGISTRAR" ? (
             <div>
-              <Label>{"O'qituvchi"}</Label>
+              <Label>{t("schTeacher")}</Label>
               <Input
                 list="builder-teachers"
                 value={teacherValue}
                 onChange={(event) => onTeacher(event.target.value)}
-                placeholder="Masalan: A.MAMANAZAROV"
+                placeholder={t("schTeacherPlaceholder")}
               />
               <datalist id="builder-teachers">
                 {teacherOptions.map((name) => (
@@ -189,7 +194,7 @@ export function BuilderPalette({
           ) : (
             <p className="rounded-xl bg-brand-50 px-3 py-2 text-xs text-brand-700">
               <span className="font-semibold">{fixedTeacher}</span>
-              {" sifatida qo'shiladi"}
+              {t("schJoinsAsTeacherSuffix")}
             </p>
           )}
         </CardBody>

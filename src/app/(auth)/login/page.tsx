@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, Card, Input, Label } from "@/components/ui";
@@ -13,7 +13,7 @@ import { apiFetch } from "@/lib/api";
 const DEMO_ACCOUNTS = [
   {
     roleKey: "authRoleStudent" as const,
-    email: "ozodbek@ttpu.uz",
+    email: "ai1s01@ttpu.uz",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -31,7 +31,7 @@ const DEMO_ACCOUNTS = [
   },
   {
     roleKey: "authRoleTeacher" as const,
-    email: "n.mahamatov@ttpu.uz",
+    email: "fizika@ttpu.uz",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -87,6 +87,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   function fillDemo(demoEmail: string) {
     setEmail(demoEmail);
@@ -107,7 +112,12 @@ export default function LoginPage() {
         setError(json?.error ?? t("authLoginError"));
         return;
       }
-      router.push("/dashboard");
+      const nextParam = new URLSearchParams(window.location.search).get("next");
+      const target =
+        nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
+          ? nextParam
+          : "/dashboard";
+      router.push(target);
       router.refresh();
     } catch {
       setError(t("commonNetworkError"));
@@ -230,7 +240,7 @@ export default function LoginPage() {
                   <p>{error}</p>
                 </div>
               ) : null}
-              <Button type="submit" disabled={loading} size="lg" className="w-full">
+              <Button type="submit" disabled={loading || !hydrated} size="lg" className="w-full">
                 {loading ? t("authLoginSubmitting") : t("authLoginSubmit")}
               </Button>
             </form>

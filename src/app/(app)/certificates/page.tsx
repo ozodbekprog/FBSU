@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import {
   Avatar,
   Badge,
@@ -29,6 +30,15 @@ export default async function CertificatesPage({
   searchParams: Promise<{ courseId?: string }>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const gradeLabels = {
+    none: dictionary.grdGradeNone,
+    excellent: dictionary.grdGradeExcellent,
+    good: dictionary.grdGradeGood,
+    satisfactory: dictionary.grdGradeSatisfactory,
+    unsatisfactory: dictionary.grdGradeUnsatisfactory,
+  };
 
   if (user.role === "STUDENT") {
     const certificates = await prisma.certificate.findMany({
@@ -44,16 +54,16 @@ export default async function CertificatesPage({
       <>
         <PageHeader
           eyebrow="FBSU LMS"
-          title="Sertifikatlarim"
-          subtitle={`${certificates.length} ta sertifikat`}
+          title={dictionary.grdMyCertificates}
+          subtitle={translate(locale, "grdCertificateCount", { count: certificates.length })}
         />
         {certificates.length === 0 ? (
           <CertificateEmptyState
-            title="Sertifikatlar yo'q"
-            description="Kurslarni muvaffaqiyatli tamomlaganingizdan so'ng sertifikatlar shu yerda paydo bo'ladi."
+            title={dictionary.grdNoCertificates}
+            description={dictionary.grdNoCertificatesDesc}
             action={
               <ButtonLink href="/courses" variant="secondary">
-                Kurslarga o&apos;tish
+                {dictionary.grdGoToCourses}
               </ButtonLink>
             }
           />
@@ -79,11 +89,15 @@ export default async function CertificatesPage({
   if (!selected) {
     return (
       <>
-        <PageHeader eyebrow="FBSU LMS" title="Sertifikatlar" subtitle="O'qituvchi paneli" />
+        <PageHeader
+          eyebrow="FBSU LMS"
+          title={dictionary.grdCertificates}
+          subtitle={dictionary.grdTeacherPanel}
+        />
         <CertificateEmptyState
-          title="Kurslar yo'q"
-          description="Sertifikat berish uchun avval kurs yaratib, talabalarni unga yozing."
-          action={<ButtonLink href="/courses">Kurslar bo&apos;limiga</ButtonLink>}
+          title={dictionary.grdNoCourses}
+          description={dictionary.grdNoCertCoursesDesc}
+          action={<ButtonLink href="/courses">{dictionary.grdToCourses}</ButtonLink>}
         />
       </>
     );
@@ -91,7 +105,7 @@ export default async function CertificatesPage({
 
   const [enrollments, certificates] = await Promise.all([
     prisma.enrollment.findMany({
-      where: { courseId: selected.id },
+      where: { courseId: selected.id, status: "ACTIVE" },
       include: { user: { select: { id: true, name: true } } },
       orderBy: { user: { name: "asc" } },
     }),
@@ -122,7 +136,7 @@ export default async function CertificatesPage({
     <>
       <PageHeader
         eyebrow="FBSU LMS"
-        title="Sertifikatlar"
+        title={dictionary.grdCertificates}
         subtitle={selected.title}
         action={
           <form method="get" className="flex items-center gap-2">
@@ -134,19 +148,31 @@ export default async function CertificatesPage({
               ))}
             </Select>
             <Button type="submit" variant="secondary">
-              Ko&apos;rsatish
+              {dictionary.grdShow}
             </Button>
           </form>
         }
       />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <Stat label="Berilgan" value={certificates.length} hint="Joriy kurs bo'yicha" />
-        <Stat label="Kutayotgan talaba" value={pendingCount} hint="Sertifikat berilmagan" />
         <Stat
-          label="O'rtacha ball"
+          label={dictionary.grdIssued}
+          value={certificates.length}
+          hint={dictionary.grdByCurrentCourse}
+        />
+        <Stat
+          label={dictionary.grdPendingStudents}
+          value={pendingCount}
+          hint={dictionary.grdNotIssued}
+        />
+        <Stat
+          label={dictionary.grdAverageScore}
           value={averageGrade ?? "—"}
-          hint={graded.length ? `${graded.length} ta baholangan` : "Baholar kiritilmagan"}
+          hint={
+            graded.length
+              ? translate(locale, "grdGradedCount", { count: graded.length })
+              : dictionary.grdNoGradesEntered
+          }
         />
       </div>
 
@@ -160,29 +186,33 @@ export default async function CertificatesPage({
 
         <Card>
           <CardHeader
-            title="Berilgan sertifikatlar"
-            subtitle={`${certificates.length} ta`}
-            action={<Badge tone="green">Faol</Badge>}
+            title={dictionary.grdIssuedCertificates}
+            subtitle={translate(locale, "grdCountBadge", { count: certificates.length })}
+            action={<Badge tone="green">{dictionary.grdActive}</Badge>}
           />
           <CardBody>
             {certificates.length === 0 ? (
               <CertificateEmptyState
-                title="Hali sertifikat berilmagan"
-                description="Chap tarafdagi shakl orqali talabaga sertifikat bering."
+                title={dictionary.grdNoIssuedYet}
+                description={dictionary.grdNoIssuedYetDesc}
               />
             ) : (
               <Table>
                 <thead>
                   <tr className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-600">
-                    <th className="py-2.5 pr-3 text-left font-medium">Talaba</th>
-                    <th className="px-3 py-2.5 text-left font-medium">Sana</th>
-                    <th className="px-3 py-2.5 text-left font-medium">Natija</th>
-                    <th className="px-3 py-2.5 text-right font-medium">Amallar</th>
+                    <th className="py-2.5 pr-3 text-left font-medium">
+                      {dictionary.grdStudent}
+                    </th>
+                    <th className="px-3 py-2.5 text-left font-medium">{dictionary.grdDate}</th>
+                    <th className="px-3 py-2.5 text-left font-medium">{dictionary.grdResult}</th>
+                    <th className="px-3 py-2.5 text-right font-medium">
+                      {dictionary.grdActions}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {certificates.map((certificate) => {
-                    const grade = certificateGrade(certificate.grade);
+                    const grade = certificateGrade(certificate.grade, gradeLabels);
                     return (
                       <tr
                         key={certificate.id}
@@ -207,7 +237,11 @@ export default async function CertificatesPage({
                         </td>
                         <td className="px-3 py-3">
                           <Badge tone={grade.tone}>
-                            {certificate.grade != null ? `${certificate.grade} ball` : grade.label}
+                            {certificate.grade != null
+                              ? translate(locale, "grdScoreBall", {
+                                  score: certificate.grade,
+                                })
+                              : grade.label}
                           </Badge>
                         </td>
                         <td className="px-3 py-3">
@@ -217,7 +251,7 @@ export default async function CertificatesPage({
                               variant="secondary"
                               size="sm"
                             >
-                              Ko&apos;rish
+                              {dictionary.grdView}
                             </ButtonLink>
                             <CertificateDeleteButton
                               certificateId={certificate.id}

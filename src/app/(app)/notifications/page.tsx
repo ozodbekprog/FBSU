@@ -8,7 +8,9 @@ import {
   NotificationIcon,
   notificationKind,
   notificationStyle,
+  type NotificationKind,
 } from "@/components/notifications/shared";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 export default async function NotificationsPage() {
   const user = await requireUser();
@@ -22,12 +24,27 @@ export default async function NotificationsPage() {
     prisma.notification.count({ where: { userId: user.id, isRead: false } }),
   ]);
 
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const kindLabels: Record<NotificationKind, string> = {
+    message: dictionary.msgKindMessage,
+    schedule: dictionary.msgKindSchedule,
+    grade: dictionary.msgKindGrade,
+    course: dictionary.msgKindCourse,
+    exam: dictionary.msgKindExam,
+    system: dictionary.msgKindSystem,
+  };
+
   return (
     <>
       <PageHeader
-        eyebrow="Xabarlar"
-        title="Bildirishnomalar"
-        subtitle={unreadCount > 0 ? `${unreadCount} ta o'qilmagan` : "Hammasi o'qilgan"}
+        eyebrow={dictionary.msgNotifEyebrow}
+        title={dictionary.msgNotifTitle}
+        subtitle={
+          unreadCount > 0
+            ? translate(locale, "msgNotifUnreadCount", { count: unreadCount })
+            : dictionary.shellNotifAllRead
+        }
         action={unreadCount > 0 ? <MarkAllReadButton /> : undefined}
       />
 
@@ -41,9 +58,9 @@ export default async function NotificationsPage() {
               </svg>
             </span>
             <div>
-              <p className="font-medium text-slate-800">Bildirishnomalar yo&apos;q</p>
+              <p className="font-medium text-slate-800">{dictionary.msgNotifEmptyTitle}</p>
               <p className="mt-1 max-w-md text-sm text-slate-500">
-                Yangi xabar, baho yoki jadval o&apos;zgarishlari shu yerda ko&apos;rinadi.
+                {dictionary.msgNotifEmptyBody}
               </p>
             </div>
           </CardBody>
@@ -93,9 +110,11 @@ export default async function NotificationsPage() {
                             )}
                           >
                             <span className={cn("size-1.5 rounded-full", style.dot)} />
-                            {style.label}
+                            {kindLabels[kind]}
                           </span>
-                          {n.isRead ? null : <Badge tone="brand">Yangi</Badge>}
+                          {n.isRead ? null : (
+                            <Badge tone="brand">{dictionary.shellNotifNew}</Badge>
+                          )}
                         </div>
                         <p
                           className={cn(
@@ -113,7 +132,7 @@ export default async function NotificationsPage() {
                             href={n.link}
                             className="group mt-2.5 inline-flex items-center gap-1 text-xs font-medium text-brand-700 transition-colors duration-150 hover:text-brand-900"
                           >
-                            Batafsil
+                            {dictionary.msgNotifDetails}
                             <svg
                               width="13"
                               height="13"

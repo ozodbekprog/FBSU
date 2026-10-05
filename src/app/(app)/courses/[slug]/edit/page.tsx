@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDictionary, getLocale } from "@/i18n";
 import { PageHeader } from "@/components/ui";
 import { CourseForm } from "@/components/courses/course-form";
 import { CourseDeleteButton } from "@/components/courses/course-delete-button";
@@ -11,6 +12,8 @@ export default async function EditCoursePage({
   params: Promise<{ slug: string }>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const { slug } = await params;
 
   const course = await prisma.course.findUnique({ where: { slug } });
@@ -23,7 +26,7 @@ export default async function EditCoursePage({
   return (
     <>
       <PageHeader
-        title="Kursni tahrirlash"
+        title={dictionary.crsEditCourse}
         subtitle={course.title}
         action={<CourseDeleteButton courseId={course.id} courseTitle={course.title} />}
       />

@@ -10,6 +10,7 @@ export type ElectiveCourse = {
   materialsCount: number;
   studentsCount: number;
   isEnrolled: boolean;
+  enrollmentStatus?: "PENDING" | "ACTIVE" | "REJECTED" | null;
 };
 
 export function ElectiveCourseCard({

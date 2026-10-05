@@ -3,14 +3,15 @@
 import { useEffect, useState } from "react";
 import { Badge, Button, EmptyState, Input, Label, Select, Skeleton } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { apiFetch } from "@/components/quiz/api";
 import {
-  QUESTION_TYPE_LABEL,
+  QUESTION_TYPE_KEY,
   QUESTION_TYPE_TONE,
   type QuestionType,
 } from "@/components/quiz/shared";
 import {
-  DIFFICULTY_LABEL,
+  DIFFICULTY_LABEL_KEYS,
   DIFFICULTY_TONE,
   type BankQuestionItem,
 } from "@/components/question-bank/shared";
@@ -26,6 +27,7 @@ export function BankImportModal({
   onClose: () => void;
   onImport: (items: BankQuestionItem[]) => Promise<string | null>;
 }) {
+  const { t } = useI18n();
   const [courseId, setCourseId] = useState(initialCourseId);
   const [type, setType] = useState<"" | QuestionType>("");
   const [search, setSearch] = useState("");
@@ -91,12 +93,12 @@ export function BankImportModal({
 
   function pickRandom() {
     if (items.length === 0) {
-      setError("Bankda savollar yo'q");
+      setError(t("grdQbNoQuestions"));
       return;
     }
     const count = Number(randomCount);
     if (!Number.isInteger(count) || count < 1 || count > items.length) {
-      setError(`1 dan ${items.length} gacha butun son kiriting`);
+      setError(t("grdQbEnterWholeNumber", { max: items.length }));
       return;
     }
     const ids = items.map((item) => item.id);
@@ -118,7 +120,7 @@ export function BankImportModal({
   async function confirm() {
     const chosen = Object.values(selected);
     if (chosen.length === 0) {
-      setError("Kamida bitta savol tanlang");
+      setError(t("grdQbSelectAtLeastOne"));
       return;
     }
     setImporting(true);
@@ -138,28 +140,28 @@ export function BankImportModal({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Bankdan savol qo'shish"
+      aria-label={t("grdQbImportAria")}
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-brand-950/40 p-4 backdrop-blur-sm"
     >
       <div className="w-full max-w-3xl animate-fade-up rounded-2xl border border-slate-200 bg-white shadow-lift">
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-4">
           <div className="min-w-0">
-            <h3 className="font-semibold tracking-tight text-slate-900">Bankdan qo&apos;shish</h3>
+            <h3 className="font-semibold tracking-tight text-slate-900">{t("crsQuizImportBank")}</h3>
             <p className="mt-0.5 text-sm text-slate-500">
-              Kurs bo&apos;yicha savollarni tanlang va testga qo&apos;shing
+              {t("grdQbImportSubtitle")}
             </p>
           </div>
           <Button variant="ghost" size="sm" onClick={onClose} disabled={importing}>
-            Yopish
+            {t("grdQbClose")}
           </Button>
         </div>
 
         <div className="space-y-4 px-6 py-5">
           <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1.4fr]">
             <div>
-              <Label>Kurs</Label>
+              <Label>{t("grdCourse")}</Label>
               <Select value={courseId} onChange={(event) => setCourseId(event.target.value)}>
-                <option value="">Barcha kurslar</option>
+                <option value="">{t("grdQbAllCourses")}</option>
                 {courses.map((course) => (
                   <option key={course.id} value={course.id}>
                     {course.title}
@@ -168,31 +170,31 @@ export function BankImportModal({
               </Select>
             </div>
             <div>
-              <Label>Tur</Label>
+              <Label>{t("grdQbType")}</Label>
               <Select
                 value={type}
                 onChange={(event) => setType(event.target.value as "" | QuestionType)}
               >
-                <option value="">Barchasi</option>
-                {(Object.keys(QUESTION_TYPE_LABEL) as QuestionType[]).map((value) => (
+                <option value="">{t("grdAll")}</option>
+                {(Object.keys(QUESTION_TYPE_KEY) as QuestionType[]).map((value) => (
                   <option key={value} value={value}>
-                    {QUESTION_TYPE_LABEL[value]}
+                    {t(QUESTION_TYPE_KEY[value])}
                   </option>
                 ))}
               </Select>
             </div>
             <div>
-              <Label>Qidiruv</Label>
+              <Label>{t("grdQbSearch")}</Label>
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Savol matni bo'yicha..."
+                placeholder={t("grdQbSearchPlaceholder")}
               />
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5">
-            <span className="text-xs font-medium text-slate-600">Tasodifiy tanlash:</span>
+            <span className="text-xs font-medium text-slate-600">{t("grdQbRandomPick")}</span>
             <Input
               type="number"
               min={1}
@@ -203,14 +205,14 @@ export function BankImportModal({
               className="h-8 w-20! px-2.5! py-1! text-xs!"
             />
             <Button size="sm" variant="secondary" onClick={pickRandom} disabled={items.length === 0}>
-              Tasodifiy N ta tanlash
+              {t("grdQbRandomN")}
             </Button>
             {selectedCount > 0 ? (
               <Button size="sm" variant="ghost" onClick={() => setSelected({})} disabled={importing}>
-                Tanlovni tozalash
+                {t("grdQbClearSelection")}
               </Button>
             ) : null}
-            <span className="ml-auto text-xs text-slate-500">{selectedCount} ta tanlandi</span>
+            <span className="ml-auto text-xs text-slate-500">{t("grdQbSelectedCount", { count: selectedCount })}</span>
           </div>
 
           {error ? <p className="text-sm text-rose-600">{error}</p> : null}
@@ -225,8 +227,8 @@ export function BankImportModal({
               ))
             ) : items.length === 0 ? (
               <EmptyState
-                title="Bank savollari yo'q"
-                description="Tanlangan filtr bo'yicha savollar topilmadi. Avval savollar bankini to'ldiring."
+                title={t("grdQbBankEmptyTitle")}
+                description={t("grdQbBankEmptyDesc")}
               />
             ) : (
               items.map((item) => {
@@ -250,10 +252,10 @@ export function BankImportModal({
                     <span className="min-w-0 flex-1">
                       <span className="flex flex-wrap items-center gap-1.5">
                         <Badge tone={QUESTION_TYPE_TONE[item.type]}>
-                          {QUESTION_TYPE_LABEL[item.type]}
+                          {t(QUESTION_TYPE_KEY[item.type])}
                         </Badge>
                         <Badge tone={DIFFICULTY_TONE[item.difficulty] ?? "slate"}>
-                          {DIFFICULTY_LABEL[item.difficulty] ?? "—"}
+                          {DIFFICULTY_LABEL_KEYS[item.difficulty] ? t(DIFFICULTY_LABEL_KEYS[item.difficulty]) : "—"}
                         </Badge>
                         {item.courseTitle ? (
                           <span className="text-[11px] text-slate-600">{item.courseTitle}</span>
@@ -277,10 +279,10 @@ export function BankImportModal({
 
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 px-6 py-4">
           <Button variant="secondary" onClick={onClose} disabled={importing}>
-            Bekor qilish
+            {t("commonCancel")}
           </Button>
           <Button onClick={() => void confirm()} disabled={importing || selectedCount === 0}>
-            {importing ? "Qo'shilmoqda..." : `Qo'shish (${selectedCount})`}
+            {importing ? t("grdQbAdding") : t("grdQbAddCount", { count: selectedCount })}
           </Button>
         </div>
       </div>

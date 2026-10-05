@@ -1,6 +1,8 @@
 import { Card, CardBody, CardHeader } from "@/components/ui";
+import { getDictionary, getLocale } from "@/i18n";
 import { HelpIcon } from "./icons";
 import { HelpSection } from "./section";
+import { RichText } from "./rich-text";
 
 export type BotCommand = {
   command: string;
@@ -8,27 +10,29 @@ export type BotCommand = {
   result: string;
 };
 
-export function BotCommands({ commands }: { commands: BotCommand[] }) {
+export async function BotCommands({ commands }: { commands: BotCommand[] }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   return (
     <HelpSection
       id="bot"
       icon="send"
-      title="Telegram bot buyruqlari"
-      description="Jadval va davomatni telefonda kuzatish uchun qisqa buyruqlar."
+      title={dictionary.mscHelpBotTitle}
+      description={dictionary.mscHelpBotDesc}
     >
       <Card className="overflow-hidden">
         <CardHeader
-          title="Buyruqlar ro'yxati"
-          subtitle="Botga ulangach quyidagi buyruqlar faollashadi"
+          title={dictionary.mscHelpBotListTitle}
+          subtitle={dictionary.mscHelpBotListSubtitle}
         />
         <CardBody className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/60 text-[11px] uppercase tracking-[0.14em] text-slate-600">
-                  <th className="px-6 py-3 font-semibold">Buyruq</th>
-                  <th className="px-6 py-3 font-semibold">Tavsif</th>
-                  <th className="hidden px-6 py-3 font-semibold md:table-cell">Natija</th>
+                  <th className="px-6 py-3 font-semibold">{dictionary.mscHelpBotColCommand}</th>
+                  <th className="px-6 py-3 font-semibold">{dictionary.mscHelpBotColDescription}</th>
+                  <th className="hidden px-6 py-3 font-semibold md:table-cell">{dictionary.mscHelpBotColResult}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -56,8 +60,7 @@ export function BotCommands({ commands }: { commands: BotCommand[] }) {
       <p className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-100">
         <HelpIcon name="help" size={16} className="mt-0.5 shrink-0" />
         <span>
-          Avval botga <span className="font-semibold">/start</span> yuboring — shundan so&apos;ng
-          qolgan buyruqlar ishlaydi. Buyruqdan keyin javob bir necha soniyada keladi.
+          <RichText text={dictionary.mscHelpBotNote} />
         </span>
       </p>
     </HelpSection>

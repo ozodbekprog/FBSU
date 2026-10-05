@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export function ReportSendButton({ groupId }: { groupId: string }) {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,12 +24,12 @@ export function ReportSendButton({ groupId }: { groupId: string }) {
         error?: string;
       } | null;
       if (!response.ok || !json?.ok) {
-        setError(json?.error ?? "Hisobotni yuborishda xatolik");
+        setError(json?.error ?? t("admCuratorReportError"));
         return;
       }
       setSent(true);
     } catch {
-      setError("Tarmoq xatosi");
+      setError(t("admNetworkError"));
     } finally {
       setLoading(false);
     }
@@ -50,9 +52,9 @@ export function ReportSendButton({ groupId }: { groupId: string }) {
           <path d="m22 2-7 20-4-9-9-4Z" />
           <path d="M22 2 11 13" />
         </svg>
-        {loading ? "Yuborilmoqda..." : "Hisobotni yuborish"}
+        {loading ? t("admCuratorReportSending") : t("admCuratorReportSend")}
       </Button>
-      {sent ? <p className="text-xs text-emerald-600">Hisobot kuratorga yuborildi</p> : null}
+      {sent ? <p className="text-xs text-emerald-600">{t("admCuratorReportSent")}</p> : null}
       {error ? <p className="text-xs text-rose-600">{error}</p> : null}
     </div>
   );

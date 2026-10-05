@@ -6,11 +6,23 @@ import { useRouter } from "next/navigation";
 import { Button, Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
-import { friendlyBugLine } from "./bug-utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
+import type { Dictionary } from "@/i18n";
+import { bugKind, type BugKind } from "./bug-utils";
 import { BUG_ASSISTANT_EVENT } from "./report";
 
 type ChatMessage = { role: "ai" | "user"; text: string; time: string; shot?: string };
 type Captured = { message: string; stack?: string; url: string };
+
+const BUG_LINE_KEY: Record<BugKind, keyof Dictionary> = {
+  database: "mscBugLineDatabase",
+  network: "mscBugLineNetwork",
+  render: "mscBugLineRender",
+  csrf: "mscBugLineCsrf",
+  chunk: "mscBugLineChunk",
+  auth: "mscBugLineAuth",
+  other: "mscBugLineOther",
+};
 
 function fmtClock(value: Date) {
   const hours = String(value.getHours()).padStart(2, "0");
@@ -18,10 +30,8 @@ function fmtClock(value: Date) {
   return `${hours}:${minutes}`;
 }
 
-const GREETING =
-  "Salom! 😊 Men AI yordamchiman. FBSU LMS saytida qanday yordam bera olaman? Muammo yoki savolingizni yozing — birgalikda hal qilamiz.";
-
 export function BugAssistant() {
+  const { t } = useI18n();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -99,22 +109,22 @@ export function BugAssistant() {
           typeof json?.data?.reply === "string" ? json.data.reply.trim() : "";
         if (reply) {
           return nav?.path
-            ? `${reply}\n\n➡️ Sahifani ochdim: ${nav.title || nav.path}`
+            ? `${reply}\n\n${t("mscBugOpenedPageLine", { target: nav.title || nav.path })}`
             : reply;
         }
-        if (nav?.path) return `Sahifani ochdim: ${nav.title || nav.path} ✅`;
+        if (nav?.path) return t("mscBugOpenedPage", { target: nav.title || nav.path });
       } catch {
         void 0;
       }
-      return "Kechirasiz, hozir javob bera olmadim. Birozdan so'ng qayta yozing — adminga ham xabar berildi.";
+      return t("mscBugNoReply");
     },
-    [router],
+    [router, t],
   );
 
   const attachImage = useCallback(
     async (file: File) => {
       if (!file.type.startsWith("image/")) {
-        aiSay("Faqat rasm (skrinshot) biriktirish mumkin.");
+        aiSay(t("mscBugOnlyImage"));
         return;
       }
       try {
@@ -129,17 +139,17 @@ export function BugAssistant() {
         ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
         const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
         if (dataUrl.length > 3_500_000) {
-          aiSay("Rasm juda katta — kichikroq skrinshot tanlang.");
+          aiSay(t("mscBugImageTooBig"));
           return;
         }
         setShot({ dataUrl, name: file.name });
         setSent(false);
-        aiSay("📎 Skrinshot biriktirildi. Yuborganingizda u ham adminga boradi.");
+        aiSay(t("mscBugImageAttached"));
       } catch {
-        aiSay("Rasmni o'qib bo'lmadi — boshqa rasm bilan urinib ko'ring.");
+        aiSay(t("mscBugImageError"));
       }
     },
-    [aiSay],
+    [aiSay, t],
   );
 
   const sendReport = useCallback(async (overrideMessage?: string): Promise<void> => {
@@ -148,7 +158,7 @@ export function BugAssistant() {
       const res = await apiFetch("/api/bugs", {
         method: "POST",
         body: JSON.stringify({
-          message: overrideMessage?.trim() || captured.current?.message || "Foydalanuvchi AI yordamchi orqali yubordi",
+          message: overrideMessage?.trim() || captured.current?.message || t("mscBugSubmittedByAi"),
           stack: captured.current?.stack,
           url: captured.current?.url ?? window.location.pathname,
           note: messages
@@ -163,13 +173,13 @@ export function BugAssistant() {
       if (!res.ok || !json?.ok) throw new Error("failed");
       setSent(true);
       setShot(null);
-      aiSay("✅ Adminga yuborildi. Tafsilotlar faqat administratorga ko'rinadi. Boshqa savolingiz bo'lsa — yozib turing, yordam beraman.");
+      aiSay(t("mscBugReportSent"));
     } catch {
-      aiSay("Adminga yuborishda muammo bo'ldi. Birozdan so'ng qayta urinib ko'ring.");
+      aiSay(t("mscBugReportError"));
     } finally {
       setBusy(false);
     }
-  }, [aiSay, messages, shot]);
+  }, [aiSay, messages, shot, t]);
 
   const capture = useCallback(
     (message: string, stack?: string, label?: string, autoSend = false) => {
@@ -178,12 +188,13 @@ export function BugAssistant() {
       lastAutoAt.current = now;
       captured.current = { message, stack, url: window.location.pathname };
       setSent(false);
+      const reason = t(BUG_LINE_KEY[bugKind(message, stack)]);
       setMessages([
         {
           role: "ai",
           text: label
-            ? `Sahifada muammo aniqlandi: ${label}. Birgalikda hal qilamiz 🙂`
-            : `Sahifada kutilmagan holat yuz berdi (${friendlyBugLine(message, stack)}). Birgalikda hal qilamiz 🙂`,
+            ? t("mscBugFoundLabel", { label })
+            : t("mscBugFoundUnknown", { reason }),
           time: fmtClock(new Date()),
         },
       ]);
@@ -193,9 +204,7 @@ export function BugAssistant() {
         const reply = await askAiReply([
           {
             role: "user",
-            text:
-              `Sahifada quyidagi muammo yuz berdi: ${label ?? friendlyBugLine(message, stack)}. ` +
-              "Menga qisqa tushuntir (2-3 gap) va qanday hal qilishni ayt.",
+            text: t("mscBugAnalysisPrompt", { reason: label ?? reason }),
             time: fmtClock(new Date()),
           },
         ]);
@@ -206,15 +215,15 @@ export function BugAssistant() {
         }
       })();
     },
-    [aiSay, askAiReply, sendReport],
+    [aiSay, askAiReply, sendReport, t],
   );
 
   useEffect(() => {
     const onError = (event: ErrorEvent) =>
-      capture(event.message || "Noma'lum xatolik", event.error?.stack as string | undefined);
+      capture(event.message || t("mscBugUnknownError"), event.error?.stack as string | undefined);
     const onReject = (event: PromiseRejectionEvent) => {
       const reason = event.reason as { message?: string; stack?: string } | undefined;
-      capture(reason?.message ?? String(event.reason ?? "Promise xatosi"), reason?.stack);
+      capture(reason?.message ?? String(event.reason ?? t("mscBugPromiseError")), reason?.stack);
     };
     window.addEventListener("error", onError);
     window.addEventListener("unhandledrejection", onReject);
@@ -222,7 +231,7 @@ export function BugAssistant() {
       window.removeEventListener("error", onError);
       window.removeEventListener("unhandledrejection", onReject);
     };
-  }, [capture]);
+  }, [capture, t]);
 
   useEffect(() => {
     const onIssue = (event: Event) => {
@@ -239,7 +248,7 @@ export function BugAssistant() {
   function openManually() {
     captured.current = null;
     setSent(false);
-    setMessages([{ role: "ai", text: GREETING, time: fmtClock(new Date()) }]);
+    setMessages([{ role: "ai", text: t("mscBugGreeting"), time: fmtClock(new Date()) }]);
     setOpen(true);
   }
 
@@ -274,7 +283,7 @@ export function BugAssistant() {
           <span className="flex size-6 items-center justify-center rounded-full bg-brand-900 text-[11px] text-white">
             AI
           </span>
-          Yordam
+          {t("mscBugOpen")}
         </button>
       ) : null}
 
@@ -286,14 +295,14 @@ export function BugAssistant() {
                 AI
               </span>
               <div>
-                <p className="text-sm font-semibold text-slate-800">AI yordamchi</p>
-                <p className="text-[11px] text-slate-600">DeepSeek · adminga yuboradi</p>
+                <p className="text-sm font-semibold text-slate-800">{t("mscBugTitle")}</p>
+                <p className="text-[11px] text-slate-600">{t("mscBugSubtitle")}</p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              aria-label="Yopish"
+              aria-label={t("mscBugClose")}
               className="rounded-full px-2 py-1 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-600"
             >
               ✕
@@ -315,7 +324,7 @@ export function BugAssistant() {
                 {message.shot ? (
                   <img
                     src={message.shot}
-                    alt="Biriktirilgan skrinshot"
+                    alt={t("mscBugAttachedAlt")}
                     className="mt-1.5 max-h-32 rounded-lg border border-white/40"
                   />
                 ) : null}
@@ -331,7 +340,7 @@ export function BugAssistant() {
             ))}
             {busy ? (
               <div className="w-fit rounded-2xl bg-slate-100 px-3 py-2 text-sm text-slate-600">
-                AI yozmoqda…
+                {t("mscBugTyping")}
               </div>
             ) : null}
           </div>
@@ -341,7 +350,7 @@ export function BugAssistant() {
               <div className="flex items-center gap-2">
                 <img
                   src={shot.dataUrl}
-                  alt="Biriktirilgan skrinshot"
+                  alt={t("mscBugAttachedAlt")}
                   className="h-12 w-20 rounded-lg border border-slate-200 object-cover"
                 />
                 <span className="min-w-0 flex-1 truncate text-[11px] text-slate-500">{shot.name}</span>
@@ -350,7 +359,7 @@ export function BugAssistant() {
                   onClick={() => setShot(null)}
                   className="text-xs text-slate-500 transition-colors hover:text-slate-700"
                 >
-                  ✖ Olib tashlash
+                  {t("mscBugRemove")}
                 </button>
               </div>
             ) : null}
@@ -359,8 +368,8 @@ export function BugAssistant() {
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 disabled={busy}
-                title="Skrinshot biriktirish"
-                aria-label="Skrinshot biriktirish"
+                title={t("mscBugAttach")}
+                aria-label={t("mscBugAttach")}
                 className="rounded-lg border border-slate-200 px-2.5 text-sm text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
               >
                 📎
@@ -387,11 +396,11 @@ export function BugAssistant() {
                     }
                   }
                 }}
-                placeholder="Xabar yozing..."
-                aria-label="AI yordamchiga xabar"
+                placeholder={t("mscBugInputPlaceholder")}
+                aria-label={t("mscBugInputAria")}
               />
               <Button size="sm" onClick={() => void handleSend()} disabled={!input.trim() || busy}>
-                Yuborish
+                {t("mscBugSend")}
               </Button>
             </div>
             <input
@@ -417,9 +426,13 @@ export function BugAssistant() {
                     : "text-brand-700 hover:text-brand-900 hover:underline",
                 )}
               >
-                {sent ? "✅ Adminga yuborilgan" : shot ? "📤 Muammoni adminga yuborish (📎 1 rasm)" : "📤 Muammoni adminga yuborish"}
+                {sent
+                  ? t("mscBugSent")
+                  : shot
+                    ? t("mscBugSendReportShot")
+                    : t("mscBugSendReport")}
               </button>
-              <span className="text-[10px] text-slate-600">Tafsilotlar faqat adminga ko&apos;rinadi</span>
+              <span className="text-[10px] text-slate-600">{t("mscBugDetailsAdmin")}</span>
             </div>
           </div>
         </div>

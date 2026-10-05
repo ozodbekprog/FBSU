@@ -236,3 +236,314 @@ body {
 .dark .\[\&\>div\]\:from-white > div { --tw-gradient-from: #0e1729; }
 
 .dark .ring-white { --tw-ring-color: #0e1729; }
+
+/* Sidebar yig'ilish animatsiyasi va yig'ilgan holat.
+   aside layout.tsx da (muzlatilgan fayl) — o'lcham shu yerda :has() orqali
+   boshqariladi, React faqat [data-nav-shell][data-collapsed] belgisini qo'yadi.
+   Yopiq holatda faqat ikonkalar qoladi: logo, labellar, matnlar silliq
+   yig'iladi; hoverda chiroyli label-pill chiqadi; aktiv punkt oltin puls oladi. */
+aside:has(> [data-nav-shell]) {
+  width: 20.5rem;
+  transition: width 360ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) {
+  width: 5rem;
+}
+
+aside:has(> [data-nav-shell]) #sidebar-nav > * {
+  transition:
+    margin-top 360ms cubic-bezier(0.32, 0.72, 0, 1),
+    margin-block-start 360ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+aside:has(> [data-nav-shell]) .nav-link {
+  transition:
+    gap 360ms cubic-bezier(0.32, 0.72, 0, 1),
+    color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) .nav-link {
+  gap: 0;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) .nav-link .nav-icon {
+  margin-inline: auto;
+}
+
+.nav-label {
+  max-width: 12rem;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width 360ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 200ms ease,
+    transform 360ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) .nav-label {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.nav-badge {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  max-width: 6rem;
+  overflow: hidden;
+  transition:
+    max-width 360ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 200ms ease;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) .nav-badge {
+  max-width: 0;
+  opacity: 0;
+}
+
+.nav-group-sep {
+  border-top: 1px solid transparent;
+  transition:
+    border-color 360ms ease,
+    padding-top 360ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) .nav-group-sep {
+  border-top-color: rgb(203 213 225 / 0.6);
+  padding-top: 0.375rem;
+}
+
+.dark aside:has(> [data-nav-shell][data-collapsed="true"]) .nav-group-sep {
+  border-top-color: rgb(43 58 92 / 0.7);
+}
+
+.nav-group-label {
+  max-height: 1.5rem;
+  overflow: hidden;
+  transition:
+    max-height 360ms cubic-bezier(0.32, 0.72, 0, 1),
+    padding-bottom 360ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 200ms ease;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) .nav-group-label {
+  max-height: 0;
+  padding-bottom: 0;
+  opacity: 0;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) .nav-link[data-active="true"] {
+  position: relative;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) .nav-link[data-active="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 1px rgb(212 175 55 / 0.4),
+    0 0 22px 2px rgb(212 175 55 / 0.25);
+  animation: nav-active-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes nav-active-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.nav-tooltip {
+  position: absolute;
+  left: calc(100% + 0.625rem);
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 16rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #1d3460 0%, #2e5090 100%);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow:
+    0 14px 30px -14px rgb(9 18 40 / 0.75),
+    inset 0 0 0 1px rgb(212 175 55 / 0.3);
+  animation: nav-tip-in 200ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.nav-tooltip::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: #1d3460;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.nav-tooltip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #d4af37;
+  box-shadow: 0 0 10px rgb(212 175 55 / 0.9);
+}
+
+@keyframes nav-tip-in {
+  from {
+    opacity: 0;
+    transform: translate(-8px, -50%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+}
+
+.nav-burger-top {
+  visibility: visible;
+  transition:
+    opacity 200ms ease,
+    transform 300ms cubic-bezier(0.32, 0.72, 0, 1),
+    color 150ms ease,
+    background-color 150ms ease,
+    visibility 0s linear 0s;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) .nav-burger-top {
+  opacity: 0;
+  transform: scale(0.7);
+  pointer-events: none;
+  visibility: hidden;
+  transition:
+    opacity 200ms ease,
+    transform 300ms cubic-bezier(0.32, 0.72, 0, 1),
+    visibility 0s linear 200ms;
+}
+
+.nav-burger-rail {
+  animation: nav-burger-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) 130ms both;
+}
+
+@keyframes nav-burger-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+aside:has(> [data-nav-shell]) > div:first-child {
+  overflow: hidden;
+  transition:
+    height 360ms cubic-bezier(0.32, 0.72, 0, 1),
+    padding 360ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+aside:has(> [data-nav-shell]) > div:first-child > a > span {
+  transition: gap 360ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+aside:has(> [data-nav-shell]) > div:first-child > a > span > span:last-child {
+  max-width: 12rem;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width 360ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 200ms ease;
+}
+
+aside:has(> [data-nav-shell]) > div:first-child > div:last-child {
+  transition: gap 360ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) > div:first-child {
+  height: 9.75rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  padding-inline: 0;
+  padding-block: 0.75rem;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) > div:first-child > a > span {
+  gap: 0;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) > div:first-child > a > span > span:last-child {
+  max-width: 0;
+  opacity: 0;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) > div:first-child > div:last-child {
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+aside:has(> [data-nav-shell]) > div:last-child > a {
+  transition:
+    padding 360ms cubic-bezier(0.32, 0.72, 0, 1),
+    gap 360ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+aside:has(> [data-nav-shell]) > div:last-child > a > :first-child {
+  flex-shrink: 0;
+}
+
+aside:has(> [data-nav-shell]) > div:last-child > a > div {
+  max-width: 14rem;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width 360ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 200ms ease;
+}
+
+aside:has(> [data-nav-shell]) > div:last-child form button {
+  transition:
+    font-size 360ms ease,
+    gap 360ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) > div:last-child > a {
+  padding-inline: 0;
+  gap: 0;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) > div:last-child > a > :first-child {
+  margin-inline: auto;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) > div:last-child > a > div {
+  max-width: 0;
+  opacity: 0;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) > div:last-child form button {
+  gap: 0;
+  font-size: 0;
+}
+
+aside:has(> [data-nav-shell][data-collapsed="true"]) > div:last-child form button > svg {
+  margin-inline: auto;
+}

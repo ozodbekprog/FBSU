@@ -1,10 +1,13 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Badge, Card, CardBody } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import {
   ROOM_TYPE_ICONS,
-  ROOM_TYPE_LABELS,
+  ROOM_TYPE_LABEL_KEY,
   ROOM_TYPE_META,
   ROOM_TYPE_TONES,
   roomType,
@@ -45,6 +48,7 @@ export function RoomCard({
   actions?: ReactNode;
   href?: string;
 }) {
+  const { t } = useI18n();
   const type = roomType(room);
   const meta = ROOM_TYPE_META[type];
   const equipment = room.equipment
@@ -71,7 +75,7 @@ export function RoomCard({
             <div className="flex items-start justify-between gap-2">
               <h3 className="truncate font-semibold tracking-tight text-slate-900">{room.name}</h3>
               <Badge tone={ROOM_TYPE_TONES[type]} className="shrink-0">
-                {ROOM_TYPE_LABELS[type]}
+                {t(ROOM_TYPE_LABEL_KEY[type])}
               </Badge>
             </div>
             <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
@@ -90,7 +94,7 @@ export function RoomCard({
                 <path d="M5 21V7l7-4 7 4v14" />
                 <path d="M10 21v-4h4v4" />
               </svg>
-              <span className="truncate">{room.building ?? "Bino ko'rsatilmagan"}</span>
+              <span className="truncate">{room.building ?? t("mscRoomNoBuilding")}</span>
             </p>
           </div>
         </div>
@@ -113,7 +117,7 @@ export function RoomCard({
               <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
-            {room.capacity === null ? "Sig'im yo'q" : `${room.capacity} o'rin`}
+            {room.capacity === null ? t("mscRoomNoCapacity") : t("mscRoomCapacity", { count: room.capacity })}
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 ring-1 ring-slate-100">
             <svg
@@ -129,12 +133,14 @@ export function RoomCard({
             >
               <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z" />
             </svg>
-            {equipment.length ? `${equipment.length} ta jihoz` : "Jihoz yo'q"}
+            {equipment.length ? t("mscRoomEquipmentCount", { count: equipment.length }) : t("mscRoomNoEquipmentShort")}
           </span>
         </div>
 
         <div className="flex-1">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">Jihozlar</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
+            {t("mscRoomEquipmentTitle")}
+          </p>
           {equipment.length ? (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {equipment.map((item) => (
@@ -148,7 +154,7 @@ export function RoomCard({
               ))}
             </div>
           ) : (
-            <p className="mt-1.5 text-xs text-slate-600">Ko&apos;rsatilmagan</p>
+            <p className="mt-1.5 text-xs text-slate-600">{t("mscRoomNotSpecified")}</p>
           )}
         </div>
 
@@ -160,7 +166,7 @@ export function RoomCard({
                 href={href}
                 className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-700 transition-colors duration-150 hover:bg-brand-50"
               >
-                Haftalik bandlik
+                {t("mscRoomWeeklyUsage")}
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14" />
                   <path d="m13 6 6 6-6 6" />

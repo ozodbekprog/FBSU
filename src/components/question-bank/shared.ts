@@ -1,4 +1,5 @@
 import type { BankQuestion } from "@prisma/client";
+import type { Dictionary } from "@/i18n";
 import { asNumberArray, asStringArray, type QuestionType } from "@/components/quiz/shared";
 
 export type BankQuestionItem = {
@@ -30,10 +31,10 @@ type BankQuestionWithRefs = BankQuestion & {
   subject: { id: string; name: string } | null;
 };
 
-export const DIFFICULTY_LABEL: Record<number, string> = {
-  1: "Oson",
-  2: "O'rtacha",
-  3: "Qiyin",
+export const DIFFICULTY_LABEL_KEYS: Record<number, keyof Dictionary> = {
+  1: "grdQbDifficultyEasy",
+  2: "grdQbDifficultyMedium",
+  3: "grdQbDifficultyHard",
 };
 
 export const DIFFICULTY_TONE: Record<number, "green" | "amber" | "rose"> = {

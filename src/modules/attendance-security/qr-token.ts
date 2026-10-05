@@ -57,6 +57,7 @@ export async function signQrToken(input: {
     exp,
   };
   if (input.location) {
+    payload.loc = input.location;
     pruneLocations(iat);
     locationStore.set(jti, { location: input.location, exp });
   }

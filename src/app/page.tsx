@@ -3,362 +3,375 @@ import Link from "next/link";
 import { Badge, ButtonLink, Card } from "@/components/ui";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-
-export const revalidate = 300;
+import { getDictionary, getLocale } from "@/i18n";
 
 const SITE_URL = "https://lms.ttpu.uz";
-const OG_TITLE = "FBSU LMS — O'quv boshqaruv tizimi";
-const OG_DESCRIPTION =
-  "Turin Politexnika Universiteti uchun zamonaviy o'quv boshqaruv tizimi: kurslar, topshiriqlar, testlar, GPA, transkript va jadval.";
+const OG_LOCALES: Record<string, string> = { uz: "uz_UZ", ru: "ru_RU", en: "en_US" };
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  alternates: { canonical: "/" },
-  openGraph: {
-    type: "website",
-    url: "/",
-    title: OG_TITLE,
-    description: OG_DESCRIPTION,
-    siteName: "FBSU LMS",
-  },
-  twitter: {
-    card: "summary",
-    title: OG_TITLE,
-    description: OG_DESCRIPTION,
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  return {
+    metadataBase: new URL(SITE_URL),
+    alternates: { canonical: "/" },
+    openGraph: {
+      type: "website",
+      url: "/",
+      title: dictionary.metaTitle,
+      description: dictionary.metaDescription,
+      siteName: "FBSU LMS",
+      locale: OG_LOCALES[locale],
+    },
+    twitter: {
+      card: "summary",
+      title: dictionary.metaTitle,
+      description: dictionary.metaDescription,
+    },
+  };
+}
 
-const STRUCTURED_DATA = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Organization",
-      "@id": `${SITE_URL}/#organization`,
-      name: "Turin Politexnika Universiteti",
-      alternateName: "FBSU LMS",
-      url: SITE_URL,
-      email: "info@ttpu.uz",
-      telephone: "+998 71 289 99 00",
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: "Toshkent",
-        addressCountry: "UZ",
+export default async function HomePage() {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${SITE_URL}/#organization`,
+        name: "Turin Polytechnic University",
+        alternateName: "FBSU LMS",
+        url: SITE_URL,
+        email: "info@ttpu.uz",
+        telephone: "+998 71 289 99 00",
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: "Tashkent",
+          addressCountry: "UZ",
+        },
       },
+      {
+        "@type": "WebSite",
+        "@id": `${SITE_URL}/#website`,
+        name: "FBSU LMS",
+        url: SITE_URL,
+        inLanguage: locale,
+        publisher: { "@id": `${SITE_URL}/#organization` },
+      },
+    ],
+  };
+
+  const navLinks = [
+    { href: "#imkoniyatlar", label: dictionary.landNavFeatures },
+    { href: "#boshlash", label: dictionary.landNavStart },
+    { href: "#statistika", label: dictionary.landNavStats },
+    { href: "#aloqa", label: dictionary.landNavContact },
+  ];
+
+  const dashNav = [
+    { label: dictionary.landDashControl, active: true },
+    { label: dictionary.navCourses, active: false },
+    { label: dictionary.navSchedule, active: false },
+    { label: dictionary.navGradesStudent, active: false },
+    { label: dictionary.navTranscript, active: false },
+    { label: dictionary.landDashBooking, active: false },
+  ];
+
+  const dashStats = [
+    { label: dictionary.navGpa, value: "3.8" },
+    { label: dictionary.navAttendance, value: "94%" },
+    { label: dictionary.landDashAssignments, value: "12" },
+  ];
+
+  const dashBars = [
+    { day: dictionary.landDayMon, value: 44, highlight: false },
+    { day: dictionary.landDayTue, value: 66, highlight: false },
+    { day: dictionary.landDayWed, value: 52, highlight: false },
+    { day: dictionary.landDayThu, value: 78, highlight: false },
+    { day: dictionary.landDayFri, value: 60, highlight: true },
+    { day: dictionary.landDaySat, value: 90, highlight: true },
+    { day: dictionary.landDaySun, value: 48, highlight: false },
+  ];
+
+  const dashSchedule = [
+    {
+      time: "09:00",
+      title: dictionary.landCourseDiffEq,
+      room: "A-204",
+      tone: "bg-brand-500",
     },
     {
-      "@type": "WebSite",
-      "@id": `${SITE_URL}/#website`,
-      name: "FBSU LMS",
-      url: SITE_URL,
-      inLanguage: "uz",
-      publisher: { "@id": `${SITE_URL}/#organization` },
+      time: "10:30",
+      title: dictionary.landCourseProg,
+      room: "B-311",
+      tone: "bg-gold-400",
     },
-  ],
-};
+    {
+      time: "13:00",
+      title: dictionary.landCoursePhysics,
+      room: "Lab-2",
+      tone: "bg-emerald-500",
+    },
+  ];
 
-const NAV_LINKS = [
-  { href: "#imkoniyatlar", label: "Imkoniyatlar" },
-  { href: "#boshlash", label: "Qanday boshlash" },
-  { href: "#statistika", label: "Statistika" },
-  { href: "#aloqa", label: "Aloqa" },
-];
+  const trustItems = [
+    dictionary.landTrust1,
+    dictionary.landTrust2,
+    dictionary.landTrust3,
+  ];
 
-const DASH_NAV = [
-  { label: "Boshqaruv", active: true },
-  { label: "Kurslar", active: false },
-  { label: "Jadval", active: false },
-  { label: "Baholar", active: false },
-  { label: "Transkript", active: false },
-  { label: "Bron qilish", active: false },
-];
+  const features = [
+    {
+      title: dictionary.landFeat1Title,
+      description: dictionary.landFeat1Desc,
+      badge: null as string | null,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landFeat2Title,
+      description: dictionary.landFeat2Desc,
+      badge: null as string | null,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <rect x="8" y="2" width="8" height="4" rx="1" />
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+          <path d="m9 14 2 2 4-4" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landFeat3Title,
+      description: dictionary.landFeat3Desc,
+      badge: null as string | null,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+          <path d="M12 17h.01" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landFeat4Title,
+      description: dictionary.landFeat4Desc,
+      badge: dictionary.landBadgeNew,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <path d="M3 3v18h18" />
+          <path d="m7 14 4-4 3 3 5-6" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landFeat5Title,
+      description: dictionary.landFeat5Desc,
+      badge: dictionary.landBadgeNew,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <path d="M14 2v6h6" />
+          <path d="M8 13h8M8 17h5" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landFeat6Title,
+      description: dictionary.landFeat6Desc,
+      badge: dictionary.landBadgeNew,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landFeat7Title,
+      description: dictionary.landFeat7Desc,
+      badge: dictionary.landBadgeNew,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <path d="M16 2v4M8 2v4M3 10h18" />
+          <path d="m9 15 2 2 4-4" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landFeat8Title,
+      description: dictionary.landFeat8Desc,
+      badge: null as string | null,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <path d="m22 2-7 20-4-9-9-4Z" />
+          <path d="M22 2 11 13" />
+        </svg>
+      ),
+    },
+  ];
 
-const DASH_STATS = [
-  { label: "GPA", value: "3.8" },
-  { label: "Davomat", value: "94%" },
-  { label: "Topshiriq", value: "12" },
-];
+  const stats = [
+    { value: "20 000+", label: dictionary.landStatUsers },
+    { value: "1 800+", label: dictionary.landStatCourses },
+    { value: "120+", label: dictionary.landStatTeachers },
+    { value: "24/7", label: dictionary.landStatSupport },
+  ];
 
-const DASH_BARS = [
-  { day: "Du", value: 44, highlight: false },
-  { day: "Se", value: 66, highlight: false },
-  { day: "Cho", value: 52, highlight: false },
-  { day: "Pay", value: 78, highlight: false },
-  { day: "Jum", value: 60, highlight: true },
-  { day: "Sha", value: 90, highlight: true },
-  { day: "Yak", value: 48, highlight: false },
-];
+  const steps = [
+    {
+      title: dictionary.landStep1Title,
+      description: dictionary.landStep1Desc,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M19 8v6M22 11h-6" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landStep2Title,
+      description: dictionary.landStep2Desc,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landStep3Title,
+      description: dictionary.landStep3Desc,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <path d="m5 3 14 9-14 9V3z" />
+        </svg>
+      ),
+    },
+  ];
 
-const DASH_SCHEDULE = [
-  { time: "09:00", title: "Differensial tenglamalar", room: "A-204", tone: "bg-brand-500" },
-  { time: "10:30", title: "Programmalash asoslari", room: "B-311", tone: "bg-gold-400" },
-  { time: "13:00", title: "Fizika (amaliy)", room: "Lab-2", tone: "bg-emerald-500" },
-];
+  const footerModules = [
+    dictionary.landFeat1Title,
+    dictionary.landModAssignmentsTests,
+    dictionary.landModGpaTranscript,
+    dictionary.landFeat6Title,
+    dictionary.landFeat7Title,
+    dictionary.landFeat8Title,
+  ];
 
-const TRUST_ITEMS = ["O'zbek tilida", "Barcha qurilmalarda", "Xavfsiz saqlash"];
+  const footerPlatform = [
+    { href: "#imkoniyatlar", label: dictionary.landNavFeatures },
+    { href: "#boshlash", label: dictionary.landNavStart },
+    { href: "/login", label: dictionary.landFooterLogin },
+    { href: "/register", label: dictionary.authLoginRegister },
+    { href: "/help", label: dictionary.landFooterHelp },
+  ];
 
-const FEATURES = [
-  {
-    title: "Kurslar va materiallar",
-    description:
-      "Fanlar bo'limlarga ajratilgan: ma'ruza matnlari, fayllar, videolar va qo'shimcha resurslar bir joyda.",
-    badge: null,
-    icon: (
-      <svg aria-hidden="true"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-5"
-      >
-        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-      </svg>
-    ),
-  },
-  {
-    title: "Topshiriqlar",
-    description:
-      "Topshiriqlarni yuklash, muddatlarni kuzatish va o'qituvchi tomonidan onlayn baholash jarayoni.",
-    badge: null,
-    icon: (
-      <svg aria-hidden="true"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-5"
-      >
-        <rect x="8" y="2" width="8" height="4" rx="1" />
-        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-        <path d="m9 14 2 2 4-4" />
-      </svg>
-    ),
-  },
-  {
-    title: "Testlar va baholash",
-    description:
-      "Vaqt chegarasi bilan onlayn testlar, avtomatik baholash va natijalar tahlili bir zumda.",
-    badge: null,
-    icon: (
-      <svg aria-hidden="true"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-5"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-        <path d="M12 17h.01" />
-      </svg>
-    ),
-  },
-  {
-    title: "GPA va kreditlar",
-    description:
-      "Semestr GPA si, yig'ilgan kreditlar va fan bo'yicha baholar real vaqtda hisoblanadi.",
-    badge: "Yangi",
-    icon: (
-      <svg aria-hidden="true"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-5"
-      >
-        <path d="M3 3v18h18" />
-        <path d="m7 14 4-4 3 3 5-6" />
-      </svg>
-    ),
-  },
-  {
-    title: "Rasmiy transkript",
-    description:
-      "Transkript avtomatik shakllanadi: barcha semestrlar, baholar va kreditlar bitta hujjatda.",
-    badge: "Yangi",
-    icon: (
-      <svg aria-hidden="true"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-5"
-      >
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <path d="M14 2v6h6" />
-        <path d="M8 13h8M8 17h5" />
-      </svg>
-    ),
-  },
-  {
-    title: "Elektron kundaliklar",
-    description:
-      "O'qituvchi kundaligi: mavzular, uy vazifalari va dars qaydlari yagona joyda saqlanadi.",
-    badge: "Yangi",
-    icon: (
-      <svg aria-hidden="true"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-5"
-      >
-        <path d="M12 20h9" />
-        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-      </svg>
-    ),
-  },
-  {
-    title: "Xona va resurs bron",
-    description:
-      "Auditoriya, laboratoriya va jihozlarni band qilish bir necha bosqichda, tasdiqlash bilan.",
-    badge: "Yangi",
-    icon: (
-      <svg aria-hidden="true"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-5"
-      >
-        <rect x="3" y="4" width="18" height="18" rx="2" />
-        <path d="M16 2v4M8 2v4M3 10h18" />
-        <path d="m9 15 2 2 4-4" />
-      </svg>
-    ),
-  },
-  {
-    title: "Telegram bot",
-    description:
-      "Bildirishnomalar, baholar va muhim eslatmalar Telegram orqali darhol yetib boradi.",
-    badge: null,
-    icon: (
-      <svg aria-hidden="true"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-5"
-      >
-        <path d="m22 2-7 20-4-9-9-4Z" />
-        <path d="M22 2 11 13" />
-      </svg>
-    ),
-  },
-];
-
-const STATS = [
-  { value: "20 000+", label: "Faol foydalanuvchi" },
-  { value: "1 800+", label: "O'quv kursi" },
-  { value: "120+", label: "Malakali o'qituvchi" },
-  { value: "24/7", label: "Qo'llab-quvvatlash" },
-];
-
-const STEPS = [
-  {
-    title: "Ro'yxatdan o'ting",
-    description:
-      "Ism, email va parolni kiriting. Hisob 30 soniyada yaratiladi va darhol faollashadi.",
-    icon: (
-      <svg aria-hidden="true"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-5"
-      >
-        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M19 8v6M22 11h-6" />
-      </svg>
-    ),
-  },
-  {
-    title: "Profilni to'ldiring",
-    description:
-      "Guruh va fakultetingizni tanlang — jadval hamda fanlar avtomatik biriktiriladi.",
-    icon: (
-      <svg aria-hidden="true"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-5"
-      >
-        <path d="M12 20h9" />
-        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-      </svg>
-    ),
-  },
-  {
-    title: "O'qishni boshlang",
-    description:
-      "Kurslar, topshiriqlar va baholar shaxsiy kabinetda. Hech narsa sozlash shart emas.",
-    icon: (
-      <svg aria-hidden="true"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-5"
-      >
-        <path d="m5 3 14 9-14 9V3z" />
-      </svg>
-    ),
-  },
-];
-
-const FOOTER_MODULES = [
-  "Kurslar va materiallar",
-  "Topshiriqlar va testlar",
-  "GPA va transkript",
-  "Elektron kundaliklar",
-  "Xona va resurs bron",
-  "Telegram bot",
-];
-
-const FOOTER_PLATFORM = [
-  { href: "#imkoniyatlar", label: "Imkoniyatlar" },
-  { href: "#boshlash", label: "Qanday boshlash" },
-  { href: "/login", label: "Tizimga kirish" },
-  { href: "/register", label: "Ro'yxatdan o'tish" },
-  { href: "/help", label: "Yordam markazi" },
-];
-
-export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-white text-slate-900">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-brand-800 focus:shadow-lg"
       >
-        Asosiy kontentga o&apos;tish
+        {dictionary.landSkipToContent}
       </a>
       <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/85 backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
@@ -366,7 +379,7 @@ export default function HomePage() {
             <Logo />
           </Link>
           <nav className="hidden items-center gap-7 text-sm font-medium text-slate-600 lg:flex">
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
@@ -379,10 +392,10 @@ export default function HomePage() {
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <ButtonLink href="/login" variant="ghost" size="sm" className="max-sm:hidden">
-              Kirish
+              {dictionary.authLoginLink}
             </ButtonLink>
             <ButtonLink href="/register" size="sm" className="whitespace-nowrap">
-              Ro&apos;yxatdan o&apos;tish
+              {dictionary.authLoginRegister}
             </ButtonLink>
           </div>
         </div>
@@ -397,22 +410,20 @@ export default function HomePage() {
             <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
               <Badge tone="brand" className="gap-2 px-3.5 py-1.5 text-xs">
                 <span className="size-1.5 rounded-full bg-gold-400" />
-                Turin Politexnika Universiteti
+                {dictionary.landUniversity}
               </Badge>
               <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight text-brand-950 sm:text-5xl lg:text-[3.4rem]">
-                Butun o&apos;quv jarayoni{" "}
+                {dictionary.landHeroTitleA}{" "}
                 <span className="underline decoration-gold-400 decoration-2 underline-offset-[6px]">
-                  yagona platformada
+                  {dictionary.landHeroTitleB}
                 </span>
               </h1>
               <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-slate-600 lg:mx-0">
-                Kurslar, topshiriqlar, testlar, GPA, transkript, kundaliklar va bron
-                qilish — talabalar hamda o&apos;qituvchilar uchun hamma narsa tez,
-                qulay va ishonchli.
+                {dictionary.landHeroSubtitle}
               </p>
               <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
                 <ButtonLink href="/login" size="lg" className="w-full min-w-44 sm:w-auto">
-                  Kirish
+                  {dictionary.authLoginLink}
                 </ButtonLink>
                 <ButtonLink
                   href="/register"
@@ -420,11 +431,11 @@ export default function HomePage() {
                   size="lg"
                   className="w-full min-w-44 sm:w-auto"
                 >
-                  Ro&apos;yxatdan o&apos;tish
+                  {dictionary.authLoginRegister}
                 </ButtonLink>
               </div>
               <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5 lg:justify-start">
-                {TRUST_ITEMS.map((item) => (
+                {trustItems.map((item) => (
                   <li key={item} className="inline-flex items-center gap-2 text-sm text-slate-500">
                     <svg aria-hidden="true"
                       viewBox="0 0 24 24"
@@ -457,7 +468,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex gap-2.5 rounded-xl bg-surface p-2.5 sm:p-3">
                   <aside aria-hidden="true" className="hidden w-36 shrink-0 flex-col gap-1 rounded-xl border border-slate-100 bg-white p-2.5 sm:flex">
-                    {DASH_NAV.map((item) => (
+                    {dashNav.map((item) => (
                       <span
                         key={item.label}
                         className={
@@ -485,19 +496,19 @@ export default function HomePage() {
                         </span>
                         <div className="min-w-0">
                           <p className="truncate text-[11px] font-semibold text-slate-800">
-                            Salom, Aziza
+                            {dictionary.landDashGreeting}
                           </p>
                           <p className="truncate text-[10px] text-slate-600">
-                            AI2-26 · 2-semestr
+                            {dictionary.landDashSemester}
                           </p>
                         </div>
                       </div>
                       <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
-                        Faol
+                        {dictionary.landDashActive}
                       </span>
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      {DASH_STATS.map((stat) => (
+                      {dashStats.map((stat) => (
                         <div
                           key={stat.label}
                           className="rounded-xl border border-slate-100 bg-white px-3 py-2.5"
@@ -512,12 +523,14 @@ export default function HomePage() {
                     <div className="rounded-xl border border-slate-100 bg-white p-3.5">
                       <div className="flex items-center justify-between">
                         <p className="text-[11px] font-semibold text-slate-700">
-                          Haftalik faollik
+                          {dictionary.landWeeklyActivity}
                         </p>
-                        <span className="text-[10px] font-medium text-slate-600">6/7 kun</span>
+                        <span className="text-[10px] font-medium text-slate-600">
+                          {dictionary.landSixOfSeven}
+                        </span>
                       </div>
                       <div className="mt-3 flex h-20 items-end gap-1.5">
-                        {DASH_BARS.map((bar) => (
+                        {dashBars.map((bar) => (
                           <div
                             key={bar.day}
                             className="flex h-full flex-1 flex-col items-center justify-end gap-1.5"
@@ -538,7 +551,7 @@ export default function HomePage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      {DASH_SCHEDULE.map((item) => (
+                      {dashSchedule.map((item) => (
                         <div
                           key={item.time}
                           className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white px-3.5 py-2.5"
@@ -576,8 +589,8 @@ export default function HomePage() {
                   </svg>
                 </span>
                 <div>
-                  <p className="text-xs font-semibold text-slate-800">GPA 3.8</p>
-                  <p className="text-[10px] text-slate-600">Semestr reytingi</p>
+                  <p className="text-xs font-semibold text-slate-800">{dictionary.landGpaShort}</p>
+                  <p className="text-[10px] text-slate-600">{dictionary.landSemesterRating}</p>
                 </div>
               </div>
 
@@ -596,8 +609,10 @@ export default function HomePage() {
                   </svg>
                 </span>
                 <div>
-                  <p className="text-xs font-semibold text-slate-800">Topshiriq baholandi</p>
-                  <p className="text-[10px] text-slate-600">Matematika · 92 ball</p>
+                  <p className="text-xs font-semibold text-slate-800">
+                    {dictionary.landAssignmentGraded}
+                  </p>
+                  <p className="text-[10px] text-slate-600">{dictionary.landMathScore}</p>
                 </div>
               </div>
             </div>
@@ -608,18 +623,17 @@ export default function HomePage() {
           <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
             <div className="mx-auto max-w-2xl text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
-                Imkoniyatlar
+                {dictionary.landNavFeatures}
               </p>
               <h2 className="mt-3 text-3xl font-bold tracking-tight text-brand-950 sm:text-4xl">
-                Bitta platformada butun o&apos;quv jarayoni
+                {dictionary.landFeaturesTitle}
               </h2>
               <p className="mt-4 leading-relaxed text-slate-600">
-                Talabalar va o&apos;qituvchilar uchun zarur bo&apos;lgan barcha vositalar
-                sodda, tez va qulay interfeysda.
+                {dictionary.landFeaturesSubtitle}
               </p>
             </div>
             <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {FEATURES.map((feature) => (
+              {features.map((feature) => (
                 <Card
                   key={feature.title}
                   className="group flex h-full flex-col p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift"
@@ -646,18 +660,17 @@ export default function HomePage() {
           <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
             <div className="mx-auto max-w-2xl text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
-                Boshlash
+                {dictionary.landStartEyebrow}
               </p>
               <h2 className="mt-3 text-3xl font-bold tracking-tight text-brand-950 sm:text-4xl">
-                1 daqiqada boshlash
+                {dictionary.landStartTitle}
               </h2>
               <p className="mt-4 leading-relaxed text-slate-600">
-                Uchta oddiy qadam — keyin barcha kurslar, jadval va baholar avtomatik
-                tayyor bo&apos;ladi.
+                {dictionary.landStartSubtitle}
               </p>
             </div>
             <div className="mt-12 grid gap-6 md:grid-cols-3">
-              {STEPS.map((step, index) => (
+              {steps.map((step, index) => (
                 <Card
                   key={step.title}
                   className="group relative h-full overflow-hidden p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift"
@@ -682,7 +695,7 @@ export default function HomePage() {
             </div>
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <ButtonLink href="/register" size="lg" className="w-full min-w-44 sm:w-auto">
-                Hisob yaratish
+                {dictionary.landCreateAccount}
               </ButtonLink>
               <ButtonLink
                 href="/login"
@@ -690,19 +703,19 @@ export default function HomePage() {
                 size="lg"
                 className="w-full min-w-44 sm:w-auto"
               >
-                Demo hisob bilan kirish
+                {dictionary.landDemoLogin}
               </ButtonLink>
             </div>
           </div>
         </section>
 
         <section id="statistika" className="px-4 py-20 sm:px-6 sm:py-24">
-          <h2 className="sr-only">Statistika</h2>
+          <h2 className="sr-only">{dictionary.landNavStats}</h2>
           <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-brand-900 px-6 py-14 sm:px-12 sm:py-16">
             <div className="pointer-events-none absolute -right-16 -top-20 size-72 rounded-full bg-gold-400/10 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-24 -left-16 size-72 rounded-full bg-brand-600/30 blur-3xl" />
             <div className="relative grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-              {STATS.map((stat) => (
+              {stats.map((stat) => (
                 <div key={stat.label} className="text-center sm:text-left">
                   <span className="mx-auto block h-0.5 w-8 rounded-full bg-gold-400 sm:mx-0" />
                   <p className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
@@ -714,11 +727,10 @@ export default function HomePage() {
             </div>
             <div className="relative mt-12 flex flex-col items-start justify-between gap-6 border-t border-white/10 pt-8 sm:flex-row sm:items-center">
               <p className="max-w-xl text-sm leading-relaxed text-brand-200">
-                Platforma har semestr yangilanadi: yangi modullar, tezkor tuzatishlar va
-                universitet talablariga moslashuv.
+                {dictionary.landStatsNote}
               </p>
               <ButtonLink href="/register" variant="gold" size="lg" className="w-full sm:w-auto">
-                Hoziroq qo&apos;shilish
+                {dictionary.landJoinNow}
               </ButtonLink>
             </div>
           </div>
@@ -726,17 +738,16 @@ export default function HomePage() {
 
         <section className="px-4 pb-20 sm:px-6 sm:pb-24">
           <div className="mx-auto max-w-4xl overflow-hidden rounded-3xl border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-brand-50 px-6 py-14 text-center sm:px-12">
-            <Badge tone="gold">Boshlash uchun tayyor</Badge>
+            <Badge tone="gold">{dictionary.landReadyBadge}</Badge>
             <h2 className="mt-5 text-2xl font-bold tracking-tight text-brand-950 sm:text-3xl">
-              O&apos;qishni bugun boshlang
+              {dictionary.landStartToday}
             </h2>
             <p className="mx-auto mt-4 max-w-xl leading-relaxed text-slate-600">
-              Tizimga kiring yoki yangi hisob yarating — barcha kurslar va materiallar sizni
-              kutmoqda.
+              {dictionary.landStartTodayText}
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <ButtonLink href="/login" size="lg" className="w-full min-w-44 sm:w-auto">
-                Tizimga kirish
+                {dictionary.landLoginCta}
               </ButtonLink>
               <ButtonLink
                 href="/register"
@@ -744,7 +755,7 @@ export default function HomePage() {
                 size="lg"
                 className="w-full min-w-44 sm:w-auto"
               >
-                Ro&apos;yxatdan o&apos;tish
+                {dictionary.authLoginRegister}
               </ButtonLink>
             </div>
           </div>
@@ -757,20 +768,20 @@ export default function HomePage() {
             <div>
               <Logo />
               <p className="mt-5 max-w-sm text-sm leading-relaxed text-slate-500">
-                Turin Politexnika Universiteti uchun zamonaviy o&apos;quv boshqaruv
-                tizimi. Ta&apos;lim jarayonini raqamlashtirish va soddalashtirish uchun
-                yaratilgan.
+                {dictionary.landFooterAbout}
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
-                <Badge tone="brand">Next.js asosida</Badge>
-                <Badge tone="green">Xavfsiz</Badge>
+                <Badge tone="brand">{dictionary.landBuiltWith}</Badge>
+                <Badge tone="green">{dictionary.landSecure}</Badge>
                 <Badge tone="slate">Open API</Badge>
               </div>
             </div>
             <div>
-              <p className="text-sm font-semibold text-brand-950">Platforma</p>
+              <p className="text-sm font-semibold text-brand-950">
+                {dictionary.landFooterPlatform}
+              </p>
               <ul className="mt-4 space-y-2.5 text-sm text-slate-500">
-                {FOOTER_PLATFORM.map((link) => (
+                {footerPlatform.map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
@@ -783,15 +794,19 @@ export default function HomePage() {
               </ul>
             </div>
             <div>
-              <p className="text-sm font-semibold text-brand-950">Modullar</p>
+              <p className="text-sm font-semibold text-brand-950">
+                {dictionary.landFooterModules}
+              </p>
               <ul className="mt-4 space-y-2.5 text-sm text-slate-500">
-                {FOOTER_MODULES.map((item) => (
+                {footerModules.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
             </div>
             <div>
-              <p className="text-sm font-semibold text-brand-950">Aloqa</p>
+              <p className="text-sm font-semibold text-brand-950">
+                {dictionary.landFooterContact}
+              </p>
               <ul className="mt-4 space-y-3.5 text-sm text-slate-500">
                 <li className="flex items-center gap-2.5">
                   <svg aria-hidden="true"
@@ -835,18 +850,16 @@ export default function HomePage() {
                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />
                     <circle cx="12" cy="10" r="3" />
                   </svg>
-                  Toshkent, O&apos;zbekiston
+                  {dictionary.landAddress}
                 </li>
-                <li className="text-xs text-slate-600">Dushanba — Shanba, 09:00 — 18:00</li>
+                <li className="text-xs text-slate-600">{dictionary.landWorkHours}</li>
               </ul>
             </div>
           </div>
         </div>
         <div className="border-t border-slate-100">
           <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-3 px-4 py-6 sm:flex-row sm:px-6">
-            <p className="text-xs text-slate-600">
-              © 2026 Turin Politexnika Universiteti. Barcha huquqlar himoyalangan.
-            </p>
+            <p className="text-xs text-slate-600">{dictionary.landRights}</p>
           </div>
         </div>
       </footer>

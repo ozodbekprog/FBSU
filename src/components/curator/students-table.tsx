@@ -1,6 +1,7 @@
 import { Badge, Table } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import type { CuratorStudent } from "@/app/api/curator/data";
+import { getDictionary, getLocale } from "@/i18n";
 
 function percentTone(value: number | null) {
   if (value === null) return "text-slate-500";
@@ -23,23 +24,25 @@ function PercentValue({ value }: { value: number | null }) {
   );
 }
 
-export function CuratorStudentsTable({ students }: { students: CuratorStudent[] }) {
+export async function CuratorStudentsTable({ students }: { students: CuratorStudent[] }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   if (students.length === 0) {
-    return <p className="text-sm text-slate-500">Guruhda talaba yo&apos;q.</p>;
+    return <p className="text-sm text-slate-500">{dictionary.admNoStudentsInGroup}</p>;
   }
 
   return (
     <Table>
       <thead>
         <tr className="text-xs uppercase tracking-wide text-slate-600">
-          <th className="border-b border-slate-100 py-2.5 pr-4 text-left font-medium">Talaba</th>
-          <th className="border-b border-slate-100 px-3 py-2.5 text-right font-medium">Davomat</th>
+          <th className="border-b border-slate-100 py-2.5 pr-4 text-left font-medium">{dictionary.admRoleStudent}</th>
+          <th className="border-b border-slate-100 px-3 py-2.5 text-right font-medium">{dictionary.admColAttendance}</th>
           <th className="border-b border-slate-100 px-3 py-2.5 text-right font-medium">
-            Topshiriqlar
+            {dictionary.admStatSubmissions}
           </th>
-          <th className="border-b border-slate-100 px-3 py-2.5 text-right font-medium">Testlar</th>
+          <th className="border-b border-slate-100 px-3 py-2.5 text-right font-medium">{dictionary.admQuizzes}</th>
           <th className="border-b border-slate-100 px-3 py-2.5 text-right font-medium">GPA</th>
-          <th className="border-b border-slate-100 py-2.5 pl-4 text-right font-medium">Holat</th>
+          <th className="border-b border-slate-100 py-2.5 pl-4 text-right font-medium">{dictionary.admStatus}</th>
         </tr>
       </thead>
       <tbody>
@@ -66,7 +69,7 @@ export function CuratorStudentsTable({ students }: { students: CuratorStudent[] 
                 <div className="flex items-center justify-end gap-2">
                   <PercentValue value={student.attendance.percent} />
                   <Badge tone={student.attendance.eligible ? "green" : "rose"}>
-                    {student.attendance.eligible ? "Ruxsat" : "Ruxsat yo'q"}
+                    {student.attendance.eligible ? dictionary.admEligible : dictionary.admNotEligible}
                   </Badge>
                 </div>
               </td>
@@ -92,9 +95,9 @@ export function CuratorStudentsTable({ students }: { students: CuratorStudent[] 
               </td>
               <td className="py-3 pl-4 text-right">
                 {student.problematic ? (
-                  <Badge tone={attendanceRisk ? "rose" : "amber"}>Muammoli</Badge>
+                  <Badge tone={attendanceRisk ? "rose" : "amber"}>{dictionary.admProblematic}</Badge>
                 ) : (
-                  <Badge tone="green">Yaxshi</Badge>
+                  <Badge tone="green">{dictionary.admGood}</Badge>
                 )}
               </td>
             </tr>

@@ -1,11 +1,14 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
 import { type ElectiveCourse } from "@/components/electives/elective-course-card";
 import { CourseBrowser } from "@/components/catalog/course-browser";
 
 export default async function ElectivesPage() {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
   const courses = await prisma.course.findMany({
     where: { isPublished: true, isElective: true },
@@ -14,7 +17,7 @@ export default async function ElectivesPage() {
       teacher: { select: { name: true } },
       sections: { select: { _count: { select: { materials: true } } } },
       _count: { select: { enrollments: true } },
-      enrollments: { where: { userId: user.id }, select: { id: true } },
+      enrollments: { where: { userId: user.id }, select: { id: true, status: true } },
     },
   });
 
@@ -29,17 +32,18 @@ export default async function ElectivesPage() {
     teacherName: course.teacher.name,
     materialsCount: course.sections.reduce((sum, s) => sum + s._count.materials, 0),
     studentsCount: course._count.enrollments,
-    isEnrolled: course.enrollments.length > 0,
+    isEnrolled: course.enrollments.some((enrollment) => enrollment.status === "ACTIVE"),
+    enrollmentStatus: course.enrollments[0]?.status ?? null,
   }));
 
   const empty = (
     <EmptyState
-      title="Tanlov fanlar yo'q"
-      description="Hozircha e'lon qilingan tanlov fanlar mavjud emas. Yangi fanlar qo'shilganda shu yerda ko'rinadi."
+      title={dictionary.crsNoElectives}
+      description={dictionary.crsNoElectivesDesc}
       action={
         staff ? (
           <ButtonLink href="/courses/new" size="sm">
-            Kurs yaratish
+            {dictionary.crsCreateCourse}
           </ButtonLink>
         ) : undefined
       }
@@ -49,12 +53,12 @@ export default async function ElectivesPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Katalog"
-        title="Tanlov fanlar"
+        eyebrow={dictionary.crsCatalog}
+        title={dictionary.crsElectives}
         subtitle={
           staff
-            ? `E'lon qilingan tanlov fanlar — ${items.length} ta`
-            : `Ochiq tanlov fanlar — ${items.length} ta`
+            ? translate(locale, "crsPublishedElectivesCount", { count: items.length })
+            : translate(locale, "crsOpenElectivesCount", { count: items.length })
         }
       />
 

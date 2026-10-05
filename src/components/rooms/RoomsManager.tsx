@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { Button, Card, CardBody, CardHeader, EmptyState, Input, Label, Textarea } from "@/components/ui";
 import { RoomCard, type RoomItem } from "@/components/rooms/room-card";
 import { ensureCsrfToken } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 type ApiResult = { ok: boolean; error?: string };
 
 export default function RoomsManager({ rooms }: { rooms: RoomItem[] }) {
+  const { t } = useI18n();
   const router = useRouter();
   const [mode, setMode] = useState<"create" | "edit" | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
@@ -63,12 +65,12 @@ export default function RoomsManager({ rooms }: { rooms: RoomItem[] }) {
       });
       const json = (await res.json().catch(() => null)) as ApiResult | null;
       if (!res.ok || !json || !json.ok) {
-        setError(json?.error ?? "Amalni bajarib bo'lmadi");
+        setError(json?.error ?? t("mscRoomActionError"));
         return null;
       }
       return json;
     } catch {
-      setError("Tarmoqda xatolik");
+      setError(t("mscRoomNetworkError"));
       return null;
     } finally {
       setBusy(false);
@@ -88,15 +90,15 @@ export default function RoomsManager({ rooms }: { rooms: RoomItem[] }) {
         : await send(`/api/rooms/${editId}`, "PATCH", payload);
     if (!json) return;
     closeForm();
-    setNotice(mode === "create" ? "Xona qo'shildi" : "Xona yangilandi");
+    setNotice(mode === "create" ? t("mscRoomCreated") : t("mscRoomUpdated"));
     router.refresh();
   }
 
   async function remove(room: RoomItem) {
-    if (!window.confirm(`${room.name} xonasi o'chirilsinmi?`)) return;
+    if (!window.confirm(t("mscRoomDeleteConfirm", { name: room.name }))) return;
     const json = await send(`/api/rooms/${room.id}`, "DELETE");
     if (!json) return;
-    setNotice("Xona o'chirildi");
+    setNotice(t("mscRoomDeleted"));
     router.refresh();
   }
 
@@ -108,7 +110,7 @@ export default function RoomsManager({ rooms }: { rooms: RoomItem[] }) {
             <path d="M12 5v14" />
             <path d="M5 12h14" />
           </svg>
-          Yangi xona
+          {t("mscRoomNew")}
         </Button>
         <div className="flex flex-wrap items-center gap-2">
           {notice ? (
@@ -130,10 +132,10 @@ export default function RoomsManager({ rooms }: { rooms: RoomItem[] }) {
       {mode ? (
         <Card className="border-brand-200/70">
           <CardHeader
-            title={mode === "create" ? "Yangi xona" : "Xonani tahrirlash"}
+            title={mode === "create" ? t("mscRoomNew") : t("mscRoomEdit")}
             action={
               <Button variant="ghost" size="sm" onClick={closeForm}>
-                Yopish
+                {t("mscRoomClose")}
               </Button>
             }
           />
@@ -146,36 +148,36 @@ export default function RoomsManager({ rooms }: { rooms: RoomItem[] }) {
               }}
             >
               <div>
-                <Label>Nomi</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="203-auditoriya" required minLength={2} />
+                <Label>{t("mscRoomName")}</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("mscRoomNamePlaceholder")} required minLength={2} />
               </div>
               <div>
-                <Label>Bino</Label>
-                <Input value={building} onChange={(e) => setBuilding(e.target.value)} placeholder="Asosiy bino" />
+                <Label>{t("mscRoomBuilding")}</Label>
+                <Input value={building} onChange={(e) => setBuilding(e.target.value)} placeholder={t("mscRoomBuildingPlaceholder")} />
               </div>
               <div>
-                <Label>Sig&apos;im</Label>
+                <Label>{t("mscRoomCapacityLabel")}</Label>
                 <Input
                   type="number"
                   value={capacity}
                   onChange={(e) => setCapacity(e.target.value)}
-                  placeholder="40"
+                  placeholder={t("mscRoomCapacityPlaceholder")}
                   min={0}
                   max={10000}
                 />
               </div>
               <div className="sm:col-span-2">
-                <Label>Jihozlar</Label>
+                <Label>{t("mscRoomEquipment")}</Label>
                 <Textarea
                   value={equipment}
                   onChange={(e) => setEquipment(e.target.value)}
-                  placeholder="Proyektor, doska, konditsioner"
+                  placeholder={t("mscRoomEquipmentPlaceholder")}
                   rows={2}
                 />
               </div>
               <div className="flex items-end gap-2 sm:col-span-2">
                 <Button type="submit" disabled={busy || name.trim().length < 2}>
-                  {busy ? "Saqlanmoqda..." : mode === "create" ? "Qo'shish" : "Saqlash"}
+                  {busy ? t("mscSaving") : mode === "create" ? t("mscRoomAdd") : t("commonSave")}
                 </Button>
               </div>
               {error ? <p className="text-sm text-rose-600 sm:col-span-2">{error}</p> : null}
@@ -186,11 +188,11 @@ export default function RoomsManager({ rooms }: { rooms: RoomItem[] }) {
 
       {rooms.length === 0 ? (
         <EmptyState
-          title="Xonalar yo'q"
-          description="Birinchi xonani qo'shing — u katalogda shu yerda ko'rinadi."
+          title={t("mscRoomsEmptyTitle")}
+          description={t("mscRoomsEmptyAddBody")}
           action={
             <Button size="sm" variant="secondary" onClick={openCreate}>
-              Xona qo&apos;shish
+              {t("mscRoomEmptyAdd")}
             </Button>
           }
         />
@@ -204,7 +206,7 @@ export default function RoomsManager({ rooms }: { rooms: RoomItem[] }) {
               actions={
                 <>
                   <Button size="sm" variant="secondary" onClick={() => openEdit(room)}>
-                    Tahrirlash
+                    {t("mscRoomEditAction")}
                   </Button>
                   <Button
                     size="sm"
@@ -212,7 +214,7 @@ export default function RoomsManager({ rooms }: { rooms: RoomItem[] }) {
                     className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
                     onClick={() => remove(room)}
                   >
-                    O&apos;chirish
+                    {t("mscRoomDelete")}
                   </Button>
                 </>
               }

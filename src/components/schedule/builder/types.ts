@@ -34,6 +34,7 @@ export type BuilderEntry = {
   parity: string | null;
   subGroup: string | null;
   status: ScheduleStatus;
+  approval: "PENDING" | "APPROVED";
   note: string | null;
 };
 

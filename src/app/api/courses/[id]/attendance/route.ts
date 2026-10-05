@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canManageCourse } from "@/components/courses/course-access";
+import { finalizeExpiredAttendanceSessions } from "@/modules/attendance/auto-close";
 import { logAudit } from "@/server/audit";
 
 const bulkSchema = z.object({
@@ -35,6 +36,8 @@ export async function GET(
   if (!course) {
     return Response.json({ ok: false, error: "Kurs topilmadi" }, { status: 404 });
   }
+
+  await finalizeExpiredAttendanceSessions(course.id);
 
   if (user.role === "STUDENT") {
     const enrolled = await prisma.enrollment.findUnique({

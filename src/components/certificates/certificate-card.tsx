@@ -1,5 +1,6 @@
 import { Badge, ButtonLink, Card, CardBody } from "@/components/ui";
 import { fmtDate } from "@/lib/utils";
+import { getDictionary, getLocale } from "@/i18n";
 import { certificateGrade, certificateSerial } from "@/components/certificates/certificate-access";
 
 type CertificateCardData = {
@@ -38,8 +39,16 @@ function MiniSeal() {
   );
 }
 
-export function CertificateCard({ certificate }: { certificate: CertificateCardData }) {
-  const grade = certificateGrade(certificate.grade);
+export async function CertificateCard({ certificate }: { certificate: CertificateCardData }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const grade = certificateGrade(certificate.grade, {
+    none: dictionary.grdGradeNone,
+    excellent: dictionary.grdGradeExcellent,
+    good: dictionary.grdGradeGood,
+    satisfactory: dictionary.grdGradeSatisfactory,
+    unsatisfactory: dictionary.grdGradeUnsatisfactory,
+  });
 
   return (
     <Card className="group flex h-full flex-col overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
@@ -62,7 +71,7 @@ export function CertificateCard({ certificate }: { certificate: CertificateCardD
           </Badge>
         </span>
         <span className="absolute bottom-2.5 left-4 text-[9px] font-semibold uppercase tracking-[0.3em] text-gold-300/90">
-          Sertifikat
+          {dictionary.grdCertificate}
         </span>
       </div>
 
@@ -82,20 +91,20 @@ export function CertificateCard({ certificate }: { certificate: CertificateCardD
 
         <dl className="mt-4 space-y-2 rounded-xl bg-slate-50/80 px-3.5 py-3 text-xs ring-1 ring-slate-100">
           <div className="flex items-center justify-between gap-3">
-            <dt className="text-slate-600">Seriya</dt>
+            <dt className="text-slate-600">{dictionary.grdSerial}</dt>
             <dd className="rounded-md bg-white px-2 py-0.5 font-mono text-[11px] tracking-wider text-brand-800 ring-1 ring-slate-200">
               {certificateSerial(certificate.id)}
             </dd>
           </div>
           <div className="flex items-center justify-between gap-3">
-            <dt className="text-slate-600">Ball</dt>
+            <dt className="text-slate-600">{dictionary.grdScore}</dt>
             <dd className="font-semibold text-slate-700">
               {certificate.grade ?? "—"}
               <span className="ml-1 text-[11px] font-normal text-slate-600">{grade.label}</span>
             </dd>
           </div>
           <div className="flex items-center justify-between gap-3">
-            <dt className="text-slate-600">Bergan</dt>
+            <dt className="text-slate-600">{dictionary.grdIssuer}</dt>
             <dd className="truncate font-medium text-slate-600">{certificate.issuedBy.name}</dd>
           </div>
         </dl>
@@ -105,14 +114,14 @@ export function CertificateCard({ certificate }: { certificate: CertificateCardD
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M20 6 9 17l-5-5" />
             </svg>
-            Tasdiqlangan hujjat
+            {dictionary.grdVerifiedDocument}
           </span>
           <ButtonLink
             href={`/certificates/${certificate.id}`}
             size="sm"
             className="transition-transform duration-150 group-hover:translate-x-0.5"
           >
-            Ko&apos;rish
+            {dictionary.grdView}
           </ButtonLink>
         </div>
       </CardBody>

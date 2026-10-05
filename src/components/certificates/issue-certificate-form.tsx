@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, CardBody, CardHeader, Input, Label, Select } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { ensureCsrfToken } from "@/lib/api";
 
 type ApiResult = { ok?: boolean; error?: string } | null;
@@ -40,6 +41,7 @@ export function IssueCertificateForm({
   issuedStudentIds: string[];
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [studentId, setStudentId] = useState("");
   const [grade, setGrade] = useState("");
   const [busy, setBusy] = useState(false);
@@ -52,12 +54,12 @@ export function IssueCertificateForm({
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!studentId) {
-      setError("Talabani tanlang");
+      setError(t("grdSelectStudent"));
       return;
     }
     const parsedGrade = grade.trim() === "" ? null : Number(grade);
     if (parsedGrade != null && (!Number.isInteger(parsedGrade) || parsedGrade < 0 || parsedGrade > 100)) {
-      setError("Ball 0 dan 100 gacha butun son bo'lishi kerak");
+      setError(t("grdInvalidScore"));
       return;
     }
 
@@ -75,15 +77,15 @@ export function IssueCertificateForm({
       });
       const json = (await response.json().catch(() => null)) as ApiResult;
       if (!response.ok || !json?.ok) {
-        setError(json?.error ?? "Sertifikat berishda xatolik yuz berdi");
+        setError(json?.error ?? t("grdIssueError"));
         return;
       }
       setStudentId("");
       setGrade("");
-      setMessage("Sertifikat berildi");
+      setMessage(t("grdIssuedSuccess"));
       router.refresh();
     } catch {
-      setError("Tarmoq xatosi. Qayta urinib ko'ring.");
+      setError(t("grdNetworkError"));
     } finally {
       setBusy(false);
     }
@@ -96,10 +98,13 @@ export function IssueCertificateForm({
         title={
           <span className="flex items-center gap-2.5">
             <SealBadge />
-            Sertifikat berish
+            {t("grdIssueCertificate")}
           </span>
         }
-        subtitle={`${available.length} ta talaba kutmoqda · ${courseTitle}`}
+        subtitle={t("grdStudentsWaiting", {
+          count: available.length,
+          course: courseTitle,
+        })}
       />
       <CardBody>
         {available.length === 0 ? (
@@ -109,22 +114,21 @@ export function IssueCertificateForm({
                 <path d="M20 6 9 17l-5-5" />
               </svg>
             </span>
-            <p className="text-sm font-medium text-emerald-800">Barcha talabalarga berilgan</p>
+            <p className="text-sm font-medium text-emerald-800">{t("grdAllIssued")}</p>
             <p className="max-w-sm text-xs text-emerald-700/80">
-              Bu kursdagi har bir talaba sertifikatga ega. Yangi sertifikat qo&apos;shish uchun
-              talabalarni kursga yozing.
+              {t("grdAllIssuedDesc")}
             </p>
           </div>
         ) : (
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
-              <Label>Talaba</Label>
+              <Label>{t("grdStudent")}</Label>
               <Select
                 value={studentId}
                 onChange={(event) => setStudentId(event.target.value)}
                 required
               >
-                <option value="">Talabani tanlang...</option>
+                <option value="">{t("grdSelectStudentDots")}</option>
                 {available.map((student) => (
                   <option key={student.id} value={student.id}>
                     {student.name}
@@ -133,23 +137,23 @@ export function IssueCertificateForm({
               </Select>
             </div>
             <div>
-              <Label>Ball (ixtiyoriy)</Label>
+              <Label>{t("grdScoreOptional")}</Label>
               <div className="relative">
                 <Input
                   type="number"
                   min={0}
                   max={100}
                   value={grade}
-                  placeholder="Masalan: 92"
+                  placeholder={t("grdScorePlaceholder")}
                   onChange={(event) => setGrade(event.target.value)}
                   className="pr-14"
                 />
                 <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-600">
-                  ball
+                  {t("grdBall")}
                 </span>
               </div>
               <p className="mt-1.5 text-xs text-slate-600">
-                0 dan 100 gacha butun son, ixtiyoriy
+                {t("grdScoreHint")}
               </p>
             </div>
 
@@ -159,7 +163,7 @@ export function IssueCertificateForm({
                 <path d="M12 11v5" />
                 <path d="M12 8h.01" />
               </svg>
-              Seriya raqami sertifikat yaratilganda avtomatik shakllantiriladi.
+              {t("grdSerialHint")}
             </div>
 
             <div aria-live="polite">
@@ -208,10 +212,10 @@ export function IssueCertificateForm({
                 {busy ? (
                   <span className="inline-flex items-center gap-2">
                     <span className="size-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                    Berilmoqda...
+                    {t("grdIssuing")}
                   </span>
                 ) : (
-                  "Sertifikat berish"
+                  t("grdIssueCertificate")
                 )}
               </Button>
             </div>

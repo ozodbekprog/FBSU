@@ -1,13 +1,8 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { getDictionary, getLocale } from "@/i18n";
 
-const TIPS = [
-  { label: "Avtomatik hisob", bar: "bg-emerald-400" },
-  { label: "4.0 shkala", bar: "bg-gold-400" },
-  { label: "Kurslar kesimida", bar: "bg-brand-400" },
-];
-
-export function GpaEmpty({
+export async function GpaEmpty({
   title,
   description,
   action,
@@ -16,6 +11,14 @@ export function GpaEmpty({
   description?: string;
   action?: ReactNode;
 }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const tips = [
+    { label: dictionary.grdTipAutoCalc, bar: "bg-emerald-400" },
+    { label: dictionary.grdTipScale, bar: "bg-gold-400" },
+    { label: dictionary.grdTipByCourse, bar: "bg-brand-400" },
+  ];
+
   return (
     <div className="animate-fade-up relative overflow-hidden rounded-3xl border border-dashed border-slate-300 bg-white/70 px-6 py-14 text-center">
       <span className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-gold-300/20 blur-3xl" />
@@ -33,7 +36,7 @@ export function GpaEmpty({
       ) : null}
       {action ? <div className="relative mt-5 flex justify-center">{action}</div> : null}
       <div className="relative mt-6 flex flex-wrap items-center justify-center gap-2">
-        {TIPS.map((tip) => (
+        {tips.map((tip) => (
           <span
             key={tip.label}
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-500"

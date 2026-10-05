@@ -3,9 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/ui";
 import DictionariesManager from "@/components/admin/DictionariesManager";
 import { ensureDictionaryDefaults } from "@/app/api/dictionaries/data";
+import { getDictionary, getLocale } from "@/i18n";
 
 export default async function AdminDictionariesPage() {
   await requireRole(["ADMIN"]);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   await ensureDictionaryDefaults();
 
   const [subjects, timeSlots, lessonTypes] = await Promise.all([
@@ -25,9 +28,9 @@ export default async function AdminDictionariesPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Boshqaruv"
-        title="Lug'atlar"
-        subtitle="Fanlar, dars vaqtlari va dars turlarini boshqarish"
+        eyebrow={dictionary.admEyebrowManage}
+        title={dictionary.admDictionaries}
+        subtitle={dictionary.admDictionariesSubtitle}
       />
       <DictionariesManager
         subjects={subjects.map((subject) => ({

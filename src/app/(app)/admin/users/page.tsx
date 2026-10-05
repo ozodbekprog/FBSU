@@ -4,8 +4,9 @@ import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Button, Card, CardBody, Input, PageHeader, Select } from "@/components/ui";
 import UsersManager from "@/components/admin/UsersManager";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
-const ROLES = ["ADMIN", "TEACHER", "STUDENT"] as const;
+const ROLES = ["ADMIN", "REKTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER", "STUDENT"] as const;
 
 export default async function AdminUsersPage({
   searchParams,
@@ -13,6 +14,8 @@ export default async function AdminUsersPage({
   searchParams: Promise<{ q?: string; role?: string }>;
 }) {
   const admin = await requireRole(["ADMIN"]);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const params = await searchParams;
 
   const q = typeof params.q === "string" ? params.q.trim() : "";
@@ -30,7 +33,7 @@ export default async function AdminUsersPage({
   }
   if (role) where.role = role;
 
-  const [users, groups] = await Promise.all([
+  const [users, groups, departments] = await Promise.all([
     prisma.user.findMany({
       where,
       select: {
@@ -41,6 +44,7 @@ export default async function AdminUsersPage({
         isActive: true,
         createdAt: true,
         group: { select: { id: true, name: true } },
+        department: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -48,11 +52,15 @@ export default async function AdminUsersPage({
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
+    prisma.department.findMany({
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
   ]);
 
   return (
     <>
-      <PageHeader title="Foydalanuvchilar" subtitle={`${users.length} ta natija`} />
+      <PageHeader title={dictionary.admUsersTitle} subtitle={translate(locale, "admUsersResults", { count: users.length })} />
 
       <form action="/admin/users" method="get" className="mb-4">
         <Card className="overflow-hidden">
@@ -64,20 +72,25 @@ export default async function AdminUsersPage({
                   <path d="m20 20-3.5-3.5" />
                 </svg>
               </span>
-              <Input name="q" defaultValue={q} placeholder="Ism yoki email..." className="pl-9" />
+              <Input name="q" defaultValue={q} placeholder={dictionary.admUsersSearchPlaceholder} className="pl-9" />
             </div>
             <Select name="role" defaultValue={role} className="w-full sm:w-48!">
-              <option value="">Barcha rollar</option>
-              <option value="STUDENT">Talaba</option>
-              <option value="TEACHER">O&apos;qituvchi</option>
-              <option value="ADMIN">Administrator</option>
+              <option value="">{dictionary.admUsersAllRoles}</option>
+              <option value="STUDENT">{dictionary.admRoleStudent}</option>
+              <option value="TEACHER">{dictionary.admRoleTeacher}</option>
+              <option value="TYUTOR">{dictionary.admRoleTutor}</option>
+              <option value="KAFEDRA_MUDIRI">{dictionary.admRoleHead}</option>
+              <option value="DEKAN">{dictionary.admRoleDean}</option>
+              <option value="REKTOR">{dictionary.admRoleRector}</option>
+              <option value="REGISTRAR">{dictionary.admRoleRegistrar}</option>
+              <option value="ADMIN">{dictionary.admRoleAdmin}</option>
             </Select>
             <Button type="submit" variant="secondary" className="gap-1.5">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="7" />
                 <path d="m20 20-3.5-3.5" />
               </svg>
-              Qidirish
+              {dictionary.admSearch}
             </Button>
             {q || role ? (
               <Link
@@ -87,7 +100,7 @@ export default async function AdminUsersPage({
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6 6 18M6 6l12 12" />
                 </svg>
-                Tozalash
+                {dictionary.admClear}
               </Link>
             ) : null}
             <span className="ml-auto hidden items-center gap-2 text-xs font-medium text-slate-600 sm:inline-flex">
@@ -97,13 +110,13 @@ export default async function AdminUsersPage({
                 <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
-              {users.length} natija
+              {translate(locale, "admUsersResults", { count: users.length })}
             </span>
           </CardBody>
         </Card>
       </form>
 
-      <UsersManager users={users} groups={groups} currentUserId={admin.id} />
+      <UsersManager users={users} groups={groups} departments={departments} currentUserId={admin.id} />
     </>
   );
 }

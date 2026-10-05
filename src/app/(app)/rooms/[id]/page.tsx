@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ButtonLink, Card, CardBody, PageHeader } from "@/components/ui";
 import { cn, dayName, fmtDate } from "@/lib/utils";
+import { getDictionary, getLocale } from "@/i18n";
 import { dayNumberForIso, getRoomUsage } from "@/components/rooms/room-data";
 import { dayIsoInWeek, formatDayShort, resolveWeekStart, shiftWeek } from "@/components/rooms/room-week";
 import { SLOT_TIMES } from "@/components/attendance/lesson-utils";
@@ -29,6 +30,8 @@ export default async function RoomUsagePage({
   searchParams: Promise<{ week?: string }>;
 }) {
   await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const { id } = await params;
   const { week: weekParam } = await searchParams;
 
@@ -46,7 +49,9 @@ export default async function RoomUsagePage({
 
   const details = [
     room.building,
-    room.capacity === null ? null : `${room.capacity} o'rin`,
+    room.capacity === null
+      ? null
+      : dictionary.mscRoomCapacity.replace("{count}", String(room.capacity)),
     room.equipment,
   ]
     .filter(Boolean)
@@ -58,12 +63,12 @@ export default async function RoomUsagePage({
   return (
     <>
       <PageHeader
-        eyebrow="Xona bandligi"
+        eyebrow={dictionary.mscRoomUsageEyebrow}
         title={room.name}
-        subtitle={details || "Ma'lumot kiritilmagan"}
+        subtitle={details || dictionary.mscRoomUsageNoInfo}
         action={
           <ButtonLink href="/rooms" variant="secondary" size="sm">
-            Xonalar ro&apos;yxati
+            {dictionary.mscRoomsList}
           </ButtonLink>
         }
       />
@@ -72,26 +77,28 @@ export default async function RoomUsagePage({
         <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600">
           <span className="inline-flex items-center gap-1.5">
             <span className="size-3 rounded border border-brand-300 bg-brand-100" />
-            Dars
+            {dictionary.mscRoomUsageLesson}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="size-3 rounded border border-gold-400 bg-gold-300/40" />
-            Bron
+            {dictionary.mscRoomUsageBooking}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="size-3 rounded border border-dashed border-slate-300 bg-slate-50" />
-            Bo&apos;sh
+            {dictionary.mscRoomUsageFree}
           </span>
           <span className="text-slate-600">
-            {lessonCount} ta dars · {bookingCount} ta bron
+            {dictionary.mscRoomUsageCount
+              .replace("{lessons}", String(lessonCount))
+              .replace("{bookings}", String(bookingCount))}
           </span>
         </div>
         <div className="flex items-center gap-2">
           <ButtonLink href={`/rooms/${room.id}?week=${shiftWeek(week, -1)}`} variant="secondary" size="sm">
-            Oldingi hafta
+            {dictionary.mscRoomUsagePrevWeek}
           </ButtonLink>
           <ButtonLink href={`/rooms/${room.id}?week=${shiftWeek(week, 1)}`} variant="secondary" size="sm">
-            Keyingi hafta
+            {dictionary.mscRoomUsageNextWeek}
           </ButtonLink>
         </div>
       </div>
@@ -106,7 +113,7 @@ export default async function RoomUsagePage({
             </div>
             <div className="grid grid-cols-[76px_repeat(6,minmax(0,1fr))] gap-1.5">
               <div className="flex items-center justify-center rounded-xl bg-slate-100/70 px-1 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
-                Par
+                {dictionary.mscRoomUsageSlotHeader}
               </div>
               {DAYS.map((day) => (
                 <div
@@ -121,7 +128,9 @@ export default async function RoomUsagePage({
               {SLOTS.map((slot) => (
                 <Fragment key={slot}>
                   <div className="flex flex-col items-center justify-center rounded-xl bg-slate-50 px-1 py-2 text-center ring-1 ring-slate-100">
-                    <span className="text-xs font-semibold text-slate-700">{slot}-par</span>
+                    <span className="text-xs font-semibold text-slate-700">
+                      {dictionary.mscRoomUsageSlot.replace("{slot}", String(slot))}
+                    </span>
                     <span className="mt-0.5 text-[10px] leading-tight text-slate-600">
                       {SLOT_TIMES[slot]}
                     </span>
@@ -162,7 +171,7 @@ export default async function RoomUsagePage({
                             className="rounded-lg border border-gold-300 bg-gold-300/20 px-2 py-1.5"
                           >
                             <p className="truncate text-[11px] font-semibold text-gold-800">
-                              {booking.purpose ?? "Bron"}
+                              {booking.purpose ?? dictionary.mscRoomBookingDefault}
                             </p>
                             <p className="truncate text-[10px] text-gold-800">{booking.userName}</p>
                           </div>
@@ -170,13 +179,13 @@ export default async function RoomUsagePage({
                         {!occupied ? (
                           <div className="flex flex-1 flex-col items-center justify-center gap-1">
                             <span className="text-[10px] font-medium uppercase tracking-wider text-slate-600">
-                              Bo&apos;sh
+                              {dictionary.mscRoomUsageFree}
                             </span>
                             <Link
                               href={`/bookings?room=${encodeURIComponent(room.name)}&date=${dayIso}&slot=${slot}`}
                               className="rounded-lg bg-brand-900 px-2 py-1 text-[10px] font-medium text-white transition-colors duration-150 hover:bg-brand-800"
                             >
-                              Bron qilish
+                              {dictionary.mscRoomBook}
                             </Link>
                           </div>
                         ) : null}

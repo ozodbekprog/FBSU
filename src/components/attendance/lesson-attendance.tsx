@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, Button, Card, CardBody, CardHeader, Label, Select } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
 import type { CourseOption } from "@/components/attendance/lesson-utils";
 
@@ -16,55 +17,59 @@ export type LessonStudent = {
   subGroupName: string | null;
 };
 
-const OPTIONS: {
+const OPTION_STYLES: {
   value: LessonStatus;
-  short: string;
-  label: string;
   active: string;
   idle: string;
   dot: string;
 }[] = [
   {
     value: "PRESENT",
-    short: "K",
-    label: "Keldi",
     active: "bg-emerald-500 text-white shadow-md shadow-emerald-500/30 ring-1 ring-emerald-400/60",
     idle: "text-emerald-700 hover:bg-emerald-50",
     dot: "bg-emerald-500",
   },
   {
     value: "ABSENT",
-    short: "Y",
-    label: "Yo'q",
     active: "bg-rose-500 text-white shadow-md shadow-rose-500/30 ring-1 ring-rose-400/60",
     idle: "text-rose-700 hover:bg-rose-50",
     dot: "bg-rose-500",
   },
   {
     value: "LATE",
-    short: "Kech",
-    label: "Kechikkan",
     active: "bg-amber-500 text-white shadow-md shadow-amber-500/30 ring-1 ring-amber-400/60",
     idle: "text-amber-700 hover:bg-amber-50",
     dot: "bg-amber-500",
   },
   {
     value: "EXCUSED",
-    short: "S",
-    label: "Sababli",
     active: "bg-slate-500 text-white shadow-md shadow-slate-500/30 ring-1 ring-slate-400/60",
     idle: "text-slate-600 hover:bg-slate-100",
     dot: "bg-slate-400",
   },
   {
     value: "SUSPICIOUS",
-    short: "Sh",
-    label: "Shubhali",
     active: "bg-violet-500 text-white shadow-md shadow-violet-500/30 ring-1 ring-violet-400/60",
     idle: "text-violet-700 hover:bg-violet-50",
     dot: "bg-violet-500",
   },
 ];
+
+const OPTION_SHORT_KEYS = {
+  PRESENT: "schShortPresent",
+  ABSENT: "schShortAbsent",
+  LATE: "schShortLate",
+  EXCUSED: "schShortExcused",
+  SUSPICIOUS: "schShortSuspicious",
+} as const;
+
+const OPTION_LABEL_KEYS = {
+  PRESENT: "schStatusPresent",
+  ABSENT: "schStatusAbsent",
+  LATE: "schStatusLate",
+  EXCUSED: "schStatusExcused",
+  SUSPICIOUS: "schStatusSuspicious",
+} as const;
 
 function StatusGlyph({ status, size = 13 }: { status: LessonStatus; size?: number }) {
   const common = {
@@ -129,6 +134,12 @@ export function LessonAttendance({
   cancelled: boolean;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
+  const options = OPTION_STYLES.map((option) => ({
+    ...option,
+    short: t(OPTION_SHORT_KEYS[option.value]),
+    label: t(OPTION_LABEL_KEYS[option.value]),
+  }));
   const [draft, setDraft] = useState<Record<string, LessonStatus>>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -202,11 +213,11 @@ export function LessonAttendance({
     } | null;
     setSaving(false);
     if (!response.ok || !json?.ok) {
-      setError(json?.error ?? "Saqlashda xatolik yuz berdi");
+      setError(json?.error ?? t("schSaveError"));
       return;
     }
     setDraft({});
-    setMessage("Davomat saqlandi");
+    setMessage(t("schAttendanceSaved"));
     router.refresh();
   }
 
@@ -214,19 +225,19 @@ export function LessonAttendance({
     <>
       <Card className="animate-fade-up">
         <CardHeader
-          title="Talabalar"
+          title={t("schStudents")}
           subtitle={
             cancelled
-              ? "Dars bekor qilingan — davomat belgilanmaydi"
+              ? t("schLessonCancelled")
               : subGroup
-                ? `${visibleStudents.length} ta talaba · ${subGroup} kichik guruh`
-                : `${visibleStudents.length} ta talaba · holatni belgilang`
+                ? t("schStudentCountSubGroup", { count: visibleStudents.length, group: subGroup })
+                : t("schStudentCountMark", { count: visibleStudents.length })
           }
         />
         <CardBody className="space-y-5">
           {courses.length > 1 ? (
             <div className="max-w-sm">
-              <Label>Kurs</Label>
+              <Label>{t("schCourse")}</Label>
               <Select value={selectedSlug} onChange={(event) => switchCourse(event.target.value)}>
                 {courses.map((course) => (
                   <option key={course.slug} value={course.slug}>
@@ -239,13 +250,15 @@ export function LessonAttendance({
 
           {visibleStudents.length === 0 ? (
             <p className="text-sm text-slate-500">
-              {subGroup ? `${subGroup} kichik guruhda talaba yo'q.` : "Kursda talaba yo'q."}
+              {subGroup
+                ? t("schNoStudentsSubGroup", { group: subGroup })
+                : t("schNoStudentsCourse")}
             </p>
           ) : (
             <div className="overflow-hidden rounded-2xl border border-slate-200">
               {visibleStudents.map((student) => {
                 const status = statuses[student.id] ?? "PRESENT";
-                const activeOption = OPTIONS.find((option) => option.value === status);
+                const activeOption = options.find((option) => option.value === status);
                 return (
                   <div
                     key={student.id}
@@ -262,7 +275,7 @@ export function LessonAttendance({
                       </div>
                     </div>
                     <div className="inline-flex shrink-0 items-center gap-1 rounded-2xl border border-slate-200 bg-slate-50/80 p-1">
-                      {OPTIONS.map((option) => (
+                      {options.map((option) => (
                         <button
                           key={option.value}
                           type="button"
@@ -297,7 +310,7 @@ export function LessonAttendance({
           ) : null}
 
           <p className="text-xs text-slate-600">
-            QR orqali belgilanganlar avtomatik &quot;Keldi&quot; bo&apos;lib turadi.
+            {t("schQrAutoPresent")}
           </p>
         </CardBody>
       </Card>
@@ -306,7 +319,7 @@ export function LessonAttendance({
         <div className="sticky bottom-4 z-20 mt-4">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-3 shadow-lift backdrop-blur">
             <div className="flex flex-wrap items-center gap-2">
-              {OPTIONS.map((option) => (
+              {options.map((option) => (
                 <span
                   key={option.value}
                   className="inline-flex items-center gap-1.5 rounded-full border border-slate-100 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600"
@@ -339,7 +352,7 @@ export function LessonAttendance({
                   <path d="m3 13 3 3L15 7" />
                   <path d="m11 15 2 2 8-8" />
                 </svg>
-                Hammasi keldi
+                {t("schAllPresent")}
               </Button>
               <Button
                 size="lg"
@@ -348,7 +361,7 @@ export function LessonAttendance({
                 }}
                 disabled={saving || cancelled || visibleStudents.length === 0}
               >
-                {saving ? "Saqlanmoqda..." : "Saqlash"}
+                {saving ? t("schSavingShort") : t("schSave")}
               </Button>
             </div>
           </div>

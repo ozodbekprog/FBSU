@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Button, Card, CardBody } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { cn, fmtDate } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { requestBrowserLocation, type QrScanPayload } from "./live-qr";
 import { QrScanner } from "./qr-scanner";
+import { FaceScan } from "@/components/face/face-scan";
 
 type CheckInResult = {
   course: { id: string; title: string; slug: string };
@@ -14,50 +17,46 @@ type CheckInResult = {
   reasons?: string[];
 };
 
-const REASON_LABELS: Record<string, string> = {
-  GEO_FAR: "Joylashuv o'qituvchi joyidan uzoq",
-  GEO_MISSING: "Qurilma joylashuvi aniqlanmadi",
-  GEO_ACCURACY_LOW: "Joylashuv aniqligi past",
-  IP_CHANGED: "IP manzil o'zgardi",
-  IP_SHARED: "Bir xil qurilmadan bir nechta belgilash aniqlandi",
-  VPN_SUSPECTED: "VPN yoki proxy aniqlandi",
-  IP_GEO_MISMATCH: "Tarmoq joylashuvi qurilma joylashuviga mos emas",
+const REASON_KEYS = {
+  GEO_FAR: "schReasonGeoFar",
+  GEO_MISSING: "schReasonGeoMissing",
+  GEO_ACCURACY_LOW: "schReasonGeoAccuracyLow",
+  IP_CHANGED: "schReasonIpChanged",
+  IP_SHARED: "schReasonIpShared",
+  VPN_SUSPECTED: "schReasonVpnSuspected",
+  IP_GEO_MISMATCH: "schReasonIpGeoMismatch",
+  CODE_USED: "schReasonCodeUsed",
+  FACE_MISSING: "schReasonFaceMissing",
+  FACE_MISMATCH: "schReasonFaceMismatch",
+} as const;
+type PendingBody = {
+  token?: string;
+  code?: string;
+  lat?: number;
+  lng?: number;
+  accuracy?: number;
 };
 
-export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload }) {
-  const [status, setStatus] = useState<"idle" | "scanning" | "loading" | "success" | "suspicious" | "error">(
+export function CheckInForm({
+  initialPayload,
+  faceEnrolled = false,
+}: {
+  initialPayload?: QrScanPayload;
+  faceEnrolled?: boolean;
+}) {
+  const { t } = useI18n();
+  const [status, setStatus] = useState<"idle" | "scanning" | "loading" | "face" | "success" | "suspicious" | "error">(
     "idle",
   );
   const [message, setMessage] = useState<string | null>(null);
   const [result, setResult] = useState<CheckInResult | null>(null);
   const [reasons, setReasons] = useState<string[]>([]);
+  const [pending, setPending] = useState<PendingBody | null>(null);
   const [pop, setPop] = useState(false);
   const tokenSubmitted = useRef(false);
+  const lastBodyRef = useRef<PendingBody | null>(null);
 
-  async function submitScan(payload: QrScanPayload) {
-    const token = payload.token?.trim() ?? "";
-    const code = (payload.code ?? "").trim().toUpperCase();
-    if (!token && !code) {
-      setStatus("error");
-      setMessage("QR kod o'qilmadi. Qayta urinib ko'ring.");
-      return;
-    }
-
-    setStatus("loading");
-    setMessage("QR o'qildi ✓ — joylashuv aniqlanmoqda...");
-
-    const location = await requestBrowserLocation();
-
-    setMessage("Tekshirilmoqda...");
-
-    const body = token
-      ? location
-        ? { token, lat: location.lat, lng: location.lng, accuracy: location.accuracy }
-        : { token }
-      : location
-        ? { code, lat: location.lat, lng: location.lng, accuracy: location.accuracy }
-        : { code };
-
+  async function send(body: PendingBody & { faceDescriptor?: number[] }) {
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), 20000);
     let response: Response;
@@ -70,7 +69,7 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
     } catch {
       window.clearTimeout(timer);
       setStatus("error");
-      setMessage("Serverdan javob kelmadi. Internetni tekshirib, qayta urinib ko'ring.");
+      setMessage(t("schNoServerResponse"));
       return;
     }
     window.clearTimeout(timer);
@@ -80,12 +79,22 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
 
     if (!response.ok || !json?.ok || !json.data) {
       setStatus("error");
-      setMessage(json?.error ?? "Belgilashda xatolik yuz berdi");
+      setMessage(json?.error ?? t("schCheckInError"));
       return;
     }
 
     setResult(json.data);
     setPop(false);
+    const faceFailed =
+      Array.isArray(json.data.reasons) &&
+      (json.data.reasons.includes("FACE_MISSING") || json.data.reasons.includes("FACE_MISMATCH"));
+    if (faceFailed && lastBodyRef.current) {
+      setReasons([]);
+      setPending(lastBodyRef.current);
+      setMessage(t("schFaceRetryHint"));
+      setStatus("face");
+      return;
+    }
     if (json.data.status === "SUSPICIOUS") {
       setReasons(Array.isArray(json.data.reasons) ? json.data.reasons : []);
       setStatus("suspicious");
@@ -96,12 +105,87 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
     window.requestAnimationFrame(() => setPop(true));
   }
 
+    async function submitScan(payload: QrScanPayload) {
+    const token = payload.token?.trim() ?? "";
+    const code = (payload.code ?? "").trim().toUpperCase();
+    if (!token && !code) {
+      setStatus("error");
+      setMessage(t("schQrNotRead"));
+      return;
+    }
+
+    setStatus("loading");
+    setMessage(t("schQrReadLocating"));
+
+    const location = await requestBrowserLocation();
+
+    setMessage(t("schChecking"));
+
+    const body: PendingBody = token
+      ? location
+        ? { token, lat: location.lat, lng: location.lng, accuracy: location.accuracy }
+        : { token }
+      : location
+        ? { code, lat: location.lat, lng: location.lng, accuracy: location.accuracy }
+        : { code };
+
+    lastBodyRef.current = body;
+
+    let needsFace = faceEnrolled;
+    try {
+      const faceResponse = await apiFetch("/api/face");
+      const faceJson = (await faceResponse.json().catch(() => null)) as
+        | { ok?: boolean; data?: { enrolled?: boolean } }
+        | null;
+      if (faceResponse.ok && faceJson?.ok) {
+        needsFace = faceJson.data?.enrolled === true;
+      }
+    } catch {
+      void 0;
+    }
+
+    if (needsFace) {
+      setPending(body);
+      setStatus("face");
+      return;
+    }
+
+    await send(body);
+  }
+
   useEffect(() => {
     if (tokenSubmitted.current) return;
     if (!initialPayload?.token && !initialPayload?.code) return;
     tokenSubmitted.current = true;
     void submitScan(initialPayload);
   }, [initialPayload]);
+
+  if (status === "face" && pending) {
+    return (
+      <Card className="animate-fade-up relative mx-auto max-w-lg overflow-hidden">
+        <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
+        <CardBody className="space-y-5 px-6 py-8 sm:px-8">
+          {message ? (
+            <p className="rounded-xl bg-amber-50 px-3 py-2 text-center text-sm text-amber-800">
+              {message}
+            </p>
+          ) : null}
+          <p className="text-center text-sm font-medium text-slate-700">{t("schFaceStep")}</p>
+          <FaceScan
+            onDescriptor={(descriptor) => {
+              setStatus("loading");
+              setMessage(t("schChecking"));
+              void send({ ...pending, faceDescriptor: descriptor });
+            }}
+            onCancel={() => {
+              setPending(null);
+              setStatus("idle");
+            }}
+          />
+        </CardBody>
+      </Card>
+    );
+  }
 
   if (status === "success" && result) {
     return (
@@ -136,7 +220,7 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
               </svg>
             </span>
           </span>
-          <p className="mt-2 text-xl font-semibold text-emerald-800">Davomat belgilandi</p>
+          <p className="mt-2 text-xl font-semibold text-emerald-800">{t("schAttendanceMarked")}</p>
           <p className="text-sm font-medium text-slate-700">{result.course.title}</p>
           <p className="text-sm text-slate-500">{fmtDate(`${result.date}T00:00:00.000Z`)}</p>
           <Button
@@ -147,7 +231,7 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
               setResult(null);
             }}
           >
-            Yana skanerlash
+            {t("schScanAgain")}
           </Button>
         </CardBody>
       </Card>
@@ -190,17 +274,20 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
             </span>
           </span>
           <p className="mt-2 text-xl font-semibold text-amber-800">
-            Belgilandingiz, lekin tekshiruv shubhali
+            {t("schSuspiciousTitle")}
           </p>
           <p className="text-sm font-medium text-slate-700">{result.course.title}</p>
           <p className="text-sm text-slate-500">{fmtDate(`${result.date}T00:00:00.000Z`)}</p>
           {reasons.length > 0 ? (
             <ul className="mt-2 w-full space-y-1.5 rounded-2xl bg-amber-50 px-4 py-3 text-left">
-              {reasons.map((reason) => (
-                <li key={reason} className="text-sm text-amber-800">
-                  · {REASON_LABELS[reason] ?? reason}
-                </li>
-              ))}
+              {reasons.map((reason) => {
+                const reasonKey = REASON_KEYS[reason as keyof typeof REASON_KEYS];
+                return (
+                  <li key={reason} className="text-sm text-amber-800">
+                    · {reasonKey ? t(reasonKey) : reason}
+                  </li>
+                );
+              })}
             </ul>
           ) : null}
           <Button
@@ -213,7 +300,7 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
               setMessage(null);
             }}
           >
-            Yana skanerlash
+            {t("schScanAgain")}
           </Button>
         </CardBody>
       </Card>
@@ -236,10 +323,10 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
             <div className="flex flex-col items-center gap-4 py-10 text-center">
               <span className="size-10 animate-spin rounded-full border-[3px] border-brand-100 border-t-brand-600" />
               <p className="text-sm font-medium text-slate-600">
-                {message ?? "Tekshirilmoqda..."}
+                {message ?? t("schChecking")}
               </p>
               <p className="text-xs text-slate-600">
-                Joylashuv so&apos;ralsa — ruxsat bering
+                {t("schAllowLocation")}
               </p>
             </div>
           )}
@@ -270,10 +357,9 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
               <path d="M14 14h3v3h-3zM21 14v.01M14 21v.01M21 21v.01M17.5 21v.01M21 17.5v.01" />
             </svg>
           </span>
-          <p className="text-base font-semibold text-slate-900">QR davomat</p>
+          <p className="text-base font-semibold text-slate-900">{t("schQrAttendanceHeading")}</p>
           <p className="max-w-sm text-sm text-slate-500">
-            O&apos;qituvchi ekranidagi QR kodni telefon kamerasi bilan skanerlang — davomat
-            avtomatik belgilanadi.
+            {t("schQrAttendanceHint")}
           </p>
         </div>
 
@@ -296,8 +382,17 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
             setStatus("scanning");
           }}
         >
-          QR skanerlash
+          {t("schScanQr")}
         </Button>
+
+        {!faceEnrolled ? (
+          <p className="text-center text-xs text-slate-500">
+            {t("schFaceEnableHint")}{" "}
+            <Link href="/face" className="font-medium text-brand-700 underline-offset-2 hover:underline">
+              Face ID
+            </Link>
+          </p>
+        ) : null}
       </CardBody>
     </Card>
   );

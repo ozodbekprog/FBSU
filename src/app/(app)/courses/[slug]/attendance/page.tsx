@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import {
   Badge,
   ButtonLink,
@@ -17,14 +18,6 @@ import { canManageCourse } from "@/components/courses/course-access";
 import { AttendanceBulk } from "@/components/courses/attendance-bulk";
 import { SessionPanel } from "@/components/attendance/SessionPanel";
 
-const STATUS_LABELS: Record<string, string> = {
-  PRESENT: "Bor",
-  ABSENT: "Yo'q",
-  LATE: "Kechikkan",
-  EXCUSED: "Sababli",
-  SUSPICIOUS: "Shubhali",
-};
-
 const STATUS_TONES: Record<string, "green" | "rose" | "amber" | "blue" | "purple"> = {
   PRESENT: "green",
   ABSENT: "rose",
@@ -39,10 +32,22 @@ function dateKey(value: Date) {
 
 export default async function CourseAttendancePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ start?: string }>;
 }) {
   const user = await requireUser();
+  const { start } = await searchParams;
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const statusLabels: Record<string, string> = {
+    PRESENT: dictionary.crsPresent,
+    ABSENT: dictionary.crsAbsent,
+    LATE: dictionary.crsLate,
+    EXCUSED: dictionary.crsExcused,
+    SUSPICIOUS: dictionary.crsSuspicious,
+  };
   const { slug } = await params;
 
   const course = await prisma.course.findUnique({ where: { slug } });
@@ -51,18 +56,18 @@ export default async function CourseAttendancePage({
   const management = canManageCourse(user, course);
   const back = (
     <ButtonLink href={`/courses/${course.slug}/assignments`} variant="secondary" size="sm">
-      Topshiriqlar
+      {dictionary.crsAssignments}
     </ButtonLink>
   );
   const journal = (
     <ButtonLink href={`/courses/${course.slug}/attendance/journal`} size="sm">
-      Guruh jurnali
+      {dictionary.crsGroupJournal}
     </ButtonLink>
   );
 
   if (user.role === "STUDENT") {
     const enrolled = await prisma.enrollment.findUnique({
-      where: { courseId_userId: { courseId: course.id, userId: user.id } },
+      where: { courseId_userId: { courseId: course.id, userId: user.id }, status: "ACTIVE" },
     });
     if (!enrolled) notFound();
 
@@ -81,7 +86,7 @@ export default async function CourseAttendancePage({
     return (
       <>
         <PageHeader
-          title="Davomat"
+          title={dictionary.crsAttendance}
           subtitle={course.title}
           action={
             <>
@@ -91,23 +96,23 @@ export default async function CourseAttendancePage({
           }
         />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Davomat foizi" value={`${percent}%`} hint={`${total} ta dars`} />
-          <Stat label="Bor" value={present} />
-          <Stat label="Kechikkan" value={late} />
-          <Stat label="Yo'q / Sababli" value={`${absent} / ${excused}`} />
+          <Stat label={dictionary.crsAttendancePercent} value={`${percent}%`} hint={translate(locale, "crsLessonsCount", { count: total })} />
+          <Stat label={dictionary.crsPresent} value={present} />
+          <Stat label={dictionary.crsLate} value={late} />
+          <Stat label={dictionary.crsAbsentExcused} value={`${absent} / ${excused}`} />
         </div>
         <Card className="mt-6">
-          <CardHeader title="Davomat tarixi" subtitle={`${total} ta yozuv`} />
+          <CardHeader title={dictionary.crsAttendanceHistory} subtitle={translate(locale, "crsRecordsCount", { count: total })} />
           <CardBody>
             {entries.length === 0 ? (
-              <EmptyState title="Ma'lumot yo'q" description="Hozircha davomat belgilanmagan." />
+              <EmptyState title={dictionary.crsNoData} description={dictionary.crsNoAttendanceMarked} />
             ) : (
               <Table>
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                    <th className="py-2.5 pr-3 text-left font-medium">Sana</th>
-                    <th className="px-3 py-2.5 text-left font-medium">Holat</th>
-                    <th className="px-3 py-2.5 text-left font-medium">Izoh</th>
+                    <th className="py-2.5 pr-3 text-left font-medium">{dictionary.crsDate}</th>
+                    <th className="px-3 py-2.5 text-left font-medium">{dictionary.crsStatus}</th>
+                    <th className="px-3 py-2.5 text-left font-medium">{dictionary.crsNote}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -115,7 +120,7 @@ export default async function CourseAttendancePage({
                     <tr key={entry.id} className="transition-colors duration-150 hover:bg-slate-50/70">
                       <td className="py-3 pr-3 text-sm text-slate-700">{fmtDate(entry.date)}</td>
                       <td className="px-3 py-3">
-                        <Badge tone={STATUS_TONES[entry.status]}>{STATUS_LABELS[entry.status]}</Badge>
+                        <Badge tone={STATUS_TONES[entry.status]}>{statusLabels[entry.status]}</Badge>
                       </td>
                       <td className="px-3 py-3 text-xs text-slate-600">{entry.note ?? "—"}</td>
                     </tr>
@@ -133,7 +138,7 @@ export default async function CourseAttendancePage({
 
   const [enrollments, entries] = await Promise.all([
     prisma.enrollment.findMany({
-      where: { courseId: course.id },
+      where: { courseId: course.id, status: "ACTIVE" },
       include: { user: { select: { id: true, name: true } } },
       orderBy: { user: { name: "asc" } },
     }),
@@ -164,8 +169,8 @@ export default async function CourseAttendancePage({
   return (
     <>
       <PageHeader
-        title="Davomat"
-        subtitle={`${course.title} · ${students.length} ta talaba`}
+        title={dictionary.crsAttendance}
+        subtitle={translate(locale, "crsCourseStudentsSubtitle", { course: course.title, count: students.length })}
         action={
           <>
             {journal}
@@ -173,7 +178,7 @@ export default async function CourseAttendancePage({
           </>
         }
       />
-      <SessionPanel courseId={course.id} studentCount={students.length} />
+      <SessionPanel courseId={course.id} studentCount={students.length} autoStart={start === "1"} />
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[1.2fr_1fr]">
         <AttendanceBulk
           courseId={course.id}
@@ -185,19 +190,19 @@ export default async function CourseAttendancePage({
           }))}
         />
         <Card>
-          <CardHeader title="So'nggi kunlar" subtitle="Holatlar bo'yicha yakun" />
+          <CardHeader title={dictionary.crsRecentDays} subtitle={dictionary.crsStatusSummary} />
           <CardBody>
             {summaryRows.length === 0 ? (
-              <p className="text-sm text-slate-500">Hozircha davomat belgilanmagan.</p>
+              <p className="text-sm text-slate-500">{dictionary.crsNoAttendanceMarked}</p>
             ) : (
               <Table>
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                    <th className="py-2.5 pr-3 text-left font-medium">Sana</th>
-                    <th className="px-3 py-2.5 text-left font-medium">Bor</th>
-                    <th className="px-3 py-2.5 text-left font-medium">Yo&apos;q</th>
-                    <th className="px-3 py-2.5 text-left font-medium">Kech.</th>
-                    <th className="px-3 py-2.5 text-left font-medium">Sababli</th>
+                    <th className="py-2.5 pr-3 text-left font-medium">{dictionary.crsDate}</th>
+                    <th className="px-3 py-2.5 text-left font-medium">{dictionary.crsPresent}</th>
+                    <th className="px-3 py-2.5 text-left font-medium">{dictionary.crsAbsent}</th>
+                    <th className="px-3 py-2.5 text-left font-medium">{dictionary.crsLateShort}</th>
+                    <th className="px-3 py-2.5 text-left font-medium">{dictionary.crsExcused}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

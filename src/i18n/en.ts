@@ -1,4 +1,12 @@
 import type { Dictionary } from "./uz";
+import { shell } from "./dict/en/shell";
+import { dash } from "./dict/en/dash";
+import { crs } from "./dict/en/crs";
+import { sch } from "./dict/en/sch";
+import { grd } from "./dict/en/grd";
+import { msg } from "./dict/en/msg";
+import { adm } from "./dict/en/adm";
+import { msc } from "./dict/en/msc";
 
 export const en: Dictionary = {
   commonSave: "Save",
@@ -114,4 +122,12 @@ export const en: Dictionary = {
   settingsEyebrow: "Account",
   settingsTitle: "Settings",
   settingsSubtitle: "Notifications, appearance and contact",
+  ...shell,
+  ...dash,
+  ...crs,
+  ...sch,
+  ...grd,
+  ...msg,
+  ...adm,
+  ...msc,
 };

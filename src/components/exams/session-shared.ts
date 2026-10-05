@@ -1,3 +1,5 @@
+import type { Dictionary } from "@/i18n";
+
 export const EXAM_MIN_PERCENT = 80;
 
 export const SESSION_TYPES = ["MIDTERM", "FINAL", "RETAKE"] as const;
@@ -5,6 +7,19 @@ export type SessionType = (typeof SESSION_TYPES)[number];
 
 export const SHEET_STATUSES = ["PENDING", "PASSED", "FAILED", "ABSENT"] as const;
 export type SheetStatus = (typeof SHEET_STATUSES)[number];
+
+export const SESSION_TYPE_KEY: Record<SessionType, keyof Dictionary> = {
+  MIDTERM: "grdExSessionTypeMidterm",
+  FINAL: "grdExSessionTypeFinal",
+  RETAKE: "grdExSessionTypeRetake",
+};
+
+export const SHEET_STATUS_KEY: Record<SheetStatus, keyof Dictionary> = {
+  PENDING: "grdStatusPending",
+  PASSED: "grdStatusPassed",
+  FAILED: "grdStatusFailed",
+  ABSENT: "grdStatusAbsent",
+};
 
 export const SESSION_TYPE_LABEL: Record<SessionType, string> = {
   MIDTERM: "Oraliq nazorat",

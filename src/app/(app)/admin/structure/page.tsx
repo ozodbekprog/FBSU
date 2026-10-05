@@ -2,9 +2,12 @@ import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/ui";
 import StructureManager from "@/components/admin/StructureManager";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 export default async function AdminStructurePage() {
   await requireRole(["ADMIN"]);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
   const [faculties, terms, groups] = await Promise.all([
     prisma.faculty.findMany({
@@ -50,9 +53,14 @@ export default async function AdminStructurePage() {
   return (
     <>
       <PageHeader
-        eyebrow="Boshqaruv"
-        title="Tuzilma"
-        subtitle={`${facultyData.length} ta fakultet · ${termData.length} ta semestr · ${totalGroups}/${groupData.length} guruh biriktirilgan`}
+        eyebrow={dictionary.admEyebrowManage}
+        title={dictionary.admEyebrowStructure}
+        subtitle={translate(locale, "admStructureSubtitle", {
+          faculties: facultyData.length,
+          terms: termData.length,
+          groups: totalGroups,
+          total: groupData.length,
+        })}
       />
       <StructureManager faculties={facultyData} terms={termData} groups={groupData} />
     </>

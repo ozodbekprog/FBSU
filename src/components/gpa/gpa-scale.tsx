@@ -1,6 +1,7 @@
 import { Card, CardBody, CardHeader } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import type { GpaLetter } from "@/app/api/gpa/data";
+import { getDictionary, getLocale } from "@/i18n";
 import { GpaPointsBadge, LetterBadge, LETTER_META } from "./gpa-badge";
 
 const SCALE: { range: string; points: number; letter: GpaLetter }[] = [
@@ -14,11 +15,24 @@ const SCALE: { range: string; points: number; letter: GpaLetter }[] = [
   { range: "0–59%", points: 0, letter: "F" },
 ];
 
-export function GpaScale({ delay = 0 }: { delay?: number }) {
+export async function GpaScale({ delay = 0 }: { delay?: number }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const letterLabels: Record<GpaLetter, string> = {
+    A: dictionary.grdGradeExcellent,
+    B: dictionary.grdGradeGood,
+    C: dictionary.grdGradeSatisfactory,
+    D: dictionary.grdGradePass,
+    F: dictionary.grdGradeUnsatisfactory,
+  };
+
   return (
     <div className="animate-fade-up" style={{ animationDelay: `${delay}ms` }}>
       <Card className="h-full">
-        <CardHeader title="4.0 shkala legendasi" subtitle="Foiz → GPA ball → harf baho" />
+        <CardHeader
+          title={dictionary.grdScaleLegend}
+          subtitle={dictionary.grdScaleLegendSubtitle}
+        />
         <CardBody className="space-y-3">
           <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-3">
             <div className="h-2 rounded-full bg-[linear-gradient(90deg,#fb7185_0%,#f59e0b_30%,#d4af37_55%,#5373b8_78%,#10b981_100%)]" />
@@ -44,12 +58,14 @@ export function GpaScale({ delay = 0 }: { delay?: number }) {
                     <span className="block text-sm font-medium tabular-nums text-slate-700">
                       {row.range}
                     </span>
-                    <span className="block text-[11px] text-slate-600">{meta.label}</span>
+                    <span className="block text-[11px] text-slate-600">
+                      {letterLabels[row.letter]}
+                    </span>
                   </span>
                 </span>
                 <span className="flex shrink-0 items-center gap-2">
                   <span className="text-[10px] font-medium uppercase tracking-wide text-slate-600">
-                    ball
+                    {dictionary.grdBall}
                   </span>
                   <GpaPointsBadge points={row.points} size="sm" />
                 </span>
@@ -57,7 +73,7 @@ export function GpaScale({ delay = 0 }: { delay?: number }) {
             );
           })}
           <p className="rounded-xl bg-slate-50/70 px-3 py-2 text-center text-[11px] leading-relaxed text-slate-600">
-            GPA = Σ (ball × kredit) ÷ Σ kredit · davomat hisobga olinmaydi
+            {dictionary.grdGpaFormula}
           </p>
         </CardBody>
       </Card>

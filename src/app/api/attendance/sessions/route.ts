@@ -3,6 +3,7 @@ import { randomInt } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canManageCourse } from "@/components/courses/course-access";
+import { finalizeExpiredAttendanceSessions } from "@/modules/attendance/auto-close";
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const CODE_LENGTH = 6;
@@ -11,6 +12,7 @@ const DEFAULT_MINUTES = 15;
 const createSchema = z.object({
   courseId: z.string().min(1),
   minutes: z.number().int().min(1).max(180).optional(),
+  exception: z.boolean().optional(),
 });
 
 function generateCode() {
@@ -81,6 +83,7 @@ export async function POST(request: Request) {
         code,
         expiresAt,
         createdById: user.id,
+        isException: parsed.data.exception === true,
       },
     });
   });
@@ -123,6 +126,8 @@ export async function GET(request: Request) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
+  await finalizeExpiredAttendanceSessions(course.id);
+
   const sessions = await prisma.attendanceSession.findMany({
     where: { courseId: course.id },
     orderBy: { createdAt: "desc" },
@@ -155,6 +160,8 @@ export async function GET(request: Request) {
     date: session.date,
     expiresAt: session.expiresAt,
     createdAt: session.createdAt,
+    finalizedAt: session.finalizedAt,
+    isException: session.isException,
     active: session.expiresAt.getTime() > now,
     marked: (byDate.get(session.date.getTime()) ?? []).map((mark) => ({
       studentId: mark.studentId,

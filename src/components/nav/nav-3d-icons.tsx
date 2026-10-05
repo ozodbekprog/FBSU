@@ -1,0 +1,564 @@
+"use client";
+
+import { RoundedBox } from "@react-three/drei";
+import type { ComponentType } from "react";
+import { useMemo } from "react";
+import {
+  NAV3D_MATERIALS,
+  nav3DCircle,
+  nav3DGeometry,
+  nav3DPolygon,
+  type Nav3DMaterialKey,
+  type Nav3DPart,
+} from "./nav-3d-materials";
+
+const PI = Math.PI;
+
+function Cube({ a, m = "brand", p, r }: Nav3DPart & { a: [number, number, number] }) {
+  return (
+    <mesh position={p} rotation={r} material={NAV3D_MATERIALS[m]}>
+      <boxGeometry args={a} />
+    </mesh>
+  );
+}
+
+function Tile({
+  a,
+  radius = 0.09,
+  m = "brand",
+  p,
+  r,
+}: Nav3DPart & { a: [number, number, number]; radius?: number }) {
+  const safe = Math.min(radius, Math.min(a[0], a[1], a[2]) / 2 - 0.001);
+  return (
+    <RoundedBox
+      args={a}
+      radius={Math.max(safe, 0.001)}
+      smoothness={3}
+      position={p}
+      rotation={r}
+      material={NAV3D_MATERIALS[m]}
+    />
+  );
+}
+
+function Cyl({
+  rt,
+  rb,
+  h = 0.4,
+  seg = 28,
+  m = "brand",
+  p,
+  r,
+}: Nav3DPart & { rt: number; rb?: number; h?: number; seg?: number }) {
+  return (
+    <mesh position={p} rotation={r} material={NAV3D_MATERIALS[m]}>
+      <cylinderGeometry args={[rt, rb ?? rt, h, seg]} />
+    </mesh>
+  );
+}
+
+function Ball({ rad = 0.3, m = "brand", p }: Nav3DPart & { rad?: number }) {
+  return (
+    <mesh position={p} material={NAV3D_MATERIALS[m]}>
+      <sphereGeometry args={[rad, 24, 16]} />
+    </mesh>
+  );
+}
+
+function Ring({
+  rad = 0.6,
+  tube = 0.12,
+  arc = PI * 2,
+  m = "brand",
+  p,
+  r,
+}: Nav3DPart & { rad?: number; tube?: number; arc?: number }) {
+  return (
+    <mesh position={p} rotation={r} material={NAV3D_MATERIALS[m]}>
+      <torusGeometry args={[rad, tube, 12, 44, arc]} />
+    </mesh>
+  );
+}
+
+function Gear({ m = "gold" }: { m?: Nav3DMaterialKey }) {
+  const geometry = useMemo(() => {
+    const teeth = 8;
+    const outer = 0.98;
+    const inner = 0.74;
+    const step = (PI * 2) / teeth;
+    const points: [number, number][] = [];
+    for (let i = 0; i < teeth; i += 1) {
+      const a = i * step;
+      points.push([Math.cos(a) * inner, Math.sin(a) * inner]);
+      points.push([Math.cos(a + step * 0.14) * outer, Math.sin(a + step * 0.14) * outer]);
+      points.push([Math.cos(a + step * 0.44) * outer, Math.sin(a + step * 0.44) * outer]);
+      points.push([Math.cos(a + step * 0.58) * inner, Math.sin(a + step * 0.58) * inner]);
+    }
+    return nav3DGeometry(() => nav3DPolygon(points, [nav3DCircle(0.3, 26)]), 0.34, 0.055);
+  }, []);
+  return (
+    <mesh geometry={geometry} position={[0, 0, -0.17]} material={NAV3D_MATERIALS[m]} />
+  );
+}
+
+function Shield({ m = "brand" }: { m?: Nav3DMaterialKey }) {
+  const geometry = useMemo(
+    () =>
+      nav3DGeometry(
+        () =>
+          nav3DPolygon([
+            [-0.82, 0.86],
+            [0.82, 0.86],
+            [0.82, -0.08],
+            [0, -0.98],
+            [-0.82, -0.08],
+          ]),
+        0.3,
+        0.07,
+      ),
+    [],
+  );
+  return (
+    <mesh geometry={geometry} position={[0, 0, -0.15]} material={NAV3D_MATERIALS[m]} />
+  );
+}
+
+function Gauge() {
+  return (
+    <group>
+      <Ring rad={0.78} tube={0.15} arc={PI} m="brand" r={[0, 0, 0]} />
+      <Cube a={[0.1, 0.26, 0.12]} m="goldLight" p={[0, 0.72, 0.04]} />
+      <Cube a={[0.1, 0.26, 0.12]} m="goldLight" p={[0.66, 0.38, 0.04]} r={[0, 0, -0.66]} />
+      <Cube a={[0.1, 0.26, 0.12]} m="goldLight" p={[-0.66, 0.38, 0.04]} r={[0, 0, 0.66]} />
+      <Cube a={[0.09, 0.62, 0.09]} m="gold" p={[-0.18, 0.28, 0.16]} r={[0, 0, 0.62]} />
+      <Cyl rt={0.17} h={0.3} m="paper" p={[0, 0, 0.14]} r={[PI / 2, 0, 0]} />
+      <Cube a={[1.7, 0.12, 0.42]} m="brandDeep" p={[0, -0.12, -0.14]} />
+    </group>
+  );
+}
+
+function Courses() {
+  return (
+    <group>
+      <Tile a={[1.66, 0.26, 1.06]} m="brand" p={[0.06, 0.44, 0.02]} radius={0.08} />
+      <Tile a={[1.66, 0.26, 1.06]} m="brandDeep" p={[-0.02, 0.02, 0.06]} radius={0.08} />
+      <Tile a={[1.66, 0.26, 1.06]} m="brandLight" p={[0.04, -0.4, 0.02]} radius={0.08} />
+      <Cube a={[0.16, 0.9, 1.08]} m="gold" p={[-0.86, 0.03, 0.03]} />
+      <Cube a={[1.5, 0.08, 0.1]} m="goldLight" p={[0.08, 0.5, 0.5]} />
+    </group>
+  );
+}
+
+function Catalog() {
+  return (
+    <group>
+      <Tile a={[1.44, 1.5, 0.94]} m="brand" p={[0, -0.16, 0]} radius={0.16} />
+      <Ring rad={0.42} tube={0.1} arc={PI} m="gold" p={[0, 0.56, 0.02]} />
+      <Cube a={[0.7, 0.1, 0.98]} m="goldLight" p={[0, 0.12, 0.01]} />
+      <Cube a={[0.34, 0.34, 0.14]} m="gold" p={[0, -0.1, 0.5]} />
+    </group>
+  );
+}
+
+function Electives() {
+  return (
+    <group>
+      <Cyl rt={0.42} rb={0.42} h={0.62} m="brandDeep" p={[0, -0.5, 0]} r={[0, 0, 0]} />
+      <Tile a={[1.94, 0.14, 1.24]} m="brand" p={[0, -0.12, 0]} r={[0.12, 0.62, 0]} radius={0.06} />
+      <Tile a={[1.5, 0.1, 1.0]} m="brandDeep" p={[0.04, -0.3, 0.02]} r={[0.12, 0.62, 0]} radius={0.05} />
+      <Cyl rt={0.055} h={0.72} m="gold" p={[0.72, -0.42, 0.34]} r={[0, 0, 0.12]} />
+      <Ball rad={0.13} m="goldLight" p={[0.78, -0.82, 0.34]} />
+      <Cyl rt={0.05} h={0.62} m="gold" p={[0, 0.02, 0.72]} r={[PI / 2, 0, 0]} />
+    </group>
+  );
+}
+
+function Schedule() {
+  return (
+    <group>
+      <Tile a={[1.66, 1.52, 0.52]} m="brandDeep" p={[0, -0.1, 0]} radius={0.12} />
+      <Cube a={[1.7, 0.42, 0.56]} m="brandLight" p={[0, 0.5, 0.02]} />
+      <Cyl rt={0.09} h={0.56} m="gold" p={[-0.5, 0.82, 0]} />
+      <Cyl rt={0.09} h={0.56} m="gold" p={[0.5, 0.82, 0]} />
+      {[-0.42, 0, 0.42].map((x) =>
+        [-0.3, 0.06].map((y) => (
+          <Cube key={`${x}-${y}`} a={[0.2, 0.2, 0.1]} m="paper" p={[x, y, 0.28]} />
+        )),
+      )}
+    </group>
+  );
+}
+
+function Calendar() {
+  return (
+    <group>
+      <Cyl rt={0.84} rb={0.84} h={0.34} m="brandDeep" r={[PI / 2, 0, 0]} />
+      <Ring rad={0.84} tube={0.11} m="gold" />
+      {Array.from({ length: 12 }, (_, i) => {
+        const a = (i / 12) * PI * 2;
+        return (
+          <Cube
+            key={i}
+            a={[0.08, i % 3 === 0 ? 0.24 : 0.15, 0.1]}
+            m={i % 3 === 0 ? "goldLight" : "brandLight"}
+            p={[Math.cos(a) * 0.6, Math.sin(a) * 0.6, 0.2]}
+            r={[0, 0, a - PI / 2]}
+          />
+        );
+      })}
+      <Cube a={[0.1, 0.42, 0.1]} m="paper" p={[0, 0.2, 0.26]} r={[0, 0, PI]} />
+      <Cube a={[0.34, 0.1, 0.1]} m="paper" p={[0.14, 0.04, 0.26]} />
+      <Cyl rt={0.12} h={0.34} m="gold" p={[0, 0, 0.3]} r={[PI / 2, 0, 0]} />
+    </group>
+  );
+}
+
+function Academic() {
+  return (
+    <group>
+      <Cube a={[1.44, 1.0, 0.86]} m="brand" p={[0, -0.36, 0]} />
+      <Cyl rt={0.05} rb={1.12} h={0.78} seg={4} m="brandDeep" p={[0, 0.52, 0]} r={[0, PI / 4, 0]} />
+      <Cube a={[0.42, 0.56, 0.1]} m="gold" p={[0, -0.34, 0.47]} />
+      <Cube a={[0.5, 0.16, 0.1]} m="brandLight" p={[-0.42, 0.06, 0.47]} />
+      <Cube a={[0.5, 0.16, 0.1]} m="brandLight" p={[0.42, 0.06, 0.47]} />
+      <Cyl rt={0.05} h={0.8} m="gold" p={[0.42, 1.14, 0]} />
+      <Cube a={[0.34, 0.24, 0.08]} m="goldLight" p={[0.6, 1.34, 0]} />
+    </group>
+  );
+}
+
+function Exams() {
+  return (
+    <group>
+      <Tile a={[1.3, 1.72, 0.18]} m="paper" p={[-0.14, 0, 0]} radius={0.08} />
+      {[0.46, 0.16, -0.14].map((y, i) => (
+        <Cube key={y} a={[i === 2 ? 0.6 : 0.92, 0.09, 0.08]} m="brandDeep" p={[-0.2, y, 0.11]} />
+      ))}
+      <Tile a={[0.78, 0.78, 0.24]} m="brand" p={[0.58, -0.56, 0.2]} radius={0.18} />
+      <Cube a={[0.34, 0.11, 0.12]} m="goldLight" p={[0.5, -0.56, 0.36]} r={[0, 0, 0.78]} />
+      <Cube a={[0.34, 0.11, 0.12]} m="goldLight" p={[0.72, -0.64, 0.36]} r={[0, 0, -0.78]} />
+    </group>
+  );
+}
+
+function Grades() {
+  return (
+    <group>
+      <Tile a={[1.34, 1.76, 0.22]} m="brand" p={[0, -0.02, 0]} radius={0.14} />
+      <Tile a={[1.04, 1.3, 0.12]} m="paper" p={[0, -0.1, 0.15]} radius={0.06} />
+      <Tile a={[0.66, 0.3, 0.32]} m="gold" p={[0, 0.8, 0.06]} radius={0.08} />
+      {[0.24, -0.02].map((y) => (
+        <Cube key={y} a={[0.74, 0.08, 0.08]} m="brandDeep" p={[-0.06, y, 0.22]} />
+      ))}
+      <Cube a={[0.4, 0.12, 0.1]} m="brand" p={[0.06, -0.36, 0.24]} r={[0, 0, 0.76]} />
+      <Cube a={[0.4, 0.12, 0.1]} m="brand" p={[0.3, -0.44, 0.24]} r={[0, 0, -0.76]} />
+    </group>
+  );
+}
+
+function Gpa() {
+  const bars: { h: number; x: number; m: Nav3DMaterialKey }[] = [
+    { h: 0.62, x: -0.52, m: "brandLight" },
+    { h: 1.06, x: 0, m: "brand" },
+    { h: 1.5, x: 0.52, m: "gold" },
+  ];
+  return (
+    <group>
+      {bars.map((bar) => (
+        <Tile key={bar.x} a={[0.36, bar.h, 0.56]} m={bar.m} p={[bar.x, bar.h / 2 - 0.62, 0]} radius={0.06} />
+      ))}
+      <Cube a={[1.76, 0.14, 0.72]} m="brandDeep" p={[0, -0.66, 0]} />
+      <Ball rad={0.16} m="goldLight" p={[0.52, 1.02, 0.16]} />
+    </group>
+  );
+}
+
+function Transcript() {
+  return (
+    <group>
+      <Tile a={[1.3, 1.76, 0.18]} m="paper" p={[-0.16, 0.02, 0]} radius={0.08} />
+      {[0.52, 0.24, -0.04].map((y) => (
+        <Cube key={y} a={[0.88, 0.08, 0.08]} m="brandDeep" p={[-0.22, y, 0.11]} />
+      ))}
+      <Cube a={[0.6, 0.08, 0.08]} m="brandLight" p={[-0.34, -0.34, 0.11]} />
+      <Cyl rt={0.3} h={0.22} m="gold" p={[0.54, -0.52, 0.24]} r={[PI / 2, 0, 0]} />
+      <Ring rad={0.3} tube={0.07} m="goldLight" p={[0.54, -0.52, 0.28]} />
+      <Cube a={[0.12, 0.34, 0.1]} m="gold" p={[0.54, -0.24, 0.2]} />
+    </group>
+  );
+}
+
+function Attendance() {
+  return (
+    <group>
+      <Tile a={[1.5, 1.34, 0.5]} m="brandDeep" p={[0, 0.1, -0.1]} radius={0.12} />
+      <Cube a={[1.54, 0.38, 0.54]} m="brandLight" p={[0, 0.62, -0.08]} />
+      <Cyl rt={0.08} h={0.46} m="gold" p={[-0.42, 0.86, -0.08]} />
+      <Cyl rt={0.08} h={0.46} m="gold" p={[0.42, 0.86, -0.08]} />
+      <Tile a={[0.94, 0.94, 0.3]} m="gold" p={[0, 0.02, 0.34]} radius={0.24} />
+      <Cube a={[0.42, 0.13, 0.12]} m="brandDeep" p={[-0.13, 0.0, 0.52]} r={[0, 0, 0.78]} />
+      <Cube a={[0.42, 0.13, 0.12]} m="brandDeep" p={[0.15, -0.09, 0.52]} r={[0, 0, -0.78]} />
+    </group>
+  );
+}
+
+function Journal() {
+  return (
+    <group>
+      <Tile a={[1.4, 1.74, 0.56]} m="brand" p={[0.06, 0, 0]} radius={0.1} />
+      <Cube a={[0.2, 1.78, 0.6]} m="brandDeep" p={[-0.72, 0, 0.02]} />
+      <Cube a={[1.0, 0.08, 0.1]} m="goldLight" p={[0.12, 0.62, 0.3]} />
+      <Cube a={[1.0, 0.08, 0.1]} m="goldLight" p={[0.12, 0.24, 0.3]} />
+      <Cube a={[0.7, 0.08, 0.1]} m="brandLight" p={[0.06, -0.14, 0.3]} />
+      {[-0.5, 0, 0.5].map((y) => (
+        <Ring key={y} rad={0.13} tube={0.05} arc={PI} m="gold" p={[-0.86, y, 0]} r={[0, PI / 2, -PI / 2]} />
+      ))}
+    </group>
+  );
+}
+
+function Certificates() {
+  return (
+    <group>
+      <Cube a={[0.26, 0.76, 0.14]} m="gold" p={[-0.34, 0.72, 0]} r={[0, 0, 0.26]} />
+      <Cube a={[0.26, 0.76, 0.14]} m="goldLight" p={[0.34, 0.72, 0]} r={[0, 0, -0.26]} />
+      <Cyl rt={0.54} rb={0.54} h={0.26} m="gold" p={[0, -0.28, 0]} r={[PI / 2, 0, 0]} />
+      <Cyl rt={0.36} h={0.3} m="brandDeep" p={[0, -0.28, 0.04]} r={[PI / 2, 0, 0]} />
+      <Ring rad={0.5} tube={0.07} m="goldLight" p={[0, -0.28, 0.16]} />
+      <Ball rad={0.14} m="goldLight" p={[0, -0.28, 0.2]} />
+    </group>
+  );
+}
+
+function Journals() {
+  return (
+    <group>
+      <Tile a={[0.86, 1.44, 0.18]} m="paper" p={[-0.34, -0.06, 0]} r={[0, 0.38, 0.1]} radius={0.06} />
+      <Tile a={[0.86, 1.44, 0.18]} m="brandLight" p={[0.34, -0.06, 0.02]} r={[0, -0.38, -0.1]} radius={0.06} />
+      <Cyl rt={0.09} h={1.1} m="brand" p={[0.62, 0.42, 0.34]} r={[0, 0, 0.52]} />
+      <Cyl rt={0.05} rb={0.12} h={0.24} m="gold" p={[1.06, 0.9, 0.34]} r={[0, 0, 0.52]} />
+      <Cube a={[0.06, 0.5, 0.06]} m="goldLight" p={[0.66, 0.42, 0.46]} />
+      {[0.42, 0.16, -0.1].map((y) => (
+        <Cube key={y} a={[0.5, 0.06, 0.06]} m="brandDeep" p={[-0.4, y, 0.12]} r={[0, 0.38, 0]} />
+      ))}
+    </group>
+  );
+}
+
+function Questions() {
+  return (
+    <group>
+      <Tile a={[1.76, 1.4, 0.24]} m="brand" p={[0, 0.06, 0]} radius={0.2} />
+      <Ring rad={0.3} tube={0.13} arc={PI * 0.78} m="goldLight" p={[-0.04, 0.34, 0.2]} r={[0, 0, PI * 0.16]} />
+      <Cube a={[0.13, 0.34, 0.13]} m="goldLight" p={[0.24, -0.1, 0.2]} r={[0, 0, 0.2]} />
+      <Ball rad={0.11} m="goldLight" p={[0.31, -0.42, 0.2]} />
+    </group>
+  );
+}
+
+function Messages() {
+  return (
+    <group>
+      <Tile a={[1.5, 1.04, 0.28]} m="brandLight" p={[-0.16, 0.28, 0]} radius={0.24} />
+      <Cube a={[0.26, 0.26, 0.2]} m="brandLight" p={[-0.66, -0.28, 0]} r={[0, 0, PI / 4]} />
+      <Tile a={[0.92, 0.68, 0.26]} m="gold" p={[0.42, -0.5, 0.24]} radius={0.2} />
+      <Cube a={[0.2, 0.2, 0.18]} m="gold" p={[0.9, -0.86, 0.24]} r={[0, 0, PI / 4]} />
+      {[-0.44, -0.16, 0.12].map((x) => (
+        <Ball key={x} rad={0.075} m="brandDeep" p={[x + 0.02, 0.3, 0.16]} />
+      ))}
+    </group>
+  );
+}
+
+function Orders() {
+  return (
+    <group>
+      <Tile a={[1.34, 1.74, 0.18]} m="paper" p={[0, 0, 0]} radius={0.08} />
+      <Cube a={[0.44, 0.44, 0.18]} m="brandLight" p={[0.5, 0.66, 0.02]} />
+      {[0.3, 0.02, -0.26].map((y) => (
+        <Cube key={y} a={[0.92, 0.08, 0.08]} m="brandDeep" p={[-0.08, y, 0.11]} />
+      ))}
+      <Tile a={[0.56, 0.56, 0.2]} m="gold" p={[0.46, -0.62, 0.2]} radius={0.16} />
+      <Cube a={[0.28, 0.1, 0.1]} m="paper" p={[0.4, -0.62, 0.32]} r={[0, 0, 0.78]} />
+      <Cube a={[0.28, 0.1, 0.1]} m="paper" p={[0.56, -0.68, 0.32]} r={[0, 0, -0.78]} />
+    </group>
+  );
+}
+
+function Bookings() {
+  return (
+    <group>
+      <Cyl rt={0.76} rb={0.76} h={0.32} m="brand" r={[PI / 2, 0, 0]} />
+      <Ring rad={0.76} tube={0.1} m="gold" />
+      <Ball rad={0.19} m="goldLight" p={[-0.5, 0.76, 0.08]} />
+      <Ball rad={0.19} m="goldLight" p={[0.5, 0.76, 0.08]} />
+      <Cube a={[0.14, 0.3, 0.14]} m="brandDeep" p={[-0.5, 0.58, 0.08]} r={[0, 0, 0.5]} />
+      <Cube a={[0.14, 0.3, 0.14]} m="brandDeep" p={[0.5, 0.58, 0.08]} r={[0, 0, -0.5]} />
+      <Cube a={[0.1, 0.4, 0.1]} m="paper" p={[-0.02, 0.18, 0.22]} r={[0, 0, PI]} />
+      <Cube a={[0.3, 0.1, 0.1]} m="paper" p={[0.11, 0.02, 0.22]} />
+      <Cyl rt={0.11} h={0.36} m="gold" p={[0, 0, 0.26]} r={[PI / 2, 0, 0]} />
+    </group>
+  );
+}
+
+function Rooms() {
+  return (
+    <group>
+      <Cube a={[1.54, 1.94, 0.4]} m="brandDeep" p={[0, 0, -0.06]} />
+      <Cube a={[1.66, 0.18, 0.52]} m="gold" p={[0, 1.02, -0.02]} />
+      <Tile a={[1.02, 1.56, 0.18]} m="brandLight" p={[0, -0.06, 0.18]} radius={0.06} />
+      <Cube a={[0.62, 0.62, 0.12]} m="brand" p={[0, 0.34, 0.28]} />
+      <Cube a={[0.62, 0.62, 0.12]} m="brand" p={[0, -0.42, 0.28]} />
+      <Ball rad={0.1} m="goldLight" p={[0.38, -0.06, 0.32]} />
+    </group>
+  );
+}
+
+function Search() {
+  return (
+    <group>
+      <Ring rad={0.58} tube={0.14} m="brand" p={[-0.14, 0.2, 0]} />
+      <Cyl rt={0.2} h={0.1} m="brandLight" p={[-0.14, 0.2, 0.06]} r={[PI / 2, 0, 0]} />
+      <Cyl rt={0.12} rb={0.12} h={0.78} m="gold" p={[0.5, -0.5, 0]} r={[0, 0, -PI / 4]} />
+      <Ring rad={0.13} tube={0.05} m="goldLight" p={[0.5, -0.5, 0.02]} r={[0, 0, -PI / 4]} />
+    </group>
+  );
+}
+
+function Help() {
+  return (
+    <group>
+      <Ring rad={0.72} tube={0.2} m="brandLight" />
+      <Ring rad={0.4} tube={0.09} m="gold" />
+      {[0, 1, 2, 3].map((i) => (
+        <Cube key={i} a={[0.2, 0.34, 0.42]} m="gold" p={[0, 0, 0]} r={[0, 0, (i * PI) / 2 + PI / 4]} />
+      ))}
+    </group>
+  );
+}
+
+function Settings() {
+  return (
+    <group>
+      <Gear m="gold" />
+      <Cyl rt={0.3} h={0.44} m="brand" p={[0, 0, 0.02]} r={[PI / 2, 0, 0]} />
+      <Ball rad={0.12} m="goldLight" p={[0, 0, 0.28]} />
+    </group>
+  );
+}
+
+function Curator() {
+  return (
+    <group>
+      <Ball rad={0.34} m="brandLight" p={[-0.1, 0.36, 0.04]} />
+      <Cyl rt={0.52} rb={0.4} h={0.72} m="brand" p={[-0.1, -0.52, 0]} />
+      <Cyl rt={0.62} rb={0.62} h={0.12} m="brandDeep" p={[-0.1, -0.16, 0]} />
+      <Tile a={[0.44, 0.44, 0.16]} m="gold" p={[0.62, 0.12, 0.3]} radius={0.14} />
+      <Ball rad={0.1} m="goldLight" p={[0.62, 0.12, 0.42]} />
+    </group>
+  );
+}
+
+function Reports() {
+  return (
+    <group>
+      <Tile a={[1.86, 1.46, 0.26]} m="brandDeep" p={[0, 0, -0.08]} radius={0.14} />
+      {[
+        { h: 0.44, x: -0.5, m: "brandLight" as Nav3DMaterialKey },
+        { h: 0.7, x: 0, m: "brand" as Nav3DMaterialKey },
+        { h: 0.96, x: 0.5, m: "gold" as Nav3DMaterialKey },
+      ].map((bar) => (
+        <Tile key={bar.x} a={[0.3, bar.h, 0.2]} m={bar.m} p={[bar.x, -0.42 + bar.h / 2, 0.18]} radius={0.05} />
+      ))}
+      <Cube a={[1.42, 0.07, 0.08]} m="goldLight" p={[0, -0.46, 0.26]} />
+    </group>
+  );
+}
+
+function Workload() {
+  return (
+    <group>
+      <Cyl rt={0.09} h={1.3} m="slate" p={[0, 0, 0]} r={[0, 0, PI / 2]} />
+      {[-0.58, 0.58].map((x) => (
+        <Cyl key={x} rt={0.3} h={0.22} m="brand" p={[x, 0, 0]} r={[0, 0, PI / 2]} />
+      ))}
+      {[-0.82, 0.82].map((x) => (
+        <Cyl key={x} rt={0.4} h={0.24} m="gold" p={[x, 0, 0]} r={[0, 0, PI / 2]} />
+      ))}
+      <Ball rad={0.16} m="goldLight" p={[0, 0, 0.14]} />
+    </group>
+  );
+}
+
+function Admin() {
+  return (
+    <group>
+      <Shield m="brand" />
+      <Cyl rt={0.26} h={0.5} m="gold" p={[0, 0.16, 0.1]} r={[PI / 2, 0, 0]} />
+      <Ring rad={0.18} tube={0.06} m="brandDeep" p={[0, 0.16, 0.3]} />
+      <Cube a={[0.12, 0.26, 0.12]} m="goldLight" p={[0, -0.14, 0.3]} />
+      <Cube a={[0.34, 0.1, 0.12]} m="goldLight" p={[0, -0.32, 0.3]} />
+    </group>
+  );
+}
+
+export const NAV3D_ICONS: Record<string, ComponentType> = {
+  "/dashboard": Gauge,
+  "/courses": Courses,
+  "/catalog": Catalog,
+  "/electives": Electives,
+  "/schedule": Schedule,
+  "/calendar": Calendar,
+  "/academic-calendar": Academic,
+  "/exams": Exams,
+  "/grades": Grades,
+  "/gpa": Gpa,
+  "/transcript": Transcript,
+  "/attendance": Attendance,
+  "/journal": Journal,
+  "/certificates": Certificates,
+  "/journals": Journals,
+  "/question-bank": Questions,
+  "/messages": Messages,
+  "/orders": Orders,
+  "/bookings": Bookings,
+  "/rooms": Rooms,
+  "/search": Search,
+  "/help": Help,
+  "/settings": Settings,
+  "/curator": Curator,
+  "/reports": Reports,
+  "/workload": Workload,
+  "/admin": Admin,
+};
+
+export const NAV3D_SPINNING = new Set([
+  "/calendar",
+  "/certificates",
+  "/bookings",
+  "/help",
+  "/settings",
+]);
+
+export function resolveNav3DIcon(href: string): ComponentType | null {
+  const exact = NAV3D_ICONS[href];
+  if (exact) return exact;
+  let best: ComponentType | null = null;
+  let bestLength = -1;
+  for (const [key, component] of Object.entries(NAV3D_ICONS)) {
+    if (href.startsWith(`${key}/`) && key.length > bestLength) {
+      best = component;
+      bestLength = key.length;
+    }
+  }
+  return best;
+}
+
+export function nav3DIsSpinning(href: string): boolean {
+  if (NAV3D_SPINNING.has(href)) return true;
+  for (const key of NAV3D_SPINNING) {
+    if (href.startsWith(`${key}/`)) return true;
+  }
+  return false;
+}

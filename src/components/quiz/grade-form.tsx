@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input } from "@/components/ui";
 import { apiFetch } from "@/components/quiz/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export function GradeForm({
   attemptId,
@@ -14,6 +15,7 @@ export function GradeForm({
   maxScore: number;
   initialScore?: number | null;
 }) {
+  const { t } = useI18n();
   const router = useRouter();
   const [value, setValue] = useState(initialScore != null ? String(initialScore) : "");
   const [loading, setLoading] = useState(false);
@@ -22,12 +24,17 @@ export function GradeForm({
   async function save() {
     const score = Number(value);
     if (value.trim() === "" || !Number.isInteger(score) || score < 0 || score > maxScore) {
-      setError(`0 dan ${maxScore} gacha butun son kiriting`);
+      setError(t("crsQuizErrScoreRange", { max: maxScore }));
       return;
     }
     setLoading(true);
     setError(null);
-    const result = await apiFetch(`/api/attempts/${attemptId}`, "PATCH", { score });
+    const result = await apiFetch(
+      `/api/attempts/${attemptId}`,
+      "PATCH",
+      { score },
+      t("crsQuizServerError"),
+    );
     if (!result.ok) {
       setError(result.error);
       setLoading(false);
@@ -50,7 +57,7 @@ export function GradeForm({
           className="w-24!"
         />
         <Button size="sm" variant="secondary" onClick={() => void save()} disabled={loading}>
-          {loading ? "..." : "Baholash"}
+          {loading ? "..." : t("crsGrade")}
         </Button>
       </div>
       {error ? <p className="text-xs text-rose-600">{error}</p> : null}

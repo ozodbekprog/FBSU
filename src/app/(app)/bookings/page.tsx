@@ -1,6 +1,7 @@
 import { requireUser, isStaff } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/ui";
+import { getDictionary, getLocale } from "@/i18n";
 import { BookingsBoard } from "@/components/bookings/bookings-board";
 import type { BookingItem, RoomOption } from "@/components/bookings/types";
 
@@ -10,6 +11,8 @@ export default async function BookingsPage({
   searchParams: Promise<{ room?: string; date?: string; slot?: string }>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const staff = isStaff(user.role);
   const params = await searchParams;
 
@@ -53,12 +56,12 @@ export default async function BookingsPage({
   return (
     <>
       <PageHeader
-        eyebrow="Kampus"
-        title="Xona band qilish"
+        eyebrow={dictionary.mscCampusEyebrow}
+        title={dictionary.mscBookingsTitle}
         subtitle={
           staff
-            ? "Barcha bronlar — sana va xona bo'yicha filtrlang"
-            : "Bo'sh xonani tanlang, sanani va parni belgilang"
+            ? dictionary.mscBookingsSubtitleStaff
+            : dictionary.mscBookingsSubtitleStudent
         }
       />
       <BookingsBoard

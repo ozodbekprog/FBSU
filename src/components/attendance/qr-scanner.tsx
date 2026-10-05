@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import jsQR from "jsqr";
 import { Button } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { parseQrPayload, type QrScanPayload } from "./live-qr";
 import { reportIssue } from "@/components/bugs/report";
 
-const MAX_SCAN_SIZE = 640;
+const MAX_SCAN_SIZE = 768;
 
 export function QrScanner({
   onDetected,
@@ -15,6 +16,7 @@ export function QrScanner({
   onDetected: (payload: QrScanPayload) => void;
   onCancel: () => void;
 }) {
+  const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const detectedRef = useRef(onDetected);
@@ -46,6 +48,26 @@ export function QrScanner({
       }
     }
 
+    function decodeRegion(
+      video: HTMLVideoElement,
+      canvas: HTMLCanvasElement,
+      sx: number,
+      sy: number,
+      sw: number,
+      sh: number,
+    ): string | null {
+      const scale = Math.min(1, MAX_SCAN_SIZE / Math.max(sw, sh));
+      const w = Math.max(1, Math.round(sw * scale));
+      const h = Math.max(1, Math.round(sh * scale));
+      canvas.width = w;
+      canvas.height = h;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      if (!context) return null;
+      context.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
+      const frame = context.getImageData(0, 0, w, h);
+      return jsQR(frame.data, w, h, { inversionAttempts: "attemptBoth" })?.data ?? null;
+    }
+
     function tick() {
       if (stopped) return;
       const video = videoRef.current;
@@ -54,37 +76,38 @@ export function QrScanner({
         const width = video.videoWidth;
         const height = video.videoHeight;
         if (width > 0 && height > 0) {
-          const scale = Math.min(1, MAX_SCAN_SIZE / Math.max(width, height));
-          const w = Math.max(1, Math.round(width * scale));
-          const h = Math.max(1, Math.round(height * scale));
-          canvas.width = w;
-          canvas.height = h;
-          const context = canvas.getContext("2d", { willReadFrequently: true });
-          if (context) {
-            context.drawImage(video, 0, 0, w, h);
-            const frame = context.getImageData(0, 0, w, h);
-            const code = jsQR(frame.data, w, h, { inversionAttempts: "attemptBoth" });
-            if (code?.data) {
-              const payload = parseQrPayload(code.data);
-              if (payload) {
-                stop();
-                setDetected(true);
-                try {
-                  navigator.vibrate?.(80);
-                } catch {
-                  void 0;
-                }
-                detectTimer = window.setTimeout(() => {
-                  detectedRef.current(payload);
-                }, 300);
-                return;
+          let raw = decodeRegion(video, canvas, 0, 0, width, height);
+          for (const ratio of [0.6, 0.35]) {
+            if (raw) break;
+            const cw = Math.floor(width * ratio);
+            const ch = Math.floor(height * ratio);
+            raw = decodeRegion(
+              video,
+              canvas,
+              Math.floor((width - cw) / 2),
+              Math.floor((height - ch) / 2),
+              cw,
+              ch,
+            );
+          }
+          if (raw) {
+            const payload = parseQrPayload(raw);
+            if (payload) {
+              stop();
+              setDetected(true);
+              try {
+                navigator.vibrate?.(80);
+              } catch {
+                void 0;
               }
-              if (!noticeShown && code.data.includes("/attendance/check-in")) {
-                noticeShown = true;
-                setNotice(
-                  "Bu QR kod davomat uchun mos emas yoki eskirgan. O'qituvchidan yangi QR ko'rsatishini so'rang.",
-                );
-              }
+              detectTimer = window.setTimeout(() => {
+                detectedRef.current(payload);
+              }, 300);
+              return;
+            }
+            if (!noticeShown && raw.includes("/attendance/check-in")) {
+              noticeShown = true;
+              setNotice(t("schQrInvalid"));
             }
           }
         }
@@ -101,7 +124,7 @@ export function QrScanner({
       try {
         if (!navigator.mediaDevices?.getUserMedia) {
           window.clearTimeout(slowTimer);
-          setError("Bu brauzerda kamera ishlamaydi. Boshqa brauzerda urinib ko'ring.");
+          setError(t("schCameraUnsupported"));
           reportIssue({
             message: "Brauzerda getUserMedia mavjud emas (kamera qo'llab-quvvatlanmaydi)",
             label: "brauzer kamerani qo'llab-quvvatlamaydi",
@@ -133,18 +156,16 @@ export function QrScanner({
         window.clearTimeout(slowTimer);
         const name = err instanceof DOMException ? err.name : "Error";
         if (name === "NotAllowedError" || name === "SecurityError") {
-          setError(
-            "Kameraga ruxsat berilmagan. Ruxsat oynasida «Ruxsat berish»ni tanlang yoki manzil qatoridagi kamera belgisidan ruxsat bering, so'ng «Qayta urinish»ni bosing.",
-          );
+          setError(t("schCameraPermission"));
           return;
         }
         let message: string;
         if (name === "NotFoundError" || name === "DevicesNotFoundError") {
-          message = "Qurilmada kamera topilmadi. Kamera ulanganini tekshiring.";
+          message = t("schCameraNotFound");
         } else if (name === "NotReadableError" || name === "TrackStartError") {
-          message = "Kamera boshqa dastur tomonidan band. Uni yopib, qayta urinib ko'ring.";
+          message = t("schCameraBusy");
         } else {
-          message = "Kamera ochilmadi. Qayta urinib ko'ring.";
+          message = t("schCameraFailed");
         }
         setError(message);
         reportIssue({
@@ -183,12 +204,12 @@ export function QrScanner({
         <div className="space-y-2">
           <p className="rounded-xl bg-rose-50 px-3 py-2 text-center text-sm text-rose-700">{error}</p>
           <Button variant="secondary" className="w-full" onClick={() => setAttempt((n) => n + 1)}>
-            Qayta urinish
+            {t("schRetry")}
           </Button>
         </div>
       ) : detected ? (
         <p className="rounded-xl bg-emerald-50 px-3 py-2 text-center text-sm font-medium text-emerald-700">
-          QR o&apos;qildi ✓ — tekshirilmoqda...
+          {t("schQrReadChecking")}
         </p>
       ) : notice ? (
         <p className="rounded-xl bg-amber-50 px-3 py-2 text-center text-sm text-amber-800">
@@ -201,18 +222,19 @@ export function QrScanner({
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
             </span>
-            QR qidirilmoqda...
+            {t("schQrSearching")}
           </p>
           {slow ? (
             <p className="text-xs text-amber-700">
-              QR topilmayapti — kamerani kodga yaqinroq tuting va yorug&apos;likni yaxshilang.
-              Kod dinamik bo&apos;lsa, 10 sekundda yangilanadi: ekrandagi eng yangi kodni tuting.
+              {t("schQrSlowHint")}
             </p>
-          ) : null}
+          ) : (
+            <p className="text-xs text-slate-500">{t("schQrCameraHint")}</p>
+          )}
         </div>
       )}
       <Button variant="secondary" className="w-full" onClick={onCancel}>
-        Bekor qilish
+        {t("schCancel")}
       </Button>
     </div>
   );

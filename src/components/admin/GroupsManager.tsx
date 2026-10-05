@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { Badge, Button, Card, CardBody, CardHeader, EmptyState, Input, Label, Select, Table } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type AdminGroup = {
   id: string;
@@ -30,6 +31,7 @@ const CHIP_CLASS =
 
 export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [mode, setMode] = useState<"create" | "edit" | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -83,12 +85,12 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
       });
       const json = (await res.json().catch(() => null)) as ApiResult<T> | null;
       if (!res.ok || !json || !json.ok) {
-        setError(json?.error ?? "Amalni bajarib bo'lmadi");
+        setError(json?.error ?? t("admErrorGeneric"));
         return null;
       }
       return json;
     } catch {
-      setError("Tarmoqda xatolik");
+      setError(t("admNetworkError"));
       return null;
     } finally {
       setBusy(false);
@@ -102,13 +104,13 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
       const res = await fetch(`/api/admin/groups/${groupId}/subgroups`);
       const json = (await res.json().catch(() => null)) as ApiResult<GroupDetails> | null;
       if (!res.ok || !json || !json.ok || !json.data) {
-        setError(json?.error ?? "Ma'lumotlarni yuklab bo'lmadi");
+        setError(json?.error ?? t("admGroupLoadFailed"));
         return;
       }
       const data = json.data;
       setDetails((prev) => ({ ...prev, [groupId]: data }));
     } catch {
-      setError("Tarmoqda xatolik");
+      setError(t("admNetworkError"));
     } finally {
       setDetailsLoading(false);
     }
@@ -141,15 +143,15 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
         : await send(`/api/admin/groups/${editId}`, "PATCH", payload);
     if (!json) return;
     closeForm();
-    setNotice(mode === "create" ? "Guruh yaratildi" : "Guruh yangilandi");
+    setNotice(mode === "create" ? t("admGroupCreated") : t("admGroupUpdated"));
     router.refresh();
   }
 
   async function remove(group: AdminGroup) {
-    if (!window.confirm(`${group.name} guruhi o'chirilsinmi?`)) return;
+    if (!window.confirm(t("admGroupDeleteConfirm", { name: group.name }))) return;
     const json = await send(`/api/admin/groups/${group.id}`, "DELETE");
     if (!json) return;
-    setNotice("Guruh o'chirildi");
+    setNotice(t("admGroupDeleted"));
     if (expandedId === group.id) setExpandedId(null);
     router.refresh();
   }
@@ -161,7 +163,7 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
       ...current,
       group: { ...current.group, curatorId: curatorId || null },
     }));
-    setNotice("Kurator saqlandi");
+    setNotice(t("admGroupCuratorSaved"));
   }
 
   async function addSubGroup(groupId: string) {
@@ -175,7 +177,7 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
       subGroups: [...current.subGroups, created].sort((a, b) => a.name.localeCompare(b.name)),
     }));
     setSubGroupName("");
-    setNotice("Kichik guruh qo'shildi");
+    setNotice(t("admSubGroupAdded"));
   }
 
   async function renameSubGroup(groupId: string) {
@@ -197,11 +199,11 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
       ),
     }));
     setRenaming(null);
-    setNotice("Kichik guruh yangilandi");
+    setNotice(t("admSubGroupUpdated"));
   }
 
   async function removeSubGroup(groupId: string, item: SubGroupItem) {
-    if (!window.confirm(`${item.name} kichik guruhi o'chirilsinmi?`)) return;
+    if (!window.confirm(t("admSubGroupDeleteConfirm", { name: item.name }))) return;
     const json = await send(`/api/admin/subgroups/${item.id}`, "DELETE");
     if (!json) return;
     updateDetails(groupId, (current) => ({
@@ -211,7 +213,7 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
         student.subGroupId === item.id ? { ...student, subGroupId: null } : student,
       ),
     }));
-    setNotice("Kichik guruh o'chirildi");
+    setNotice(t("admSubGroupDeleted"));
   }
 
   async function assignStudent(groupId: string, studentId: string, subGroupId: string) {
@@ -231,13 +233,13 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
         })),
       };
     });
-    setNotice("Talaba biriktirildi");
+    setNotice(t("admGroupStudentAssigned"));
   }
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button onClick={openCreate}>+ Yangi guruh</Button>
+        <Button onClick={openCreate}>{t("admNewGroup")}</Button>
         <div className="relative w-full sm:w-64">
           <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-600">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -248,7 +250,7 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Guruh qidirish..."
+            placeholder={t("admGroupSearchPlaceholder")}
             className="pl-9"
           />
         </div>
@@ -271,11 +273,9 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
       {mode ? (
         <Card className="border-brand-200/70">
           <CardHeader
-            title={mode === "create" ? "Yangi guruh" : "Guruhni tahrirlash"}
+            title={mode === "create" ? t("admNewGroupTitle") : t("admGroupEditTitle")}
             action={
-              <Button variant="ghost" size="sm" onClick={closeForm}>
-                Yopish
-              </Button>
+              <Button variant="ghost" size="sm" onClick={closeForm}>{t("admClose")}</Button>
             }
           />
           <CardBody>
@@ -287,23 +287,23 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
               }}
             >
               <div>
-                <Label>Nomi</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="AI2-26" required minLength={2} />
+                <Label>{t("admName")}</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("admGroupNamePlaceholder")} required minLength={2} />
               </div>
               <div>
-                <Label>Yil</Label>
+                <Label>{t("admYear")}</Label>
                 <Input
                   type="number"
                   value={year}
                   onChange={(e) => setYear(e.target.value)}
-                  placeholder="2026"
+                  placeholder={t("admYearPlaceholder")}
                   min={2000}
                   max={2100}
                 />
               </div>
               <div className="flex items-end gap-2 sm:col-span-2">
                 <Button type="submit" disabled={busy || name.trim().length < 2}>
-                  {busy ? "Saqlanmoqda..." : mode === "create" ? "Yaratish" : "Saqlash"}
+                  {busy ? t("admSaving") : mode === "create" ? t("admCreate") : t("admSave")}
                 </Button>
               </div>
               {error ? <p className="text-sm text-rose-600 sm:col-span-2">{error}</p> : null}
@@ -313,20 +313,18 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
       ) : null}
 
       <Card>
-        <CardHeader title="Guruhlar" subtitle={`${filtered.length} ta`} />
+        <CardHeader title={t("admGroups")} subtitle={t("admGroupsTitleShort", { count: filtered.length })} />
         {groups.length === 0 ? (
           <CardBody>
-            <EmptyState title="Guruhlar yo'q" description="Birinchi guruhni yarating." />
+            <EmptyState title={t("admGroupsEmptyTitle")} description={t("admGroupsEmptyDesc")} />
           </CardBody>
         ) : filtered.length === 0 ? (
           <CardBody>
             <EmptyState
-              title="Hech narsa topilmadi"
-              description={`"${query.trim()}" bo'yicha guruh topilmadi.`}
+              title={t("admNothingFound")}
+              description={t("admGroupNotFound", { query: query.trim() })}
               action={
-                <Button variant="secondary" size="sm" onClick={() => setQuery("")}>
-                  Tozalash
-                </Button>
+                <Button variant="secondary" size="sm" onClick={() => setQuery("")}>{t("admClear")}</Button>
               }
             />
           </CardBody>
@@ -334,10 +332,10 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
           <Table className="max-h-[68vh] overflow-y-auto">
             <thead>
               <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">Nomi</th>
-                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">Yil</th>
-                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">A&apos;zolar</th>
-                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 text-right font-semibold backdrop-blur">Amallar</th>
+                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admName")}</th>
+                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admYear")}</th>
+                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admColMembers")}</th>
+                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 text-right font-semibold backdrop-blur">{t("admActions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -364,7 +362,7 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
                             <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
                             <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                           </svg>
-                          {group.userCount} a&apos;zo
+                          {t("admMemberCount", { count: group.userCount })}
                         </Badge>
                       </td>
                       <td className="px-5 py-3">
@@ -374,20 +372,14 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
                             variant={open ? "primary" : "secondary"}
                             onClick={() => toggleDetails(group.id)}
                             aria-expanded={open}
-                          >
-                            Kichik guruhlar
-                          </Button>
-                          <Button size="sm" variant="secondary" onClick={() => openEdit(group)}>
-                            Tahrirlash
-                          </Button>
+                          >{t("admSubGroups")}</Button>
+                          <Button size="sm" variant="secondary" onClick={() => openEdit(group)}>{t("admEdit")}</Button>
                           <Button
                             size="sm"
                             variant="ghost"
                             className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
                             onClick={() => remove(group)}
-                          >
-                            O&apos;chirish
-                          </Button>
+                          >{t("admDelete")}</Button>
                         </div>
                       </td>
                     </tr>
@@ -395,20 +387,20 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
                       <tr className="border-b border-slate-100 bg-slate-50/50 last:border-0">
                         <td colSpan={4} className="px-5 py-4">
                           {detailsLoading && !data ? (
-                            <p className="text-sm text-slate-600">Yuklanmoqda…</p>
+                            <p className="text-sm text-slate-600">{t("admLoading")}</p>
                           ) : !data ? (
-                            <p className="text-sm text-slate-600">Ma&apos;lumot yuklanmadi.</p>
+                            <p className="text-sm text-slate-600">{t("admDetailsNotLoaded")}</p>
                           ) : (
                             <div className="grid gap-5 lg:grid-cols-2">
                               <div className="space-y-4">
                                 <div>
-                                  <Label>Kurator</Label>
+                                  <Label>{t("admCuratorLabel")}</Label>
                                   <Select
                                     value={data.group.curatorId ?? ""}
                                     disabled={busy}
                                     onChange={(event) => void saveCurator(group.id, event.target.value)}
                                   >
-                                    <option value="">Tanlanmagan</option>
+                                    <option value="">{t("admNotSelected")}</option>
                                     {data.teachers.map((teacher) => (
                                       <option key={teacher.id} value={teacher.id}>
                                         {teacher.name}
@@ -418,11 +410,11 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
                                 </div>
                                 <div>
                                   <div className="mb-1.5 flex items-center justify-between">
-                                    <Label className="mb-0">Kichik guruhlar</Label>
-                                    <span className="text-xs text-slate-600">{data.subGroups.length} ta</span>
+                                    <Label className="mb-0">{t("admSubGroups")}</Label>
+                                    <span className="text-xs text-slate-600">{t("admCount", { count: data.subGroups.length })}</span>
                                   </div>
                                   {data.subGroups.length === 0 ? (
-                                    <p className="text-xs text-slate-600">Hozircha kichik guruh yo&apos;q.</p>
+                                    <p className="text-xs text-slate-600">{t("admNoSubGroups")}</p>
                                   ) : (
                                     <div className="flex flex-wrap gap-1.5">
                                       {data.subGroups.map((item) => (
@@ -437,7 +429,7 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
                                             type="button"
                                             className="font-semibold text-brand-800"
                                             onClick={() => setRenaming({ id: item.id, value: item.name })}
-                                            title="Nomini o'zgartirish"
+                                            title={t("admRenameTitle")}
                                           >
                                             {item.name}
                                           </button>
@@ -446,7 +438,7 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
                                           </span>
                                           <button
                                             type="button"
-                                            aria-label={`${item.name} kichik guruhini o'chirish`}
+                                            aria-label={t("admSubGroupDeleteAria", { name: item.name })}
                                             className="text-slate-600 transition-colors hover:text-rose-600"
                                             onClick={() => void removeSubGroup(group.id, item)}
                                           >
@@ -479,19 +471,15 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
                                         size="sm"
                                         disabled={busy || !renaming.value.trim()}
                                         onClick={() => void renameSubGroup(group.id)}
-                                      >
-                                        Saqlash
-                                      </Button>
-                                      <Button size="sm" variant="ghost" onClick={() => setRenaming(null)}>
-                                        Bekor
-                                      </Button>
+                                      >{t("admSave")}</Button>
+                                      <Button size="sm" variant="ghost" onClick={() => setRenaming(null)}>{t("admCancelShort")}</Button>
                                     </div>
                                   ) : null}
                                   <div className="mt-2 flex gap-2">
                                     <Input
                                       value={subGroupName}
                                       maxLength={20}
-                                      placeholder="Masalan: A"
+                                      placeholder={t("admSubGroupPlaceholder")}
                                       onChange={(event) => setSubGroupName(event.target.value)}
                                       onKeyDown={(event) => {
                                         if (event.key === "Enter") {
@@ -504,22 +492,18 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
                                       size="sm"
                                       disabled={busy || !subGroupName.trim()}
                                       onClick={() => void addSubGroup(group.id)}
-                                    >
-                                      Qo&apos;shish
-                                    </Button>
+                                    >{t("admAdd")}</Button>
                                   </div>
                                 </div>
                               </div>
 
                               <div>
                                 <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-                                  <Label className="mb-0">Talabalar</Label>
-                                  <span className="text-xs text-slate-600">{data.students.length} ta</span>
+                                  <Label className="mb-0">{t("admStudents")}</Label>
+                                  <span className="text-xs text-slate-600">{t("admCount", { count: data.students.length })}</span>
                                 </div>
                                 {data.students.length === 0 ? (
-                                  <p className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-600">
-                                    Bu guruhda talaba yo&apos;q.
-                                  </p>
+                                  <p className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-600">{t("admNoStudentsInGroup")}</p>
                                 ) : (
                                   <div className="max-h-72 space-y-1 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2">
                                     {data.students.map((student) => (
@@ -540,7 +524,7 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
                                             }
                                             className="h-8 py-0! text-xs!"
                                           >
-                                            <option value="">Kichik guruhsiz</option>
+                                            <option value="">{t("admNoSubGroupOption")}</option>
                                             {data.subGroups.map((item) => (
                                               <option key={item.id} value={item.id}>
                                                 {item.name}

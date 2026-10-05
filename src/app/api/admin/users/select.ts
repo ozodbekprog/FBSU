@@ -8,4 +8,5 @@ export const userSelect = {
   isActive: true,
   createdAt: true,
   group: { select: { id: true, name: true } },
+  department: { select: { id: true, name: true } },
 } satisfies Prisma.UserSelect;

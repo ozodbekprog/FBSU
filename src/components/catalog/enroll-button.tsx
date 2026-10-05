@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 type EnrollResponse = { ok?: boolean; error?: string } | null;
 
@@ -80,6 +81,7 @@ function AlertIcon() {
 
 export function EnrollButton({ courseId }: { courseId: string }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [state, setState] = useState<"idle" | "busy" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -90,14 +92,14 @@ export function EnrollButton({ courseId }: { courseId: string }) {
       const res = await fetch(`/api/courses/${courseId}/enroll`, { method: "POST" });
       const json = (await res.json().catch(() => null)) as EnrollResponse;
       if (!res.ok || !json?.ok) {
-        setError(json?.error ?? "Yozilishda xatolik yuz berdi");
+        setError(json?.error ?? t("crsEnrollError"));
         setState("idle");
         return;
       }
       setState("done");
       router.refresh();
     } catch {
-      setError("Tarmoq xatosi. Qayta urinib ko'ring.");
+      setError(t("crsNetworkError"));
       setState("idle");
     }
   }
@@ -111,17 +113,17 @@ export function EnrollButton({ courseId }: { courseId: string }) {
         {busy ? (
           <>
             <SpinnerIcon />
-            Yozilmoqda...
+            {t("crsSending")}
           </>
         ) : done ? (
           <>
             <CheckIcon />
-            Yozildingiz
+            {t("crsRequestSent")}
           </>
         ) : (
           <>
             <PlusIcon />
-            Yozilish
+            {t("crsEnroll")}
           </>
         )}
       </Button>

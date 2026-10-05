@@ -9,7 +9,7 @@ import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
 import { getClientIp as getClientIpFromHeaders } from "@/lib/client-ip";
 
-const ROLES = ["ADMIN", "TEACHER", "STUDENT"] as const;
+const ROLES = ["ADMIN", "REKTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER", "STUDENT"] as const;
 
 const createSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -17,6 +17,7 @@ const createSchema = z.object({
   password: z.string().min(12).max(100),
   role: z.enum(ROLES),
   groupId: z.string().trim().min(1).nullable().optional(),
+  departmentId: z.string().trim().min(1).nullable().optional(),
 });
 
 function getClientIp(request: Request) {
@@ -111,6 +112,7 @@ export async function POST(request: Request) {
       passwordHash,
       role: parsed.data.role,
       groupId: parsed.data.groupId ?? null,
+      departmentId: parsed.data.departmentId ?? null,
     },
     select: userSelect,
   });

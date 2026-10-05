@@ -3,9 +3,10 @@
 import { Fragment } from "react";
 import type { DragEvent, MouseEvent } from "react";
 import { Badge, Card, CardBody, CardHeader } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { SLOT_TIMES } from "@/components/attendance/lesson-utils";
-import { cn, dayName } from "@/lib/utils";
-import { dayIsoInWeek, formatDayShort } from "@/components/schedule/week-utils";
+import { cn } from "@/lib/utils";
+import { DAY_KEYS, dayIsoInWeek, formatDayShort } from "@/components/schedule/week-utils";
 import type { ScheduleStatus } from "@/components/schedule/types";
 import { LegoSurface } from "./lego";
 import type { BuilderEntry, CellRef, DragPayload, Selection } from "./types";
@@ -13,11 +14,11 @@ import type { BuilderEntry, CellRef, DragPayload, Selection } from "./types";
 const DAYS = [1, 2, 3, 4, 5, 6];
 const SLOTS = [1, 2, 3, 4, 5, 6, 7, 8];
 
-const STATUS_META: Record<ScheduleStatus, { label: string; tone: "amber" | "blue" | "rose" } | null> = {
+const STATUS_TONES: Record<ScheduleStatus, "amber" | "blue" | "rose" | null> = {
   NORMAL: null,
-  CHANGED: { label: "O'zgargan", tone: "amber" },
-  MOVED: { label: "Ko'chirilgan", tone: "blue" },
-  CANCELLED: { label: "Bekor", tone: "rose" },
+  CHANGED: "amber",
+  MOVED: "blue",
+  CANCELLED: "rose",
 };
 
 function BlockBadge({
@@ -40,7 +41,9 @@ function BuilderBlock({
   selected,
   snapping,
   canManage,
+  canApprove,
   onSelect,
+  onApprove,
   onDragStart,
   onDragEnd,
 }: {
@@ -49,13 +52,24 @@ function BuilderBlock({
   selected: boolean;
   snapping: boolean;
   canManage: boolean;
+  canApprove: boolean;
   onSelect: (event: MouseEvent<HTMLElement>, entry: BuilderEntry) => void;
+  onApprove: (entry: BuilderEntry) => void;
   onDragStart: (event: DragEvent<HTMLElement>, payload: DragPayload) => void;
   onDragEnd: () => void;
 }) {
-  const meta = STATUS_META[entry.status];
+  const { t } = useI18n();
+  const metaTone = STATUS_TONES[entry.status];
   const cancelled = entry.status === "CANCELLED";
   const title = entry.subjectRef?.name ?? entry.subject;
+  const statusLabel =
+    entry.status === "CHANGED"
+      ? t("schStatusChanged")
+      : entry.status === "MOVED"
+        ? t("schStatusMoved")
+        : entry.status === "CANCELLED"
+          ? t("schStatusCancelledShort")
+          : null;
   return (
     <div
       draggable={canManage}
@@ -87,11 +101,28 @@ function BuilderBlock({
           {entry.subGroup ? <BlockBadge tone="purple">{entry.subGroup}</BlockBadge> : null}
           {entry.lessonType ? <BlockBadge tone="blue">{entry.lessonType}</BlockBadge> : null}
           {entry.room ? <BlockBadge tone="slate">{entry.room}</BlockBadge> : null}
-          {entry.parity ? <BlockBadge tone="amber">{entry.parity === "odd" ? "Toq" : "Juft"}</BlockBadge> : null}
-          {meta ? <BlockBadge tone={meta.tone}>{meta.label}</BlockBadge> : null}
+          {entry.parity ? (
+            <BlockBadge tone="amber">
+              {entry.parity === "odd" ? t("schOdd") : t("schEven")}
+            </BlockBadge>
+          ) : null}
+          {metaTone && statusLabel ? <BlockBadge tone={metaTone}>{statusLabel}</BlockBadge> : null}
+          {entry.approval === "PENDING" ? <BlockBadge tone="amber">{t("schPending")}</BlockBadge> : null}
         </div>
+        {canApprove && entry.approval === "PENDING" ? (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onApprove(entry);
+            }}
+            className="mt-1.5 inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white transition-colors hover:bg-emerald-700"
+          >
+            {t("schApprove")}
+          </button>
+        ) : null}
         <p className="mt-1 text-[10px] opacity-50">
-          {`${dayName(entry.dayOfWeek).slice(0, 3)} ${formatDayShort(dayIsoInWeek(weekStart, entry.dayOfWeek))}`}
+          {`${t(DAY_KEYS[entry.dayOfWeek % 7]).slice(0, 3)} ${formatDayShort(dayIsoInWeek(weekStart, entry.dayOfWeek))}`}
         </p>
       </LegoSurface>
     </div>
@@ -113,6 +144,8 @@ export function BuilderGrid({
   onDragOverCell,
   onDragLeaveCell,
   onDropCell,
+  canApprove,
+  onApproveEntry,
   pending,
 }: {
   entries: BuilderEntry[];
@@ -129,16 +162,19 @@ export function BuilderGrid({
   onDragOverCell: (event: DragEvent<HTMLElement>, cell: CellRef) => void;
   onDragLeaveCell: (event: DragEvent<HTMLElement>) => void;
   onDropCell: (event: DragEvent<HTMLElement>, cell: CellRef) => void;
+  canApprove: boolean;
+  onApproveEntry: (entry: BuilderEntry) => void;
   pending: boolean;
 }) {
   const hasSelection = selection !== null;
+  const { t } = useI18n();
 
   return (
     <Card>
       <CardHeader
-        title="Haftalik konstruktor"
-        subtitle="6 kun × 8 par — bo'sh kataklarga tashlang yoki bosing"
-        action={pending ? <span className="text-xs font-medium text-slate-600">Saqlanmoqda…</span> : undefined}
+        title={t("schWeeklyBuilder")}
+        subtitle={t("schWeeklyBuilderSubtitle")}
+        action={pending ? <span className="text-xs font-medium text-slate-600">{t("schSaving")}</span> : undefined}
       />
       <CardBody className="overflow-x-auto">
         <div className="min-w-[980px]">
@@ -146,7 +182,7 @@ export function BuilderGrid({
             <div />
             {DAYS.map((day) => (
               <div key={day} className="rounded-xl bg-brand-50/70 px-2 py-2 text-center">
-                <p className="text-xs font-semibold uppercase tracking-wide text-brand-800">{dayName(day)}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-brand-800">{t(DAY_KEYS[day % 7])}</p>
                 <p className="text-[11px] text-brand-500">{formatDayShort(dayIsoInWeek(weekStart, day))}</p>
               </div>
             ))}
@@ -154,7 +190,7 @@ export function BuilderGrid({
             {SLOTS.map((slot) => (
               <Fragment key={slot}>
                 <div className="flex flex-col items-end justify-center rounded-xl bg-slate-50 px-2 py-2 text-right">
-                  <p className="text-xs font-semibold text-slate-700">{slot}-par</p>
+                  <p className="text-xs font-semibold text-slate-700">{t("schSlotLabel", { slot })}</p>
                   <p className="text-[10px] text-slate-600">{SLOT_TIMES[slot]}</p>
                 </div>
                 {DAYS.map((day) => {
@@ -187,6 +223,8 @@ export function BuilderGrid({
                             selected={selectedEntryId === entry.id}
                             snapping={snapId === entry.id}
                             canManage={canManageEntry(entry)}
+                            canApprove={canApprove}
+                            onApprove={onApproveEntry}
                             onSelect={onSelectEntry}
                             onDragStart={onDragStart}
                             onDragEnd={onDragEnd}
@@ -201,7 +239,7 @@ export function BuilderGrid({
                                 : "border-slate-200/80 text-slate-500 opacity-0 group-hover:opacity-100 group-hover:border-brand-300 group-hover:bg-brand-50/50 group-hover:text-brand-400",
                             )}
                           >
-                            {hasSelection ? "Qo'yish" : "+"}
+                            {hasSelection ? t("schDrop") : "+"}
                           </div>
                         ) : null}
                       </div>

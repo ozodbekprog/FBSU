@@ -1,6 +1,7 @@
-import { requireUser, isStaff } from "@/lib/auth";
+import { requireUser, isStaff, isRegistrar } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { PageHeader } from "@/components/ui";
+import { ButtonLink, PageHeader } from "@/components/ui";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { ScheduleBoard } from "@/components/schedule/schedule-board";
 import type { BoardEntry, PaletteBlock } from "@/components/schedule/builder/types";
 import { isoWeekday, resolveWeekStart } from "@/components/schedule/week-utils";
@@ -32,8 +33,10 @@ export default async function SchedulePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const params = await searchParams;
-  const staff = isStaff(user.role);
+  const staff = isStaff(user.role) || isRegistrar(user.role);
 
   const groups = staff
     ? await prisma.group.findMany({
@@ -56,7 +59,7 @@ export default async function SchedulePage({
   const where = staff
     ? {}
     : selectedGroup
-      ? { groupId: selectedGroup.id }
+      ? { groupId: selectedGroup.id, approval: "APPROVED" as const }
       : null;
 
   const rows =
@@ -132,7 +135,7 @@ export default async function SchedulePage({
         }));
       } else {
         const courseRows = await prisma.course.findMany({
-          where: { teacherId: user.id, enrollments: { some: { user: { groupId: selectedGroup.id } } } },
+          where: { teacherId: user.id, enrollments: { some: { user: { groupId: selectedGroup.id }, status: "ACTIVE" } } },
           orderBy: { title: "asc" },
           select: {
             id: true,
@@ -214,12 +217,12 @@ export default async function SchedulePage({
         teacherId: source.teacherId,
         teacherChoices: source.teacherChoices,
         placedCount: matched.length,
-        lessonType: sorted.find((row) => row.lessonType)?.lessonType ?? "Ma'ruza",
+        lessonType: sorted.find((row) => row.lessonType)?.lessonType ?? dictionary.schLessonLecture,
         room: sorted.find((row) => row.room)?.room ?? null,
       };
     });
 
-    if (user.role === "ADMIN") {
+    if (user.role === "ADMIN" || user.role === "REGISTRAR") {
       const teacherRows = await prisma.user.findMany({
         where: { role: "TEACHER", isActive: true },
         orderBy: { name: "asc" },
@@ -239,17 +242,39 @@ export default async function SchedulePage({
       ).map((item) => item.name)
     : [];
 
+  const pendingCount = staff
+    ? await prisma.scheduleEntry.count({ where: { approval: "PENDING" } })
+    : 0;
+
   return (
     <>
       <PageHeader
         eyebrow="FBSU LMS"
-        title="Dars jadvali"
-        subtitle={selectedGroup ? `${selectedGroup.name} guruhi — haftalik jadval` : undefined}
+        title={dictionary.schScheduleTitle}
+        subtitle={
+          selectedGroup
+            ? translate(locale, "schScheduleSubtitle", { group: selectedGroup.name })
+            : undefined
+        }
       />
+      {pendingCount > 0 ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="text-sm font-medium text-amber-900">
+            ⏳ {translate(locale, "schPendingEntries", { count: pendingCount })}
+          </p>
+          <ButtonLink
+            href={`/schedule/builder?groupId=${encodeURIComponent(selectedGroup?.id ?? "")}&week=${weekStart}`}
+            variant="secondary"
+            size="sm"
+          >
+            {dictionary.schViewInBuilder}
+          </ButtonLink>
+        </div>
+      ) : null}
       <ScheduleBoard
         key={selectedGroup?.id ?? "none"}
         canEdit={staff}
-        role={user.role === "ADMIN" ? "ADMIN" : user.role === "TEACHER" ? "TEACHER" : "STUDENT"}
+        role={user.role === "TEACHER" ? "TEACHER" : user.role === "STUDENT" ? "STUDENT" : "ADMIN"}
         userId={user.id}
         userName={user.name}
         groups={groups}

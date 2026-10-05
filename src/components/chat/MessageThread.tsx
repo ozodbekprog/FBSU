@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Avatar, EmptyState, Skeleton } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import type { ChatConversation, ChatMessage } from "./shared";
 import { dayKey, fmtClock, fmtDayLabel, roleLabel } from "./shared";
 
@@ -25,6 +26,7 @@ export function MessageThread({
   onSend,
   onBack,
 }: Props) {
+  const { t } = useI18n();
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -43,11 +45,11 @@ export function MessageThread({
       if (last && last.key === key) {
         last.items.push(message);
       } else {
-        result.push({ key, label: fmtDayLabel(message.createdAt), items: [message] });
+        result.push({ key, label: fmtDayLabel(message.createdAt, t), items: [message] });
       }
     }
     return result;
-  }, [messages]);
+  }, [messages, t]);
 
   async function submit() {
     const text = draft.trim();
@@ -57,7 +59,7 @@ export function MessageThread({
       setDraft("");
       setError(null);
     } else {
-      setError("Xabar yuborilmadi. Birozdan so'ng qayta urinib ko'ring.");
+      setError(t("msgSendError"));
     }
   }
 
@@ -73,8 +75,8 @@ export function MessageThread({
       <div className="flex h-full w-full items-center justify-center p-6">
         <div className="animate-fade-up">
           <EmptyState
-            title="Suhbat tanlanmagan"
-            description="Chapdagi ro'yxatdan suhbat tanlang yoki yangisini boshlang."
+            title={t("msgNoConversationSelected")}
+            description={t("msgNoConversationSelectedDesc")}
           />
         </div>
       </div>
@@ -89,7 +91,7 @@ export function MessageThread({
         <button
           type="button"
           onClick={onBack}
-          aria-label="Suhbatlar ro'yxatiga qaytish"
+          aria-label={t("msgBackToConversations")}
           className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors duration-150 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-900 md:hidden"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -99,7 +101,7 @@ export function MessageThread({
         <Avatar name={participant.name} src={participant.avatarUrl} size={40} />
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-brand-950">{participant.name}</p>
-          <p className="text-xs text-slate-500">{roleLabel(participant.role)}</p>
+          <p className="text-xs text-slate-500">{roleLabel(participant.role, t)}</p>
         </div>
       </div>
 
@@ -124,8 +126,8 @@ export function MessageThread({
           <div className="flex h-full items-center justify-center">
             <div className="animate-fade-up">
               <EmptyState
-                title="Hali xabar yo'q"
-                description="Birinchi xabarni yozib yozishmani boshlang."
+                title={t("msgNoMessages")}
+                description={t("msgStartFirstMessage")}
               />
             </div>
           </div>
@@ -196,14 +198,14 @@ export function MessageThread({
             maxLength={2000}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Xabar yozing..."
+            placeholder={t("msgComposePlaceholder")}
             className="max-h-32 min-h-9 flex-1 resize-none bg-transparent py-2 text-sm text-slate-900 outline-none placeholder:text-slate-500"
           />
           <button
             type="button"
             onClick={() => void submit()}
             disabled={sending || draft.trim().length === 0}
-            aria-label="Xabar yuborish"
+            aria-label={t("msgSend")}
             className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-800 to-brand-950 text-white shadow-sm transition-all duration-150 hover:from-brand-700 hover:to-brand-900 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -213,7 +215,7 @@ export function MessageThread({
           </button>
         </div>
         <p className="mt-2 hidden px-2 text-[11px] text-slate-600 sm:block">
-          Enter — yuborish, Shift+Enter — yangi qator
+          {t("msgComposerHint")}
         </p>
       </div>
     </div>

@@ -2,15 +2,16 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Card, Progress } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
+import { getDictionary, getLocale, t as translate, type Locale } from "@/i18n";
+import { MONTH_KEYS } from "@/components/schedule/week-utils";
 import { examBucket } from "./data";
 import { AttendanceBanner, SessionStateBadge, SessionTypeBadge } from "./session-badges";
 import {
-  sheetStatusLabel,
+  SHEET_STATUS_KEY,
+  type SheetStatus,
   type StaffSessionItem,
   type StudentSessionItem,
 } from "./session-shared";
-
-const MONTHS_SHORT = ["Yanv", "Fev", "Mar", "Apr", "May", "Iyn", "Iyl", "Avg", "Sen", "Okt", "Noy", "Dek"];
 
 const DATE_TONES = {
   upcoming: "bg-brand-50 text-brand-700 ring-brand-100",
@@ -18,7 +19,7 @@ const DATE_TONES = {
   past: "bg-slate-100 text-slate-500 ring-slate-200",
 } as const;
 
-function SessionDateTile({ date }: { date: Date }) {
+function SessionDateTile({ date, month }: { date: Date; month: string }) {
   const bucket = examBucket(date);
   return (
     <div
@@ -30,14 +31,17 @@ function SessionDateTile({ date }: { date: Date }) {
     >
       <span className="text-lg leading-none font-bold">{date.getDate()}</span>
       <span className="mt-1 text-[10px] font-semibold tracking-wider uppercase">
-        {MONTHS_SHORT[date.getMonth()]}
+        {month}
       </span>
     </div>
   );
 }
 
-function sessionTime(session: { startTime: string | null; endTime: string | null }) {
-  if (!session.startTime) return "Vaqt belgilanmagan";
+function sessionTime(
+  session: { startTime: string | null; endTime: string | null },
+  locale: Locale,
+) {
+  if (!session.startTime) return translate(locale, "grdExTimeNotSet");
   return session.endTime ? `${session.startTime}–${session.endTime}` : session.startTime;
 }
 
@@ -56,12 +60,14 @@ function MiniStat({ label, value, tone }: { label: string; value: number; tone: 
   );
 }
 
-export function StaffSessionCard({ session }: { session: StaffSessionItem }) {
+export async function StaffSessionCard({ session }: { session: StaffSessionItem }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   return (
     <Card className="relative flex h-full flex-col p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
       <Link href={`/exams/sessions/${session.id}`} aria-label={session.title} className="absolute inset-0 rounded-2xl" />
       <div className="flex items-start gap-3">
-        <SessionDateTile date={session.date} />
+        <SessionDateTile date={session.date} month={dictionary[MONTH_KEYS[session.date.getMonth()]].slice(0, 3)} />
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold tracking-tight text-slate-900">{session.title}</p>
           <p className="mt-0.5 truncate text-sm text-slate-500">{session.course.title}</p>
@@ -76,70 +82,76 @@ export function StaffSessionCard({ session }: { session: StaffSessionItem }) {
                   : "bg-slate-100 text-slate-600",
               )}
             >
-              {session.admissionOpen ? "Ruxsat ochiq" : "Ruxsat yopiq"}
+              {session.admissionOpen ? dictionary.grdAdmissionOpen : dictionary.grdAdmissionClosed}
             </span>
           </div>
         </div>
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
-        <MetaChip>{sessionTime(session)}</MetaChip>
+        <MetaChip>{sessionTime(session, locale)}</MetaChip>
         {session.room ? <MetaChip>{session.room}</MetaChip> : null}
-        <MetaChip>{session.termName ?? "Semestrsiz"}</MetaChip>
+        <MetaChip>{session.termName ?? dictionary.grdNoTerm}</MetaChip>
       </div>
       <div className="mt-4 grid grid-cols-3 gap-2">
-        <MiniStat label="Varaqalar" value={session.sheetCount} tone="bg-brand-50 text-brand-700" />
-        <MiniStat label="O'tdi" value={session.passedCount} tone="bg-emerald-50 text-emerald-700" />
-        <MiniStat label="Kutilmoqda" value={session.pendingCount} tone="bg-amber-50 text-amber-700" />
+        <MiniStat label={dictionary.grdExSheets} value={session.sheetCount} tone="bg-brand-50 text-brand-700" />
+        <MiniStat label={dictionary.grdPassed} value={session.passedCount} tone="bg-emerald-50 text-emerald-700" />
+        <MiniStat label={dictionary.grdStatusPending} value={session.pendingCount} tone="bg-amber-50 text-amber-700" />
       </div>
       <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4">
-        <span className="text-xs text-slate-500">Ruxsatli: {session.eligibleCount} ta</span>
-        <span className="text-xs font-semibold text-brand-700">Batafsil &rarr;</span>
+        <span className="text-xs text-slate-500">{translate(locale, "grdExEligibleCount", { count: session.eligibleCount })}</span>
+        <span className="text-xs font-semibold text-brand-700">{dictionary.grdExDetails} &rarr;</span>
       </div>
     </Card>
   );
 }
 
-export function StudentSessionCard({ session }: { session: StudentSessionItem }) {
+export async function StudentSessionCard({ session }: { session: StudentSessionItem }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const statusKey = session.sheet ? SHEET_STATUS_KEY[session.sheet.status as SheetStatus] : undefined;
+  const statusLabel = session.sheet
+    ? `${statusKey ? dictionary[statusKey] : session.sheet.status}${
+        session.sheet.score != null ? ` · ${session.sheet.score}` : ""
+      }`
+    : "—";
   return (
     <Card className="relative flex h-full flex-col p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
       <Link href={`/exams/sessions/${session.id}`} aria-label={session.title} className="absolute inset-0 rounded-2xl" />
       <div className="flex items-start gap-3">
-        <SessionDateTile date={session.date} />
+        <SessionDateTile date={session.date} month={dictionary[MONTH_KEYS[session.date.getMonth()]].slice(0, 3)} />
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold tracking-tight text-slate-900">{session.title}</p>
           <p className="mt-0.5 truncate text-sm text-slate-500">{session.course.title}</p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <SessionTypeBadge type={session.type} />
             <SessionStateBadge date={session.date} />
-            {session.admissionOpen ? <span className="text-xs font-medium text-emerald-600">Ruxsat ochiq</span> : null}
+            {session.admissionOpen ? <span className="text-xs font-medium text-emerald-600">{dictionary.grdAdmissionOpen}</span> : null}
           </div>
         </div>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-xl bg-slate-50 px-3 py-2.5">
-          <p className="text-[10px] font-semibold tracking-wider text-slate-600 uppercase">Vaqt</p>
-          <p className="mt-1 font-medium text-slate-700">{sessionTime(session)}</p>
+          <p className="text-[10px] font-semibold tracking-wider text-slate-600 uppercase">{dictionary.grdTime}</p>
+          <p className="mt-1 font-medium text-slate-700">{sessionTime(session, locale)}</p>
         </div>
         <div className="rounded-xl bg-slate-50 px-3 py-2.5">
-          <p className="text-[10px] font-semibold tracking-wider text-slate-600 uppercase">Xona</p>
+          <p className="text-[10px] font-semibold tracking-wider text-slate-600 uppercase">{dictionary.grdRoom}</p>
           <p className="mt-1 font-medium text-slate-700">{session.room ?? "—"}</p>
         </div>
         <div className="rounded-xl bg-slate-50 px-3 py-2.5">
-          <p className="text-[10px] font-semibold tracking-wider text-slate-600 uppercase">O&apos;rindiq</p>
+          <p className="text-[10px] font-semibold tracking-wider text-slate-600 uppercase">{dictionary.grdSeat}</p>
           <p className="mt-1 font-semibold text-slate-700">{session.sheet?.seat ?? "—"}</p>
         </div>
         <div className="rounded-xl bg-slate-50 px-3 py-2.5">
-          <p className="text-[10px] font-semibold tracking-wider text-slate-600 uppercase">Natija</p>
+          <p className="text-[10px] font-semibold tracking-wider text-slate-600 uppercase">{dictionary.grdResult}</p>
           <p className="mt-1 font-medium text-slate-700">
-            {session.sheet
-              ? `${sheetStatusLabel(session.sheet.status)}${session.sheet.score != null ? ` · ${session.sheet.score}` : ""}`
-              : "—"}
+            {statusLabel}
           </p>
         </div>
       </div>
       <div className="mt-4">
         <div className="mb-2 flex items-center justify-between text-xs">
-          <span className="text-slate-500">Davomat</span>
+          <span className="text-slate-500">{dictionary.grdAttendance}</span>
           <span className={cn("font-semibold", session.attendance.eligible ? "text-emerald-600" : "text-rose-600")}>
             {session.attendance.percent}%
           </span>

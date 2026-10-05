@@ -1,17 +1,21 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
 import { CourseCard, type CourseCardData } from "@/components/courses/course-card";
 
 export default async function CoursesPage() {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
-  const where =
+  const where: Prisma.CourseWhereInput =
     user.role === "ADMIN"
       ? {}
       : user.role === "TEACHER"
         ? { teacherId: user.id }
-        : { enrollments: { some: { userId: user.id } } };
+        : { enrollments: { some: { userId: user.id, status: "ACTIVE" } } };
 
   const courses = await prisma.course.findMany({
     where,
@@ -19,7 +23,7 @@ export default async function CoursesPage() {
     include: {
       teacher: { select: { name: true } },
       sections: { select: { _count: { select: { materials: true } } } },
-      _count: { select: { enrollments: true } },
+      _count: { select: { enrollments: { where: { status: "ACTIVE" } } } },
     },
   });
 
@@ -39,28 +43,28 @@ export default async function CoursesPage() {
 
   const subtitle =
     user.role === "ADMIN"
-      ? `Barcha kurslar — ${items.length} ta`
+      ? translate(locale, "crsAllCoursesCount", { count: items.length })
       : user.role === "TEACHER"
-        ? `Siz o'qitadigan kurslar — ${items.length} ta`
-        : `Yozilgan kurslaringiz — ${items.length} ta`;
+        ? translate(locale, "crsTeachingCoursesCount", { count: items.length })
+        : translate(locale, "crsEnrolledCoursesCount", { count: items.length });
 
   return (
     <>
       <PageHeader
-        title="Kurslar"
+        title={dictionary.crsCourses}
         subtitle={subtitle}
-        action={staff ? <ButtonLink href="/courses/new">Yangi kurs</ButtonLink> : undefined}
+        action={staff ? <ButtonLink href="/courses/new">{dictionary.crsNewCourse}</ButtonLink> : undefined}
       />
 
       {items.length === 0 ? (
         <EmptyState
-          title="Kurslar topilmadi"
+          title={dictionary.crsCoursesNotFound}
           description={
             staff
-              ? "Hozircha kurs yo'q. Birinchi kursni yarating."
-              : "Siz hali biror kursga yozilmagansiz."
+              ? dictionary.crsNoCoursesStaff
+              : dictionary.crsNoCoursesStudent
           }
-          action={staff ? <ButtonLink href="/courses/new">Yangi kurs</ButtonLink> : undefined}
+          action={staff ? <ButtonLink href="/courses/new">{dictionary.crsNewCourse}</ButtonLink> : undefined}
         />
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">

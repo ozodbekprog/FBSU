@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 const MAX_SIZE = 30 * 1024 * 1024;
 const ACCEPT = "image/png,image/jpeg,image/webp";
@@ -23,6 +24,7 @@ export function AvatarUpload({
   size?: number;
   className?: string;
 }) {
+  const { t } = useI18n();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -34,11 +36,11 @@ export function AvatarUpload({
     if (!file) return;
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setError("Faqat png, jpg yoki webp rasm tanlang");
+      setError(t("mscImageTypeError"));
       return;
     }
     if (file.size > MAX_SIZE) {
-      setError("Rasm hajmi 30MB dan oshmasligi kerak");
+      setError(t("mscImageSizeError"));
       return;
     }
 
@@ -50,12 +52,12 @@ export function AvatarUpload({
       const res = await apiFetch("/api/profile/avatar", { method: "POST", body });
       const json = (await res.json().catch(() => null)) as ApiResult;
       if (!res.ok || !json?.ok) {
-        setError(json?.error ?? "Yuklashda xatolik yuz berdi");
+        setError(json?.error ?? t("mscUploadError"));
         return;
       }
       router.refresh();
     } catch {
-      setError("Tarmoq xatosi. Qayta urinib ko'ring.");
+      setError(t("commonNetworkError"));
     } finally {
       setBusy(false);
     }
@@ -77,8 +79,8 @@ export function AvatarUpload({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={busy}
-          aria-label="Avatar yuklash"
-          title="Avatar yuklash"
+          aria-label={t("mscAvatarUpload")}
+          title={t("mscAvatarUpload")}
           className="absolute -bottom-0.5 -right-0.5 inline-flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-brand-700 to-brand-950 text-white shadow-lg ring-2 ring-white transition-all duration-200 hover:scale-105 hover:from-brand-600 hover:to-brand-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/30 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {busy ? (

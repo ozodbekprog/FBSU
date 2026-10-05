@@ -1,3 +1,11 @@
+import { currentLocale } from "@/lib/utils";
+
+const NO_DATA: Record<string, string> = {
+  uz: "Ma'lumot yo'q",
+  ru: "Нет данных",
+  en: "No data",
+};
+
 export type DonutChartDatum = { label: string; value: number; color: string };
 
 const SIZE = 180;
@@ -10,7 +18,7 @@ export function DonutChart({ data }: { data: DonutChartDatum[] }) {
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
   if (data.length === 0 || total === 0) {
-    return <p className="py-12 text-center text-sm text-slate-600">{"Ma'lumot yo'q"}</p>;
+    return <p className="py-12 text-center text-sm text-slate-600">{NO_DATA[currentLocale()] ?? NO_DATA.uz}</p>;
   }
 
   const segments = data.reduce<

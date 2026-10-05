@@ -15,7 +15,7 @@ afterEach(() => {
 });
 
 describe("qr-token", () => {
-  it("sign va verify roundtrip sid/cid/jti ni qaytaradi, geo payloadda bo'lmaydi", async () => {
+  it("sign va verify roundtrip sid/cid/jti ni qaytaradi, geo payloadda va storeda bo'ladi", async () => {
     const token = await signQrToken({
       sessionId: SESSION_ID,
       courseId: COURSE_ID,
@@ -26,6 +26,7 @@ describe("qr-token", () => {
     expect(typeof payload?.jti).toBe("string");
     expect(payload).not.toHaveProperty("lat");
     expect(payload).not.toHaveProperty("lng");
+    expect(payload?.loc).toEqual({ lat: 41.3111, lng: 69.2797 });
     expect(lookupQrLocation(payload?.jti ?? "")).toEqual({ lat: 41.3111, lng: 69.2797 });
   });
 

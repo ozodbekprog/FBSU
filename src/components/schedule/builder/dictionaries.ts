@@ -1,13 +1,11 @@
 import type { BuilderCourse, BuilderLessonType, BuilderSubject, Dictionaries } from "./types";
 
-export const FALLBACK_LESSON_TYPES = ["Ma'ruza", "Amaliy", "Seminar", "Laboratoriya"];
-
 export function fallbackSubjects(courses: BuilderCourse[]): BuilderSubject[] {
   return courses.map((course) => ({ id: null, name: course.title, color: course.coverColor }));
 }
 
-export function fallbackLessonTypes(): BuilderLessonType[] {
-  return FALLBACK_LESSON_TYPES.map((name) => ({ id: null, name, color: null }));
+export function fallbackLessonTypes(names: readonly string[]): BuilderLessonType[] {
+  return names.map((name) => ({ id: null, name, color: null }));
 }
 
 export function findCourseForSubject(subject: BuilderSubject, courses: BuilderCourse[]): BuilderCourse | null {

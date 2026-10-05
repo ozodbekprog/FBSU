@@ -1,8 +1,15 @@
-export function ExportButtons({ courseId }: { courseId: string }) {
+import { getDictionary, getLocale } from "@/i18n";
+
+export async function ExportButtons({ courseId }: { courseId: string }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const exports = [
-    { href: `/api/courses/${courseId}/export/grades`, label: "Baholar CSV" },
-    { href: `/api/courses/${courseId}/export/attendance`, label: "Davomat CSV" },
-    { href: `/api/courses/${courseId}/export/quizzes`, label: "Test natijalari CSV" },
+    { href: `/api/courses/${courseId}/export/grades`, label: dictionary.grdGradesCsv },
+    { href: `/api/courses/${courseId}/export/attendance`, label: dictionary.grdAttendanceCsv },
+    {
+      href: `/api/courses/${courseId}/export/quizzes`,
+      label: dictionary.grdQuizResultsCsv,
+    },
   ];
 
   return (

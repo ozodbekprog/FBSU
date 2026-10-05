@@ -21,8 +21,12 @@
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.1",
+    "@tensorflow/tfjs": "^4.22.0",
     "@types/nodemailer": "^8.0.2",
     "@types/qrcode": "^1.5.6",
+    "@vladmandic/face-api": "^1.7.15",
     "bcryptjs": "^3.0.3",
     "ioredis": "^6.0.0",
     "jose": "^6.2.12",
@@ -32,6 +36,7 @@
     "qrcode": "^1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "three": "^0.186.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {
@@ -40,6 +45,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.186.0",
     "@vitest/coverage-v8": "^3.2.7",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",

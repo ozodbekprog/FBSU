@@ -32,24 +32,37 @@ export async function POST(
 
   const existing = await prisma.enrollment.findUnique({
     where: { courseId_userId: { courseId: course.id, userId: user.id } },
-    select: { id: true },
+    select: { id: true, status: true },
   });
   if (existing) {
-    return Response.json(
-      { ok: false, error: "Siz allaqachon bu kursga yozilgansiz" },
-      { status: 409 },
-    );
+    if (existing.status === "ACTIVE") {
+      return Response.json(
+        { ok: false, error: "Siz allaqachon bu kursga yozilgansiz" },
+        { status: 409 },
+      );
+    }
+    if (existing.status === "PENDING") {
+      return Response.json(
+        { ok: false, error: "So'rovingiz allaqachon yuborilgan — tasdiq kutilmoqda" },
+        { status: 409 },
+      );
+    }
+    const renewed = await prisma.enrollment.update({
+      where: { id: existing.id },
+      data: { status: "PENDING" },
+    });
+    return Response.json({ ok: true, data: { pending: true, enrollment: renewed } }, { status: 201 });
   }
 
   try {
     const enrollment = await prisma.enrollment.create({
-      data: { courseId: course.id, userId: user.id },
+      data: { courseId: course.id, userId: user.id, status: "PENDING" },
     });
-    return Response.json({ ok: true, data: enrollment }, { status: 201 });
+    return Response.json({ ok: true, data: { pending: true, enrollment } }, { status: 201 });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return Response.json(
-        { ok: false, error: "Siz allaqachon bu kursga yozilgansiz" },
+        { ok: false, error: "So'rovingiz allaqachon yuborilgan — tasdiq kutilmoqda" },
         { status: 409 },
       );
     }

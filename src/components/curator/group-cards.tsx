@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Badge, Card, CardBody } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import type { CuratorGroupSummary } from "@/app/api/curator/data";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 function attendanceTone(value: number | null) {
   if (value === null) return "text-slate-600";
@@ -10,13 +11,15 @@ function attendanceTone(value: number | null) {
   return "text-rose-600";
 }
 
-export function CuratorGroupCards({
+export async function CuratorGroupCards({
   groups,
   showCurator,
 }: {
   groups: CuratorGroupSummary[];
   showCurator: boolean;
 }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {groups.map((group) => (
@@ -35,9 +38,9 @@ export function CuratorGroupCards({
                   <p className="mt-0.5 truncate text-xs text-slate-500">
                     {showCurator
                       ? group.curator
-                        ? `Kurator: ${group.curator.name}`
-                        : "Kurator biriktirilmagan"
-                      : `${group.studentCount} ta talaba`}
+                        ? `${dictionary.admCuratorLabel}: ${group.curator.name}`
+                        : dictionary.admCuratorNotAssigned
+                      : translate(locale, "admCuratorStudentsSubtitle", { count: group.studentCount })}
                   </p>
                 </div>
                 {group.year ? <Badge tone="slate">{group.year}</Badge> : null}
@@ -45,13 +48,13 @@ export function CuratorGroupCards({
 
               <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-slate-100 pt-4 text-sm">
                 <div>
-                  <p className="text-xs text-slate-600">Talabalar</p>
+                  <p className="text-xs text-slate-600">{dictionary.admStudents}</p>
                   <p className="mt-0.5 font-semibold tabular-nums text-slate-800">
                     {group.studentCount}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-600">O&apos;rtacha davomat</p>
+                  <p className="text-xs text-slate-600">{dictionary.admCuratorStatAttendance}</p>
                   <p
                     className={cn(
                       "mt-0.5 font-semibold tabular-nums",
@@ -62,18 +65,18 @@ export function CuratorGroupCards({
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-600">Ruxsatsiz</p>
+                  <p className="text-xs text-slate-600">{dictionary.admCuratorStatLowAttendance}</p>
                   <p
                     className={cn(
                       "mt-0.5 font-semibold tabular-nums",
                       group.lowAttendanceCount > 0 ? "text-rose-600" : "text-emerald-600",
                     )}
                   >
-                    {group.lowAttendanceCount} ta
+                    {translate(locale, "admCount", { count: group.lowAttendanceCount })}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-600">O&apos;rtacha GPA</p>
+                  <p className="text-xs text-slate-600">{dictionary.admCuratorStatGpa}</p>
                   <p className="mt-0.5 font-semibold tabular-nums text-slate-800">
                     {group.averageGpa !== null ? group.averageGpa.toFixed(2) : "—"}
                   </p>

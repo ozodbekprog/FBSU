@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import type { AttendanceStatus, Role, SubmissionStatus } from "@prisma/client";
 import type { BarChartDatum, DonutChartDatum, LineChartDatum } from "@/components/charts";
+import { t as translate, type Dictionary, type Locale } from "@/i18n";
 
 export type StudentAnalytics = {
   attendance: DonutChartDatum[];
@@ -25,24 +26,54 @@ export type AdminAnalytics = {
   submissionsByDay: BarChartDatum[];
 };
 
-const ATTENDANCE_META: Record<AttendanceStatus, { label: string; color: string }> = {
-  PRESENT: { label: "Keldi", color: "#10b981" },
-  LATE: { label: "Kechikdi", color: "#f59e0b" },
-  EXCUSED: { label: "Sababli", color: "#64748b" },
-  ABSENT: { label: "Kelmadi", color: "#f43f5e" },
-  SUSPICIOUS: { label: "Shubhali", color: "#a855f7" },
+const ATTENDANCE_COLORS: Record<AttendanceStatus, string> = {
+  PRESENT: "#10b981",
+  LATE: "#f59e0b",
+  EXCUSED: "#64748b",
+  ABSENT: "#f43f5e",
+  SUSPICIOUS: "#a855f7",
 };
 
-const SUBMISSION_META: Record<SubmissionStatus, { label: string; color: string }> = {
-  SUBMITTED: { label: "Topshirilgan", color: "#5373b8" },
-  GRADED: { label: "Baholangan", color: "#10b981" },
-  LATE: { label: "Kechiktirilgan", color: "#f59e0b" },
+const ATTENDANCE_LABELS: Record<AttendanceStatus, keyof Dictionary> = {
+  PRESENT: "dashAttendancePresent",
+  LATE: "dashAttendanceLate",
+  EXCUSED: "dashAttendanceExcused",
+  ABSENT: "dashAttendanceAbsent",
+  SUSPICIOUS: "dashAttendanceSuspicious",
 };
 
-const ROLE_META: Record<Role, { label: string; color: string }> = {
-  STUDENT: { label: "Talabalar", color: "#5373b8" },
-  TEACHER: { label: "O'qituvchilar", color: "#34497f" },
-  ADMIN: { label: "Adminlar", color: "#c9a227" },
+const SUBMISSION_COLORS: Record<SubmissionStatus, string> = {
+  SUBMITTED: "#5373b8",
+  GRADED: "#10b981",
+  LATE: "#f59e0b",
+};
+
+const SUBMISSION_LABELS: Record<SubmissionStatus, keyof Dictionary> = {
+  SUBMITTED: "dashSubmitted",
+  GRADED: "dashGraded",
+  LATE: "dashSubmissionLate",
+};
+
+const ROLE_COLORS: Record<Role, string> = {
+  STUDENT: "#5373b8",
+  TEACHER: "#34497f",
+  REGISTRAR: "#0284c7",
+  TYUTOR: "#059669",
+  KAFEDRA_MUDIRI: "#0ea5e9",
+  DEKAN: "#7c3aed",
+  REKTOR: "#c9a227",
+  ADMIN: "#e11d48",
+};
+
+const ROLE_LABELS: Record<Role, keyof Dictionary> = {
+  STUDENT: "dashRoleStudents",
+  TEACHER: "dashRoleTeachers",
+  REGISTRAR: "dashRoleRegistrar",
+  TYUTOR: "dashRoleTutors",
+  KAFEDRA_MUDIRI: "dashRoleHeads",
+  DEKAN: "dashRoleDeans",
+  REKTOR: "dashRoleRector",
+  ADMIN: "dashRoleAdmins",
 };
 
 const ATTENDED: AttendanceStatus[] = ["PRESENT", "LATE", "EXCUSED", "SUSPICIOUS"];
@@ -79,9 +110,12 @@ function percent(value: number, max: number) {
   return Math.max(0, Math.min(100, Math.round((value / max) * 100)));
 }
 
-export async function getStudentAnalytics(studentId: string): Promise<StudentAnalytics> {
+export async function getStudentAnalytics(
+  studentId: string,
+  locale: Locale,
+): Promise<StudentAnalytics> {
   const enrollments = await prisma.enrollment.findMany({
-    where: { userId: studentId },
+    where: { userId: studentId, status: "ACTIVE" },
     select: { course: { select: { id: true, title: true } } },
     orderBy: { course: { title: "asc" } },
   });
@@ -142,9 +176,9 @@ export async function getStudentAnalytics(studentId: string): Promise<StudentAna
   const attendance: DonutChartDatum[] = (
     ["PRESENT", "LATE", "EXCUSED", "SUSPICIOUS", "ABSENT"] as AttendanceStatus[]
   ).map((status) => ({
-    label: ATTENDANCE_META[status].label,
+    label: translate(locale, ATTENDANCE_LABELS[status]),
     value: statusTotals[status],
-    color: ATTENDANCE_META[status].color,
+    color: ATTENDANCE_COLORS[status],
   }));
 
   const courseAttendance: BarChartDatum[] = enrollments
@@ -190,7 +224,10 @@ export async function getStudentAnalytics(studentId: string): Promise<StudentAna
   };
 }
 
-export async function getTeacherAnalytics(teacherId: string): Promise<TeacherAnalytics> {
+export async function getTeacherAnalytics(
+  teacherId: string,
+  locale: Locale,
+): Promise<TeacherAnalytics> {
   const courses = await prisma.course.findMany({
     where: { teacherId },
     select: { id: true, title: true, _count: { select: { enrollments: true } } },
@@ -254,15 +291,15 @@ export async function getTeacherAnalytics(teacherId: string): Promise<TeacherAna
   const submissionStatus: DonutChartDatum[] = (
     ["SUBMITTED", "GRADED", "LATE"] as SubmissionStatus[]
   ).map((status) => ({
-    label: SUBMISSION_META[status].label,
+    label: translate(locale, SUBMISSION_LABELS[status]),
     value: countByStatus.get(status) ?? 0,
-    color: SUBMISSION_META[status].color,
+    color: SUBMISSION_COLORS[status],
   }));
 
   return { kind: "teacher", submissionsByDay, attendanceByDay, studentsByCourse, submissionStatus };
 }
 
-export async function getAdminAnalytics(): Promise<AdminAnalytics> {
+export async function getAdminAnalytics(locale: Locale): Promise<AdminAnalytics> {
   const { start, days } = buildWindow(14);
 
   const [roleCounts, submissions] = await Promise.all([
@@ -277,9 +314,9 @@ export async function getAdminAnalytics(): Promise<AdminAnalytics> {
     roleCounts.map((row): [Role, number] => [row.role, row._count._all]),
   );
   const usersByRole: DonutChartDatum[] = (["STUDENT", "TEACHER", "ADMIN"] as Role[]).map((role) => ({
-    label: ROLE_META[role].label,
+    label: translate(locale, ROLE_LABELS[role]),
     value: countByRole.get(role) ?? 0,
-    color: ROLE_META[role].color,
+    color: ROLE_COLORS[role],
   }));
 
   const buckets = new Map<string, number>();

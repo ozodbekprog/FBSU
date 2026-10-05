@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Badge, Button, Card, CardBody, EmptyState, Input, Label, Select, Textarea } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type MaterialTypeValue = "TEXT" | "FILE" | "VIDEO" | "LINK";
 
@@ -27,11 +28,11 @@ type RequestFn = (url: string, method: "POST" | "PATCH" | "DELETE", body?: unkno
 
 const MATERIAL_TYPES: MaterialTypeValue[] = ["TEXT", "LINK", "VIDEO", "FILE"];
 
-const TYPE_LABELS: Record<MaterialTypeValue, string> = {
-  TEXT: "Matn",
-  LINK: "Havola",
-  VIDEO: "Video",
-  FILE: "Fayl",
+const TYPE_LABEL_KEYS: Record<MaterialTypeValue, "crsText" | "crsLink" | "crsVideo" | "crsFile"> = {
+  TEXT: "crsText",
+  LINK: "crsLink",
+  VIDEO: "crsVideo",
+  FILE: "crsFile",
 };
 
 const TYPE_TONES: Record<MaterialTypeValue, Tone> = {
@@ -97,6 +98,7 @@ export function CourseMaterials({
   canManage: boolean;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState<Record<string, boolean>>(() =>
@@ -122,12 +124,12 @@ export function CourseMaterials({
       });
       const json = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
       if (!res.ok || !json?.ok) {
-        return json?.error ?? "Amalni bajarishda xatolik yuz berdi";
+        return json?.error ?? t("crsActionError");
       }
       router.refresh();
       return null;
     } catch {
-      return "Tarmoq xatosi. Qayta urinib ko'ring.";
+      return t("crsNetworkError");
     } finally {
       setBusy(false);
     }
@@ -159,14 +161,14 @@ export function CourseMaterials({
   }
 
   async function removeSection(id: string, title: string) {
-    if (!window.confirm(`"${title}" bo'limi va uning materiallari o'chiriladi. Davom etilsinmi?`)) return;
+    if (!window.confirm(t("crsDeleteSectionConfirm", { title }))) return;
     const err = await request(`/api/sections/${id}`, "DELETE");
     if (err) setError(err);
     else setError(null);
   }
 
   async function removeMaterial(id: string, title: string) {
-    if (!window.confirm(`"${title}" materiali o'chirilsinmi?`)) return;
+    if (!window.confirm(t("crsDeleteMaterialConfirm", { title }))) return;
     const err = await request(`/api/materials/${id}`, "DELETE");
     if (err) setError(err);
     else setError(null);
@@ -187,18 +189,18 @@ export function CourseMaterials({
           <Card>
             <CardBody className="flex flex-wrap items-end gap-3">
               <div className="min-w-52 flex-1">
-                <Label>{"Bo'lim nomi"}</Label>
+                <Label>{t("crsSectionName")}</Label>
                 <Input
                   value={newSectionTitle}
                   onChange={(e) => setNewSectionTitle(e.target.value)}
-                  placeholder="Masalan: 3-hafta: Massivlar"
+                  placeholder={t("crsSectionNamePlaceholder")}
                 />
               </div>
               <Button onClick={saveSection} disabled={busy || !newSectionTitle.trim()}>
-                Saqlash
+                {t("crsSave")}
               </Button>
               <Button variant="secondary" onClick={() => setAddingSection(false)}>
-                Bekor
+                {t("crsCancelShort")}
               </Button>
             </CardBody>
           </Card>
@@ -221,18 +223,18 @@ export function CourseMaterials({
               <path d="M12 5v14" />
               <path d="M5 12h14" />
             </svg>
-            {"Bo'lim qo'shish"}
+            {t("crsAddSection")}
           </Button>
         )
       ) : null}
 
       {sections.length === 0 ? (
         <EmptyState
-          title="Bo'limlar yo'q"
+          title={t("crsNoSections")}
           description={
             canManage
-              ? "Kurs materiallarini bo'limlarga ajratib joylashtiring."
-              : "Hozircha bu kursda materiallar mavjud emas."
+              ? t("crsNoSectionsStaff")
+              : t("crsNoSectionsStudent")
           }
         />
       ) : null}
@@ -247,10 +249,10 @@ export function CourseMaterials({
                 className="max-w-md"
               />
               <Button size="sm" onClick={() => renameSection(section.id)} disabled={busy}>
-                Saqlash
+                {t("crsSave")}
               </Button>
               <Button size="sm" variant="secondary" onClick={() => setEditingSection(null)}>
-                Bekor
+                {t("crsCancelShort")}
               </Button>
             </div>
           ) : (
@@ -280,7 +282,7 @@ export function CourseMaterials({
                     <span className="inline-flex size-4 items-center justify-center rounded-md bg-slate-100 text-[9px] font-semibold tabular-nums text-slate-500">
                       {section.materials.length}
                     </span>
-                    ta material
+                    {t("crsMaterialsSuffix")}
                   </span>
                 </span>
                 <span
@@ -313,7 +315,7 @@ export function CourseMaterials({
                     variant="ghost"
                     onClick={() => setEditingSection({ id: section.id, title: section.title })}
                   >
-                    Tahrir
+                    {t("crsEditShort")}
                   </Button>
                   <Button
                     size="sm"
@@ -321,7 +323,7 @@ export function CourseMaterials({
                     className="text-rose-600"
                     onClick={() => removeSection(section.id, section.title)}
                   >
-                    {"O'chirish"}
+                    {t("crsDelete")}
                   </Button>
                 </div>
               ) : null}
@@ -335,7 +337,7 @@ export function CourseMaterials({
                   <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
                     <TypeIcon type="TEXT" />
                   </span>
-                  <p className="text-sm text-slate-600">Hozircha material qo&apos;shilmagan.</p>
+                  <p className="text-sm text-slate-600">{t("crsNoMaterialsYet")}</p>
                 </div>
               ) : null}
 
@@ -379,7 +381,7 @@ export function CourseMaterials({
                     <path d="M12 5v14" />
                     <path d="M5 12h14" />
                   </svg>
-                  {"Material qo'shish"}
+                  {t("crsAddMaterial")}
                 </button>
               ) : null}
             </div>
@@ -403,6 +405,7 @@ function MaterialRow({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useI18n();
   const href = material.type === "FILE" ? material.fileUrl : material.content;
   return (
     <div className="group flex items-start justify-between gap-3 rounded-xl border border-slate-100 bg-white p-3.5 transition-all duration-200 hover:border-brand-100 hover:shadow-sm">
@@ -418,7 +421,7 @@ function MaterialRow({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium text-slate-900">{material.title}</span>
-            <Badge tone={TYPE_TONES[material.type]}>{TYPE_LABELS[material.type]}</Badge>
+            <Badge tone={TYPE_TONES[material.type]}>{t(TYPE_LABEL_KEYS[material.type])}</Badge>
           </div>
           {material.type === "TEXT" ? (
             material.content ? (
@@ -456,10 +459,10 @@ function MaterialRow({
       {canManage ? (
         <div className="flex shrink-0 items-center gap-0.5 md:opacity-0 md:transition-opacity md:duration-150 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
           <Button size="sm" variant="ghost" disabled={busy} onClick={onEdit}>
-            Tahrir
+            {t("crsEditShort")}
           </Button>
           <Button size="sm" variant="ghost" className="text-rose-600" disabled={busy} onClick={onDelete}>
-            {"O'chirish"}
+            {t("crsDelete")}
           </Button>
         </div>
       ) : null}
@@ -480,6 +483,7 @@ function MaterialEditor({
   request: RequestFn;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const [title, setTitle] = useState(material?.title ?? "");
   const [type, setType] = useState<MaterialTypeValue>(material?.type ?? "TEXT");
   const [content, setContent] = useState(material?.content ?? "");
@@ -507,26 +511,26 @@ function MaterialEditor({
           <TypeIcon type={type} />
         </span>
         <p className="text-sm font-semibold text-slate-800">
-          {material ? "Materialni tahrirlash" : "Yangi material"}
+          {material ? t("crsEditMaterial") : t("crsNewMaterial")}
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <Label>Sarlavha</Label>
+          <Label>{t("crsTitle")}</Label>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Material nomi"
+            placeholder={t("crsMaterialNamePlaceholder")}
             required
             maxLength={300}
           />
         </div>
         <div>
-          <Label>Turi</Label>
+          <Label>{t("crsType")}</Label>
           <Select value={type} onChange={(e) => setType(e.target.value as MaterialTypeValue)}>
             {MATERIAL_TYPES.map((value) => (
               <option key={value} value={value}>
-                {TYPE_LABELS[value]}
+                {t(TYPE_LABEL_KEYS[value])}
               </option>
             ))}
           </Select>
@@ -534,17 +538,17 @@ function MaterialEditor({
         <div className="sm:col-span-2">
           {type === "TEXT" ? (
             <>
-              <Label>Matn</Label>
+              <Label>{t("crsText")}</Label>
               <Textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={5}
-                placeholder="Material matni"
+                placeholder={t("crsMaterialTextPlaceholder")}
               />
             </>
           ) : type === "FILE" ? (
             <>
-              <Label>Fayl havolasi (URL)</Label>
+              <Label>{t("crsFileUrl")}</Label>
               <Input
                 value={fileUrl}
                 onChange={(e) => setFileUrl(e.target.value)}
@@ -553,7 +557,7 @@ function MaterialEditor({
             </>
           ) : (
             <>
-              <Label>Havola (URL)</Label>
+              <Label>{t("crsUrl")}</Label>
               <Input
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
@@ -566,10 +570,10 @@ function MaterialEditor({
       {error ? <p className="text-sm text-rose-700">{error}</p> : null}
       <div className="flex justify-end gap-2">
         <Button size="sm" variant="secondary" onClick={onClose}>
-          Bekor
+          {t("crsCancelShort")}
         </Button>
         <Button type="submit" size="sm" disabled={busy}>
-          {material ? "Saqlash" : "Qo'shish"}
+          {material ? t("crsSave") : t("crsAdd")}
         </Button>
       </div>
     </form>

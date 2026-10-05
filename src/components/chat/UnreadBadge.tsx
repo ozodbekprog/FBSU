@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 type UnreadResponse = { ok: boolean; data?: { count: number } };
 
 export function UnreadBadge() {
+  const { t } = useI18n();
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export function UnreadBadge() {
   return (
     <span
       role="status"
-      aria-label={`${count} ta o'qilmagan xabar`}
+      aria-label={t("msgUnreadMessages", { count })}
       className="relative inline-flex size-9 items-center justify-center rounded-xl text-slate-500"
     >
       <svg

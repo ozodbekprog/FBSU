@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { Badge, Button, Card, CardBody, CardHeader, Label, Select, Table } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { fmtDateTime } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import {
@@ -26,15 +27,9 @@ type SessionRow = {
   expiresAt: string;
   createdAt: string;
   active: boolean;
+  finalizedAt?: string | null;
+  isException?: boolean;
   marked: SessionMark[];
-};
-
-const STATUS_LABELS: Record<AttendanceStatusValue, string> = {
-  PRESENT: "Bor",
-  ABSENT: "Yo'q",
-  LATE: "Kechikkan",
-  EXCUSED: "Sababli",
-  SUSPICIOUS: "Shubhali",
 };
 
 const STATUS_TONES: Record<AttendanceStatusValue, "green" | "rose" | "amber" | "blue"> = {
@@ -44,6 +39,14 @@ const STATUS_TONES: Record<AttendanceStatusValue, "green" | "rose" | "amber" | "
   EXCUSED: "blue",
   SUSPICIOUS: "amber",
 };
+
+const STATUS_LABEL_KEYS = {
+  PRESENT: "schStatusPresent",
+  ABSENT: "schStatusAbsent",
+  LATE: "schStatusLate",
+  EXCUSED: "schStatusExcused",
+  SUSPICIOUS: "schStatusSuspicious",
+} as const;
 
 const MINUTE_OPTIONS = [5, 10, 15, 30, 60];
 
@@ -60,11 +63,15 @@ function formatRemaining(ms: number) {
 export function SessionPanel({
   courseId,
   studentCount,
+  autoStart = false,
 }: {
   courseId: string;
   studentCount: number;
+  autoStart?: boolean;
 }) {
+  const { t } = useI18n();
   const [sessions, setSessions] = useState<SessionRow[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [minutes, setMinutes] = useState(15);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,12 +95,13 @@ export function SessionPanel({
       | { ok?: boolean; error?: string; data?: { sessions: SessionRow[] } }
       | null;
     if (!response.ok || !json?.ok || !json.data) {
-      setError(json?.error ?? "Sessiyalarni yuklashda xatolik");
+      setError(json?.error ?? t("schSessionsLoadError"));
       return;
     }
     setSessions(json.data.sessions);
     setError(null);
-  }, [courseId]);
+    setLoaded(true);
+  }, [courseId, t]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void refresh(), 0);
@@ -107,6 +115,16 @@ export function SessionPanel({
 
   const latest = sessions[0] ?? null;
   const hasActive = sessions.some((session) => session.active);
+  const autoStartedRef = useRef(false);
+
+  useEffect(() => {
+    if (!loaded || !autoStart || autoStartedRef.current) return;
+    autoStartedRef.current = true;
+    if (!sessions.some((session) => session.active)) {
+      window.history.replaceState(null, "", window.location.pathname);
+      void startSession();
+    }
+  }, [loaded, autoStart, sessions]);
 
   useEffect(() => {
     if (!hasActive) return;
@@ -121,7 +139,7 @@ export function SessionPanel({
     if (!latestCode) return;
     let cancelled = false;
     const checkInUrl = `${window.location.origin}/attendance/check-in?code=${latestCode}`;
-    QRCode.toDataURL(checkInUrl, { width: 512, margin: 1 })
+    QRCode.toDataURL(checkInUrl, { width: 640, margin: 3, errorCorrectionLevel: "L" })
       .then((url) => {
         if (!cancelled) setQr({ code: latestCode, url });
       })
@@ -171,7 +189,7 @@ export function SessionPanel({
         | null;
       if (cancelled) return;
       if (!response.ok || !json?.ok || !json.data) {
-        setTokenError(json?.error ?? "Dinamik QR yangilashda xatolik");
+        setTokenError(json?.error ?? t("schDynamicQrError"));
         return;
       }
       setTokenError(null);
@@ -198,7 +216,7 @@ export function SessionPanel({
       return;
     }
     let cancelled = false;
-    QRCode.toDataURL(dynamicQr.url, { width: 512, margin: 1 })
+    QRCode.toDataURL(dynamicQr.url, { width: 640, margin: 3, errorCorrectionLevel: "L" })
       .then((url) => {
         if (!cancelled) setDynamicImg(url);
       })
@@ -233,7 +251,7 @@ export function SessionPanel({
       | { ok?: boolean; error?: string }
       | null;
     if (!response.ok || !json?.ok) {
-      setError(json?.error ?? "Sessiya boshlashda xatolik");
+      setError(json?.error ?? t("schSessionStartError"));
       setBusy(false);
       return;
     }
@@ -250,7 +268,27 @@ export function SessionPanel({
       | { ok?: boolean; error?: string }
       | null;
     if (!response.ok || !json?.ok) {
-      setError(json?.error ?? "Sessiyani yopishda xatolik");
+      setError(json?.error ?? t("schSessionCloseError"));
+      setBusy(false);
+      return;
+    }
+    await refresh();
+    setBusy(false);
+  }
+
+  async function reopenAsException() {
+    if (!window.confirm(t("schExceptionConfirm"))) return;
+    setBusy(true);
+    setError(null);
+    const response = await apiFetch("/api/attendance/sessions", {
+      method: "POST",
+      body: JSON.stringify({ courseId, minutes, exception: true }),
+    });
+    const json = (await response.json().catch(() => null)) as
+      | { ok?: boolean; error?: string }
+      | null;
+    if (!response.ok || !json?.ok) {
+      setError(json?.error ?? t("schSessionStartError"));
       setBusy(false);
       return;
     }
@@ -270,8 +308,8 @@ export function SessionPanel({
   return (
     <Card>
       <CardHeader
-        title="QR davomat sessiyasi"
-        subtitle="Talabalar QR kodni skanerlaydi"
+        title={t("schQrSessionTitle")}
+        subtitle={t("schQrSessionSubtitle")}
         action={
           <Button
             variant="ghost"
@@ -280,14 +318,14 @@ export function SessionPanel({
               void refresh();
             }}
           >
-            Yangilash
+            {t("schRefresh")}
           </Button>
         }
       />
       <CardBody className="space-y-6">
         <div className="flex flex-wrap items-end gap-3">
           <div className="w-40">
-            <Label>Davomiyligi</Label>
+            <Label>{t("schDuration")}</Label>
             <Select
               value={minutes}
               disabled={busy}
@@ -295,7 +333,7 @@ export function SessionPanel({
             >
               {MINUTE_OPTIONS.map((option) => (
                 <option key={option} value={option}>
-                  {option} daqiqa
+                  {t("schMinutes", { count: option })}
                 </option>
               ))}
             </Select>
@@ -306,7 +344,7 @@ export function SessionPanel({
             }}
             disabled={busy}
           >
-            {hasActive ? "Yangi sessiya" : "Sessiya boshlash"}
+            {hasActive ? t("schNewSession") : t("schStartSession")}
           </Button>
           {latestActive ? (
             <Button
@@ -316,7 +354,7 @@ export function SessionPanel({
               }}
               disabled={busy}
             >
-              Yopish
+              {t("schClose")}
             </Button>
           ) : null}
         </div>
@@ -326,36 +364,52 @@ export function SessionPanel({
         ) : null}
 
         {latest ? (
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,16rem)_1fr]">
-            <div className="mx-auto w-full max-w-64">
-              <div className="rounded-3xl border border-slate-100 bg-white p-3 shadow-lift ring-1 ring-slate-900/5">
-                <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white p-2">
-                  {qrSrc ? (
-                    <img
-                      src={qrSrc}
-                      alt="Davomat uchun QR kod"
-                      className="aspect-square w-full rounded-xl"
-                    />
-                  ) : (
-                    <div className="aspect-square w-full animate-pulse rounded-xl bg-slate-100" />
-                  )}
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,24rem)_1fr]">
+            <div className="mx-auto w-full max-w-96">
+              {latestActive ? (
+                <>
+                  <div className="rounded-3xl border border-slate-100 bg-white p-3 shadow-lift ring-1 ring-slate-900/5">
+                    <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white p-2">
+                      {qrSrc ? (
+                        <img
+                          src={qrSrc}
+                          alt={t("schQrAlt")}
+                          className="aspect-square w-full rounded-xl"
+                        />
+                      ) : (
+                        <div className="aspect-square w-full animate-pulse rounded-xl bg-slate-100" />
+                      )}
+                    </div>
+                  </div>
+                  <p className="mt-5 text-center text-xs text-slate-600">
+                    {t("schQrScanByStudents")}
+                  </p>
+                </>
+              ) : (
+                <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
+                  <span className="mx-auto inline-flex size-12 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="10" rx="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  </span>
+                  <p className="mt-3 text-sm font-semibold text-slate-700">{t("schPanelClosed")}</p>
+                  <p className="mt-1 text-xs text-slate-500">{t("schQrClosedHint")}</p>
                 </div>
-              </div>
-              <p className="mt-5 text-center text-xs text-slate-600">
-                Talabalar QR kodni telefon kamerasi bilan skanerlaydi
-              </p>
+              )}
             </div>
 
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
                 {latestActive ? (
                   <Badge tone="green" className="shadow-sm shadow-emerald-500/20">
-                    Faol
+                    {t("schActive")}
                   </Badge>
                 ) : (
-                  <Badge tone="slate">Yopilgan</Badge>
+                  <Badge tone="slate">{t("schClosed")}</Badge>
                 )}
-                {latestActive ? <Badge tone="blue">Dinamik QR · 10s</Badge> : null}
+                {latest.isException ? <Badge tone="gold">{t("schExceptionBadge")}</Badge> : null}
+                {latestActive ? <Badge tone="blue">{t("schDynamicQr10s")}</Badge> : null}
                 {latestActive ? (
                   <span className="relative inline-flex size-16 items-center justify-center">
                     <svg viewBox="0 0 56 56" className="absolute inset-0 -rotate-90">
@@ -384,13 +438,13 @@ export function SessionPanel({
                   </span>
                 ) : (
                   <span className="text-sm text-slate-500">
-                    Tugadi: {fmtDateTime(latest.expiresAt)}
+                    {t("schEndedAt", { date: fmtDateTime(latest.expiresAt) })}
                   </span>
                 )}
                 {latestActive && dynamicQr ? (
                   <span
                     className="relative inline-flex size-16 items-center justify-center"
-                    title="Token yangilanishiga qoldi"
+                    title={t("schTokenRefreshTitle")}
                   >
                     <svg viewBox="0 0 56 56" className="absolute inset-0 -rotate-90">
                       <circle
@@ -420,14 +474,25 @@ export function SessionPanel({
               </div>
               {latestActive && !teacherLocation ? (
                 <p className="text-xs text-slate-500">
-                  Joylashuv ruxsati berilmagan — masofa tekshiruvi ishlamaydi
+                  {t("schLocationNotGranted")}
                 </p>
               ) : null}
               {tokenError ? <p className="text-xs text-rose-600">{tokenError}</p> : null}
 
+              {!latestActive && latest.finalizedAt ? (
+                <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  {t("schAutoFinalizedNote")}
+                </p>
+              ) : null}
+              {!latestActive && !hasActive && latest.finalizedAt ? (
+                <Button variant="secondary" onClick={() => void reopenAsException()} disabled={busy}>
+                  {t("schExceptionReopen")}
+                </Button>
+              ) : null}
+
               <div>
                 <p className="text-sm font-medium text-slate-800">
-                  Belgilanganlar:{" "}
+                  {t("schMarked")}
                   <span className="font-semibold text-brand-800">{latest.marked.length}</span>
                   {studentCount ? (
                     <span className="text-slate-600"> / {studentCount}</span>
@@ -435,7 +500,7 @@ export function SessionPanel({
                 </p>
                 {latest.marked.length === 0 ? (
                   <p className="mt-1.5 text-sm text-slate-500">
-                    Hozircha hech kim belgilanmagan.
+                    {t("schNobodyMarked")}
                   </p>
                 ) : (
                   <ul className="mt-2.5 flex max-h-48 flex-wrap gap-2 overflow-y-auto">
@@ -445,7 +510,7 @@ export function SessionPanel({
                           tone={STATUS_TONES[mark.status]}
                           className="px-2.5 py-1 shadow-sm ring-1 ring-black/[0.03]"
                         >
-                          {mark.name} · {STATUS_LABELS[mark.status]}
+                          {mark.name} · {t(STATUS_LABEL_KEYS[mark.status])}
                         </Badge>
                       </li>
                     ))}
@@ -454,27 +519,27 @@ export function SessionPanel({
               </div>
 
               <p className="text-xs text-slate-600">
-                Ro&apos;yxat 30 sekundda bir marta avtomatik yangilanadi.
+                {t("schAutoRefresh30")}
               </p>
             </div>
           </div>
         ) : (
           <p className="text-sm text-slate-500">
-            Hozircha sessiya boshlanmagan. Sessiya boshlangach QR kod shu yerda paydo bo&apos;ladi.
+            {t("schNoSessionYet")}
           </p>
         )}
 
         {history.length > 0 ? (
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">
-              So&apos;nggi sessiyalar
+              {t("schRecentSessions")}
             </p>
             <Table>
               <thead>
                 <tr className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-600">
-                  <th className="py-2.5 pr-3 text-left font-medium">Sana</th>
-                  <th className="px-3 py-2.5 text-left font-medium">Holat</th>
-                  <th className="px-3 py-2.5 text-right font-medium">Belgilangan</th>
+                  <th className="py-2.5 pr-3 text-left font-medium">{t("schDate")}</th>
+                  <th className="px-3 py-2.5 text-left font-medium">{t("schStatusCol")}</th>
+                  <th className="px-3 py-2.5 text-right font-medium">{t("schMarkedCol")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -488,9 +553,9 @@ export function SessionPanel({
                     </td>
                     <td className="px-3 py-2.5">
                       {session.active ? (
-                        <Badge tone="green">Faol</Badge>
+                        <Badge tone="green">{t("schActive")}</Badge>
                       ) : (
-                        <Badge tone="slate">Yopilgan</Badge>
+                        <Badge tone="slate">{t("schClosed")}</Badge>
                       )}
                     </td>
                     <td className="px-3 py-2.5 text-right text-xs font-semibold text-slate-600">

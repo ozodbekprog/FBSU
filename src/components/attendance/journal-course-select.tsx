@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Card, CardBody, Label, Select } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export function JournalCourseSelect({
   courses,
@@ -11,12 +12,13 @@ export function JournalCourseSelect({
   value: string;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
 
   return (
     <Card>
       <CardBody className="flex flex-wrap items-end gap-3">
         <div className="w-full sm:w-80">
-          <Label>Kurs</Label>
+          <Label>{t("schCourse")}</Label>
           <Select
             value={value}
             onChange={(event) => {
@@ -31,7 +33,7 @@ export function JournalCourseSelect({
           </Select>
         </div>
         <p className="pb-2 text-xs text-slate-600">
-          Guruhni jurnal ichida tanlaysiz · katakka bosib belgilashni o&apos;zgartirasiz
+          {t("schJournalCourseHint")}
         </p>
       </CardBody>
     </Card>

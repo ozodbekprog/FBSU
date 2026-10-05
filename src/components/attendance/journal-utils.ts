@@ -43,74 +43,60 @@ export function shortName(name: string): string {
 
 export const JOURNAL_STATUS_ORDER: JournalStatus[] = ["PRESENT", "SUSPICIOUS", "LATE", "EXCUSED", "ABSENT"];
 
-export const JOURNAL_STATUS_META: Record<
-  JournalStatus,
-  { short: string; label: string; chip: string; badge: string }
-> = {
+export const JOURNAL_STATUS_STYLE: Record<JournalStatus, { chip: string; badge: string }> = {
   PRESENT: {
-    short: "K",
-    label: "Keldi",
     chip: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/80",
     badge: "bg-emerald-500 text-white shadow-sm shadow-emerald-500/30",
   },
   ABSENT: {
-    short: "Y",
-    label: "Kelmadi",
     chip: "bg-rose-50 text-rose-700 ring-1 ring-rose-200/80",
     badge: "bg-rose-500 text-white shadow-sm shadow-rose-500/30",
   },
   LATE: {
-    short: "Kech",
-    label: "Kechikdi",
     chip: "bg-amber-50 text-amber-700 ring-1 ring-amber-200/80",
     badge: "bg-amber-500 text-white shadow-sm shadow-amber-500/30",
   },
   EXCUSED: {
-    short: "S",
-    label: "Sababli",
     chip: "bg-slate-100 text-slate-600 ring-1 ring-slate-200/80",
     badge: "bg-slate-400 text-white shadow-sm shadow-slate-400/30",
   },
   SUSPICIOUS: {
-    short: "Sh",
-    label: "Shubhali",
     chip: "bg-violet-50 text-violet-700 ring-1 ring-violet-200/80",
     badge: "bg-violet-500 text-white shadow-sm shadow-violet-500/30",
   },
 };
 
-const MONTHS_UZ = [
-  "yanvar",
-  "fevral",
-  "mart",
-  "aprel",
-  "may",
-  "iyun",
-  "iyul",
-  "avgust",
-  "sentabr",
-  "oktabr",
-  "noyabr",
-  "dekabr",
-];
+export const JOURNAL_STATUS_LABEL_KEYS = {
+  PRESENT: "schJournalPresent",
+  ABSENT: "schJournalAbsent",
+  LATE: "schJournalLate",
+  EXCUSED: "schJournalExcused",
+  SUSPICIOUS: "schJournalSuspicious",
+} as const;
 
-const WEEKDAY_SHORT = ["Ya", "Du", "Se", "Ch", "Pa", "Ju", "Sh"];
+export const JOURNAL_STATUS_SHORT_KEYS = {
+  PRESENT: "schShortPresent",
+  ABSENT: "schShortAbsent",
+  LATE: "schShortLate",
+  EXCUSED: "schShortExcused",
+  SUSPICIOUS: "schShortSuspicious",
+} as const;
 
-export function journalDateParts(iso: string) {
+export function journalDateParts(iso: string, weekdays: readonly string[]) {
   const date = new Date(`${iso}T00:00:00.000Z`);
   const day = String(date.getUTCDate()).padStart(2, "0");
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  return { label: `${day}.${month}`, weekday: WEEKDAY_SHORT[date.getUTCDay()] ?? "" };
+  return { label: `${day}.${month}`, weekday: weekdays[date.getUTCDay()] ?? "" };
 }
 
 export function journalMonthKey(iso: string) {
   return iso.slice(0, 7);
 }
 
-export function journalMonthLabel(key: string) {
+export function journalMonthLabel(key: string, months: readonly string[]) {
   const [year, month] = key.split("-");
   const index = Number(month) - 1;
-  const name = MONTHS_UZ[index] ?? month;
+  const name = months[index] ?? month;
   return `${name} ${year}`;
 }
 

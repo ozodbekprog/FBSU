@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input, Label } from "@/components/ui";
 import { useI18n } from "@/components/i18n/LocaleProvider";
@@ -14,6 +14,11 @@ export default function ResetPasswordForm({ token }: { token: string }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -126,7 +131,7 @@ export default function ResetPasswordForm({ token }: { token: string }) {
             <p>{error}</p>
           </div>
         ) : null}
-        <Button type="submit" disabled={loading} size="lg" className="w-full">
+        <Button type="submit" disabled={loading || !hydrated} size="lg" className="w-full">
           {loading ? t("authResetSubmitting") : t("authResetSubmit")}
         </Button>
       </form>

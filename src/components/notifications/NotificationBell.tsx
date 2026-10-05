@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cn, fmtDateTime } from "@/lib/utils";
 import { ensureCsrfToken } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import type { NotificationItem } from "./shared";
 import { NotificationIcon, notificationKind, notificationStyle } from "./shared";
 
@@ -16,6 +17,7 @@ type NotificationsResponse = {
 
 export function NotificationBell({ align = "right" }: { align?: "left" | "right" }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
@@ -90,8 +92,8 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
   }
 
   const sections = [
-    { key: "unread", label: "Yangi", entries: items.filter((n) => !n.isRead).slice(0, 3) },
-    { key: "read", label: "O'qilgan", entries: items.filter((n) => n.isRead).slice(0, 3) },
+    { key: "unread", label: t("shellNotifNew"), entries: items.filter((n) => !n.isRead).slice(0, 3) },
+    { key: "read", label: t("shellNotifRead"), entries: items.filter((n) => n.isRead).slice(0, 3) },
   ].filter((section) => section.entries.length > 0);
 
   return (
@@ -99,7 +101,7 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        aria-label="Bildirishnomalar"
+        aria-label={t("shellNotifications")}
         aria-expanded={open}
         className={cn(
           "relative inline-flex size-9 items-center justify-center rounded-xl transition-colors duration-150",
@@ -137,13 +139,13 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
           )}
         >
           <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-100 px-4 py-2.5">
-            <p className="text-sm font-semibold text-brand-950">Bildirishnomalar</p>
+            <p className="text-sm font-semibold text-brand-950">{t("shellNotifications")}</p>
             {unreadCount > 0 ? (
               <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">
-                {unreadCount} ta yangi
+                {t("shellNotifNewCount", { count: unreadCount })}
               </span>
             ) : (
-              <span className="text-[11px] text-slate-600">Hammasi o&apos;qilgan</span>
+              <span className="text-[11px] text-slate-600">{t("shellNotifAllRead")}</span>
             )}
           </div>
 
@@ -156,8 +158,8 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
                 </svg>
               </span>
               <div>
-                <p className="text-sm font-medium text-slate-700">Bildirishnomalar yo&apos;q</p>
-                <p className="mt-0.5 text-xs text-slate-600">Yangi xabarlar shu yerda ko&apos;rinadi</p>
+                <p className="text-sm font-medium text-slate-700">{t("shellNotifEmptyTitle")}</p>
+                <p className="mt-0.5 text-xs text-slate-600">{t("shellNotifEmpty")}</p>
               </div>
             </div>
           ) : (
@@ -231,7 +233,7 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
             onClick={() => setOpen(false)}
             className="flex items-center justify-center gap-1 border-t border-slate-100 px-4 py-2.5 text-sm font-medium text-brand-700 transition-colors duration-150 hover:bg-brand-50 hover:text-brand-900"
           >
-            Barchasini ko&apos;rish
+            {t("shellNotifViewAll")}
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="m9 18 6-6-6-6" />
             </svg>

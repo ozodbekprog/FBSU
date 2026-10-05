@@ -1,38 +1,54 @@
+export type BugKind =
+  | "database"
+  | "network"
+  | "render"
+  | "csrf"
+  | "chunk"
+  | "auth"
+  | "other";
+
 export type BugSuggestion = {
   title: string;
   hint: string;
+  kind: BugKind;
 };
 
-const PATTERNS: { test: RegExp; title: string; hint: string }[] = [
+const PATTERNS: { test: RegExp; title: string; hint: string; kind: BugKind }[] = [
   {
     test: /prisma|P20\d\d|database|ECONNREFUSED.*5432/i,
     title: "Ma'lumotlar bazasi",
     hint: "Baza ulanishini va migratsiyalar holatini tekshirish kerak",
+    kind: "database",
   },
   {
     test: /failed to fetch|network|load failed|ECONNREFUSED|ETIMEDOUT/i,
     title: "Tarmoq aloqasi",
     hint: "Server ishlayaptimi va tarmoq uzilmaganini tekshirish kerak",
+    kind: "network",
   },
   {
     test: /hydrat|text content does not match/i,
     title: "Sahifa renderi",
     hint: "Server va brauzer renderi mosligini tekshirish kerak",
+    kind: "render",
   },
   {
     test: /csrf/i,
     title: "Xavfsizlik (CSRF)",
     hint: "CSRF token oqimini tekshirish kerak",
+    kind: "csrf",
   },
   {
     test: /chunk|loading chunk|404/i,
     title: "Fayl yuklash",
     hint: "Build yangilanganini va brauzer keshini tekshirish kerak",
+    kind: "chunk",
   },
   {
     test: /unauthorized|forbidden|401|403/i,
     title: "Ruxsat / sessiya",
     hint: "Sessiya muddati va foydalanuvchi ruxsatlarini tekshirish kerak",
+    kind: "auth",
   },
 ];
 
@@ -40,10 +56,14 @@ export function classifyBug(message: string, stack?: string | null): BugSuggesti
   const text = `${message} ${stack ?? ""}`;
   for (const pattern of PATTERNS) {
     if (pattern.test.test(text)) {
-      return { title: pattern.title, hint: pattern.hint };
+      return { title: pattern.title, hint: pattern.hint, kind: pattern.kind };
     }
   }
-  return { title: "Boshqa xatolik", hint: "Qo'lda tekshirish kerak" };
+  return { title: "Boshqa xatolik", hint: "Qo'lda tekshirish kerak", kind: "other" };
+}
+
+export function bugKind(message: string, stack?: string | null): BugKind {
+  return classifyBug(message, stack).kind;
 }
 
 const FRIENDLY: Record<string, string> = {

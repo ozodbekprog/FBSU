@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { Avatar, Badge, Card } from "@/components/ui";
 import { initials } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type CourseCardData = {
   id: string;
@@ -15,6 +18,7 @@ export type CourseCardData = {
 };
 
 export function CourseCard({ course, staff = false }: { course: CourseCardData; staff?: boolean }) {
+  const { t } = useI18n();
   return (
     <Link href={`/courses/${course.slug}`} className="group block h-full rounded-2xl focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20">
       <Card className="flex h-full flex-col overflow-hidden transition-all duration-300 group-hover:-translate-y-1.5 group-hover:border-brand-200 group-hover:shadow-lift">
@@ -28,12 +32,12 @@ export function CourseCard({ course, staff = false }: { course: CourseCardData; 
           <span className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/15 to-transparent" />
           <div className="absolute inset-x-0 top-4 flex items-center justify-between gap-2 px-4">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80 ring-1 ring-inset ring-white/20 backdrop-blur">
-              Kurs
+              {t("crsBadgeCourse")}
             </span>
             <span className="flex shrink-0 items-center gap-2">
               {staff && !course.isPublished ? (
                 <Badge tone="gold" className="shadow-sm ring-1 ring-inset ring-white/25">
-                  Qoralama
+                  {t("crsDraft")}
                 </Badge>
               ) : null}
               <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-xl bg-white/15 px-2 text-xs font-bold text-white shadow-sm ring-1 ring-inset ring-white/25 backdrop-blur transition-transform duration-300 group-hover:scale-105">
@@ -71,7 +75,7 @@ export function CourseCard({ course, staff = false }: { course: CourseCardData; 
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
               </svg>
-              {course.materialsCount} material
+              {t("crsMaterialsCount", { count: course.materialsCount })}
             </span>
             {staff ? (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-500 ring-1 ring-inset ring-slate-200/70">
@@ -89,7 +93,7 @@ export function CourseCard({ course, staff = false }: { course: CourseCardData; 
                   <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                   <circle cx="9" cy="7" r="4" />
                 </svg>
-                {course.studentsCount} talaba
+                {t("crsStudentsCount", { count: course.studentsCount })}
               </span>
             ) : null}
             <span className="ml-auto inline-flex size-7 items-center justify-center rounded-full bg-brand-50 text-brand-700 opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-100">

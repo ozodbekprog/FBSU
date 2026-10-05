@@ -1,11 +1,16 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import {
   EXAM_MIN_PERCENT,
-  sessionTypeLabel,
-  sheetStatusLabel,
+  SESSION_TYPE_KEY,
+  SHEET_STATUS_KEY,
   type AttendanceSummary,
+  type SessionType,
+  type SheetStatus,
 } from "./session-shared";
 
 const TYPE_TONES: Record<string, string> = {
@@ -30,32 +35,38 @@ function bucketOf(date: Date) {
 }
 
 const BUCKET_BADGES = {
-  upcoming: { label: "Kelayotgan", tone: "blue" },
-  today: { label: "Bugun", tone: "amber" },
-  past: { label: "O'tgan", tone: "slate" },
+  upcoming: { key: "grdGroupUpcoming", tone: "blue" },
+  today: { key: "grdGroupToday", tone: "amber" },
+  past: { key: "grdGroupPast", tone: "slate" },
 } as const;
 
 export function SessionTypeBadge({ type }: { type: string }) {
-  return <Badge tone={TYPE_TONES[type] ?? "slate"}>{sessionTypeLabel(type)}</Badge>;
+  const { t } = useI18n();
+  const key = SESSION_TYPE_KEY[type as SessionType];
+  return <Badge tone={TYPE_TONES[type] ?? "slate"}>{key ? t(key) : type}</Badge>;
 }
 
 export function SheetStatusBadge({ status, score }: { status: string; score?: number | null }) {
-  return (
-    <Badge tone={STATUS_TONES[status] ?? "slate"}>
-      {score != null ? `${sheetStatusLabel(status)} · ${score}` : sheetStatusLabel(status)}
-    </Badge>
-  );
+  const { t } = useI18n();
+  const key = SHEET_STATUS_KEY[status as SheetStatus];
+  const label = key ? t(key) : status;
+  return <Badge tone={STATUS_TONES[status] ?? "slate"}>{score != null ? `${label} · ${score}` : label}</Badge>;
 }
 
 export function SessionStateBadge({ date }: { date: Date }) {
+  const { t } = useI18n();
   const bucket = bucketOf(date);
-  return <Badge tone={BUCKET_BADGES[bucket].tone}>{BUCKET_BADGES[bucket].label}</Badge>;
+  return <Badge tone={BUCKET_BADGES[bucket].tone}>{t(BUCKET_BADGES[bucket].key)}</Badge>;
 }
 
 export function AttendanceBadge({ attendance }: { attendance: AttendanceSummary }) {
+  const { t } = useI18n();
   return (
     <Badge tone={attendance.eligible ? "green" : "rose"}>
-      {attendance.eligible ? "Ruxsat" : "Ruxsat yo'q"} · {attendance.percent}%
+      {t("grdExAttendanceBadge", {
+        status: t(attendance.eligible ? "grdEligibleShort" : "grdNoPermission"),
+        percent: attendance.percent,
+      })}
     </Badge>
   );
 }
@@ -67,6 +78,7 @@ export function AttendanceBanner({
   attendance: AttendanceSummary;
   compact?: boolean;
 }) {
+  const { t } = useI18n();
   const eligible = attendance.eligible;
   return (
     <div
@@ -86,12 +98,12 @@ export function AttendanceBanner({
       </span>
       <div className="min-w-0">
         <p className={cn("text-sm font-bold", eligible ? "text-emerald-700" : "text-rose-700")}>
-          {eligible ? "Ruxsat" : "Ruxsat yo'q"}
+          {t(eligible ? "grdEligibleShort" : "grdNoPermission")}
         </p>
         <p className={cn("mt-0.5 text-xs", eligible ? "text-emerald-600/80" : "text-rose-600/80")}>
           {eligible
-            ? `Davomat ${attendance.percent}% — talab bajarilgan`
-            : `Davomat ${attendance.percent}% — kamida ${EXAM_MIN_PERCENT}% kerak`}
+            ? t("grdExAttendanceMet", { percent: attendance.percent })
+            : t("grdExAttendanceRequired", { percent: attendance.percent, min: EXAM_MIN_PERCENT })}
         </p>
       </div>
     </div>

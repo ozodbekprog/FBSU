@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDictionary, getLocale } from "@/i18n";
 import { Avatar, Badge, ButtonLink, Card, CardBody, PageHeader } from "@/components/ui";
 import { cn, fmtDateTime } from "@/lib/utils";
 import { canManageCourse } from "@/components/courses/course-access";
@@ -14,6 +15,8 @@ export default async function ForumTopicPage({
   params: Promise<{ slug: string; id: string }>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const { slug, id } = await params;
 
   const course = await prisma.course.findUnique({ where: { slug } });
@@ -22,7 +25,7 @@ export default async function ForumTopicPage({
   const management = canManageCourse(user, course);
   if (user.role === "STUDENT") {
     const enrolled = await prisma.enrollment.findUnique({
-      where: { courseId_userId: { courseId: course.id, userId: user.id } },
+      where: { courseId_userId: { courseId: course.id, userId: user.id }, status: "ACTIVE" },
     });
     if (!enrolled) notFound();
   } else if (!management) {
@@ -48,7 +51,7 @@ export default async function ForumTopicPage({
         subtitle={course.title}
         action={
           <ButtonLink href={`/courses/${course.slug}/forum`} variant="secondary" size="sm">
-            Forumga qaytish
+            {dictionary.crsBackToForum}
           </ButtonLink>
         }
       />
@@ -83,7 +86,7 @@ export default async function ForumTopicPage({
                         <path d="M12 17v5" />
                         <path d="M9 10.8V4h6v6.8l2 2.2H7z" />
                       </svg>
-                      Pin
+                      {dictionary.crsPinned}
                     </Badge>
                   ) : null}
                 </div>
@@ -105,7 +108,7 @@ export default async function ForumTopicPage({
       </Card>
 
       <h2 className="mb-3 flex items-center gap-2 font-semibold text-brand-950">
-        Javoblar
+        {dictionary.crsReplies}
         <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-500">
           {topic.replies.length}
         </span>
@@ -113,7 +116,7 @@ export default async function ForumTopicPage({
 
       {topic.replies.length === 0 ? (
         <p className="mb-6 rounded-2xl border border-dashed border-slate-300 bg-white/60 px-5 py-6 text-center text-sm text-slate-500">
-          Hozircha javoblar yo&apos;q. Birinchi bo&apos;lib javob yozing.
+          {dictionary.crsNoReplies}
         </p>
       ) : (
         <div className="mb-6 space-y-3">

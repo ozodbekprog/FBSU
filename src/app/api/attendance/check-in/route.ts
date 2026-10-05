@@ -7,6 +7,7 @@ import {
   clientIpFromHeaders,
   evaluateCheckInRisk,
 } from "@/modules/attendance-security/verify";
+import { checkFace } from "@/modules/attendance/face";
 
 const CHECK_IN_WINDOW_MS = 10 * 60 * 1000;
 const CHECK_IN_MAX_ATTEMPTS = 10;
@@ -18,6 +19,7 @@ const checkInSchema = z
     lat: z.number().finite().optional(),
     lng: z.number().finite().optional(),
     accuracy: z.number().finite().optional(),
+    faceDescriptor: z.array(z.number().finite()).max(256).optional(),
   })
   .refine((value) => Boolean(value.token || value.code), {
     message: "Token yoki kod kerak",
@@ -87,7 +89,7 @@ export async function POST(request: Request) {
   }
 
   const enrolled = await prisma.enrollment.findUnique({
-    where: { courseId_userId: { courseId: session.courseId, userId: user.id } },
+    where: { courseId_userId: { courseId: session.courseId, userId: user.id }, status: "ACTIVE" },
   });
   if (!enrolled) {
     return Response.json({ ok: false, error: "Siz bu kursga yozilmagansiz" }, { status: 403 });
@@ -102,14 +104,17 @@ export async function POST(request: Request) {
       },
     },
   });
-  if (existing) {
-    return Response.json(
-      { ok: false, error: "Bugun bu kurs uchun davomat allaqachon belgilangan" },
-      { status: 409 },
-    );
+  if (existing && existing.status !== "ABSENT") {
+    const faceRetry = existing.status === "SUSPICIOUS" && parsed.data.faceDescriptor !== undefined;
+    if (!faceRetry) {
+      return Response.json(
+        { ok: false, error: "Bugun bu kurs uchun davomat allaqachon belgilangan" },
+        { status: 409 },
+      );
+    }
   }
 
-  const tokenLocation = payload ? lookupQrLocation(payload.jti) : undefined;
+  const tokenLocation = payload ? (payload.loc ?? lookupQrLocation(payload.jti)) : undefined;
   const studentLocation =
     typeof parsed.data.lat === "number" && typeof parsed.data.lng === "number"
       ? {
@@ -118,6 +123,12 @@ export async function POST(request: Request) {
           accuracy: parsed.data.accuracy,
         }
       : undefined;
+  const faceRow = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { faceDescriptor: true },
+  });
+  const faceCheck = checkFace(faceRow?.faceDescriptor ?? null, parsed.data.faceDescriptor ?? null);
+
   const risk = await evaluateCheckInRisk({
     studentId: user.id,
     sessionId: session.id,
@@ -125,9 +136,15 @@ export async function POST(request: Request) {
     tokenLocation,
     studentLocation,
     ip,
+    usedCode: !payload,
+    faceCheck,
   });
   const status = risk.suspicious ? "SUSPICIOUS" : "PRESENT";
-  const note = risk.suspicious ? `Shubhali: ${risk.reasons.join(", ")}` : "QR orqali";
+  const note = risk.suspicious
+    ? `Shubhali: ${risk.reasons.join(", ")}`
+    : faceCheck === "ok"
+      ? "QR orqali · Face ID"
+      : "QR orqali";
 
   const attendance = await prisma.attendance.upsert({
     where: {
@@ -160,6 +177,7 @@ export async function POST(request: Request) {
         reasons: risk.reasons,
         distanceM: risk.distanceM ?? null,
         suspicious: risk.suspicious,
+        faceCheck,
       },
     },
   });
@@ -172,6 +190,7 @@ export async function POST(request: Request) {
       status,
       suspicious: risk.suspicious,
       reasons: risk.reasons,
+      faceCheck,
     },
   });
 }

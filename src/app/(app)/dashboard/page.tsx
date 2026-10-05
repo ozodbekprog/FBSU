@@ -6,7 +6,9 @@ import { BarChart, DonutChart, LineChart } from "@/components/charts";
 import { cn, dayName, fmtDate, initials } from "@/lib/utils";
 import { getAdminAnalytics, getStudentAnalytics, getTeacherAnalytics } from "./analytics";
 import type { AdminAnalytics, StudentAnalytics, TeacherAnalytics } from "./analytics";
+import { getDictionary, getLocale, t as translate, type Locale } from "@/i18n";
 import { CheckInForm } from "@/components/attendance/check-in-form";
+import { LessonBanner } from "@/components/dashboard/lesson-banner";
 import {
   SLOT_TIMES,
   dateFromIso,
@@ -172,12 +174,14 @@ function Hero({
   roleLabel,
   now,
   actions,
+  locale,
 }: {
   name: string;
   firstName: string;
   roleLabel: string;
   now: Date;
   actions: QuickAction[];
+  locale: Locale;
 }) {
   return (
     <section className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-950 via-brand-900 to-brand-700 p-6 text-white shadow-card md:p-8">
@@ -188,7 +192,9 @@ function Hero({
         <div className="flex flex-wrap items-center gap-4">
           <Avatar name={name} className="size-14! text-base ring-4 ring-white/10" />
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Salom, {firstName}!</h1>
+            <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+              {translate(locale, "dashGreeting", { name: firstName })}
+            </h1>
             <div className="mt-2.5 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-medium text-brand-100 ring-1 ring-white/15">
                 {roleLabel}
@@ -205,7 +211,7 @@ function Hero({
         </div>
         <div className="mt-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-200/80">
-            Tezkor amallar
+            {translate(locale, "dashQuickActions")}
           </p>
           <div className="mt-2.5 flex flex-wrap gap-2">
             {actions.map((action) => (
@@ -296,6 +302,7 @@ function AnalyticsCard({
   delay,
   empty,
   emptyDescription,
+  locale,
   children,
 }: {
   title: string;
@@ -304,6 +311,7 @@ function AnalyticsCard({
   delay: number;
   empty: boolean;
   emptyDescription: string;
+  locale: Locale;
   children: ReactNode;
 }) {
   return (
@@ -312,7 +320,7 @@ function AnalyticsCard({
         <CardHeader title={title} subtitle={subtitle} />
         <CardBody>
           {empty ? (
-            <EmptyState title="Hali ma'lumot yo'q" description={emptyDescription} />
+            <EmptyState title={translate(locale, "dashNoDataTitle")} description={emptyDescription} />
           ) : (
             <>
               {children}
@@ -327,42 +335,45 @@ function AnalyticsCard({
   );
 }
 
-function StudentAnalyticsSection({ data }: { data: StudentAnalytics }) {
+function StudentAnalyticsSection({ data, locale }: { data: StudentAnalytics; locale: Locale }) {
   return (
     <section className="mt-8">
       <SectionHeading
-        title="Tahlillar"
-        subtitle="Davomat va baholar bo'yicha shaxsiy ko'rsatkichlar"
-        action={<Badge tone="blue">{data.attendanceTotal} yozuv</Badge>}
+        title={translate(locale, "dashAnalyticsTitle")}
+        subtitle={translate(locale, "dashStudentAnalyticsSubtitle")}
+        action={<Badge tone="blue">{translate(locale, "dashRecordsCount", { count: data.attendanceTotal })}</Badge>}
       />
       <div className="grid gap-5 lg:grid-cols-2">
         <AnalyticsCard
-          title="Davomat taqsimoti"
-          subtitle="Barcha kurslar bo'yicha yozuvlar"
-          note="Kechikkan va sababli darslar ham qatnashgan hisoblanadi."
+          title={translate(locale, "dashAttendanceDistTitle")}
+          subtitle={translate(locale, "dashAttendanceDistSubtitle")}
+          note={translate(locale, "dashAttendanceDistNote")}
           delay={60}
           empty={data.attendanceTotal === 0}
-          emptyDescription="Davomat yozuvlari paydo bo'lganda taqsimot shu yerda ko'rinadi."
+          emptyDescription={translate(locale, "dashAttendanceDistEmpty")}
+          locale={locale}
         >
           <DonutChart data={data.attendance} />
         </AnalyticsCard>
         <AnalyticsCard
-          title="Kurslar bo'yicha davomat"
-          subtitle="Keldi foizi (kechikkan va sababli bilan)"
-          note="Har bir ustun kursdagi barcha davomat yozuvlariga asoslanadi."
+          title={translate(locale, "dashCourseAttendanceTitle")}
+          subtitle={translate(locale, "dashCourseAttendanceSubtitle")}
+          note={translate(locale, "dashCourseAttendanceNote")}
           delay={120}
           empty={data.courseAttendance.length === 0}
-          emptyDescription="Darslar belgilangach kurslar kesimida foiz ko'rinadi."
+          emptyDescription={translate(locale, "dashCourseAttendanceEmpty")}
+          locale={locale}
         >
           <BarChart data={data.courseAttendance} />
         </AnalyticsCard>
         <AnalyticsCard
-          title="Baholar dinamikasi"
-          subtitle="Topshiriq va testlar, oxirgi 10 natija"
-          note="Har bir nuqta — bitta baholangan topshiriq yoki test natijasi."
+          title={translate(locale, "dashGradeTrendTitle")}
+          subtitle={translate(locale, "dashGradeTrendSubtitle")}
+          note={translate(locale, "dashGradeTrendNote")}
           delay={180}
           empty={data.gradeTrend.length === 0}
-          emptyDescription="Baholangan topshiriq yoki test natijalari hali yo'q."
+          emptyDescription={translate(locale, "dashGradeTrendEmpty")}
+          locale={locale}
         >
           <LineChart data={data.gradeTrend} />
         </AnalyticsCard>
@@ -371,52 +382,56 @@ function StudentAnalyticsSection({ data }: { data: StudentAnalytics }) {
   );
 }
 
-function TeacherAnalyticsSection({ data }: { data: TeacherAnalytics }) {
+function TeacherAnalyticsSection({ data, locale }: { data: TeacherAnalytics; locale: Locale }) {
   return (
     <section className="mt-8">
       <SectionHeading
-        title="Tahlillar"
-        subtitle="Kurslaringiz bo'yicha ko'rsatkichlar va so'nggi 14 kunlik dinamika"
-        action={<Badge tone="slate">So&apos;nggi 14 kun</Badge>}
+        title={translate(locale, "dashAnalyticsTitle")}
+        subtitle={translate(locale, "dashTeacherAnalyticsSubtitle")}
+        action={<Badge tone="slate">{translate(locale, "dashLast14Days")}</Badge>}
       />
       <div className="grid gap-5 lg:grid-cols-2">
         <AnalyticsCard
-          title="Topshiriqlar topshirilishi"
-          subtitle="So'nggi 14 kunda yuborilgan ishlar"
-          note="Ustunlar kunlik yuborilgan ishlar sonini ko'rsatadi."
+          title={translate(locale, "dashSubmissionsTitle")}
+          subtitle={translate(locale, "dashSubmissionsSubtitle")}
+          note={translate(locale, "dashSubmissionsNote")}
           delay={60}
           empty={!data.submissionsByDay.some((point) => point.value > 0)}
-          emptyDescription="So'nggi 14 kunda topshirilgan ish yo'q."
+          emptyDescription={translate(locale, "dashSubmissionsEmpty")}
+          locale={locale}
         >
           <BarChart data={data.submissionsByDay} />
         </AnalyticsCard>
         <AnalyticsCard
-          title="Davomat dinamikasi"
-          subtitle="Faol dars kunlari bo'yicha o'rtacha foiz"
-          note="Faqat dars o'tilgan kunlar hisobga olinadi."
+          title={translate(locale, "dashAttendanceTrendTitle")}
+          subtitle={translate(locale, "dashAttendanceTrendSubtitle")}
+          note={translate(locale, "dashAttendanceTrendNote")}
           delay={120}
           empty={data.attendanceByDay.length === 0}
-          emptyDescription="So'nggi 14 kunda davomat yozuvlari yo'q."
+          emptyDescription={translate(locale, "dashAttendanceTrendEmpty")}
+          locale={locale}
         >
           <LineChart data={data.attendanceByDay} />
         </AnalyticsCard>
         <AnalyticsCard
-          title="Kurslardagi talabalar"
-          subtitle="Har kurs bo'yicha yozilganlar soni"
-          note="Har bir ustun kursga yozilgan talabalar soni."
+          title={translate(locale, "dashCourseStudentsTitle")}
+          subtitle={translate(locale, "dashCourseStudentsSubtitle")}
+          note={translate(locale, "dashCourseStudentsNote")}
           delay={180}
           empty={data.studentsByCourse.length === 0}
-          emptyDescription="Kurslaringizga hali talaba yozilmagan."
+          emptyDescription={translate(locale, "dashCourseStudentsEmpty")}
+          locale={locale}
         >
           <BarChart data={data.studentsByCourse} />
         </AnalyticsCard>
         <AnalyticsCard
-          title="Topshiriqlar holati"
-          subtitle="Barcha topshiriqlar bo'yicha holatlar"
-          note="Topshirilgan, baholangan va kechiktirilgan ishlar kesimi."
+          title={translate(locale, "dashSubmissionStatusTitle")}
+          subtitle={translate(locale, "dashSubmissionStatusSubtitle")}
+          note={translate(locale, "dashSubmissionStatusNote")}
           delay={240}
           empty={!data.submissionStatus.some((slice) => slice.value > 0)}
-          emptyDescription="Topshiriqlar yuborilganda holatlar shu yerda ko'rinadi."
+          emptyDescription={translate(locale, "dashSubmissionStatusEmpty")}
+          locale={locale}
         >
           <DonutChart data={data.submissionStatus} />
         </AnalyticsCard>
@@ -425,32 +440,34 @@ function TeacherAnalyticsSection({ data }: { data: TeacherAnalytics }) {
   );
 }
 
-function AdminAnalyticsSection({ data }: { data: AdminAnalytics }) {
+function AdminAnalyticsSection({ data, locale }: { data: AdminAnalytics; locale: Locale }) {
   return (
     <section className="mt-8">
       <SectionHeading
-        title="Tahlillar"
-        subtitle="Tizim ko'rsatkichlari va so'nggi 14 kunlik dinamika"
-        action={<Badge tone="slate">So&apos;nggi 14 kun</Badge>}
+        title={translate(locale, "dashAnalyticsTitle")}
+        subtitle={translate(locale, "dashAdminAnalyticsSubtitle")}
+        action={<Badge tone="slate">{translate(locale, "dashLast14Days")}</Badge>}
       />
       <div className="grid gap-5 lg:grid-cols-2">
         <AnalyticsCard
-          title="Foydalanuvchilar rollari"
-          subtitle="Talabalar, o'qituvchilar va adminlar nisbati"
-          note="Barcha ro'yxatdan o'tgan foydalanuvchilar hisobga olinadi."
+          title={translate(locale, "dashUserRolesTitle")}
+          subtitle={translate(locale, "dashUserRolesSubtitle")}
+          note={translate(locale, "dashUserRolesNote")}
           delay={60}
           empty={data.usersByRole.every((slice) => slice.value === 0)}
-          emptyDescription="Foydalanuvchilar mavjud emas."
+          emptyDescription={translate(locale, "dashUserRolesEmpty")}
+          locale={locale}
         >
           <DonutChart data={data.usersByRole} />
         </AnalyticsCard>
         <AnalyticsCard
-          title="Topshiriqlar dinamikasi"
-          subtitle="So'nggi 14 kunda yuborilgan ishlar"
-          note="Ustunlar kunlik yuborilgan ishlar sonini ko'rsatadi."
+          title={translate(locale, "dashSubmissionsTrendTitle")}
+          subtitle={translate(locale, "dashSubmissionsSubtitle")}
+          note={translate(locale, "dashSubmissionsNote")}
           delay={120}
           empty={!data.submissionsByDay.some((point) => point.value > 0)}
-          emptyDescription="So'nggi 14 kunda topshirilgan ish yo'q."
+          emptyDescription={translate(locale, "dashSubmissionsEmpty")}
+          locale={locale}
         >
           <BarChart data={data.submissionsByDay} />
         </AnalyticsCard>
@@ -461,14 +478,16 @@ function AdminAnalyticsSection({ data }: { data: AdminAnalytics }) {
 
 export default async function DashboardPage() {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dict = getDictionary(locale);
   const now = new Date();
   const firstName = user.name.split(" ")[0];
   const roleLabel =
     user.role === "ADMIN"
-      ? "Administrator paneli"
+      ? dict.dashRoleAdminPanel
       : user.role === "TEACHER"
-        ? "O'qituvchi paneli"
-        : `${user.group?.name ?? "Talaba"} guruhi`;
+        ? dict.dashRoleTeacherPanel
+        : translate(locale, "dashRoleGroup", { group: user.group?.name ?? dict.dashRoleStudent });
 
   if (isStaff(user.role)) {
     const where = user.role === "TEACHER" ? { teacherId: user.id } : {};
@@ -483,7 +502,7 @@ export default async function DashboardPage() {
       }),
     ]);
     const analytics =
-      user.role === "TEACHER" ? await getTeacherAnalytics(user.id) : await getAdminAnalytics();
+      user.role === "TEACHER" ? await getTeacherAnalytics(user.id, locale) : await getAdminAnalytics(locale);
 
     const todayDow = now.getDay() === 0 ? 7 : now.getDay();
     const dateIso = todayIso();
@@ -502,7 +521,7 @@ export default async function DashboardPage() {
             id: true,
             slug: true,
             title: true,
-            _count: { select: { enrollments: true } },
+            _count: { select: { enrollments: { where: { status: "ACTIVE" } } } },
           },
         }),
         prisma.attendance.groupBy({
@@ -541,7 +560,10 @@ export default async function DashboardPage() {
             href: slug
               ? `/courses/${slug}/attendance/lesson?date=${dateIso}&slot=${entry.slot}`
               : null,
-            statusText: markedCount > 0 ? `${markedCount}/${total} belgilangan` : "Belgilanmagan",
+            statusText:
+              markedCount > 0
+                ? translate(locale, "dashMarkedStatus", { marked: markedCount, total })
+                : dict.dashNotMarked,
             marked: markedCount > 0,
           };
         });
@@ -550,36 +572,51 @@ export default async function DashboardPage() {
     const actions: QuickAction[] =
       user.role === "TEACHER"
         ? [
-            { href: "/attendance", label: "Davomat", icon: <CheckCircleIcon /> },
-            { href: "/schedule", label: "Jadval", icon: <CalendarIcon /> },
-            { href: "/grades", label: "Topshiriqlar", icon: <ClipboardIcon /> },
-            { href: "/quizzes", label: "Testlar", icon: <HelpCircleIcon /> },
+            { href: "/attendance", label: dict.dashActionAttendance, icon: <CheckCircleIcon /> },
+            { href: "/schedule", label: dict.dashActionSchedule, icon: <CalendarIcon /> },
+            { href: "/grades", label: dict.dashActionAssignments, icon: <ClipboardIcon /> },
+            { href: "/quizzes", label: dict.dashActionQuizzes, icon: <HelpCircleIcon /> },
           ]
         : [
-            { href: "/admin", label: "Statistika", icon: <BarChartIcon /> },
-            { href: "/admin/users", label: "Foydalanuvchilar", icon: <UsersIcon /> },
-            { href: "/schedule", label: "Jadval", icon: <CalendarIcon /> },
-            { href: "/reports", label: "Hisobotlar", icon: <FileTextIcon /> },
+            { href: "/admin", label: dict.dashActionStats, icon: <BarChartIcon /> },
+            { href: "/admin/users", label: dict.dashActionUsers, icon: <UsersIcon /> },
+            { href: "/schedule", label: dict.dashActionSchedule, icon: <CalendarIcon /> },
+            { href: "/reports", label: dict.dashActionReports, icon: <FileTextIcon /> },
           ];
 
     return (
       <>
-        <Hero name={user.name} firstName={firstName} roleLabel={roleLabel} now={now} actions={actions} />
+        <Hero
+          name={user.name}
+          firstName={firstName}
+          roleLabel={roleLabel}
+          now={now}
+          actions={actions}
+          locale={locale}
+        />
+
+        {user.role === "TEACHER" ? (
+          <div className="mt-6">
+            <LessonBanner teacherId={user.id} />
+          </div>
+        ) : null}
 
         <SectionHeading
-          title={user.role === "TEACHER" ? "Yuklama" : "Statistika"}
+          title={user.role === "TEACHER" ? dict.dashTeacherLoadTitle : dict.dashStatsTitle}
           subtitle={
-            user.role === "TEACHER"
-              ? "Kurslaringiz, talabalar va faoliyat qisqacha"
-              : "Tizim bo'yicha umumiy ko'rsatkichlar"
+            user.role === "TEACHER" ? dict.dashTeacherLoadSubtitle : dict.dashStatsSubtitle
           }
         />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Reveal delay={60}>
             <StatTile
-              label="Kurslar"
+              label={dict.dashStatCourses}
               value={courses}
-              hint={user.role === "TEACHER" ? "Siz o'qitadigan kurslar" : "Tizimdagi barcha kurslar"}
+              hint={
+                user.role === "TEACHER"
+                  ? dict.dashStatCoursesTeacherHint
+                  : dict.dashStatCoursesAdminHint
+              }
               icon={
                 <Icon>
                   <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -590,9 +627,9 @@ export default async function DashboardPage() {
           </Reveal>
           <Reveal delay={120}>
             <StatTile
-              label="Talabalar"
+              label={dict.dashStatStudents}
               value={students}
-              hint="Tizimdagi talabalar"
+              hint={dict.dashStatStudentsHint}
               tone="emerald"
               icon={
                 <Icon>
@@ -606,9 +643,9 @@ export default async function DashboardPage() {
           </Reveal>
           <Reveal delay={180}>
             <StatTile
-              label="Topshiriqlar"
+              label={dict.dashStatAssignments}
               value={submissions}
-              hint="Yuborilgan ishlar"
+              hint={dict.dashStatAssignmentsHint}
               tone="amber"
               icon={
                 <Icon>
@@ -621,9 +658,9 @@ export default async function DashboardPage() {
           </Reveal>
           <Reveal delay={240}>
             <StatTile
-              label="Testlar"
+              label={dict.dashStatQuizzes}
               value={quizzes}
-              hint="Yaratilgan testlar"
+              hint={dict.dashStatQuizzesHint}
               tone="gold"
               icon={
                 <Icon>
@@ -640,15 +677,23 @@ export default async function DashboardPage() {
           <Reveal delay={300} className="mt-8">
             <Card className="transition-shadow duration-200 hover:shadow-lift">
               <CardHeader
-                title="Bugungi darslarim"
-                subtitle={`${dayName(now.getDay())}, ${fmtDate(now)} — ${todayLessons.length} ta dars`}
-                action={<Badge tone="blue">{todayLessons.length} ta dars</Badge>}
+                title={dict.dashMyTodayLessons}
+                subtitle={translate(locale, "dashTodayLessonsSubtitle", {
+                  day: dayName(now.getDay()),
+                  date: fmtDate(now),
+                  count: todayLessons.length,
+                })}
+                action={
+                  <Badge tone="blue">
+                    {translate(locale, "dashLessonsCount", { count: todayLessons.length })}
+                  </Badge>
+                }
               />
               <CardBody className="space-y-2">
                 {todayLessons.length === 0 ? (
                   <EmptyState
-                    title="Bugun dars yo'q"
-                    description="Dars jadvalida bugunga sizning darsingiz yo'q."
+                    title={dict.dashNoLessonsTodayTitle}
+                    description={dict.dashNoLessonsTodayDesc}
                   />
                 ) : (
                   todayLessons.map((lesson) => (
@@ -661,7 +706,9 @@ export default async function DashboardPage() {
                     >
                       <div className="flex min-w-0 items-center gap-3">
                         <span className="inline-flex w-24 shrink-0 flex-col rounded-xl bg-brand-50 px-3 py-1.5 text-brand-800">
-                          <span className="text-xs font-semibold">{lesson.slot}-par</span>
+                          <span className="text-xs font-semibold">
+                            {translate(locale, "dashPairNumber", { slot: lesson.slot })}
+                          </span>
                           <span className="text-[11px] text-brand-600">
                             {SLOT_TIMES[lesson.slot] ?? ""}
                           </span>
@@ -685,7 +732,7 @@ export default async function DashboardPage() {
                         <Badge tone={lesson.marked ? "green" : "slate"}>{lesson.statusText}</Badge>
                         {lesson.href ? (
                           <ButtonLink href={lesson.href} size="sm">
-                            Davomat belgilash
+                            {dict.dashMarkAttendance}
                           </ButtonLink>
                         ) : null}
                       </div>
@@ -698,16 +745,16 @@ export default async function DashboardPage() {
         ) : null}
 
         {analytics.kind === "teacher" ? (
-          <TeacherAnalyticsSection data={analytics} />
+          <TeacherAnalyticsSection data={analytics} locale={locale} />
         ) : (
-          <AdminAnalyticsSection data={analytics} />
+          <AdminAnalyticsSection data={analytics} locale={locale} />
         )}
       </>
     );
   }
 
   const enrollments = await prisma.enrollment.findMany({
-    where: { userId: user.id },
+    where: { userId: user.id, status: "ACTIVE" },
     include: {
       course: { include: { teacher: true } },
     },
@@ -732,39 +779,46 @@ export default async function DashboardPage() {
       })
     : [];
 
-  const analytics = await getStudentAnalytics(user.id);
+  const analytics = await getStudentAnalytics(user.id, locale);
 
   const assignmentsHref = enrollments[0]
     ? `/courses/${enrollments[0].course.slug}/assignments`
     : "/courses";
 
   const actions: QuickAction[] = [
-    { href: "/attendance", label: "Davomat", icon: <CheckCircleIcon /> },
-    { href: "/schedule", label: "Jadval", icon: <CalendarIcon /> },
-    { href: assignmentsHref, label: "Topshiriqlar", icon: <ClipboardIcon /> },
-    { href: "/quizzes", label: "Testlar", icon: <HelpCircleIcon /> },
+    { href: "/attendance", label: dict.dashActionAttendance, icon: <CheckCircleIcon /> },
+    { href: "/schedule", label: dict.dashActionSchedule, icon: <CalendarIcon /> },
+    { href: assignmentsHref, label: dict.dashActionAssignments, icon: <ClipboardIcon /> },
+    { href: "/quizzes", label: dict.dashActionQuizzes, icon: <HelpCircleIcon /> },
   ];
 
   return (
     <>
-      <Hero name={user.name} firstName={firstName} roleLabel={roleLabel} now={now} actions={actions} />
+      <Hero
+        name={user.name}
+        firstName={firstName}
+        roleLabel={roleLabel}
+        now={now}
+        actions={actions}
+        locale={locale}
+      />
 
       <SectionHeading
-        title="QR davomat"
-        subtitle="Darsdagi QR kodni skanerlab davomatni belgilang"
+        title={dict.dashQrAttendanceTitle}
+        subtitle={dict.dashQrAttendanceSubtitle}
       />
       <CheckInForm />
 
       <SectionHeading
-        title="Bugungi holat"
-        subtitle="Kurslar, darslar va topshiriqlar qisqacha"
+        title={dict.dashTodayStatusTitle}
+        subtitle={dict.dashTodayStatusSubtitle}
       />
       <div className="grid gap-4 sm:grid-cols-3">
         <Reveal delay={60}>
           <StatTile
-            label="Kurslarim"
+            label={dict.dashMyCourses}
             value={enrollments.length}
-            hint="Yozilgan kurslar"
+            hint={dict.dashMyCoursesHint}
             icon={
               <Icon>
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -775,7 +829,7 @@ export default async function DashboardPage() {
         </Reveal>
         <Reveal delay={120}>
           <StatTile
-            label="Bugungi darslar"
+            label={dict.dashTodayLessons}
             value={scheduleToday.length}
             hint={dayName(now.getDay())}
             tone="emerald"
@@ -789,9 +843,9 @@ export default async function DashboardPage() {
         </Reveal>
         <Reveal delay={180}>
           <StatTile
-            label="Yaqin topshiriqlar"
+            label={dict.dashUpcomingAssignments}
             value={upcoming.length}
-            hint="Muddat bo'yicha"
+            hint={dict.dashByDeadline}
             tone="amber"
             icon={
               <Icon>
@@ -807,18 +861,22 @@ export default async function DashboardPage() {
         <Reveal delay={240}>
           <Card className="h-full transition-shadow duration-200 hover:shadow-lift">
             <CardHeader
-              title="Bugungi darslar"
+              title={dict.dashTodayLessons}
               subtitle={user.group?.name}
-              action={<Badge tone="blue">{scheduleToday.length} ta dars</Badge>}
+              action={
+                <Badge tone="blue">
+                  {translate(locale, "dashLessonsCount", { count: scheduleToday.length })}
+                </Badge>
+              }
             />
             <CardBody>
               {scheduleToday.length === 0 ? (
                 <EmptyState
-                  title="Bugun dars yo'q"
-                  description="Dars jadvali bo'sh kun."
+                  title={dict.dashNoLessonsTodayTitle}
+                  description={dict.dashEmptyScheduleDesc}
                   action={
                     <ButtonLink href="/schedule" size="sm" variant="secondary">
-                      Jadvalni ko&apos;rish
+                      {dict.dashViewSchedule}
                     </ButtonLink>
                   }
                 />
@@ -830,7 +888,7 @@ export default async function DashboardPage() {
                       className="group flex gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150 hover:bg-slate-50"
                     >
                       <span className="w-11 shrink-0 pt-px text-right text-xs font-semibold tabular-nums text-brand-800">
-                        {PAIR_TIMES[s.slot] ?? `${s.slot}-para`}
+                        {PAIR_TIMES[s.slot] ?? translate(locale, "dashPairShort", { slot: s.slot })}
                       </span>
                       <span className="relative flex w-3 shrink-0 justify-center">
                         {index < scheduleToday.length - 1 ? (
@@ -849,7 +907,9 @@ export default async function DashboardPage() {
                           </Icon>
                           <span className="truncate">{s.room}</span>
                           <span className="text-slate-500">·</span>
-                          <span className="text-slate-600">{s.slot}-para</span>
+                          <span className="text-slate-600">
+                            {translate(locale, "dashPairShort", { slot: s.slot })}
+                          </span>
                         </span>
                       </span>
                     </li>
@@ -864,15 +924,19 @@ export default async function DashboardPage() {
           <Reveal delay={300}>
             <Card className="transition-shadow duration-200 hover:shadow-lift">
               <CardHeader
-                title="Yaqin topshiriqlar"
-                subtitle="Muddat bo'yicha"
-                action={<Badge tone="amber">{upcoming.length} ta</Badge>}
+                title={dict.dashUpcomingAssignments}
+                subtitle={dict.dashByDeadline}
+                action={
+                  <Badge tone="amber">
+                    {translate(locale, "dashCountShort", { count: upcoming.length })}
+                  </Badge>
+                }
               />
               <CardBody className="space-y-2">
                 {upcoming.length === 0 ? (
                   <EmptyState
-                    title="Topshiriqlar yo'q"
-                    description="Hozircha faol topshiriq mavjud emas."
+                    title={dict.dashNoAssignmentsTitle}
+                    description={dict.dashNoAssignmentsDesc}
                   />
                 ) : (
                   upcoming.map((a) => {
@@ -900,11 +964,11 @@ export default async function DashboardPage() {
                             {fmtDate(a.dueAt)}
                           </DateChip>
                           {submitted ? (
-                            <Badge tone="green">Topshirilgan</Badge>
+                            <Badge tone="green">{dict.dashSubmitted}</Badge>
                           ) : overdue ? (
-                            <Badge tone="rose">Muddat o&apos;tgan</Badge>
+                            <Badge tone="rose">{dict.dashOverdue}</Badge>
                           ) : soon ? (
-                            <Badge tone="amber">Muddat yaqin</Badge>
+                            <Badge tone="amber">{dict.dashDueSoon}</Badge>
                           ) : null}
                         </div>
                       </div>
@@ -918,18 +982,24 @@ export default async function DashboardPage() {
           <Reveal delay={360}>
             <Card className="transition-shadow duration-200 hover:shadow-lift">
               <CardHeader
-                title="Kurslarim"
-                subtitle={`${enrollments.length} ta kurs`}
-                action={<Badge tone="slate">{enrollments.length} ta</Badge>}
+                title={dict.dashMyCourses}
+                subtitle={translate(locale, "dashCoursesCountSubtitle", {
+                  count: enrollments.length,
+                })}
+                action={
+                  <Badge tone="slate">
+                    {translate(locale, "dashCountShort", { count: enrollments.length })}
+                  </Badge>
+                }
               />
               <CardBody className="space-y-2">
                 {enrollments.length === 0 ? (
                   <EmptyState
-                    title="Kurslar yo'q"
-                    description="Siz hali biror kursga yozilmagansiz."
+                    title={dict.dashNoCoursesTitle}
+                    description={dict.dashNoCoursesDesc}
                     action={
                       <ButtonLink href="/courses" size="sm" variant="secondary">
-                        Kurslarni ko&apos;rish
+                        {dict.dashViewCourses}
                       </ButtonLink>
                     }
                   />
@@ -966,7 +1036,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <StudentAnalyticsSection data={analytics} />
+      <StudentAnalyticsSection data={analytics} locale={locale} />
     </>
   );
 }

@@ -21,27 +21,28 @@ describe("attendanceCounts", () => {
     });
   });
 
-  it("PRESENT, LATE va EXCUSED qatnashgan hisoblanadi, ABSENT emas", () => {
+  it("PRESENT va LATE qatnashgan hisoblanadi, EXCUSED esa yo'q", () => {
     const counts = attendanceCounts(["PRESENT", "PRESENT", "LATE", "EXCUSED", "ABSENT"]);
     expect(counts.present).toBe(2);
     expect(counts.late).toBe(1);
     expect(counts.excused).toBe(1);
     expect(counts.absent).toBe(1);
     expect(counts.total).toBe(5);
-    expect(counts.percent).toBe(80);
-    expect(counts.eligible).toBe(true);
-  });
-
-  it("foiz formulasi (PRESENT + LATE + EXCUSED) / total", () => {
-    const counts = attendanceCounts(["PRESENT", "LATE", "EXCUSED", "ABSENT"]);
-    expect(counts.percent).toBe(75);
+    // EXCUSED is intentionally excluded: 3/5 = 60%, below the 80% gate.
+    expect(counts.percent).toBe(60);
     expect(counts.eligible).toBe(false);
   });
 
-  it("SUSPICIOUS ham qatnashgan hisoblanadi va alohida ko'rsatiladi", () => {
+  it("foiz formulasi (faqat PRESENT + LATE) / total", () => {
+    const counts = attendanceCounts(["PRESENT", "LATE", "EXCUSED", "ABSENT"]);
+    expect(counts.percent).toBe(50);
+    expect(counts.eligible).toBe(false);
+  });
+
+  it("SUSPICIOUS qatnashgan hisoblanMAYdi (anti-fraud signal)", () => {
     const counts = attendanceCounts(["PRESENT", "SUSPICIOUS", "ABSENT"]);
     expect(counts.suspicious).toBe(1);
-    expect(counts.percent).toBe(67);
+    expect(counts.percent).toBe(33);
     expect(counts.eligible).toBe(false);
   });
 

@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PwaRegister } from "@/components/pwa/PwaRegister";
 import { CsrfBootstrap } from "@/components/csrf/csrf-bootstrap";
-import { getLocale } from "@/i18n";
+import { getDictionary, getLocale } from "@/i18n";
+import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
@@ -17,8 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 const FALLBACK_SITE_URL = "https://lms.ttpu.uz";
-const SITE_DESCRIPTION = "Turin Politexnika Universiteti uchun zamonaviy o'quv platformasi";
-const DEFAULT_TITLE = "FBSU LMS — O'quv boshqaruv tizimi";
+const OG_LOCALES: Record<string, string> = { uz: "uz_UZ", ru: "ru_RU", en: "en_US" };
 
 function resolveSiteUrl(): URL {
   const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
@@ -29,32 +29,39 @@ function resolveSiteUrl(): URL {
   }
 }
 
-export const metadata: Metadata = {
-  metadataBase: resolveSiteUrl(),
-  title: {
-    default: DEFAULT_TITLE,
-    template: "%s — FBSU LMS",
-  },
-  description: SITE_DESCRIPTION,
-  manifest: "/manifest.webmanifest",
-  appleWebApp: {
-    capable: true,
-    title: "FBSU LMS",
-    statusBarStyle: "default",
-  },
-  openGraph: {
-    type: "website",
-    siteName: "FBSU LMS",
-    locale: "uz_UZ",
-    title: DEFAULT_TITLE,
-    description: SITE_DESCRIPTION,
-  },
-  twitter: {
-    card: "summary",
-    title: DEFAULT_TITLE,
-    description: SITE_DESCRIPTION,
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const title = dictionary.metaTitle;
+  const description = dictionary.metaDescription;
+
+  return {
+    metadataBase: resolveSiteUrl(),
+    title: {
+      default: title,
+      template: "%s — FBSU LMS",
+    },
+    description,
+    manifest: "/manifest.webmanifest",
+    appleWebApp: {
+      capable: true,
+      title: "FBSU LMS",
+      statusBarStyle: "default",
+    },
+    openGraph: {
+      type: "website",
+      siteName: "FBSU LMS",
+      locale: OG_LOCALES[locale],
+      title,
+      description,
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#1d3460",
@@ -62,6 +69,7 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   return (
     <html
       lang={locale}
@@ -72,7 +80,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
-        {children}
+        <LocaleProvider locale={locale} dictionary={dictionary}>
+          {children}
+        </LocaleProvider>
         <PwaRegister />
         <CsrfBootstrap />
       </body>

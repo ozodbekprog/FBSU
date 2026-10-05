@@ -2,6 +2,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/ui";
 import { totalPoints } from "@/components/quiz/shared";
+import { getDictionary, getLocale } from "@/i18n";
 import OrdersManager, {
   type OrderItem,
   type RetakeItem,
@@ -11,6 +12,8 @@ const FAIL_PERCENT = 60;
 
 export default async function OrdersPage() {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
   const [orders, attempts, submissions] = await Promise.all([
     prisma.order.findMany({
@@ -93,9 +96,9 @@ export default async function OrdersPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Xizmatlar"
-        title="Arizalar"
-        subtitle="Transkript, ma'lumotnoma va qayta topshirish so'rovlari"
+        eyebrow={dictionary.mscOrdersEyebrow}
+        title={dictionary.mscOrdersTitle}
+        subtitle={dictionary.mscOrdersSubtitle}
       />
       <OrdersManager orders={orderItems} retakes={retakes} />
     </>

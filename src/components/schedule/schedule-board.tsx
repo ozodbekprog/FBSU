@@ -15,7 +15,8 @@ import {
   EmptyState,
   Table,
 } from "@/components/ui";
-import { cn, dayName } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
+import { cn } from "@/lib/utils";
 import {
   SLOT_TIMES,
   matchCourseSlug,
@@ -36,6 +37,8 @@ import type {
   ToastMessage,
 } from "./builder/types";
 import {
+  DAY_KEYS,
+  MONTH_KEYS,
   dayIsoInWeek,
   formatDayShort,
   formatWeekRange,
@@ -65,18 +68,13 @@ type NewBlockData = {
 const DAYS = [1, 2, 3, 4, 5, 6];
 const SLOTS = [1, 2, 3, 4, 5, 6, 7, 8];
 
-const PARITY_LABEL: Record<string, string> = {
-  odd: "Toq hafta",
-  even: "Juft hafta",
-};
-
-type StatusMeta = { label: string; tone: "amber" | "blue" | "rose"; stripe: string; dot: string };
+type StatusMeta = { tone: "amber" | "blue" | "rose"; stripe: string; dot: string };
 
 const STATUS_META: Record<ScheduleStatus, StatusMeta | null> = {
   NORMAL: null,
-  CHANGED: { label: "O'zgargan", tone: "amber", stripe: "bg-amber-400", dot: "bg-amber-500" },
-  MOVED: { label: "Ko'chirilgan", tone: "blue", stripe: "bg-sky-400", dot: "bg-sky-500" },
-  CANCELLED: { label: "Bekor qilindi", tone: "rose", stripe: "bg-rose-500", dot: "bg-rose-500" },
+  CHANGED: { tone: "amber", stripe: "bg-amber-400", dot: "bg-amber-500" },
+  MOVED: { tone: "blue", stripe: "bg-sky-400", dot: "bg-sky-500" },
+  CANCELLED: { tone: "rose", stripe: "bg-rose-500", dot: "bg-rose-500" },
 };
 
 const SUBJECT_TONES = [
@@ -286,7 +284,11 @@ function cellBackground(isToday: boolean, isNowPair: boolean) {
   return "";
 }
 
-async function apiRequest<T>(url: string, init?: RequestInit): Promise<ApiResponse<T>> {
+async function apiRequest<T>(
+  url: string,
+  init: RequestInit | undefined,
+  messages: { network: string; busy: string },
+): Promise<ApiResponse<T>> {
   try {
     const method = (init?.method || "GET").toString().toUpperCase();
     const headers: Record<string, string> = { ...((init?.headers as Record<string, string>) ?? {}) };
@@ -296,12 +298,12 @@ async function apiRequest<T>(url: string, init?: RequestInit): Promise<ApiRespon
     }
     const response = await fetch(url, { ...init, headers });
     const payload = (await response.json().catch(() => null)) as ApiResponse<T> | null;
-    if (!payload) return { ok: false, error: "Server bilan aloqa xatosi" };
+    if (!payload) return { ok: false, error: messages.network };
     if (payload.ok) return payload;
-    if (response.status === 409) return { ok: false, error: "Bu vaqt band", status: 409 };
+    if (response.status === 409) return { ok: false, error: messages.busy, status: 409 };
     return { ok: false, error: payload.error, status: response.status };
   } catch {
-    return { ok: false, error: "Server bilan aloqa xatosi" };
+    return { ok: false, error: messages.network };
   }
 }
 
@@ -379,6 +381,8 @@ export function ScheduleBoard({
   subGroups: string[];
 }) {
   const router = useRouter();
+  const { t } = useI18n();
+  const months = MONTH_KEYS.map((key) => t(key));
   const [entries, setEntries] = useState<BoardEntry[]>(initialEntries);
   const [mode, setMode] = useState<StaffMode>("group");
   const [view, setView] = useState<ViewMode>("grid");
@@ -407,6 +411,12 @@ export function ScheduleBoard({
     actionRef.current = null;
     setToast(null);
   }, []);
+
+  const request = useCallback(
+    <T,>(url: string, init?: RequestInit) =>
+      apiRequest<T>(url, init, { network: t("schNetworkError"), busy: t("schTimeBusy") }),
+    [t],
+  );
 
   useEffect(() => {
     if (!canEdit) return;
@@ -448,7 +458,18 @@ export function ScheduleBoard({
 
   const weekNumber = isoWeekNumber(weekStart);
   const parity = weekParityOf(weekStart);
-  const parityLabel = parity === "even" ? "Juft hafta" : "Toq hafta";
+  const parityLabel = parity === "even" ? t("schEvenWeek") : t("schOddWeek");
+
+  function statusLabel(status: ScheduleStatus): string | null {
+    if (status === "CHANGED") return t("schStatusChanged");
+    if (status === "MOVED") return t("schStatusMoved");
+    if (status === "CANCELLED") return t("schStatusCancelledLong");
+    return null;
+  }
+
+  function parityText(value: string): string {
+    return value === "odd" ? t("schOddWeek") : t("schEvenWeek");
+  }
   const nowPair = isCurrentWeek ? slotAtMinutes(nowMinutes) : null;
 
   const teacherOptionsFromEntries = (() => {
@@ -665,7 +686,7 @@ export function ScheduleBoard({
     setEntries((prev) => [...prev, optimistic]);
     flashSnap(tempId);
     setPending(true);
-    const result = await apiRequest<BuilderEntry>("/api/schedule", {
+    const result = await request<BuilderEntry>("/api/schedule", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -701,7 +722,7 @@ export function ScheduleBoard({
       ),
     );
     flashSnap(created.id);
-    showToast("success", "Qo'yildi ✓");
+    showToast("success", t("schToastPlacedCheck"));
   }
 
   async function moveEntry(id: string, cell: CellRef) {
@@ -715,7 +736,7 @@ export function ScheduleBoard({
     );
     flashSnap(id);
     setPending(true);
-    const result = await apiRequest<BuilderEntry>(`/api/schedule/${id}`, {
+    const result = await request<BuilderEntry>(`/api/schedule/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ dayOfWeek: cell.day, slot: cell.slot }),
@@ -736,7 +757,7 @@ export function ScheduleBoard({
           : entry,
       ),
     );
-    showToast("success", "Ko'chirildi ✓");
+    showToast("success", t("schToastMovedCheck"));
   }
 
   async function toggleCancel(entry: BoardEntry) {
@@ -744,7 +765,7 @@ export function ScheduleBoard({
     const snapshot = entry.status;
     setEntries((prev) => prev.map((item) => (item.id === entry.id ? { ...item, status: next } : item)));
     setPending(true);
-    const result = await apiRequest<BuilderEntry>(`/api/schedule/${entry.id}`, {
+    const result = await request<BuilderEntry>(`/api/schedule/${entry.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: next }),
@@ -765,7 +786,7 @@ export function ScheduleBoard({
           : item,
       ),
     );
-    showToast("success", next === "CANCELLED" ? "Bekor qilindi" : "Tiklandi");
+    showToast("success", next === "CANCELLED" ? t("schStatusCancelledLong") : t("schRestored"));
   }
 
   async function undoDelete() {
@@ -773,7 +794,7 @@ export function ScheduleBoard({
     if (!entry) return;
     deletedRef.current = null;
     setPending(true);
-    const result = await apiRequest<BuilderEntry>("/api/schedule", {
+    const result = await request<BuilderEntry>("/api/schedule", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -802,12 +823,12 @@ export function ScheduleBoard({
       ...prev,
       { ...toBoardEntry(created, entry.groupName), subjectRef: created.subjectRef ?? entry.subjectRef },
     ]);
-    showToast("success", "Qaytarildi ✓");
+    showToast("success", t("schToastUndone"));
   }
 
   async function deleteEntry(entry: BoardEntry) {
     setPending(true);
-    const result = await apiRequest<{ id: string }>(`/api/schedule/${entry.id}`, { method: "DELETE" });
+    const result = await request<{ id: string }>(`/api/schedule/${entry.id}`, { method: "DELETE" });
     setPending(false);
     if (!result.ok) {
       showToast("error", result.error);
@@ -817,7 +838,7 @@ export function ScheduleBoard({
     setPanelId(null);
     setSelectedBlockId(null);
     deletedRef.current = entry;
-    showToast("success", "O'chirildi", "Qaytarish", () => {
+    showToast("success", t("schToastDeletedShort"), t("schUndo"), () => {
       void undoDelete();
     });
   }
@@ -940,8 +961,8 @@ export function ScheduleBoard({
   if (groups.length === 0 || !selectedGroupId) {
     return (
       <EmptyState
-        title="Guruh topilmadi"
-        description="Jadvalni ko'rish uchun sizga guruh biriktirilgan bo'lishi kerak."
+        title={t("schGroupNotFoundTitle")}
+        description={t("schGroupNotFoundDescSchedule")}
       />
     );
   }
@@ -950,19 +971,19 @@ export function ScheduleBoard({
     <div className="hidden items-center gap-3 text-[11px] text-slate-600 lg:flex">
       <span className="inline-flex items-center gap-1.5">
         <span className="size-2 rounded-full bg-brand-500" />
-        Dars
+        {t("schLegendLesson")}
       </span>
       <span className="inline-flex items-center gap-1.5">
         <span className="size-2 rounded-full bg-amber-500" />
-        {"O'zgargan"}
+        {t("schStatusChanged")}
       </span>
       <span className="inline-flex items-center gap-1.5">
         <span className="size-2 rounded-full bg-sky-500" />
-        {"Ko'chirilgan"}
+        {t("schStatusMoved")}
       </span>
       <span className="inline-flex items-center gap-1.5">
         <span className="size-2 rounded-full bg-rose-500" />
-        Bekor
+        {t("schStatusCancelledShort")}
       </span>
     </div>
   );
@@ -970,20 +991,20 @@ export function ScheduleBoard({
   const gridSection = (
     <Card className={cn("animate-fade-in", view === "list" && "hidden")}>
       <CardHeader
-        title="Haftalik jadval"
+        title={t("schWeeklySchedule")}
         subtitle={
           canEdit && view === "grid"
-            ? "Blokni katakka sudrab tashlang yoki blokni bosib, katakni bosing"
+            ? t("schBoardDropHint")
             : selectedGroupName ?? undefined
         }
-        action={pending ? <span className="text-xs font-medium text-slate-600">Saqlanmoqda…</span> : legend}
+        action={pending ? <span className="text-xs font-medium text-slate-600">{t("schSaving")}</span> : legend}
       />
       <CardBody>
         <Table className="[&>table]:min-w-[900px]">
           <thead>
             <tr className="border-b border-slate-200">
               <th className="w-28 px-3 pb-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                Vaqt
+                {t("schTime")}
               </th>
               {DAYS.map((day) => {
                 const isToday = isCurrentWeek && day === today;
@@ -996,10 +1017,10 @@ export function ScheduleBoard({
                     )}
                   >
                     {isToday ? <span className="absolute inset-x-0 top-0 h-0.5 bg-gold-400" /> : null}
-                    {`${dayName(day)} ${formatDayShort(dayIsoInWeek(weekStart, day))}`}
+                    {`${t(DAY_KEYS[day % 7])} ${formatDayShort(dayIsoInWeek(weekStart, day))}`}
                     {isToday ? (
                       <span className="ml-2 rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-semibold normal-case text-brand-700">
-                        bugun
+                        {t("schToday")}
                       </span>
                     ) : null}
                   </th>
@@ -1020,7 +1041,7 @@ export function ScheduleBoard({
                   >
                     <div className="flex items-center gap-2">
                       <p className={cn("text-sm font-medium", isNowPair ? "text-brand-800" : "text-slate-700")}>
-                        {slot}-par
+                        {t("schSlotLabel", { slot })}
                       </p>
                       {isNowPair ? (
                         <span className="relative inline-flex size-1.5">
@@ -1085,12 +1106,12 @@ export function ScheduleBoard({
                                     </span>
                                   ) : null}
                                   {entry.parity ? (
-                                    <Badge tone="amber">{PARITY_LABEL[entry.parity] ?? entry.parity}</Badge>
+                                    <Badge tone="amber">{parityText(entry.parity)}</Badge>
                                   ) : null}
                                   {meta ? (
                                     <Badge tone={meta.tone} className="gap-1.5">
                                       <span className={cn("size-1.5 rounded-full", meta.dot)} />
-                                      {meta.label}
+                                      {statusLabel(entry.status)}
                                     </Badge>
                                   ) : null}
                                 </div>
@@ -1101,7 +1122,7 @@ export function ScheduleBoard({
                                   <div className="mt-2 flex">
                                     <ButtonLink size="sm" variant="ghost" href={href} className={ATTENDANCE_CLASS}>
                                       <CheckCircleIcon className="size-3.5" />
-                                      Davomat
+                                      {t("schAttendance")}
                                     </ButtonLink>
                                   </div>
                                 ) : null}
@@ -1180,7 +1201,7 @@ export function ScheduleBoard({
                                   : "border-slate-200/80 text-slate-500 opacity-60",
                               )}
                             >
-                              {isHover ? "+" : selectedBlockId ? "Qo'yish" : "+"}
+                              {isHover ? "+" : selectedBlockId ? t("schDrop") : "+"}
                             </div>
                           ) : null}
                         </div>
@@ -1199,9 +1220,9 @@ export function ScheduleBoard({
   const listSection = (
     <Card className={cn("animate-fade-in", view === "grid" && "hidden")}>
       <CardHeader
-        title="Kunlik agenda"
+        title={t("schDailyAgenda")}
         subtitle={selectedGroupName ?? undefined}
-        action={<Badge tone="slate">{`${visibleEntries.length} ta dars`}</Badge>}
+        action={<Badge tone="slate">{t("schLessonsCount", { count: visibleEntries.length })}</Badge>}
       />
       <CardBody className="space-y-5">
         {DAYS.map((day) => {
@@ -1237,20 +1258,22 @@ export function ScheduleBoard({
                   </span>
                   <div>
                     <p className={cn("text-sm font-semibold", isToday ? "text-brand-900" : "text-slate-700")}>
-                      {dayName(day)}
+                      {t(DAY_KEYS[day % 7])}
                     </p>
                     <p className="text-xs text-slate-600">
-                      {dayEntries.length > 0 ? `${dayEntries.length} ta dars` : "Darslar yo'q"}
+                      {dayEntries.length > 0
+                        ? t("schLessonsCount", { count: dayEntries.length })
+                        : t("schNoLessons")}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-slate-600">{formatDayShort(dateIso)}</span>
-                  {isToday ? <Badge tone="blue">bugun</Badge> : null}
+                  {isToday ? <Badge tone="blue">{t("schToday")}</Badge> : null}
                 </div>
               </header>
               {dayEntries.length === 0 ? (
-                <p className="px-4 py-5 text-center text-xs text-slate-600">{"Bu kunda dars yo'q"}</p>
+                <p className="px-4 py-5 text-center text-xs text-slate-600">{t("schNoLessonsOnDay")}</p>
               ) : (
                 <div className="px-4 py-4">
                   {dayEntries.map((entry, index) => {
@@ -1265,7 +1288,9 @@ export function ScheduleBoard({
                     return (
                       <div key={entry.id} className="flex gap-3">
                         <div className="w-14 shrink-0 pt-1 text-right">
-                          <p className="text-xs font-semibold text-slate-600">{from ?? `${entry.slot}-par`}</p>
+                          <p className="text-xs font-semibold text-slate-600">
+                            {from ?? t("schSlotLabel", { slot: entry.slot })}
+                          </p>
                           {to ? <p className="text-[10px] text-slate-600">{to}</p> : null}
                         </div>
                         <div
@@ -1324,12 +1349,12 @@ export function ScheduleBoard({
                                     </span>
                                   ) : null}
                                   {entry.parity ? (
-                                    <Badge tone="slate">{PARITY_LABEL[entry.parity] ?? entry.parity}</Badge>
+                                    <Badge tone="slate">{parityText(entry.parity)}</Badge>
                                   ) : null}
                                   {meta ? (
                                     <Badge tone={meta.tone} className="gap-1.5">
                                       <span className={cn("size-1.5 rounded-full", meta.dot)} />
-                                      {meta.label}
+                                      {statusLabel(entry.status)}
                                     </Badge>
                                   ) : null}
                                 </div>
@@ -1338,7 +1363,7 @@ export function ScheduleBoard({
                                 <div className="flex flex-wrap items-center gap-1.5">
                                   <ButtonLink size="sm" variant="ghost" href={href} className={ATTENDANCE_CLASS}>
                                     <CheckCircleIcon className="size-3.5" />
-                                    Davomat
+                                    {t("schAttendance")}
                                   </ButtonLink>
                                 </div>
                               ) : null}
@@ -1370,9 +1395,11 @@ export function ScheduleBoard({
               </span>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold tracking-tight text-brand-950">
-                  {formatWeekRange(weekStart)}
+                  {formatWeekRange(weekStart, months)}
                 </p>
-                <p className="text-xs text-slate-600">{`${weekNumber}-hafta · ${visibleEntries.length} ta dars`}</p>
+                <p className="text-xs text-slate-600">
+                  {t("schWeekLessonsSummary", { week: weekNumber, count: visibleEntries.length })}
+                </p>
               </div>
               <Badge tone={parity === "even" ? "blue" : "gold"} className="hidden sm:inline-flex">
                 {parityLabel}
@@ -1380,7 +1407,7 @@ export function ScheduleBoard({
               {isCurrentWeek ? (
                 <span className="hidden items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 sm:inline-flex">
                   <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
-                  Joriy hafta
+                  {t("schCurrentWeek")}
                 </span>
               ) : null}
             </div>
@@ -1394,7 +1421,7 @@ export function ScheduleBoard({
                 onClick={() => goWeek(resolveWeekStart(null))}
                 disabled={isCurrentWeek}
               >
-                Bugun
+                {t("schTodayCap")}
               </Button>
               <Button variant="secondary" size="sm" className="px-2!" onClick={() => goWeek(shiftWeek(weekStart, 1))}>
                 <ChevronRightIcon className="size-4" />
@@ -1408,7 +1435,7 @@ export function ScheduleBoard({
                 <UsersIcon className="size-3.5" />
               </span>
               <select
-                aria-label="Guruh"
+                aria-label={t("schGroup")}
                 value={selectedGroupId ?? ""}
                 onChange={(event) => changeGroup(event.target.value)}
                 disabled={!canEdit}
@@ -1431,12 +1458,12 @@ export function ScheduleBoard({
                   <UsersIcon className="size-3.5" />
                 </span>
                 <select
-                  aria-label="Kichik guruh"
+                  aria-label={t("schSubGroup")}
                   value={placeSubGroup}
                   onChange={(event) => setPlaceSubGroup(event.target.value)}
                   className={FILTER_CLASS}
                 >
-                  <option value="">Butun guruh</option>
+                  <option value="">{t("schWholeGroup")}</option>
                   {subGroups.map((name) => (
                     <option key={name} value={name}>
                       {name}
@@ -1455,7 +1482,7 @@ export function ScheduleBoard({
                   <SlidersIcon className="size-3.5" />
                 </span>
                 <select
-                  aria-label="Rejim"
+                  aria-label={t("schMode")}
                   value={mode}
                   onChange={(event) =>
                     changeMode(
@@ -1466,9 +1493,9 @@ export function ScheduleBoard({
                   }
                   className={FILTER_CLASS}
                 >
-                  <option value="group">Guruh</option>
-                  <option value="teacher">{"O'qituvchi"}</option>
-                  <option value="room">Xona</option>
+                  <option value="group">{t("schGroup")}</option>
+                  <option value="teacher">{t("schTeacher")}</option>
+                  <option value="room">{t("schRoom")}</option>
                 </select>
                 <span className={CHEVRON_CLASS}>
                   <ChevronDownIcon className="size-3.5" />
@@ -1482,12 +1509,12 @@ export function ScheduleBoard({
                   <TeacherIcon className="size-3.5" />
                 </span>
                 <select
-                  aria-label="O'qituvchi"
+                  aria-label={t("schTeacher")}
                   value={teacherFilter}
                   onChange={(event) => setTeacherFilter(event.target.value)}
                   className={FILTER_CLASS}
                 >
-                  <option value="">Tanlang</option>
+                  <option value="">{t("schSelect")}</option>
                   {teacherOptionsFromEntries.map((name) => (
                     <option key={name} value={name}>
                       {name}
@@ -1506,10 +1533,10 @@ export function ScheduleBoard({
                   <PinIcon className="size-3.5" />
                 </span>
                 <input
-                  aria-label="Xona"
+                  aria-label={t("schRoom")}
                   value={roomQuery}
                   onChange={(event) => setRoomQuery(event.target.value)}
-                  placeholder="Masalan: 205"
+                  placeholder={t("schRoomPlaceholder")}
                   className={cn(FILTER_CLASS, "placeholder:font-normal placeholder:text-slate-500")}
                 />
               </div>
@@ -1527,7 +1554,7 @@ export function ScheduleBoard({
                   )}
                 >
                   <GridIcon className="size-3.5" />
-                  Jadval
+                  {t("schViewSchedule")}
                 </button>
                 <button
                   type="button"
@@ -1539,7 +1566,7 @@ export function ScheduleBoard({
                   )}
                 >
                   <ListIcon className="size-3.5" />
-                  {"Ro'yxat"}
+                  {t("schViewList")}
                 </button>
               </div>
 
@@ -1547,16 +1574,16 @@ export function ScheduleBoard({
 
               <a className={EXPORT_CLASS} href={`/schedule/print?${exportQuery}`} target="_blank" rel="noreferrer">
                 <PrinterIcon className="size-3.5" />
-                Chop etish
+                {t("schPrint")}
               </a>
               <a className={EXPORT_CLASS} href={`/api/schedule/export/ics?${exportQuery}`} target="_blank" rel="noreferrer">
                 <CalendarSyncIcon className="size-3.5" />
-                Kalendar
+                {t("schCalendar")}
               </a>
               {canEdit ? (
                 <a className={EXPORT_CLASS} href={`/schedule/builder?${exportQuery}`}>
                   <SlidersIcon className="size-3.5" />
-                  Konstruktor
+                  {t("schBuilderLink")}
                 </a>
               ) : null}
             </div>
@@ -1570,10 +1597,10 @@ export function ScheduleBoard({
             <LegoPalette
               title={
                 isAdmin
-                  ? `Barcha fanlar — ${selectedGroupName ?? ""}`
-                  : `Mening darslarim — ${selectedGroupName ?? ""}`
+                  ? t("schAllSubjectsTitle", { group: selectedGroupName ?? "" })
+                  : t("schMyLessonsTitle", { group: selectedGroupName ?? "" })
               }
-              subtitle={`${paletteBlocks.length} ta fan · tayyor bloklar`}
+              subtitle={t("schReadyBlocks", { count: paletteBlocks.length })}
               blocks={paletteBlocks}
               selectedBlockId={selectedBlockId}
               onSelect={toggleBlock}
@@ -1613,10 +1640,10 @@ export function ScheduleBoard({
           <Card className="border-brand-200 shadow-xl">
             <CardHeader
               title={panelEntry.subject}
-              subtitle={`${dayName(panelEntry.dayOfWeek)}, ${panelEntry.slot}-par`}
+              subtitle={`${t(DAY_KEYS[panelEntry.dayOfWeek % 7])}, ${t("schSlotLabel", { slot: panelEntry.slot })}`}
               action={
                 <Button variant="ghost" size="sm" onClick={() => setPanelId(null)}>
-                  Yopish
+                  {t("schClose")}
                 </Button>
               }
             />
@@ -1628,7 +1655,7 @@ export function ScheduleBoard({
                   disabled={pending}
                   onClick={() => void toggleCancel(panelEntry)}
                 >
-                  Tiklash
+                  {t("schRestore")}
                 </Button>
               ) : (
                 <Button
@@ -1637,7 +1664,7 @@ export function ScheduleBoard({
                   disabled={pending}
                   onClick={() => void toggleCancel(panelEntry)}
                 >
-                  Bekor qilish
+                  {t("schCancel")}
                 </Button>
               )}
               <Button
@@ -1647,7 +1674,7 @@ export function ScheduleBoard({
                 onClick={() => void deleteEntry(panelEntry)}
               >
                 <TrashIcon className="size-3.5" />
-                {"O'chirish"}
+                {t("schDelete")}
               </Button>
             </CardBody>
           </Card>

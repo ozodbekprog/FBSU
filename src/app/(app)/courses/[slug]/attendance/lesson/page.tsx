@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { dayName, fmtDate } from "@/lib/utils";
 import { canManageCourse } from "@/components/courses/course-access";
 import { LessonAttendance } from "@/components/attendance/lesson-attendance";
@@ -34,6 +35,8 @@ export default async function LessonAttendancePage({
   searchParams: Promise<{ date?: string; slot?: string; subGroup?: string }>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const { slug } = await params;
   const query = await searchParams;
 
@@ -51,7 +54,7 @@ export default async function LessonAttendancePage({
 
   const [enrollments, attendanceRows, dayEntries, teacherCourses] = await Promise.all([
     prisma.enrollment.findMany({
-      where: { courseId: course.id },
+      where: { courseId: course.id, status: "ACTIVE" },
       include: {
         user: {
           select: {
@@ -112,7 +115,7 @@ export default async function LessonAttendancePage({
   const subGroup = matchedEntry?.subGroup ?? requestedSubGroup;
   const room = matchedEntry?.room ?? null;
   const subject = matchedEntry?.subject ?? course.title;
-  const time = SLOT_TIMES[slot] ?? `${slot}-par`;
+  const time = SLOT_TIMES[slot] ?? translate(locale, "crsSlotPair", { slot });
   const scheduleStatus = matchedEntry?.status ?? "NORMAL";
   const scheduleNote = matchedEntry?.note ?? null;
   const cancelled = scheduleStatus === "CANCELLED";
@@ -125,7 +128,7 @@ export default async function LessonAttendancePage({
         <div className="relative flex flex-wrap items-start justify-between gap-5">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-300">
-              Davomat · {slot}-par
+              {translate(locale, "crsAttendanceSlot", { slot })}
             </p>
             <h1 className="mt-1.5 text-2xl font-semibold tracking-tight">{subject}</h1>
             <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-medium text-white/90">
@@ -207,7 +210,7 @@ export default async function LessonAttendancePage({
                     </svg>
                   }
                 >
-                  {[groupName, subGroup ? `${subGroup} kichik guruh` : null].filter(Boolean).join(" · ")}
+                  {[groupName, subGroup ? translate(locale, "crsSubGroup", { name: subGroup }) : null].filter(Boolean).join(" · ")}
                 </MetaChip>
               ) : null}
             </div>
@@ -229,7 +232,7 @@ export default async function LessonAttendancePage({
               <path d="m12 19-7-7 7-7" />
               <path d="M19 12H5" />
             </svg>
-            Davomat bo&apos;limi
+            {dictionary.crsAttendanceSection}
           </Link>
         </div>
       </section>
@@ -252,7 +255,7 @@ export default async function LessonAttendancePage({
           </span>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-rose-800">
-              Bu dars bekor qilingan — davomat belgilanmaydi
+              {dictionary.crsLessonCancelled}
             </p>
             {scheduleNote ? (
               <p className="mt-1 text-xs text-rose-600">{scheduleNote}</p>
@@ -297,8 +300,8 @@ export default async function LessonAttendancePage({
               }
             >
               {scheduleStatus === "CHANGED"
-                ? "Dars o'zgartirilgan — jadvaldagi o'zgarishni tekshiring"
-                : "Dars ko'chirilgan — jadvaldagi o'zgarishni tekshiring"}
+                ? dictionary.crsLessonChanged
+                : dictionary.crsLessonMoved}
             </p>
             {scheduleNote ? (
               <p

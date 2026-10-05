@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { getDictionary, getLocale } from "@/i18n";
 
 const SIZE = 220;
 const CENTER = SIZE / 2;
@@ -68,7 +69,7 @@ function polar(angle: number, radius: number) {
   };
 }
 
-export function GpaRing({
+export async function GpaRing({
   gpa,
   variant = "light",
   className,
@@ -77,6 +78,8 @@ export function GpaRing({
   variant?: "light" | "dark";
   className?: string;
 }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const tier = gpaTier(gpa);
   const meta = TIER_META[tier];
   const ratio = Math.min(Math.max(gpa / 4, 0), 0.9999);
@@ -175,7 +178,7 @@ export function GpaRing({
             dark ? "text-brand-200" : "text-slate-600",
           )}
         >
-          4.0 tizim
+          {dictionary.grdScaleSystem}
         </span>
       </div>
     </div>

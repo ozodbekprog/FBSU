@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui";
+import { getDictionary, getLocale } from "@/i18n";
 import { HelpIcon } from "@/components/help/icons";
 import type { HelpIconName } from "@/components/help/icons";
 import { QuickStart } from "@/components/help/quick-start";
@@ -9,230 +10,201 @@ import type { FaqItem } from "@/components/help/faq";
 import { BotCommands } from "@/components/help/bot-commands";
 import type { BotCommand } from "@/components/help/bot-commands";
 import { ContactCards } from "@/components/help/contact";
+import { RichText } from "@/components/help/rich-text";
 
-export const metadata: Metadata = {
-  title: "Yordam markazi",
-  description: "FBSU LMS bo'yicha qo'llanmalar, savol-javoblar, bot buyruqlari va aloqa ma'lumotlari",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  return {
+    title: dictionary.mscHelpMetaTitle,
+    description: dictionary.mscHelpMetaDescription,
+  };
+}
 
-const QUICK_LINKS: { href: string; label: string; hint: string; icon: HelpIconName }[] = [
-  { href: "#boshlash", label: "Tez boshlash", hint: "6 qadamli qo'llanma", icon: "sparkles" },
-  { href: "#faq", label: "FAQ", hint: "Ko'p so'raladigan savollar", icon: "help" },
-  { href: "#bot", label: "Bot buyruqlari", hint: "/jadval, /davomat va boshqalar", icon: "send" },
-  { href: "#aloqa", label: "Aloqa", hint: "O'quv bo'limi va tyutor", icon: "mail" },
-];
+export default async function HelpPage() {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
-const STEPS: QuickStartStep[] = [
-  {
-    title: "Tizimga kirish",
-    description:
-      "Universitet bergan email va parol bilan kiring. Sessiya 7 kun davomida saqlanadi.",
-    href: "/login",
-    linkLabel: "Kirish sahifasi",
-    icon: "login",
-  },
-  {
-    title: "Kurslar va materiallar",
-    description:
-      "Kurslar bo'limidan fanlaringizni tanlang, ma'ruza va amaliy materiallarni o'qing.",
-    href: "/courses",
-    linkLabel: "Kurslarga o'tish",
-    icon: "book",
-  },
-  {
-    title: "Topshiriqlarni bajarish",
-    description:
-      "Kurs sahifasidagi topshiriqni ochib, faylni yuklang va topshirish muddatini kuzatib boring.",
-    href: "/courses",
-    linkLabel: "Topshiriqlar",
-    icon: "clipboard",
-  },
-  {
-    title: "Testlarni yechish",
-    description:
-      "Testlar belgilangan vaqt ichida bajariladi. Natijani baholar bo'limida ko'rasiz.",
-    href: "/quizzes",
-    linkLabel: "Testlar bo'limi",
-    icon: "listChecks",
-  },
-  {
-    title: "Davomatni belgilash",
-    description:
-      "O'qituvchi ko'rsatgan 6 belgili kod bilan davomatni tasdiqlang — bir necha soniyada.",
-    href: "/attendance/check-in",
-    linkLabel: "Davomat sahifasi",
-    icon: "qr",
-  },
-  {
-    title: "Telegram botga ulanish",
-    description:
-      "Botga /start yuboring — jadval va davomat endi doim yoningizdagi telefonda.",
-    href: "#bot",
-    linkLabel: "Bot buyruqlari",
-    icon: "send",
-  },
-];
+  const QUICK_LINKS: { href: string; label: string; hint: string; icon: HelpIconName }[] = [
+    {
+      href: "#boshlash",
+      label: dictionary.mscHelpQuickStartLink,
+      hint: dictionary.mscHelpQuickStartLinkHint,
+      icon: "sparkles",
+    },
+    { href: "#faq", label: dictionary.mscHelpFaqLink, hint: dictionary.mscHelpFaqLinkHint, icon: "help" },
+    { href: "#bot", label: dictionary.mscHelpBotLink, hint: dictionary.mscHelpBotLinkHint, icon: "send" },
+    {
+      href: "#aloqa",
+      label: dictionary.mscHelpContactLink,
+      hint: dictionary.mscHelpContactLinkHint,
+      icon: "mail",
+    },
+  ];
 
-const FAQ: FaqItem[] = [
-  {
-    id: "parol",
-    question: "Parolni qanday tiklayman?",
-    answer: (
-      <div className="space-y-2.5">
-        <p>
-          Tizimga kirgan bo&apos;lsangiz, profil sahifasidagi{" "}
-          <span className="font-medium text-slate-800">Parolni o&apos;zgartirish</span> bo&apos;limi
-          orqali yangi parol o&apos;rnatishingiz mumkin.
-        </p>
-        <p>
-          Tizimga kira olmasangiz,{" "}
-          <a
-            href="mailto:academic.department@polito.uz"
-            className="font-medium text-brand-700 hover:underline"
-          >
-            academic.department@polito.uz
-          </a>{" "}
-          manziliga yozing yoki 103-xonadagi tyutorga murojaat qiling — parol tez orada yangilanadi.
-        </p>
-      </div>
-    ),
-  },
-  {
-    id: "davomat-foizi",
-    question: "Davomat foizi qanday hisoblanadi? (80% qoida)",
-    answer: (
-      <div className="space-y-3">
-        <p>Davomat foizi quyidagi formula bo&apos;yicha hisoblanadi:</p>
-        <p className="rounded-xl bg-brand-50 px-4 py-2.5 text-center font-medium text-brand-800 ring-1 ring-brand-100">
-          Qatnashgan darslar ÷ Jami darslar × 100
-        </p>
-        <p>
-          Universitet qoidasiga ko&apos;ra{" "}
-          <span className="font-semibold text-slate-800">80%</span> dan past davomat bilan kursni
-          yakunlash va sertifikat olish mumkin emas. Uzrli sabab bo&apos;lsa, tasdiqlovchi hujjatni
-          tyutorga taqdim eting.
-        </p>
-      </div>
-    ),
-  },
-  {
-    id: "qr",
-    question: "QR davomat qanday ishlaydi?",
-    answer: (
-      <div className="space-y-2.5">
-        <p>
-          O&apos;qituvchi dars boshida 6 belgili kod va QR kodni ko&apos;rsatadi. Siz{" "}
-          <span className="font-medium text-slate-800">Davomat → QR orqali davomat</span> sahifasiga
-          kodni kiritasiz yoki QR havolasini skanerlaysiz.
-        </p>
-        <p>
-          Har bir kod faqat shu dars uchun amal qiladi va davomat bir marta belgilanadi. Kodni
-          kechiktirmasdan kiriting.
-        </p>
-      </div>
-    ),
-  },
-  {
-    id: "telegram",
-    question: "Telegram botga qanday ulanaman?",
-    answer: (
-      <div className="space-y-2.5">
-        <p>
-          Telegramda LMS botini toping va{" "}
-          <span className="font-semibold text-slate-800">/start</span> buyrug&apos;ini yuboring. Bot
-          akkauntni tizimdagi ma&apos;lumotlaringiz bilan bog&apos;laydi.
-        </p>
-        <p>
-          Shundan so&apos;ng jadval va davomat bo&apos;yicha buyruqlar ishlaydi. Batafsil ro&apos;yxat
-          quyida —{" "}
-          <a href="#bot" className="font-medium text-brand-700 hover:underline">
-            Bot buyruqlari
-          </a>
-          .
-        </p>
-      </div>
-    ),
-  },
-  {
-    id: "sertifikat",
-    question: "Sertifikat/transkript qanday olinadi?",
-    answer: (
-      <div className="space-y-2.5">
-        <p>
-          Sertifikatlar bo&apos;limida kurs yakunlangach PDF sertifikatni yuklab olish mumkin. Buning
-          uchun davomat{" "}
-          <span className="font-semibold text-slate-800">80%</span> dan yuqori va yakuniy baho ijobiy
-          bo&apos;lishi kerak.
-        </p>
-        <p>
-          Rasmiy transkript kerak bo&apos;lsa,{" "}
-          <a
-            href="mailto:academic.department@polito.uz"
-            className="font-medium text-brand-700 hover:underline"
-          >
-            academic.department@polito.uz
-          </a>{" "}
-          manziliga murojaat qiling.
-        </p>
-      </div>
-    ),
-  },
-  {
-    id: "xatolar",
-    question: "Xatolar bo'lsa kimga murojaat qilaman?",
-    answer: (
-      <div className="space-y-2.5">
-        <p>
-          Xatolik yoki tizim ishlamayotgan bo&apos;lsa,{" "}
-          <a
-            href="mailto:academic.department@polito.uz"
-            className="font-medium text-brand-700 hover:underline"
-          >
-            academic.department@polito.uz
-          </a>{" "}
-          manziliga skrinshot va qisqa tavsif bilan yozing.
-        </p>
-        <p>Shoshilinch masalalar uchun 103-xonadagi tyutorga murojaat qiling.</p>
-      </div>
-    ),
-  },
-];
+  const STEPS: QuickStartStep[] = [
+    {
+      title: dictionary.mscHelpStep1Title,
+      description: dictionary.mscHelpStep1Desc,
+      href: "/login",
+      linkLabel: dictionary.mscHelpStep1Link,
+      icon: "login",
+    },
+    {
+      title: dictionary.mscHelpStep2Title,
+      description: dictionary.mscHelpStep2Desc,
+      href: "/courses",
+      linkLabel: dictionary.mscHelpStep2Link,
+      icon: "book",
+    },
+    {
+      title: dictionary.mscHelpStep3Title,
+      description: dictionary.mscHelpStep3Desc,
+      href: "/courses",
+      linkLabel: dictionary.mscHelpStep3Link,
+      icon: "clipboard",
+    },
+    {
+      title: dictionary.mscHelpStep4Title,
+      description: dictionary.mscHelpStep4Desc,
+      href: "/quizzes",
+      linkLabel: dictionary.mscHelpStep4Link,
+      icon: "listChecks",
+    },
+    {
+      title: dictionary.mscHelpStep5Title,
+      description: dictionary.mscHelpStep5Desc,
+      href: "/attendance/check-in",
+      linkLabel: dictionary.mscHelpStep5Link,
+      icon: "qr",
+    },
+    {
+      title: dictionary.mscHelpStep6Title,
+      description: dictionary.mscHelpStep6Desc,
+      href: "#bot",
+      linkLabel: dictionary.mscHelpStep6Link,
+      icon: "send",
+    },
+  ];
 
-const BOT_COMMANDS: BotCommand[] = [
-  {
-    command: "/start",
-    description: "Bot bilan tanishish va akkauntni ulash",
-    result: "Ulanish tasdiqlanadi",
-  },
-  {
-    command: "/jadval",
-    description: "Bugungi dars jadvali",
-    result: "Kunlik jadval ro'yxati",
-  },
-  {
-    command: "/ertaga",
-    description: "Ertangi kungi darslar",
-    result: "Ertangi jadval",
-  },
-  {
-    command: "/hafta",
-    description: "Haftalik dars jadvali",
-    result: "7 kunlik jadval",
-  },
-  {
-    command: "/davomat",
-    description: "Davomat foizi va so'nggi belgilar",
-    result: "80% qoidasi bo'yicha holat",
-  },
-];
+  const FAQ: FaqItem[] = [
+    {
+      id: "parol",
+      question: dictionary.mscHelpFaqPasswordQ,
+      answer: (
+        <div className="space-y-2.5">
+          <p>
+            <RichText text={dictionary.mscHelpFaqPasswordA1} />
+          </p>
+          <p>
+            <RichText text={dictionary.mscHelpFaqPasswordA2} />
+          </p>
+        </div>
+      ),
+    },
+    {
+      id: "davomat-foizi",
+      question: dictionary.mscHelpFaqAttendanceQ,
+      answer: (
+        <div className="space-y-3">
+          <p>{dictionary.mscHelpFaqAttendanceIntro}</p>
+          <p className="rounded-xl bg-brand-50 px-4 py-2.5 text-center font-medium text-brand-800 ring-1 ring-brand-100">
+            {dictionary.mscHelpFaqAttendanceFormula}
+          </p>
+          <p>
+            <RichText text={dictionary.mscHelpFaqAttendanceNote} />
+          </p>
+        </div>
+      ),
+    },
+    {
+      id: "qr",
+      question: dictionary.mscHelpFaqQrQ,
+      answer: (
+        <div className="space-y-2.5">
+          <p>
+            <RichText text={dictionary.mscHelpFaqQrA1} />
+          </p>
+          <p>{dictionary.mscHelpFaqQrA2}</p>
+        </div>
+      ),
+    },
+    {
+      id: "telegram",
+      question: dictionary.mscHelpFaqTelegramQ,
+      answer: (
+        <div className="space-y-2.5">
+          <p>
+            <RichText text={dictionary.mscHelpFaqTelegramA1} />
+          </p>
+          <p>
+            <RichText text={dictionary.mscHelpFaqTelegramA2} />
+          </p>
+        </div>
+      ),
+    },
+    {
+      id: "sertifikat",
+      question: dictionary.mscHelpFaqCertQ,
+      answer: (
+        <div className="space-y-2.5">
+          <p>
+            <RichText text={dictionary.mscHelpFaqCertA1} />
+          </p>
+          <p>
+            <RichText text={dictionary.mscHelpFaqCertA2} />
+          </p>
+        </div>
+      ),
+    },
+    {
+      id: "xatolar",
+      question: dictionary.mscHelpFaqSupportQ,
+      answer: (
+        <div className="space-y-2.5">
+          <p>
+            <RichText text={dictionary.mscHelpFaqSupportA1} />
+          </p>
+          <p>{dictionary.mscHelpFaqSupportA2}</p>
+        </div>
+      ),
+    },
+  ];
 
-export default function HelpPage() {
+  const BOT_COMMANDS: BotCommand[] = [
+    {
+      command: "/start",
+      description: dictionary.mscHelpBotStartDesc,
+      result: dictionary.mscHelpBotStartResult,
+    },
+    {
+      command: "/jadval",
+      description: dictionary.mscHelpBotScheduleDesc,
+      result: dictionary.mscHelpBotScheduleResult,
+    },
+    {
+      command: "/ertaga",
+      description: dictionary.mscHelpBotTomorrowDesc,
+      result: dictionary.mscHelpBotTomorrowResult,
+    },
+    {
+      command: "/hafta",
+      description: dictionary.mscHelpBotWeekDesc,
+      result: dictionary.mscHelpBotWeekResult,
+    },
+    {
+      command: "/davomat",
+      description: dictionary.mscHelpBotAttendanceDesc,
+      result: dictionary.mscHelpBotAttendanceResult,
+    },
+  ];
+
   return (
     <>
       <PageHeader
-        eyebrow="Yordam"
-        title="Yordam markazi"
-        subtitle="FBSU LMS bo'yicha qo'llanmalar, savol-javoblar va aloqa ma'lumotlari"
+        eyebrow={dictionary.mscHelpEyebrow}
+        title={dictionary.mscHelpTitle}
+        subtitle={dictionary.mscHelpSubtitle}
       />
 
       <section className="relative mb-12 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-950 via-brand-900 to-brand-800 px-5 py-8 shadow-lift md:px-8 md:py-10">
@@ -240,14 +212,13 @@ export default function HelpPage() {
         <span className="pointer-events-none absolute -bottom-24 left-1/3 size-56 rounded-full bg-gold-400/10 blur-3xl" />
         <div className="relative">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-300">
-            FBSU LMS qo&apos;llanmasi
+            {dictionary.mscHelpHeroEyebrow}
           </p>
           <h2 className="mt-2 max-w-2xl text-2xl font-semibold tracking-tight text-white md:text-3xl">
-            Kerakli javob bir necha bosishda
+            {dictionary.mscHelpHeroTitle}
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-brand-200">
-            Qo&apos;llanmalar, ko&apos;p so&apos;raladigan savollar, bot buyruqlari va aloqa
-            ma&apos;lumotlari — barchasi shu sahifada.
+            {dictionary.mscHelpHeroText}
           </p>
           <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {QUICK_LINKS.map((link) => (
@@ -277,7 +248,7 @@ export default function HelpPage() {
       </div>
 
       <p className="pt-10 text-center text-xs text-slate-600">
-        Ma&apos;lumot sentabr 2026 holatiga ko&apos;ra yangilangan. Takliflar uchun:{" "}
+        {dictionary.mscHelpUpdated}{" "}
         <a href="mailto:academic.department@polito.uz" className="hover:text-brand-600 hover:underline">
           academic.department@polito.uz
         </a>

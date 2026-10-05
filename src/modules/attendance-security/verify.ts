@@ -159,6 +159,9 @@ function startOfToday(): Date {
 
 export async function evaluateCheckInRisk(input: CheckInRiskInput): Promise<RiskResult> {
   const reasons: RiskReason[] = [];
+  if (input.usedCode) addReason(reasons, "CODE_USED");
+  if (input.faceCheck === "missing") addReason(reasons, "FACE_MISSING");
+  if (input.faceCheck === "mismatch") addReason(reasons, "FACE_MISMATCH");
   const ip = input.ip?.trim() || null;
   let distanceM: number | undefined;
   let ipGeo: IpGeo | null = null;
@@ -200,21 +203,25 @@ export async function evaluateCheckInRisk(input: CheckInRiskInput): Promise<Risk
       orderBy: { createdAt: "desc" },
     });
     const previousIp = metaString(previous?.meta, "ip");
-    if (previousIp && previousIp !== ip) addReason(reasons, "IP_CHANGED");
+    if (input.faceCheck !== "ok" && previousIp && previousIp !== ip) {
+      addReason(reasons, "IP_CHANGED");
+    }
 
-    const sharedCandidates = await prisma.auditLog.findMany({
-      where: {
-        action: "attendance.check-in",
-        createdAt: { gte: startOfToday() },
-      },
-    });
-    const shared = sharedCandidates.some(
-      (entry) =>
-        entry.actorId !== input.studentId &&
-        metaString(entry.meta, "sessionId") === input.sessionId &&
-        metaString(entry.meta, "ip") === ip,
-    );
-    if (shared) addReason(reasons, "IP_SHARED");
+    if (input.faceCheck !== "ok") {
+      const sharedCandidates = await prisma.auditLog.findMany({
+        where: {
+          action: "attendance.check-in",
+          createdAt: { gte: startOfToday() },
+        },
+      });
+      const shared = sharedCandidates.some(
+        (entry) =>
+          entry.actorId !== input.studentId &&
+          metaString(entry.meta, "sessionId") === input.sessionId &&
+          metaString(entry.meta, "ip") === ip,
+      );
+      if (shared) addReason(reasons, "IP_SHARED");
+    }
   }
 
   return {

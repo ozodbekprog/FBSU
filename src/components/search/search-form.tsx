@@ -1,3 +1,4 @@
+import { getDictionary, getLocale } from "@/i18n";
 import { Button, Input } from "@/components/ui";
 
 const SEARCH_ICON = (
@@ -7,7 +8,9 @@ const SEARCH_ICON = (
   </svg>
 );
 
-export function SearchForm({ defaultValue }: { defaultValue: string }) {
+export async function SearchForm({ defaultValue }: { defaultValue: string }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   return (
     <form action="/search" method="get" className="mb-7">
       <div className="group relative rounded-2xl border border-slate-200/70 bg-white p-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.05),0_12px_32px_-16px_rgba(29,52,96,0.18)] transition-all duration-200 focus-within:border-brand-300 focus-within:shadow-lift focus-within:ring-4 focus-within:ring-brand-500/10 sm:p-3">
@@ -20,23 +23,23 @@ export function SearchForm({ defaultValue }: { defaultValue: string }) {
               name="q"
               defaultValue={defaultValue}
               autoFocus
-              placeholder="Kurs, material, topshiriq, test yoki foydalanuvchi qidirish"
+              placeholder={dictionary.mscSrchPlaceholder}
               className="h-12 pl-12 text-base!"
             />
           </div>
           <Button type="submit" size="lg" className="h-12 gap-2 px-6">
             {SEARCH_ICON}
-            Qidirish
+            {dictionary.mscSrchSubmit}
           </Button>
         </div>
       </div>
       <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 px-1">
-        <p className="text-xs text-slate-600">Kamida 2 ta belgi kiriting.</p>
+        <p className="text-xs text-slate-600">{dictionary.mscSrchMinHint}</p>
         <p className="hidden items-center gap-1.5 text-xs text-slate-600 sm:flex">
           <kbd className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[11px] font-medium text-slate-500">
             Enter
           </kbd>
-          bilan qidirish
+          {dictionary.mscSrchEnterHint}
         </p>
       </div>
     </form>

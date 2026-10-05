@@ -1,3 +1,12 @@
+import { shell } from "./dict/uz/shell";
+import { dash } from "./dict/uz/dash";
+import { crs } from "./dict/uz/crs";
+import { sch } from "./dict/uz/sch";
+import { grd } from "./dict/uz/grd";
+import { msg } from "./dict/uz/msg";
+import { adm } from "./dict/uz/adm";
+import { msc } from "./dict/uz/msc";
+
 export const uz = {
   commonSave: "Saqlash",
   commonCancel: "Bekor qilish",
@@ -112,6 +121,14 @@ export const uz = {
   settingsEyebrow: "Hisob",
   settingsTitle: "Sozlamalar",
   settingsSubtitle: "Bildirishnomalar, ko'rinish va aloqa",
+  ...shell,
+  ...dash,
+  ...crs,
+  ...sch,
+  ...grd,
+  ...msg,
+  ...adm,
+  ...msc,
 };
 
 export type Dictionary = typeof uz;

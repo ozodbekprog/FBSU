@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, Button, Card, CardBody, CardHeader, Input, Progress, Select, Table } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { AttendanceBadge } from "./session-badges";
-import { SHEET_STATUSES, SHEET_STATUS_LABEL, type SessionSheetRow } from "./session-shared";
+import { SHEET_STATUSES, SHEET_STATUS_KEY, type SessionSheetRow } from "./session-shared";
 
 type Draft = { seat: string; status: string; score: string };
 
@@ -23,6 +24,7 @@ function buildDrafts(rows: SessionSheetRow[]) {
 
 export function SheetManager({ sessionId, rows }: { sessionId: string; rows: SessionSheetRow[] }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [drafts, setDrafts] = useState<Record<string, Draft>>(() => buildDrafts(rows));
   const [savingId, setSavingId] = useState<string | null>(null);
   const [rowErrors, setRowErrors] = useState<Record<string, string>>({});
@@ -59,13 +61,13 @@ export function SheetManager({ sessionId, rows }: { sessionId: string; rows: Ses
     } | null;
     setGenerating(false);
     if (!response.ok || !json?.ok || !json.data) {
-      setError(json?.error ?? "Ro'yxat shakllantirishda xatolik");
+      setError(json?.error ?? t("grdExSheetGenError"));
       return;
     }
     const skipped = json.data.ineligible ?? 0;
     setNotice(
-      `${json.data.created ?? 0} ta varaq yaratildi · ${json.data.skipped ?? 0} ta allaqachon mavjud` +
-        (skipped > 0 ? ` · ${skipped} ta ruxsatsiz o'tkazib yuborildi` : ""),
+      t("grdExSheetGenNotice", { created: json.data.created ?? 0, skipped: json.data.skipped ?? 0 }) +
+        (skipped > 0 ? t("grdExSheetGenSkipped", { skipped }) : ""),
     );
     router.refresh();
   }
@@ -80,10 +82,10 @@ export function SheetManager({ sessionId, rows }: { sessionId: string; rows: Ses
     });
     const json = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
     if (!response.ok || !json?.ok) {
-      setError(json?.error ?? "Qo'shishda xatolik");
+      setError(json?.error ?? t("grdExAddError"));
       return;
     }
-    setNotice("Talaba majburiy ravishda ro'yxatga qo'shildi");
+    setNotice(t("grdExForceAdded"));
     router.refresh();
   }
 
@@ -93,7 +95,7 @@ export function SheetManager({ sessionId, rows }: { sessionId: string; rows: Ses
     const trimmed = draft.score.trim();
     const score = trimmed === "" ? null : Number(trimmed);
     if (score !== null && (!Number.isInteger(score) || score < 0 || score > 100)) {
-      setRowErrors((current) => ({ ...current, [row.studentId]: "Ball 0-100 oralig'ida bo'lishi kerak" }));
+      setRowErrors((current) => ({ ...current, [row.studentId]: t("grdInvalidScore") }));
       return;
     }
     setSavingId(row.studentId);
@@ -106,18 +108,18 @@ export function SheetManager({ sessionId, rows }: { sessionId: string; rows: Ses
     const json = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
     setSavingId(null);
     if (!response.ok || !json?.ok) {
-      setRowErrors((current) => ({ ...current, [row.studentId]: json?.error ?? "Saqlashda xatolik" }));
+      setRowErrors((current) => ({ ...current, [row.studentId]: json?.error ?? t("grdExRowSaveError") }));
       return;
     }
-    setNotice(`${row.studentName}: natija saqlandi`);
+    setNotice(t("grdExResultSaved", { name: row.studentName }));
     router.refresh();
   }
 
   return (
     <Card>
       <CardHeader
-        title="Imtihon varaqalari"
-        subtitle={`${rows.length} ta talaba · ${admittedCount} ta ro'yxatda`}
+        title={t("grdExSheetsTitle")}
+        subtitle={t("grdExSheetsSubtitle", { total: rows.length, admitted: admittedCount })}
         action={
           <div className="flex flex-wrap items-center justify-end gap-3">
             <label className="flex items-center gap-2 text-xs font-medium text-slate-600">
@@ -127,10 +129,10 @@ export function SheetManager({ sessionId, rows }: { sessionId: string; rows: Ses
                 onChange={(event) => setForce(event.target.checked)}
                 className="size-4 rounded border-slate-300 accent-brand-700"
               />
-              Ruxsatsizlarni ham qo&apos;shish
+              {t("grdExIncludeIneligible")}
             </label>
             <Button size="sm" onClick={generate} disabled={generating}>
-              {generating ? "Shakllantirilmoqda..." : "Ro'yxatni shakllantirish"}
+              {generating ? t("grdExGenerating") : t("grdExGenerateSheets")}
             </Button>
           </div>
         }
@@ -145,17 +147,17 @@ export function SheetManager({ sessionId, rows }: { sessionId: string; rows: Ses
 
         {rows.length === 0 ? (
           <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50/50 px-4 py-8 text-center text-sm text-slate-500">
-            Kursda hali talaba yo&apos;q.
+            {t("grdExNoStudents")}
           </p>
         ) : (
           <Table>
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50 text-xs tracking-wide text-slate-500 uppercase">
-                <th className="rounded-l-xl py-2.5 pr-3 pl-3 text-left font-medium">Talaba</th>
-                <th className="px-3 py-2.5 text-left font-medium">Davomat</th>
-                <th className="px-3 py-2.5 text-left font-medium">Ruxsat</th>
-                <th className="px-3 py-2.5 text-left font-medium">O&apos;rindiq</th>
-                <th className="px-3 py-2.5 text-left font-medium">Natija</th>
+                <th className="rounded-l-xl py-2.5 pr-3 pl-3 text-left font-medium">{t("grdStudent")}</th>
+                <th className="px-3 py-2.5 text-left font-medium">{t("grdAttendance")}</th>
+                <th className="px-3 py-2.5 text-left font-medium">{t("grdPermission")}</th>
+                <th className="px-3 py-2.5 text-left font-medium">{t("grdSeat")}</th>
+                <th className="px-3 py-2.5 text-left font-medium">{t("grdResult")}</th>
                 <th className="rounded-r-xl px-3 py-2.5 text-right font-medium" />
               </tr>
             </thead>
@@ -169,7 +171,7 @@ export function SheetManager({ sessionId, rows }: { sessionId: string; rows: Ses
                         <Avatar name={row.studentName} size={32} />
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-slate-800">{row.studentName}</p>
-                          <p className="text-xs text-slate-600">{row.studentGroup ?? "Guruhsiz"}</p>
+                          <p className="text-xs text-slate-600">{row.studentGroup ?? t("grdNoGroup")}</p>
                         </div>
                       </div>
                     </td>
@@ -191,7 +193,7 @@ export function SheetManager({ sessionId, rows }: { sessionId: string; rows: Ses
                       <div className="flex flex-col items-start gap-1.5">
                         <AttendanceBadge attendance={row.attendance} />
                         {row.admitted && !row.attendance.eligible ? (
-                          <span className="text-[11px] font-medium text-amber-600">Majburiy kiritilgan</span>
+                          <span className="text-[11px] font-medium text-amber-600">{t("grdExForceAddedShort")}</span>
                         ) : null}
                       </div>
                     </td>
@@ -218,7 +220,7 @@ export function SheetManager({ sessionId, rows }: { sessionId: string; rows: Ses
                           >
                             {SHEET_STATUSES.map((status) => (
                               <option key={status} value={status}>
-                                {SHEET_STATUS_LABEL[status]}
+                                {t(SHEET_STATUS_KEY[status])}
                               </option>
                             ))}
                           </Select>
@@ -228,7 +230,7 @@ export function SheetManager({ sessionId, rows }: { sessionId: string; rows: Ses
                             max={100}
                             value={draft.score}
                             onChange={(event) => patchDraft(row.studentId, { score: event.target.value })}
-                            placeholder="Ball"
+                            placeholder={t("grdScore")}
                             className="w-20! px-2.5! py-1.5!"
                           />
                         </div>
@@ -247,14 +249,14 @@ export function SheetManager({ sessionId, rows }: { sessionId: string; rows: Ses
                           onClick={() => saveRow(row)}
                           disabled={savingId === row.studentId}
                         >
-                          {savingId === row.studentId ? "..." : "Saqlash"}
+                          {savingId === row.studentId ? "..." : t("commonSave")}
                         </Button>
                       ) : !row.attendance.eligible ? (
                         <Button size="sm" variant="gold" onClick={() => forceAdd(row.studentId)}>
-                          Majburiy qo&apos;shish
+                          {t("grdExForceAdd")}
                         </Button>
                       ) : (
-                        <span className="text-xs text-slate-600">Ro&apos;yxatga olinmagan</span>
+                        <span className="text-xs text-slate-600">{t("grdExNotEnrolled")}</span>
                       )}
                     </td>
                   </tr>
@@ -276,6 +278,7 @@ export function SessionStatusActions({
   admissionOpen: boolean;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -290,21 +293,21 @@ export function SessionStatusActions({
     const json = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
     setBusy(false);
     if (!response.ok || !json?.ok) {
-      setError(json?.error ?? "O'zgartirishda xatolik");
+      setError(json?.error ?? t("grdExUpdateError"));
       return;
     }
     router.refresh();
   }
 
   async function remove() {
-    if (!window.confirm("Sessiya va uning barcha varaqalari o'chiriladi. Davom etasizmi?")) return;
+    if (!window.confirm(t("grdExDeleteConfirm"))) return;
     setBusy(true);
     setError(null);
     const response = await fetch(`/api/exams/sessions/${sessionId}`, { method: "DELETE" });
     const json = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
     setBusy(false);
     if (!response.ok || !json?.ok) {
-      setError(json?.error ?? "O'chirishda xatolik");
+      setError(json?.error ?? t("grdExDeleteError"));
       return;
     }
     router.push("/exams/sessions");
@@ -314,10 +317,10 @@ export function SessionStatusActions({
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
       <Button size="sm" variant={admissionOpen ? "secondary" : "primary"} onClick={toggleAdmission} disabled={busy}>
-        {admissionOpen ? "Ruxsatni yopish" : "Ruxsatni ochish"}
+        {admissionOpen ? t("grdExCloseAdmission") : t("grdExOpenAdmission")}
       </Button>
       <Button size="sm" variant="danger" onClick={remove} disabled={busy}>
-        O&apos;chirish
+        {t("grdExDelete")}
       </Button>
       {error ? <span className="text-xs text-rose-600">{error}</span> : null}
     </div>

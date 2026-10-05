@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Card, CardBody, CardHeader, EmptyState, Input, Label, Skeleton, Textarea } from "@/components/ui";
-import { cn, fmtDate } from "@/lib/utils";
+import { cn, fmtDate, monthName } from "@/lib/utils";
 import { ensureCsrfToken } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type AcademicEventType = "SEMESTER" | "HOLIDAY" | "EXAM" | "EVENT";
 
@@ -25,54 +26,34 @@ type RequestResult = { ok: true } | { ok: false; error: string };
 type MonthGroup = { key: string; label: string; events: AcademicEventItem[] };
 
 type TypeMeta = {
-  label: string;
   tone: Tones;
   dot: string;
   iconWrap: string;
   chipActive: string;
 };
 
-const MONTHS = [
-  "yanvar",
-  "fevral",
-  "mart",
-  "aprel",
-  "may",
-  "iyun",
-  "iyul",
-  "avgust",
-  "sentabr",
-  "oktabr",
-  "noyabr",
-  "dekabr",
-];
-
 const TYPE_OPTIONS: AcademicEventType[] = ["SEMESTER", "HOLIDAY", "EXAM", "EVENT"];
 
 const TYPE_META: Record<AcademicEventType, TypeMeta> = {
   SEMESTER: {
-    label: "Semestr",
     tone: "brand",
     dot: "bg-brand-500",
     iconWrap: "border-brand-200 bg-brand-50 text-brand-700",
     chipActive: "border-brand-500 bg-brand-50 text-brand-800 ring-2 ring-brand-500/15",
   },
   HOLIDAY: {
-    label: "Ta'til",
     tone: "green",
     dot: "bg-emerald-500",
     iconWrap: "border-emerald-200 bg-emerald-50 text-emerald-700",
     chipActive: "border-emerald-500 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-500/15",
   },
   EXAM: {
-    label: "Imtihon",
     tone: "amber",
     dot: "bg-amber-500",
     iconWrap: "border-amber-200 bg-amber-50 text-amber-700",
     chipActive: "border-amber-500 bg-amber-50 text-amber-800 ring-2 ring-amber-500/15",
   },
   EVENT: {
-    label: "Tadbir",
     tone: "purple",
     dot: "bg-purple-500",
     iconWrap: "border-purple-200 bg-purple-50 text-purple-700",
@@ -129,8 +110,7 @@ function pad(value: number): string {
 }
 
 function monthLabel(date: Date): string {
-  const name = MONTHS[date.getMonth()];
-  return `${name.charAt(0).toUpperCase()}${name.slice(1)} ${date.getFullYear()}`;
+  return `${monthName(date.getMonth())} ${date.getFullYear()}`;
 }
 
 function eventEnd(item: AcademicEventItem): Date {
@@ -160,30 +140,6 @@ function durationDays(item: AcademicEventItem): number {
   return Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1);
 }
 
-function durationText(item: AcademicEventItem): string {
-  const days = durationDays(item);
-  if (days === 1) return "1 kun";
-  if (days < 7) return `${days} kun`;
-  const weeks = Math.floor(days / 7);
-  const rest = days % 7;
-  return rest === 0 ? `${weeks} hafta` : `${weeks} hafta ${rest} kun`;
-}
-
-function statusText(item: AcademicEventItem, today: Date): { label: string; tone: string } | null {
-  const start = startOfDay(item.startDate);
-  const end = startOfDay(eventEnd(item));
-  if (start <= today && today <= end) {
-    return { label: "Davom etmoqda", tone: "border-emerald-200 bg-emerald-50 text-emerald-700" };
-  }
-  if (start > today) {
-    const days = Math.round((start.getTime() - today.getTime()) / 86400000);
-    if (days > 30) return null;
-    if (days === 1) return { label: "Ertaga boshlanadi", tone: "border-brand-200 bg-brand-50 text-brand-700" };
-    return { label: `${days} kundan keyin`, tone: "border-brand-200 bg-brand-50 text-brand-700" };
-  }
-  return null;
-}
-
 function groupByMonth(items: AcademicEventItem[]): MonthGroup[] {
   const groups = new Map<string, MonthGroup>();
   for (const item of items) {
@@ -211,7 +167,21 @@ function previewDuration(start: string, end: string): number | null {
   return Math.max(1, days);
 }
 
-function CalendarEmpty({ staff, onCreate }: { staff: boolean; onCreate: () => void }) {
+function CalendarEmpty({
+  staff,
+  onCreate,
+  title,
+  staffDescription,
+  studentDescription,
+  addLabel,
+}: {
+  staff: boolean;
+  onCreate: () => void;
+  title: string;
+  staffDescription: string;
+  studentDescription: string;
+  addLabel: string;
+}) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-white/70 px-6 py-14 text-center">
       <span className="inline-flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-900 to-brand-600 text-white shadow-lg shadow-brand-900/20">
@@ -223,16 +193,14 @@ function CalendarEmpty({ staff, onCreate }: { staff: boolean; onCreate: () => vo
         </svg>
       </span>
       <div>
-        <p className="font-semibold text-slate-800">Hozircha tadbirlar yo&apos;q</p>
+        <p className="font-semibold text-slate-800">{title}</p>
         <p className="mt-1 max-w-sm text-sm text-slate-500">
-          {staff
-            ? "O'quv yili tadbirlarini qo'shing — ular oy bo'limlari bo'ylab vaqt chizig'ida joylashadi."
-            : "O'quv yili tadbirlari e'lon qilinganda shu yerda paydo bo'ladi."}
+          {staff ? staffDescription : studentDescription}
         </p>
       </div>
       {staff ? (
         <Button onClick={onCreate} className="mt-1">
-          + Tadbir qo&apos;shish
+          {addLabel}
         </Button>
       ) : null}
     </div>
@@ -240,6 +208,13 @@ function CalendarEmpty({ staff, onCreate }: { staff: boolean; onCreate: () => vo
 }
 
 export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
+  const { t } = useI18n();
+  const typeLabels: Record<AcademicEventType, string> = {
+    SEMESTER: t("dashAcalSemester"),
+    HOLIDAY: t("dashAcalHoliday"),
+    EXAM: t("dashAcalExam"),
+    EVENT: t("dashAcalEvent"),
+  };
   const [events, setEvents] = useState<AcademicEventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -268,14 +243,14 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
         if (!active) return;
         if (!json || !json.ok) {
           setEvents([]);
-          setError(json && !json.ok ? json.error : "Ma'lumotlarni yuklab bo'lmadi");
+          setError(json && !json.ok ? json.error : t("dashAcalLoadError"));
           return;
         }
         setEvents(json.data.events);
       } catch {
         if (!active) return;
         setEvents([]);
-        setError("Ma'lumotlarni yuklab bo'lmadi");
+        setError(t("dashAcalLoadError"));
       } finally {
         if (active) setLoading(false);
       }
@@ -309,6 +284,32 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
   const currentMonthKey = `${today.getFullYear()}-${pad(today.getMonth() + 1)}`;
   const formDuration = previewDuration(startDate, endDate);
 
+  function eventDuration(item: AcademicEventItem): string {
+    const days = durationDays(item);
+    if (days < 7) return t("dashAcalDurationDays", { count: days });
+    const weeks = Math.floor(days / 7);
+    const rest = days % 7;
+    const weeksText = t("dashAcalDurationWeeks", { count: weeks });
+    return rest === 0 ? weeksText : `${weeksText} ${t("dashAcalDurationDays", { count: rest })}`;
+  }
+
+  function eventStatus(item: AcademicEventItem): { label: string; tone: string } | null {
+    const start = startOfDay(item.startDate);
+    const end = startOfDay(eventEnd(item));
+    if (start <= today && today <= end) {
+      return { label: t("dashAcalOngoing"), tone: "border-emerald-200 bg-emerald-50 text-emerald-700" };
+    }
+    if (start > today) {
+      const days = Math.round((start.getTime() - today.getTime()) / 86400000);
+      if (days > 30) return null;
+      if (days === 1) {
+        return { label: t("dashAcalStartsTomorrow"), tone: "border-brand-200 bg-brand-50 text-brand-700" };
+      }
+      return { label: t("dashAcalStartsIn", { count: days }), tone: "border-brand-200 bg-brand-50 text-brand-700" };
+    }
+    return null;
+  }
+
   async function request(url: string, method: "POST" | "PATCH" | "DELETE", body?: unknown): Promise<RequestResult> {
     setBusy(true);
     try {
@@ -322,11 +323,11 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
       });
       const json = (await response.json().catch(() => null)) as { ok: boolean; error?: string } | null;
       if (!response.ok || !json || !json.ok) {
-        return { ok: false, error: json?.error ?? "Amalni bajarib bo'lmadi" };
+        return { ok: false, error: json?.error ?? t("dashAcalActionError") };
       }
       return { ok: true };
     } catch {
-      return { ok: false, error: "Tarmoqda xatolik" };
+      return { ok: false, error: t("dashAcalNetworkError") };
     } finally {
       setBusy(false);
     }
@@ -366,15 +367,15 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
 
   async function submit() {
     if (title.trim().length < 2) {
-      setFormError("Nomi kamida 2 ta belgidan iborat bo'lishi kerak");
+      setFormError(t("dashAcalErrTitle"));
       return;
     }
     if (!startDate) {
-      setFormError("Boshlanish sanasini kiriting");
+      setFormError(t("dashAcalErrStart"));
       return;
     }
     if (endDate && endDate < startDate) {
-      setFormError("Tugash sanasi boshlanish sanasidan keyin bo'lishi kerak");
+      setFormError(t("dashAcalErrEnd"));
       return;
     }
     const payload = {
@@ -394,26 +395,26 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
     }
     const created = mode === "create";
     closeForm();
-    setNotice(created ? "Tadbir qo'shildi" : "Tadbir yangilandi");
+    setNotice(created ? t("dashAcalNoticeCreated") : t("dashAcalNoticeUpdated"));
     setVersion((value) => value + 1);
   }
 
   async function remove(item: AcademicEventItem) {
-    if (!window.confirm(`"${item.title}" tadbiri o'chirilsinmi?`)) return;
+    if (!window.confirm(t("dashAcalConfirmDelete", { title: item.title }))) return;
     const result = await request(`/api/academic-calendar/${item.id}`, "DELETE");
     if (!result.ok) {
       setActionError(result.error);
       return;
     }
     setActionError(null);
-    setNotice("Tadbir o'chirildi");
+    setNotice(t("dashAcalNoticeDeleted"));
     setVersion((value) => value + 1);
   }
 
   function renderEvent(item: AcademicEventItem) {
     const meta = TYPE_META[item.type] ?? TYPE_META.EVENT;
     const isPast = eventEnd(item) < today;
-    const status = isPast ? null : statusText(item, today);
+    const status = isPast ? null : eventStatus(item);
     return (
       <article key={item.id} className="relative flex gap-3">
         <span
@@ -435,7 +436,7 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <h4 className="text-sm font-semibold text-slate-900">{item.title}</h4>
-                <Badge tone={meta.tone}>{meta.label}</Badge>
+                <Badge tone={meta.tone}>{typeLabels[item.type] ?? typeLabels.EVENT}</Badge>
                 {status ? (
                   <span className={cn("inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium", status.tone)}>
                     {status.label}
@@ -450,14 +451,14 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
                 </svg>
                 <span>{rangeText(item)}</span>
                 <span className="text-slate-500">·</span>
-                <span>{durationText(item)}</span>
+                <span>{eventDuration(item)}</span>
               </p>
               {item.description ? <p className="mt-2 text-sm leading-relaxed text-slate-500">{item.description}</p> : null}
             </div>
             {canManage ? (
               <div className="flex shrink-0 gap-1.5">
                 <Button size="sm" variant="secondary" onClick={() => openEdit(item)}>
-                  Tahrirlash
+                  {t("dashAcalEdit")}
                 </Button>
                 <Button
                   size="sm"
@@ -465,7 +466,7 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
                   className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
                   onClick={() => remove(item)}
                 >
-                  O&apos;chirish
+                  {t("dashAcalDelete")}
                 </Button>
               </div>
             ) : null}
@@ -499,10 +500,10 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
           <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{group.label}</h4>
           {group.key === currentMonthKey && !pastSection ? (
             <span className="rounded-full bg-gold-300/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gold-800">
-              Bu oy
+              {t("dashAcalThisMonth")}
             </span>
           ) : null}
-          <span className="ml-auto text-[11px] font-medium text-slate-600">{group.events.length} ta</span>
+          <span className="ml-auto text-[11px] font-medium text-slate-600">{t("dashAcalCount", { count: group.events.length })}</span>
         </div>
         <div className="relative space-y-3">
           <span aria-hidden="true" className="absolute bottom-6 left-5 top-6 w-px bg-slate-200" />
@@ -525,11 +526,11 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
         <div className="mx-auto w-full max-w-2xl">
           <Card className="overflow-hidden border-brand-200/70 shadow-2xl shadow-brand-950/20">
             <CardHeader
-              title={mode === "create" ? "Yangi tadbir" : "Tadbirni tahrirlash"}
-              subtitle={mode === "create" ? "O'quv kalendariga yangi sana qo'shing" : "Tadbir ma'lumotlarini yangilang"}
+              title={mode === "create" ? t("dashAcalNewTitle") : t("dashAcalEditTitle")}
+              subtitle={mode === "create" ? t("dashAcalNewSubtitle") : t("dashAcalEditSubtitle")}
               action={
                 <Button variant="ghost" size="sm" onClick={closeForm}>
-                  Yopish
+                  {t("dashAcalClose")}
                 </Button>
               }
             />
@@ -542,18 +543,18 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
                 }}
               >
                 <div className="sm:col-span-2">
-                  <Label>Nomi</Label>
+                  <Label>{t("dashAcalNameLabel")}</Label>
                   <Input
                     value={title}
                     onChange={(event) => setTitle(event.target.value)}
-                    placeholder="2026-27 o'quv yili boshlanishi"
+                    placeholder={t("dashAcalNamePlaceholder")}
                     required
                     minLength={2}
                     maxLength={200}
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <Label>Turi</Label>
+                  <Label>{t("dashAcalTypeLabel")}</Label>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {TYPE_OPTIONS.map((option) => {
                       const meta = TYPE_META[option];
@@ -573,41 +574,41 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
                           <span className={cn("inline-flex size-7 shrink-0 items-center justify-center rounded-lg border", meta.iconWrap)}>
                             <TypeIcon type={option} size={15} />
                           </span>
-                          {meta.label}
+                          {typeLabels[option]}
                         </button>
                       );
                     })}
                   </div>
                 </div>
                 <div>
-                  <Label>Boshlanish sanasi</Label>
+                  <Label>{t("dashAcalStartLabel")}</Label>
                   <Input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} required />
                 </div>
                 <div>
-                  <Label>Tugash sanasi (ixtiyoriy)</Label>
+                  <Label>{t("dashAcalEndLabel")}</Label>
                   <Input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
                 </div>
                 <div className="sm:col-span-2">
                   {startDate ? (
                     endDate && endDate < startDate ? (
-                      <p className="text-xs font-medium text-rose-600">Tugash sanasi boshlanishdan keyin bo&apos;lishi kerak</p>
+                      <p className="text-xs font-medium text-rose-600">{t("dashAcalEndAfter")}</p>
                     ) : (
                       <p className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-500">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <circle cx="12" cy="12" r="9" />
                           <path d="M12 7v5l3 2" />
                         </svg>
-                        Davomiylik: {formDuration} kun
+                        {t("dashAcalDuration", { count: formDuration ?? 1 })}
                       </p>
                     )
                   ) : null}
                 </div>
                 <div className="sm:col-span-2">
-                  <Label>Izoh</Label>
+                  <Label>{t("dashAcalNoteLabel")}</Label>
                   <Textarea
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
-                    placeholder="Tadbir haqida qisqacha ma'lumot"
+                    placeholder={t("dashAcalNotePlaceholder")}
                     rows={2}
                     maxLength={500}
                   />
@@ -623,10 +624,10 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
                 ) : null}
                 <div className="flex flex-wrap items-center gap-2 sm:col-span-2">
                   <Button type="submit" disabled={busy || title.trim().length < 2}>
-                    {busy ? "Saqlanmoqda..." : mode === "create" ? "Qo'shish" : "Saqlash"}
+                    {busy ? t("dashAcalSaving") : mode === "create" ? t("dashAcalAdd") : t("dashAcalSave")}
                   </Button>
                   <Button variant="ghost" onClick={closeForm}>
-                    Bekor qilish
+                    {t("dashAcalCancel")}
                   </Button>
                 </div>
               </form>
@@ -643,13 +644,13 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          {canManage ? <Button onClick={openCreate}>+ Tadbir qo&apos;shish</Button> : null}
+          {canManage ? <Button onClick={openCreate}>{t("dashAcalAddEvent")}</Button> : null}
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-slate-200/70 bg-white px-3.5 py-2 shadow-sm">
           {TYPE_OPTIONS.map((option) => (
             <span key={option} className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600">
               <span className={cn("size-2 rounded-full", TYPE_META[option].dot)} />
-              {TYPE_META[option].label}
+              {typeLabels[option]}
             </span>
           ))}
         </div>
@@ -672,29 +673,36 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
       {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
 
       {!loading && !error && events.length === 0 ? (
-        <CalendarEmpty staff={canManage} onCreate={openCreate} />
+        <CalendarEmpty
+          staff={canManage}
+          onCreate={openCreate}
+          title={t("dashAcalEmptyTitle")}
+          staffDescription={t("dashAcalEmptyStaffDesc")}
+          studentDescription={t("dashAcalEmptyStudentDesc")}
+          addLabel={t("dashAcalAddEvent")}
+        />
       ) : (
         <>
           <Card>
             <CardHeader
-              title="Kelayotgan tadbirlar"
-              subtitle={loading ? "Yuklanmoqda..." : `${upcoming.length} ta tadbir`}
+              title={t("dashAcalUpcoming")}
+              subtitle={loading ? t("commonLoading") : t("dashAcalUpcomingCount", { count: upcoming.length })}
             />
             <CardBody className="space-y-4">
               {loading ? (
                 renderSkeleton()
               ) : upcomingGroups.length === 0 ? (
                 <EmptyState
-                  title="Kelayotgan tadbirlar yo'q"
+                  title={t("dashAcalUpcomingEmpty")}
                   description={
                     canManage
-                      ? "Yangi tadbir qo'shsangiz, u shu yerda paydo bo'ladi."
-                      : "Hozircha rejalashtirilgan tadbir yo'q."
+                      ? t("dashAcalUpcomingEmptyStaff")
+                      : t("dashAcalUpcomingEmptyStudent")
                   }
                   action={
                     canManage ? (
                       <Button size="sm" variant="secondary" onClick={openCreate}>
-                        + Tadbir qo&apos;shish
+                        {t("dashAcalAddEvent")}
                       </Button>
                     ) : undefined
                   }
@@ -707,14 +715,14 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
 
           <Card>
             <CardHeader
-              title="O'tgan tadbirlar"
-              subtitle={loading ? "Yuklanmoqda..." : `${past.length} ta tadbir`}
+              title={t("dashAcalPast")}
+              subtitle={loading ? t("commonLoading") : t("dashAcalUpcomingCount", { count: past.length })}
             />
             <CardBody className="space-y-4">
               {loading ? (
                 renderSkeleton()
               ) : pastGroups.length === 0 ? (
-                <EmptyState title="O'tgan tadbirlar yo'q" description="Tugagan tadbirlar shu yerda arxivlanadi." />
+                <EmptyState title={t("dashAcalPastEmpty")} description={t("dashAcalPastEmptyDesc")} />
               ) : (
                 renderGroups(pastGroups, true)
               )}

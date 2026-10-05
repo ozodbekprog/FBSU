@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Avatar, Badge, Button, Card, CardBody, CardHeader, Input, Label, Table, Textarea } from "@/components/ui";
 import { SubmissionBadge, type SubmissionStatusValue } from "@/components/courses/assignments-status";
 import { cn, fmtDateTime } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type SubmissionRow = {
   id: string;
@@ -16,6 +17,7 @@ export type SubmissionRow = {
   feedback: string | null;
   text: string | null;
   fileUrl: string | null;
+  pendingChange?: boolean;
 };
 
 function fileNameOf(url: string) {
@@ -26,37 +28,51 @@ function fileNameOf(url: string) {
 export function AssignmentsGrade({
   maxScore,
   submissions,
+  canDirectGrade = true,
 }: {
   maxScore: number;
   submissions: SubmissionRow[];
+  canDirectGrade?: boolean;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [score, setScore] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const selected = submissions.find((item) => item.id === selectedId) ?? null;
   const gradedCount = submissions.filter((item) => item.status === "GRADED").length;
+  const needsRequest = Boolean(selected && selected.status === "GRADED" && !canDirectGrade);
 
   function select(submission: SubmissionRow) {
     setSelectedId(submission.id);
     setScore(submission.score != null ? String(submission.score) : "");
     setFeedback(submission.feedback ?? "");
+    setReason("");
     setError(null);
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selected) return;
+    if (needsRequest && reason.trim().length < 5) {
+      setError(t("crsChangeReasonRequired"));
+      return;
+    }
     setSaving(true);
     setError(null);
 
     const response = await fetch(`/api/submissions/${selected.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ score: Number(score), feedback: feedback || null }),
+      body: JSON.stringify({
+        score: Number(score),
+        feedback: feedback || null,
+        ...(needsRequest ? { reason: reason.trim() } : {}),
+      }),
     });
     const json = (await response.json().catch(() => null)) as {
       ok?: boolean;
@@ -65,7 +81,7 @@ export function AssignmentsGrade({
 
     setSaving(false);
     if (!response.ok || !json?.ok) {
-      setError(json?.error ?? "Baholashda xatolik yuz berdi");
+      setError(json?.error ?? t("crsGradeError"));
       return;
     }
 
@@ -76,8 +92,8 @@ export function AssignmentsGrade({
   return (
     <Card>
       <CardHeader
-        title="Topshirilgan ishlar"
-        subtitle={`${submissions.length} ta topshiriq · ${gradedCount} ta baholangan`}
+        title={t("crsSubmissions")}
+        subtitle={t("crsSubmissionsSubtitle", { count: submissions.length, graded: gradedCount })}
         action={
           submissions.length > 0 ? (
             <Badge tone={gradedCount === submissions.length ? "green" : "amber"}>
@@ -108,18 +124,18 @@ export function AssignmentsGrade({
                     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                   </svg>
                 </span>
-                <p className="font-medium text-slate-700">Hali hech kim topshirmagan</p>
-                <p className="text-sm text-slate-500">Talabalar ish yuklagach shu yerda paydo bo&apos;ladi.</p>
+                <p className="font-medium text-slate-700">{t("crsNoSubmissions")}</p>
+                <p className="text-sm text-slate-500">{t("crsNoSubmissionsDesc")}</p>
               </div>
             ) : (
               <Table>
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                    <th className="rounded-l-xl py-2.5 pr-3 pl-3 text-left font-medium">Talaba</th>
-                    <th className="px-3 py-2.5 text-left font-medium">Sana</th>
-                    <th className="px-3 py-2.5 text-left font-medium">Holat</th>
-                    <th className="px-3 py-2.5 text-left font-medium">Fayl</th>
-                    <th className="px-3 py-2.5 text-left font-medium">Ball</th>
+                    <th className="rounded-l-xl py-2.5 pr-3 pl-3 text-left font-medium">{t("crsStudent")}</th>
+                    <th className="px-3 py-2.5 text-left font-medium">{t("crsDate")}</th>
+                    <th className="px-3 py-2.5 text-left font-medium">{t("crsStatus")}</th>
+                    <th className="px-3 py-2.5 text-left font-medium">{t("crsFile")}</th>
+                    <th className="px-3 py-2.5 text-left font-medium">{t("crsScore")}</th>
                     <th className="rounded-r-xl px-3 py-2.5" />
                   </tr>
                 </thead>
@@ -144,7 +160,12 @@ export function AssignmentsGrade({
                         {fmtDateTime(submission.submittedAt)}
                       </td>
                       <td className="px-3 py-3">
-                        <SubmissionBadge status={submission.status} />
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <SubmissionBadge status={submission.status} />
+                          {submission.pendingChange ? (
+                            <Badge tone="amber">{t("crsPendingChange")}</Badge>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="px-3 py-3">
                         {submission.fileUrl ? (
@@ -170,7 +191,7 @@ export function AssignmentsGrade({
                               <path d="M12 18v-6" />
                               <path d="m9 15 3 3 3-3" />
                             </svg>
-                            Yuklab olish
+                            {t("crsDownload")}
                           </a>
                         ) : (
                           <span className="text-slate-500">—</span>
@@ -186,7 +207,7 @@ export function AssignmentsGrade({
                       </td>
                       <td className="px-3 py-3 text-right">
                         <Button size="sm" variant="secondary" onClick={() => select(submission)}>
-                          Baholash
+                          {t("crsGrade")}
                         </Button>
                       </td>
                     </tr>
@@ -216,7 +237,7 @@ export function AssignmentsGrade({
                     type="button"
                     onClick={() => setSelectedId(null)}
                     className="shrink-0 rounded-lg p-1.5 text-slate-600 transition-colors hover:bg-white hover:text-slate-700"
-                    aria-label="Panelni yopish"
+                    aria-label={t("crsClosePanel")}
                   >
                     <svg
                       width="15"
@@ -238,22 +259,30 @@ export function AssignmentsGrade({
                     <SubmissionBadge status={selected.status} />
                     {selected.score != null ? (
                       <Badge tone="blue">
-                        {selected.score}/{maxScore} ball
+                        {t("crsScoreBadge", { score: selected.score, max: maxScore })}
                       </Badge>
                     ) : null}
                   </div>
 
+                  {needsRequest ? (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-xs leading-relaxed text-amber-800">
+                      {t("crsGradeLockedBefore")}
+                      <b>{t("crsGradeLockedBold")}</b>
+                      {t("crsGradeLockedAfter")}
+                    </div>
+                  ) : null}
+
                   {selected.text ? (
                     <div className="rounded-xl border-l-[3px] border-brand-300 bg-slate-50 px-3.5 py-3">
                       <p className="text-xs font-semibold tracking-wide text-slate-600 uppercase">
-                        Javob matni
+                        {t("crsAnswerText")}
                       </p>
                       <p className="mt-1.5 text-sm leading-relaxed whitespace-pre-wrap text-slate-600">
                         {selected.text}
                       </p>
                     </div>
                   ) : (
-                    <p className="text-sm text-slate-600">Javob matni kiritilmagan.</p>
+                    <p className="text-sm text-slate-600">{t("crsNoAnswerText")}</p>
                   )}
 
                   {selected.fileUrl ? (
@@ -301,7 +330,7 @@ export function AssignmentsGrade({
 
                   <div className="grid gap-4">
                     <div>
-                      <Label>Ball (0-{maxScore})</Label>
+                      <Label>{t("crsScoreLabel", { max: maxScore })}</Label>
                       <Input
                         type="number"
                         min={0}
@@ -313,15 +342,28 @@ export function AssignmentsGrade({
                       />
                     </div>
                     <div>
-                      <Label>Izoh</Label>
+                      <Label>{t("crsNote")}</Label>
                       <Textarea
                         value={feedback}
                         onChange={(event) => setFeedback(event.target.value)}
                         rows={4}
-                        placeholder="Talabaga izoh yozing..."
+                        placeholder={t("crsFeedbackPlaceholder")}
                         className="resize-y leading-relaxed"
                       />
                     </div>
+                    {needsRequest ? (
+                      <div>
+                        <Label>{t("crsChangeReason")}</Label>
+                        <Textarea
+                          value={reason}
+                          onChange={(event) => setReason(event.target.value)}
+                          rows={2}
+                          placeholder={t("crsChangeReasonPlaceholder")}
+                          required
+                          className="resize-y leading-relaxed"
+                        />
+                      </div>
+                    ) : null}
                   </div>
 
                   {error ? (
@@ -330,10 +372,14 @@ export function AssignmentsGrade({
 
                   <div className="flex justify-end gap-2">
                     <Button variant="secondary" onClick={() => setSelectedId(null)}>
-                      Yopish
+                      {t("crsClose")}
                     </Button>
                     <Button type="submit" disabled={saving}>
-                      {saving ? "Saqlanmoqda..." : "Baholash"}
+                      {saving
+                        ? t("crsSending")
+                        : needsRequest
+                          ? t("crsSendChangeRequest")
+                          : t("crsGrade")}
                     </Button>
                   </div>
                 </div>
@@ -355,9 +401,9 @@ export function AssignmentsGrade({
                     <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z" />
                   </svg>
                 </span>
-                <p className="font-medium text-slate-700">Baholash paneli</p>
+                <p className="font-medium text-slate-700">{t("crsGradePanel")}</p>
                 <p className="max-w-56 text-sm text-slate-500">
-                  Jadvaldan talabani tanlang — baho va izoh shu yerda kiritiladi.
+                  {t("crsGradePanelDesc")}
                 </p>
               </div>
             )}

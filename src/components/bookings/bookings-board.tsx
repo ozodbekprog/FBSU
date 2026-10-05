@@ -19,6 +19,7 @@ import {
 import { cn, fmtDate } from "@/lib/utils";
 import { SLOT_TIMES, todayIso } from "@/components/attendance/lesson-utils";
 import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import type { BookingItem, RoomOption } from "./types";
 
 const SLOTS = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -33,13 +34,6 @@ type CreatePayload = { ok: true; data: BookingItem } | { ok: false; error: strin
 type CancelPayload =
   | { ok: true; data: { id: string; status: string } }
   | { ok: false; error: string };
-
-function roomLabel(room: RoomOption) {
-  const parts = [room.name];
-  if (room.building) parts.push(room.building);
-  if (room.capacity) parts.push(`${room.capacity} o'rin`);
-  return parts.join(" · ");
-}
 
 export function BookingsBoard({
   rooms,
@@ -60,7 +54,16 @@ export function BookingsBoard({
   initialDate?: string;
   initialSlot?: number;
 }) {
+  const { t } = useI18n();
   const presetRoomName = initialRoom?.trim() ?? "";
+
+  function roomLabel(room: RoomOption) {
+    const parts = [room.name];
+    if (room.building) parts.push(room.building);
+    if (room.capacity) parts.push(t("mscRoomCapacity", { count: room.capacity }));
+    return parts.join(" · ");
+  }
+
   const presetRoom = presetRoomName
     ? rooms.find((room) => room.name.toLowerCase() === presetRoomName.toLowerCase()) ?? null
     : null;
@@ -111,9 +114,9 @@ export function BookingsBoard({
         setError(payload.error);
       }
     } catch {
-      setError("Bronlarni yuklab bo'lmadi");
+      setError(t("mscBookLoadError"));
     }
-  }, [filterDate, filterRoom]);
+  }, [filterDate, filterRoom, t]);
 
   useEffect(() => {
     if (firstFilterRun.current) {
@@ -145,7 +148,7 @@ export function BookingsBoard({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!resolvedRoom) {
-      setError("Xona nomini kiriting yoki ro'yxatdan tanlang");
+      setError(t("mscBookRoomRequired"));
       setConflict(false);
       return;
     }
@@ -166,17 +169,21 @@ export function BookingsBoard({
       });
       const payload = (await response.json().catch(() => null)) as CreatePayload | null;
       if (!response.ok || !payload || !payload.ok) {
-        setError(payload && !payload.ok ? payload.error : "Bron qilib bo'lmadi");
+        setError(payload && !payload.ok ? payload.error : t("mscBookCreateError"));
         setConflict(response.status === 409);
         return;
       }
       setPurpose("");
       setNotice(
-        `${payload.data.roomName} — ${fmtDate(payload.data.date)}, ${payload.data.slot}-par band qilindi`,
+        t("mscBookCreated", {
+          room: payload.data.roomName,
+          date: fmtDate(payload.data.date),
+          slot: payload.data.slot,
+        }),
       );
       await reload();
     } catch {
-      setError("Tarmoq xatosi. Qayta urinib ko'ring");
+      setError(t("commonNetworkError"));
       setConflict(false);
     } finally {
       setSaving(false);
@@ -186,7 +193,11 @@ export function BookingsBoard({
   async function cancelBooking(booking: BookingItem) {
     if (
       !window.confirm(
-        `${booking.roomName} — ${fmtDate(booking.date)}, ${booking.slot}-par broni bekor qilinsinmi?`,
+        t("mscBookCancelConfirm", {
+          room: booking.roomName,
+          date: fmtDate(booking.date),
+          slot: booking.slot,
+        }),
       )
     ) {
       return;
@@ -199,13 +210,13 @@ export function BookingsBoard({
       const response = await apiFetch(`/api/bookings/${booking.id}`, { method: "DELETE" });
       const payload = (await response.json().catch(() => null)) as CancelPayload | null;
       if (!response.ok || !payload || !payload.ok) {
-        setError(payload && !payload.ok ? payload.error : "Bekor qilib bo'lmadi");
+        setError(payload && !payload.ok ? payload.error : t("mscBookCancelError"));
         return;
       }
-      setNotice("Bron bekor qilindi");
+      setNotice(t("mscBookCancelled"));
       await reload();
     } catch {
-      setError("Tarmoq xatosi. Qayta urinib ko'ring");
+      setError(t("commonNetworkError"));
     } finally {
       setCancellingId(null);
     }
@@ -221,19 +232,19 @@ export function BookingsBoard({
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="animate-fade-up">
           <Stat
-            label={staff ? "Faol bronlar" : "Faol bronlarim"}
+            label={staff ? t("mscBookActiveStaff") : t("mscBookActiveMine")}
             value={activeCount}
-            hint={`Jami ${items.length} ta bron`}
+            hint={t("mscBookTotalHint", { count: items.length })}
           />
         </div>
         <div className="animate-fade-up" style={{ animationDelay: "60ms" }}>
-          <Stat label="Bugun" value={todayCount} hint={fmtDate(today)} />
+          <Stat label={t("mscBookToday")} value={todayCount} hint={fmtDate(today)} />
         </div>
         <div className="animate-fade-up" style={{ animationDelay: "120ms" }}>
           <Stat
-            label={staff ? "Bekor qilingan" : "Bekor qilinganlarim"}
+            label={staff ? t("mscBookCancelledStaff") : t("mscBookCancelledMine")}
             value={cancelledCount}
-            hint="Bekor qilingan vaqtlar bo'shatiladi"
+            hint={t("mscBookCancelledHint")}
           />
         </div>
       </div>
@@ -242,11 +253,11 @@ export function BookingsBoard({
         <div className="animate-fade-up" style={{ animationDelay: "80ms" }}>
           <Card className="relative overflow-hidden">
             <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
-            <CardHeader title="Yangi bron" subtitle="Xona, sana va parni tanlang" />
+            <CardHeader title={t("mscBookNewTitle")} subtitle={t("mscBookNewSubtitle")} />
             <CardBody>
               <form onSubmit={submit} className="space-y-5">
                 <div>
-                  <Label>Xona</Label>
+                  <Label>{t("mscBookRoomLabel")}</Label>
                   {rooms.length > 0 ? (
                     <div className="mb-2 flex gap-1 rounded-xl bg-slate-100 p-1">
                       <button
@@ -259,7 +270,7 @@ export function BookingsBoard({
                             : "text-slate-500 hover:text-slate-700",
                         )}
                       >
-                        Ro&apos;yxatdan
+                        {t("mscBookFromList")}
                       </button>
                       <button
                         type="button"
@@ -271,7 +282,7 @@ export function BookingsBoard({
                             : "text-slate-500 hover:text-slate-700",
                         )}
                       >
-                        Qo&apos;lda kiritish
+                        {t("mscBookManual")}
                       </button>
                     </div>
                   ) : null}
@@ -287,14 +298,14 @@ export function BookingsBoard({
                     <Input
                       value={roomText}
                       onChange={(event) => setRoomText(event.target.value)}
-                      placeholder="Masalan: 305-xona"
+                      placeholder={t("mscBookRoomPlaceholder")}
                       maxLength={100}
                     />
                   )}
                 </div>
 
                 <div>
-                  <Label>Sana</Label>
+                  <Label>{t("mscRoomsDate")}</Label>
                   <Input
                     type="date"
                     value={date}
@@ -304,7 +315,7 @@ export function BookingsBoard({
                 </div>
 
                 <div>
-                  <Label>Par</Label>
+                  <Label>{t("mscRoomsSlot")}</Label>
                   <div className="grid grid-cols-4 gap-2">
                     {SLOTS.map((value) => {
                       const active = slot === value;
@@ -320,7 +331,7 @@ export function BookingsBoard({
                               : "border-slate-200 bg-white text-slate-500 hover:border-brand-300 hover:text-slate-700",
                           )}
                         >
-                          <span className="text-sm font-semibold leading-none">{value}-par</span>
+                          <span className="text-sm font-semibold leading-none">{t("mscRoomUsageSlot", { slot: value })}</span>
                           <span
                             className={cn(
                               "mt-1 text-[10px] leading-none",
@@ -336,25 +347,25 @@ export function BookingsBoard({
                 </div>
 
                 <div>
-                  <Label>Maqsad</Label>
+                  <Label>{t("mscBookPurposeLabel")}</Label>
                   <Textarea
                     value={purpose}
                     onChange={(event) => setPurpose(event.target.value)}
                     rows={3}
                     maxLength={300}
-                    placeholder="Masalan: guruh bilan loyiha uchrashuvi"
+                    placeholder={t("mscBookPurposePlaceholder")}
                   />
                 </div>
 
                 <div className="rounded-xl bg-slate-50 px-3.5 py-3 ring-1 ring-slate-100">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-                    Tanlov
+                    {t("mscBookSummary")}
                   </p>
                   <p className="mt-1 truncate text-sm font-medium text-slate-700">
-                    {resolvedRoom || "Xona tanlanmagan"}
+                    {resolvedRoom || t("mscBookNoRoom")}
                   </p>
                   <p className="mt-0.5 text-xs text-slate-500">
-                    {fmtDate(date)} · {slot}-par · {SLOT_TIMES[slot]}
+                    {fmtDate(date)} · {t("mscRoomUsageSlot", { slot })} · {SLOT_TIMES[slot]}
                   </p>
                 </div>
 
@@ -383,10 +394,10 @@ export function BookingsBoard({
                       <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
                     </svg>
                     <div>
-                      <p className="font-semibold">{conflict ? "Bu vaqt band" : "Xatolik"}</p>
+                      <p className="font-semibold">{conflict ? t("mscBookConflictTitle") : t("mscBookErrorTitle")}</p>
                       <p className={cn("mt-0.5 text-xs", conflict ? "text-amber-700" : "text-rose-600")}>
                         {conflict
-                          ? "Tanlangan xona, sana va par allaqachon band qilingan. Boshqa par yoki xonani tanlang."
+                          ? t("mscBookConflictBody")
                           : error}
                       </p>
                     </div>
@@ -412,7 +423,7 @@ export function BookingsBoard({
                 ) : null}
 
                 <Button type="submit" className="w-full" disabled={saving}>
-                  {saving ? "Bron qilinmoqda…" : "Bron qilish"}
+                  {saving ? t("mscBookSubmitting") : t("mscRoomBook")}
                 </Button>
               </form>
             </CardBody>
@@ -422,16 +433,16 @@ export function BookingsBoard({
         <div className="animate-fade-up" style={{ animationDelay: "140ms" }}>
           <Card className="overflow-hidden">
             <CardHeader
-              title="Bronlar"
-              subtitle={staff ? "Barcha foydalanuvchilar bronlari" : "Sizning bronlaringiz"}
-              action={<Badge tone="blue">{items.length} ta</Badge>}
+              title={t("mscBookListTitle")}
+              subtitle={staff ? t("mscBookListStaffSubtitle") : t("mscBookListMineSubtitle")}
+              action={<Badge tone="blue">{t("mscBookCountBadge", { count: items.length })}</Badge>}
             />
 
             {staff ? (
               <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-                    Filtr
+                    {t("mscBookFilter")}
                   </p>
                   {filtersActive ? (
                     <button
@@ -439,13 +450,13 @@ export function BookingsBoard({
                       onClick={resetFilters}
                       className="text-xs font-medium text-slate-500 transition-colors duration-150 hover:text-brand-800"
                     >
-                      Tozalash
+                      {t("mscRoomsClear")}
                     </button>
                   ) : null}
                 </div>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <div>
-                    <Label>Sana bo&apos;yicha</Label>
+                    <Label>{t("mscBookFilterDate")}</Label>
                     <Input
                       type="date"
                       value={filterDate}
@@ -453,7 +464,7 @@ export function BookingsBoard({
                     />
                   </div>
                   <div>
-                    <Label>Xona bo&apos;yicha</Label>
+                    <Label>{t("mscBookFilterRoom")}</Label>
                     <div className="relative">
                       <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-600">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -464,7 +475,7 @@ export function BookingsBoard({
                       <Input
                         value={filterRoom}
                         onChange={(event) => setFilterRoom(event.target.value)}
-                        placeholder="Xona nomi"
+                        placeholder={t("mscBookRoomNamePlaceholder")}
                         className="pl-9"
                       />
                     </div>
@@ -477,18 +488,18 @@ export function BookingsBoard({
               {items.length === 0 ? (
                 filtersActive ? (
                   <EmptyState
-                    title="Filtrga mos bron topilmadi"
-                    description="Sana yoki xona filtrini o'zgartirib qayta ko'ring."
+                    title={t("mscBookFilterEmptyTitle")}
+                    description={t("mscBookFilterEmptyBody")}
                     action={
                       <Button variant="secondary" size="sm" onClick={resetFilters}>
-                        Filtrlarni tozalash
+                        {t("mscBookResetFilters")}
                       </Button>
                     }
                   />
                 ) : (
                   <EmptyState
-                    title={staff ? "Hozircha bronlar yo'q" : "Sizda hali bron yo'q"}
-                    description="Chapdagi shakl orqali xonani band qiling — bron shu yerda ko'rinadi."
+                    title={staff ? t("mscBookEmptyStaffTitle") : t("mscBookEmptyMineTitle")}
+                    description={t("mscBookEmptyBody")}
                   />
                 )
               ) : (
@@ -523,7 +534,7 @@ export function BookingsBoard({
                                 {booking.roomName}
                               </p>
                               <Badge tone={active ? "green" : "slate"}>
-                                {active ? "Faol" : "Bekor qilingan"}
+                                {active ? t("mscBookActive") : t("mscBookCancelledStaff")}
                               </Badge>
                             </div>
                             <p className="mt-1 text-sm text-slate-500">{fmtDate(booking.date)}</p>
@@ -536,7 +547,7 @@ export function BookingsBoard({
                                     : "bg-slate-100 text-slate-500",
                                 )}
                               >
-                                {booking.slot}-par · {SLOT_TIMES[booking.slot]}
+                                {t("mscRoomUsageSlot", { slot: booking.slot })} · {SLOT_TIMES[booking.slot]}
                               </span>
                               {booking.purpose ? (
                                 <span className="text-slate-500">{booking.purpose}</span>
@@ -563,7 +574,7 @@ export function BookingsBoard({
                                   void cancelBooking(booking);
                                 }}
                               >
-                                {cancellingId === booking.id ? "Bekor qilinmoqda…" : "Bekor qilish"}
+                                {cancellingId === booking.id ? t("mscBookCancelling") : t("commonCancel")}
                               </Button>
                             ) : null}
                           </div>

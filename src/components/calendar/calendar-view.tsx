@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Badge, ButtonLink, Card, CardBody, CardHeader, EmptyState } from "@/components/ui";
-import { cn, dayName } from "@/lib/utils";
+import { cn, dayName, monthName, currentLocale } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type CalendarItem = {
   id: string;
@@ -16,23 +17,6 @@ export type CalendarItem = {
 type CalendarResponse =
   | { ok: true; data: { items: CalendarItem[] } }
   | { ok: false; error: string };
-
-const MONTH_NAMES = [
-  "Yanvar",
-  "Fevral",
-  "Mart",
-  "Aprel",
-  "May",
-  "Iyun",
-  "Iyul",
-  "Avgust",
-  "Sentabr",
-  "Oktabr",
-  "Noyabr",
-  "Dekabr",
-];
-
-const WEEKDAYS = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
 
 function pad(value: number): string {
   return String(value).padStart(2, "0");
@@ -64,10 +48,23 @@ function selectedDayTitle(key: string): string {
   const year = Number(yearText);
   const month = Number(monthText);
   const day = Number(dayText);
-  return `${day} ${MONTH_NAMES[month - 1].toLowerCase()}, ${dayName(new Date(year, month - 1, day).getDay())}`;
+  const monthLabel = monthName(month - 1);
+  const dayLabel = dayName(new Date(year, month - 1, day).getDay());
+  if (currentLocale() === "en") return `${monthLabel} ${day}, ${dayLabel}`;
+  return `${day} ${monthLabel.toLowerCase()}, ${dayLabel}`;
 }
 
 export function CalendarView() {
+  const { t } = useI18n();
+  const weekdays = [
+    t("dashCalDayMon"),
+    t("dashCalDayTue"),
+    t("dashCalDayWed"),
+    t("dashCalDayThu"),
+    t("dashCalDayFri"),
+    t("dashCalDaySat"),
+    t("dashCalDaySun"),
+  ];
   const today = useMemo(() => new Date(), []);
   const todayKey = dayKeyFromDate(today);
 
@@ -91,14 +88,14 @@ export function CalendarView() {
         if (!active) return;
         if (!json || !json.ok) {
           setItems([]);
-          setError(json && !json.ok ? json.error : "Ma'lumotlarni yuklab bo'lmadi");
+          setError(json && !json.ok ? json.error : t("dashCalLoadError"));
           return;
         }
         setItems(json.data.items);
       } catch {
         if (!active) return;
         setItems([]);
-        setError("Ma'lumotlarni yuklab bo'lmadi");
+        setError(t("dashCalLoadError"));
       } finally {
         if (active) setLoading(false);
       }
@@ -152,14 +149,14 @@ export function CalendarView() {
     <div className="space-y-4">
       <Card>
         <CardHeader
-          title={`${MONTH_NAMES[month - 1]} ${year}`}
-          subtitle={loading ? "Yuklanmoqda..." : `${items.length} ta muddat`}
+          title={`${monthName(month - 1)} ${year}`}
+          subtitle={loading ? t("commonLoading") : t("dashCalDeadlineCount", { count: items.length })}
           action={
             <div className="flex items-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
               <button
                 type="button"
                 onClick={() => goToMonth(-1)}
-                aria-label="Oldingi oy"
+                aria-label={t("dashCalPrevMonth")}
                 className="px-3 py-1.5 text-sm text-slate-500 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-800"
               >
                 ←
@@ -169,12 +166,12 @@ export function CalendarView() {
                 onClick={goToToday}
                 className="border-x border-slate-200 px-3.5 py-1.5 text-sm font-medium text-brand-700 transition-colors duration-150 hover:bg-brand-50"
               >
-                Bugun
+                {t("dashCalToday")}
               </button>
               <button
                 type="button"
                 onClick={() => goToMonth(1)}
-                aria-label="Keyingi oy"
+                aria-label={t("dashCalNextMonth")}
                 className="px-3 py-1.5 text-sm text-slate-500 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-800"
               >
                 →
@@ -187,7 +184,7 @@ export function CalendarView() {
             <p className="mb-3 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
           ) : null}
           <div className="grid grid-cols-7 gap-1.5">
-            {WEEKDAYS.map((name) => (
+            {weekdays.map((name) => (
               <div
                 key={name}
                 className="pb-1 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-600"
@@ -247,16 +244,16 @@ export function CalendarView() {
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-5 text-xs text-slate-500">
             <span className="flex items-center gap-1.5">
-              <span className="size-1.5 rounded-full bg-brand-600" /> Test
+              <span className="size-1.5 rounded-full bg-brand-600" /> {t("dashCalTypeQuiz")}
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="size-1.5 rounded-full bg-amber-500" /> Topshiriq
+              <span className="size-1.5 rounded-full bg-amber-500" /> {t("dashCalTypeAssignment")}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="inline-flex size-4 items-center justify-center rounded-full bg-brand-900 text-[9px] font-semibold text-white">
                 {today.getDate()}
               </span>
-              Bugun
+              {t("dashCalToday")}
             </span>
           </div>
         </CardBody>
@@ -264,20 +261,20 @@ export function CalendarView() {
 
       <Card>
         <CardHeader
-          title={selected ? selectedDayTitle(selected) : "Kun tanlanmagan"}
+          title={selected ? selectedDayTitle(selected) : t("dashCalNoDay")}
           subtitle={
             selected && selectedItems.length > 0
-              ? `${selectedItems.length} ta muddat`
-              : "Deadline'lar ro'yxati"
+              ? t("dashCalDeadlineCount", { count: selectedItems.length })
+              : t("dashCalDeadlines")
           }
         />
         <CardBody className="space-y-3">
           {selected === null ? (
             <p className="text-sm text-slate-500">
-              Kalendardan kunni tanlang — o&apos;sha kundagi muddatlar shu yerda ko&apos;rinadi.
+              {t("dashCalPickDay")}
             </p>
           ) : selectedItems.length === 0 ? (
-            <EmptyState title="Bu kunda deadline yo'q" />
+            <EmptyState title={t("dashCalNoDeadline")} />
           ) : (
             selectedItems.map((item) => (
               <div
@@ -295,7 +292,7 @@ export function CalendarView() {
                   <p className="mt-0.5 text-xs text-slate-500">{item.courseTitle}</p>
                 </div>
                 <Badge tone={item.type === "quiz" ? "brand" : "amber"}>
-                  {item.type === "quiz" ? "Test" : "Topshiriq"}
+                  {item.type === "quiz" ? t("dashCalTypeQuiz") : t("dashCalTypeAssignment")}
                 </Badge>
                 <span className="text-xs font-semibold text-slate-700">{timeText(item.dueAt)}</span>
                 {item.type === "quiz" ? (

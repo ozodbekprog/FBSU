@@ -5,14 +5,9 @@ import { cn } from "@/lib/utils";
 import { Card, CardBody, Input } from "@/components/ui";
 import { CatalogCourseCard, type CatalogCourse } from "@/components/catalog/catalog-course-card";
 import { ElectiveCourseCard } from "@/components/electives/elective-course-card";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 type CourseFilter = "all" | "enrolled" | "open";
-
-const FILTERS: { key: CourseFilter; label: string }[] = [
-  { key: "all", label: "Barchasi" },
-  { key: "enrolled", label: "Yozilganlar" },
-  { key: "open", label: "Yozilmaganlar" },
-];
 
 export function CourseBrowser({
   items,
@@ -29,6 +24,12 @@ export function CourseBrowser({
   searchable?: boolean;
   empty?: ReactNode;
 }) {
+  const { t } = useI18n();
+  const filters: { key: CourseFilter; label: string }[] = [
+    { key: "all", label: t("crsFilterAll") },
+    { key: "enrolled", label: t("crsFilterEnrolled") },
+    { key: "open", label: t("crsFilterOpen") },
+  ];
   const [filter, setFilter] = useState<CourseFilter>("all");
   const [term, setTerm] = useState("");
 
@@ -85,8 +86,8 @@ export function CourseBrowser({
               <Input
                 value={term}
                 onChange={(event) => setTerm(event.target.value)}
-                placeholder="Kurs yoki o'qituvchi nomi bo'yicha qidirish"
-                aria-label="Tanlov fanlarni qidirish"
+                placeholder={t("crsSearchPlaceholder")}
+                aria-label={t("crsSearchElectivesLabel")}
                 className="pl-9"
               />
             </div>
@@ -94,7 +95,7 @@ export function CourseBrowser({
 
           <div className="flex flex-wrap items-center gap-2">
             {!staff && items.length > 0
-              ? FILTERS.map((item) => {
+              ? filters.map((item) => {
                   const active = filter === item.key;
                   return (
                     <button
@@ -123,7 +124,7 @@ export function CourseBrowser({
                 })
               : null}
             <span className="ml-auto text-xs font-medium text-slate-500">
-              {visible.length} ta kurs
+              {t("crsCoursesCount", { count: visible.length })}
             </span>
           </div>
         </CardBody>
@@ -148,16 +149,16 @@ export function CourseBrowser({
               <path d="m20 20-3.5-3.5" />
             </svg>
           </span>
-          <p className="font-medium text-slate-800">Bu filtr bo&apos;yicha kurs topilmadi</p>
+          <p className="font-medium text-slate-800">{t("crsFilterNoResults")}</p>
           <p className="max-w-md text-sm text-slate-500">
-            Boshqa filtrni tanlang yoki qidiruvni tozalab ko&apos;ring.
+            {t("crsFilterNoResultsDesc")}
           </p>
           <button
             type="button"
             onClick={reset}
             className="mt-2 inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition-all duration-150 hover:border-slate-400 hover:bg-slate-50"
           >
-            Filtrlarni tozalash
+            {t("crsResetFilters")}
           </button>
         </div>
       ) : (

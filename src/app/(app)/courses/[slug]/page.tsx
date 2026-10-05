@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { Avatar, Badge, ButtonLink } from "@/components/ui";
 import { CourseMaterials } from "@/components/courses/course-materials";
 import { CourseReviews } from "@/components/courses/course-reviews";
@@ -17,6 +18,8 @@ export default async function CoursePage({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const { slug } = await params;
   const { tab } = await searchParams;
 
@@ -29,6 +32,7 @@ export default async function CoursePage({
         include: { materials: { orderBy: { position: "asc" } } },
       },
       enrollments: {
+        where: { status: "ACTIVE" },
         orderBy: { createdAt: "asc" },
         include: {
           user: {
@@ -84,7 +88,7 @@ export default async function CoursePage({
               >
                 <path d="m15 18-6-6 6-6" />
               </svg>
-              Kurslar
+              {dictionary.crsCourses}
             </Link>
             <div className="mt-5 flex flex-wrap items-start justify-between gap-6">
               <div className="max-w-2xl">
@@ -92,12 +96,12 @@ export default async function CoursePage({
                   <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">{course.title}</h1>
                   {!course.isPublished ? (
                     <Badge tone="gold" className="ring-1 ring-inset ring-white/25">
-                      Qoralama
+                      {dictionary.crsDraft}
                     </Badge>
                   ) : null}
                   {attendance && attendance.total > 0 ? (
                     <Badge tone={attendance.eligible ? "green" : "rose"} className="ring-1 ring-inset ring-white/20">
-                      Davomat: {attendance.percent}% {attendance.eligible ? "✓" : "⚠"}
+                      {translate(locale, "crsAttendanceBadge", { percent: attendance.percent })} {attendance.eligible ? "✓" : "⚠"}
                     </Badge>
                   ) : null}
                 </div>
@@ -121,7 +125,7 @@ export default async function CoursePage({
                       <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                     </svg>
-                    {materialsCount} ta material
+                    {translate(locale, "crsMaterialsCount", { count: materialsCount })}
                   </span>
                   {canManage ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-inset ring-white/15 backdrop-blur">
@@ -139,7 +143,7 @@ export default async function CoursePage({
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                         <circle cx="9" cy="7" r="4" />
                       </svg>
-                      {course.enrollments.length} ta talaba
+                      {translate(locale, "crsStudentsCount", { count: course.enrollments.length })}
                     </span>
                   ) : null}
                 </div>
@@ -169,7 +173,7 @@ export default async function CoursePage({
                     <path d="M12 20h9" />
                     <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" />
                   </svg>
-                  Tahrirlash
+                  {dictionary.crsEdit}
                 </ButtonLink>
               ) : null}
             </div>
