@@ -1,7 +1,9 @@
 import { requireUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { CheckInForm } from "@/components/attendance/check-in-form";
+import { isValidFaceDescriptor } from "@/modules/attendance/face";
 
 export default async function AttendanceCheckInPage({
   searchParams,
@@ -33,6 +35,11 @@ export default async function AttendanceCheckInPage({
   const token = (t ?? "").trim();
   const codeValue = (code ?? "").trim().toUpperCase();
   const initialPayload = token ? { token } : codeValue ? { code: codeValue } : undefined;
+  const faceRow = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { faceDescriptor: true },
+  });
+  const faceEnrolled = isValidFaceDescriptor(faceRow?.faceDescriptor);
 
   return (
     <>
@@ -40,7 +47,7 @@ export default async function AttendanceCheckInPage({
         title={dictionary.schQrAttendanceTitle}
         subtitle={translate(locale, "schScanQrSubtitle", { name: user.name })}
       />
-      <CheckInForm initialPayload={initialPayload} />
+      <CheckInForm initialPayload={initialPayload} faceEnrolled={faceEnrolled} />
     </>
   );
 }

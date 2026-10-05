@@ -7,6 +7,7 @@ import {
   clientIpFromHeaders,
   evaluateCheckInRisk,
 } from "@/modules/attendance-security/verify";
+import { checkFace } from "@/modules/attendance/face";
 
 const CHECK_IN_WINDOW_MS = 10 * 60 * 1000;
 const CHECK_IN_MAX_ATTEMPTS = 10;
@@ -18,6 +19,7 @@ const checkInSchema = z
     lat: z.number().finite().optional(),
     lng: z.number().finite().optional(),
     accuracy: z.number().finite().optional(),
+    faceDescriptor: z.array(z.number().finite()).max(256).optional(),
   })
   .refine((value) => Boolean(value.token || value.code), {
     message: "Token yoki kod kerak",
@@ -118,6 +120,12 @@ export async function POST(request: Request) {
           accuracy: parsed.data.accuracy,
         }
       : undefined;
+  const faceRow = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { faceDescriptor: true },
+  });
+  const faceCheck = checkFace(faceRow?.faceDescriptor ?? null, parsed.data.faceDescriptor ?? null);
+
   const risk = await evaluateCheckInRisk({
     studentId: user.id,
     sessionId: session.id,
@@ -126,9 +134,14 @@ export async function POST(request: Request) {
     studentLocation,
     ip,
     usedCode: !payload,
+    faceCheck,
   });
   const status = risk.suspicious ? "SUSPICIOUS" : "PRESENT";
-  const note = risk.suspicious ? `Shubhali: ${risk.reasons.join(", ")}` : "QR orqali";
+  const note = risk.suspicious
+    ? `Shubhali: ${risk.reasons.join(", ")}`
+    : faceCheck === "ok"
+      ? "QR orqali · Face ID"
+      : "QR orqali";
 
   const attendance = await prisma.attendance.upsert({
     where: {
@@ -161,6 +174,7 @@ export async function POST(request: Request) {
         reasons: risk.reasons,
         distanceM: risk.distanceM ?? null,
         suspicious: risk.suspicious,
+        faceCheck,
       },
     },
   });
@@ -173,6 +187,7 @@ export async function POST(request: Request) {
       status,
       suspicious: risk.suspicious,
       reasons: risk.reasons,
+      faceCheck,
     },
   });
 }

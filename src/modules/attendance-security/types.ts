@@ -21,7 +21,9 @@ export type RiskReason =
   | "IP_SHARED"
   | "IP_GEO_MISMATCH"
   | "VPN_SUSPECTED"
-  | "CODE_USED";
+  | "CODE_USED"
+  | "FACE_MISSING"
+  | "FACE_MISMATCH";
 
 export type RiskResult = {
   suspicious: boolean;
@@ -49,4 +51,5 @@ export type CheckInRiskInput = {
   studentLocation?: GeoPoint;
   ip?: string | null;
   usedCode?: boolean;
+  faceCheck?: "ok" | "missing" | "mismatch" | "not_enrolled";
 };

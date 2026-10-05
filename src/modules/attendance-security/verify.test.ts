@@ -215,4 +215,45 @@ describe("evaluateCheckInRisk", () => {
 
     expect(result.reasons).toEqual(["IP_CHANGED", "IP_SHARED"]);
   });
+
+  it("yuz tasdiqlangan bo'lsa IP flaglari qo'shilmaydi", async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      ipResponse({ status: "success", query: "4.4.4.4" }),
+    );
+    prismaMock.auditLog.findFirst.mockResolvedValue({ meta: { ip: "5.5.5.5" } });
+    prismaMock.auditLog.findMany.mockResolvedValue([
+      {
+        actorId: "student-6",
+        meta: { sessionId: "session-5", ip: "4.4.4.4" },
+      },
+    ]);
+
+    const result = await evaluateCheckInRisk({
+      studentId: "student-5",
+      sessionId: "session-5",
+      courseId: "course-5",
+      tokenLocation,
+      studentLocation: { ...tokenLocation, accuracy: 20 },
+      ip: "4.4.4.4",
+      faceCheck: "ok",
+    });
+
+    expect(result.suspicious).toBe(false);
+    expect(result.reasons).toEqual([]);
+    expect(prismaMock.auditLog.findMany).not.toHaveBeenCalled();
+  });
+
+  it("yuz mos kelmasa FACE_MISMATCH qaytaradi", async () => {
+    const result = await evaluateCheckInRisk({
+      studentId: "student-8",
+      sessionId: "session-8",
+      courseId: "course-8",
+      tokenLocation,
+      studentLocation: { ...tokenLocation, accuracy: 20 },
+      faceCheck: "mismatch",
+    });
+
+    expect(result.suspicious).toBe(true);
+    expect(result.reasons).toEqual(["FACE_MISMATCH"]);
+  });
 });

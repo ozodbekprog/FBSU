@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Button, Card, CardBody } from "@/components/ui";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { cn, fmtDate } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { requestBrowserLocation, type QrScanPayload } from "./live-qr";
 import { QrScanner } from "./qr-scanner";
+import { FaceScan } from "@/components/face/face-scan";
 
 type CheckInResult = {
   course: { id: string; title: string; slug: string };
@@ -24,43 +26,36 @@ const REASON_KEYS = {
   VPN_SUSPECTED: "schReasonVpnSuspected",
   IP_GEO_MISMATCH: "schReasonIpGeoMismatch",
   CODE_USED: "schReasonCodeUsed",
+  FACE_MISSING: "schReasonFaceMissing",
+  FACE_MISMATCH: "schReasonFaceMismatch",
 } as const;
+type PendingBody = {
+  token?: string;
+  code?: string;
+  lat?: number;
+  lng?: number;
+  accuracy?: number;
+};
 
-export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload }) {
+export function CheckInForm({
+  initialPayload,
+  faceEnrolled = false,
+}: {
+  initialPayload?: QrScanPayload;
+  faceEnrolled?: boolean;
+}) {
   const { t } = useI18n();
-  const [status, setStatus] = useState<"idle" | "scanning" | "loading" | "success" | "suspicious" | "error">(
+  const [status, setStatus] = useState<"idle" | "scanning" | "loading" | "face" | "success" | "suspicious" | "error">(
     "idle",
   );
   const [message, setMessage] = useState<string | null>(null);
   const [result, setResult] = useState<CheckInResult | null>(null);
   const [reasons, setReasons] = useState<string[]>([]);
+  const [pending, setPending] = useState<PendingBody | null>(null);
   const [pop, setPop] = useState(false);
   const tokenSubmitted = useRef(false);
 
-  async function submitScan(payload: QrScanPayload) {
-    const token = payload.token?.trim() ?? "";
-    const code = (payload.code ?? "").trim().toUpperCase();
-    if (!token && !code) {
-      setStatus("error");
-      setMessage(t("schQrNotRead"));
-      return;
-    }
-
-    setStatus("loading");
-    setMessage(t("schQrReadLocating"));
-
-    const location = await requestBrowserLocation();
-
-    setMessage(t("schChecking"));
-
-    const body = token
-      ? location
-        ? { token, lat: location.lat, lng: location.lng, accuracy: location.accuracy }
-        : { token }
-      : location
-        ? { code, lat: location.lat, lng: location.lng, accuracy: location.accuracy }
-        : { code };
-
+  async function send(body: PendingBody & { faceDescriptor?: number[] }) {
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), 20000);
     let response: Response;
@@ -99,12 +94,67 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
     window.requestAnimationFrame(() => setPop(true));
   }
 
+  async function submitScan(payload: QrScanPayload) {
+    const token = payload.token?.trim() ?? "";
+    const code = (payload.code ?? "").trim().toUpperCase();
+    if (!token && !code) {
+      setStatus("error");
+      setMessage(t("schQrNotRead"));
+      return;
+    }
+
+    setStatus("loading");
+    setMessage(t("schQrReadLocating"));
+
+    const location = await requestBrowserLocation();
+
+    setMessage(t("schChecking"));
+
+    const body: PendingBody = token
+      ? location
+        ? { token, lat: location.lat, lng: location.lng, accuracy: location.accuracy }
+        : { token }
+      : location
+        ? { code, lat: location.lat, lng: location.lng, accuracy: location.accuracy }
+        : { code };
+
+    if (faceEnrolled) {
+      setPending(body);
+      setStatus("face");
+      return;
+    }
+
+    await send(body);
+  }
+
   useEffect(() => {
     if (tokenSubmitted.current) return;
     if (!initialPayload?.token && !initialPayload?.code) return;
     tokenSubmitted.current = true;
     void submitScan(initialPayload);
   }, [initialPayload]);
+
+  if (status === "face" && pending) {
+    return (
+      <Card className="animate-fade-up relative mx-auto max-w-lg overflow-hidden">
+        <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
+        <CardBody className="space-y-5 px-6 py-8 sm:px-8">
+          <p className="text-center text-sm font-medium text-slate-700">{t("schFaceStep")}</p>
+          <FaceScan
+            onDescriptor={(descriptor) => {
+              setStatus("loading");
+              setMessage(t("schChecking"));
+              void send({ ...pending, faceDescriptor: descriptor });
+            }}
+            onCancel={() => {
+              setPending(null);
+              setStatus("idle");
+            }}
+          />
+        </CardBody>
+      </Card>
+    );
+  }
 
   if (status === "success" && result) {
     return (
@@ -303,6 +353,15 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
         >
           {t("schScanQr")}
         </Button>
+
+        {!faceEnrolled ? (
+          <p className="text-center text-xs text-slate-500">
+            {t("schFaceEnableHint")}{" "}
+            <Link href="/face" className="font-medium text-brand-700 underline-offset-2 hover:underline">
+              Face ID
+            </Link>
+          </p>
+        ) : null}
       </CardBody>
     </Card>
   );

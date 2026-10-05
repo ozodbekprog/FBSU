@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { PageHeader } from "@/components/ui";
+import Link from "next/link";
+import { Badge, PageHeader } from "@/components/ui";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { PasswordForm } from "@/components/profile/PasswordForm";
 import { ProfileForm } from "@/components/profile/ProfileForm";
@@ -8,11 +9,17 @@ import { ProfileHero } from "@/components/profile/ProfileHero";
 import { StatsRow } from "@/components/profile/StatsRow";
 import type { ProfileStatKind } from "@/components/profile/StatsRow";
 import { getDictionary, getLocale } from "@/i18n";
+import { isValidFaceDescriptor } from "@/modules/attendance/face";
 
 export default async function ProfilePage() {
   const user = await requireUser();
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
+  const faceRow = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { faceDescriptor: true },
+  });
+  const faceEnrolled = isValidFaceDescriptor(faceRow?.faceDescriptor);
 
   let coursesCount = 0;
   let certificatesCount = 0;
@@ -123,6 +130,33 @@ export default async function ProfilePage() {
         <ProfileForm initialName={user.name} initialBio={user.bio} avatarUrl={user.avatarUrl} />
         <PasswordForm />
       </div>
+      <Link
+        href="/face"
+        className="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-slate-200/70 bg-white p-5 transition-all duration-150 hover:border-brand-200 hover:shadow-lift"
+      >
+        <span className="flex items-center gap-3">
+          <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M9 10h.01M15 10h.01" />
+              <path d="M9.5 15a4 4 0 0 0 5 0" />
+            </svg>
+          </span>
+          <span>
+            <span className="block text-sm font-semibold text-slate-800">
+              {dictionary.schFaceTitle}
+            </span>
+            <span className="block text-xs text-slate-500">
+              {dictionary.schFacePageSubtitle}
+            </span>
+          </span>
+        </span>
+        {faceEnrolled ? (
+          <Badge tone="green">{dictionary.schFaceEnrolled}</Badge>
+        ) : (
+          <Badge tone="amber">{dictionary.schFaceNotEnrolled}</Badge>
+        )}
+      </Link>
     </>
   );
 }

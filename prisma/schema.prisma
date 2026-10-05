@@ -64,6 +64,8 @@ model User {
   preferences  Json?
   isActive     Boolean  @default(true)
   sessionEpoch Int      @default(0)
+  faceDescriptor Json?
+  faceEnrolledAt DateTime?
   createdAt    DateTime @default(now())
 
   groupId String?
