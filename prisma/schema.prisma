@@ -79,6 +79,8 @@ model User {
   certificatesReceived Certificate[]      @relation("CertificateStudent")
   bonusPointsReceived  BonusPoint[]       @relation("BonusPointStudent")
   bonusPointsAwarded   BonusPoint[]       @relation("BonusPointAwardedBy")
+  gradeChangeRequests  GradeChangeRequest[] @relation("GradeChangeRequester")
+  gradeChangeReviews   GradeChangeRequest[] @relation("GradeChangeReviewer")
   attendanceSessions   AttendanceSession[]
   conversationsA       Conversation[]     @relation("ConversationA")
   conversationsB       Conversation[]     @relation("ConversationB")
@@ -214,8 +216,30 @@ model Submission {
 
   assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   student    User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  gradeChanges GradeChangeRequest[]
 
   @@unique([assignmentId, studentId])
+}
+
+model GradeChangeRequest {
+  id            String            @id @default(cuid())
+  submissionId  String
+  requestedById String
+  oldScore      Int?
+  newScore      Int?
+  oldFeedback   String?
+  newFeedback   String?
+  reason        String
+  status        GradeChangeStatus @default(PENDING)
+  reviewedById  String?
+  reviewedAt    DateTime?
+  createdAt     DateTime          @default(now())
+
+  submission  Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  requestedBy User       @relation("GradeChangeRequester", fields: [requestedById], references: [id], onDelete: Cascade)
+  reviewedBy  User?      @relation("GradeChangeReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
 }
 
 model Attendance {
@@ -312,6 +336,12 @@ enum ScheduleStatus {
 enum ScheduleApproval {
   PENDING
   APPROVED
+}
+
+enum GradeChangeStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model Notification {

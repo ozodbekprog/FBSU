@@ -126,6 +126,30 @@ function looksLikeSessionCookie(value: string | undefined): boolean {
   return parts.length === 3 && parts.every((part) => part.length > 0);
 }
 
+/**
+ * Role-gated pages: the proxy verifies the session JWT and answers with a real
+ * 307 instead of a streamed page redirect. Real authorization still lives in
+ * the page (`requireUser`), this only makes the gate server-side.
+ */
+const ROLE_GATED: Record<string, string[]> = {
+  "/approvals": ["ADMIN", "REGISTRAR"],
+};
+
+function sessionSecret(): Uint8Array {
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) return new TextEncoder().encode("");
+  return new TextEncoder().encode(secret);
+}
+
+async function sessionRole(token: string): Promise<string | null> {
+  try {
+    const { payload } = await jwtVerify(token, sessionSecret());
+    return typeof payload.role === "string" ? payload.role : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
@@ -136,13 +160,24 @@ export async function proxy(request: NextRequest) {
   // Public pages and static/API assets never need the cookie gate.
   if (isPublicPath(pathname)) return NextResponse.next();
 
-  if (!looksLikeSessionCookie(request.cookies.get(SESSION_COOKIE)?.value)) {
+  const sessionCookie = request.cookies.get(SESSION_COOKIE)?.value;
+  if (!looksLikeSessionCookie(sessionCookie)) {
     // `next` is built from the request's own pathname+search, so it can never
     // point at another origin (no open redirect); it is also URL-encoded.
     return NextResponse.redirect(
       new URL("/login?next=" + encodeURIComponent(pathname + search), request.url),
       307,
     );
+  }
+
+  const gated = Object.entries(ROLE_GATED).find(
+    ([prefix]) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+  if (gated) {
+    const role = await sessionRole(sessionCookie ?? "");
+    if (!role || !gated[1].includes(role)) {
+      return NextResponse.redirect(new URL("/dashboard", request.url), 307);
+    }
   }
 
   return NextResponse.next();

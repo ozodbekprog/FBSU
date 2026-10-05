@@ -153,6 +153,15 @@ export default async function AssignmentDetailPage({
       orderBy: { submittedAt: "asc" },
     });
 
+    const pendingChanges = await prisma.gradeChangeRequest.findMany({
+      where: {
+        submissionId: { in: submissions.map((submission) => submission.id) },
+        status: "PENDING",
+      },
+      select: { submissionId: true },
+    });
+    const pendingSet = new Set(pendingChanges.map((row) => row.submissionId));
+
     return (
       <>
         <PageHeader title={assignment.title} subtitle={course.title} action={back} />
@@ -160,6 +169,7 @@ export default async function AssignmentDetailPage({
           {infoCard}
           <AssignmentsGrade
             maxScore={assignment.maxScore}
+            canDirectGrade={user.role !== "TEACHER"}
             submissions={submissions.map((submission) => ({
               id: submission.id,
               studentName: submission.student.name,
@@ -170,6 +180,7 @@ export default async function AssignmentDetailPage({
               feedback: submission.feedback,
               text: submission.text,
               fileUrl: submission.fileUrl,
+              pendingChange: pendingSet.has(submission.id),
             }))}
           />
         </div>

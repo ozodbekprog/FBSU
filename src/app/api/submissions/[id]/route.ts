@@ -4,10 +4,12 @@ import { getCurrentUser } from "@/lib/auth";
 import { canManageCourse } from "@/components/courses/course-access";
 import { notifyUser } from "@/server/notify";
 import { logAudit } from "@/server/audit";
+import { needsApproval } from "@/modules/grades/regrade";
 
 const gradeSchema = z.object({
   score: z.coerce.number().int().min(0),
   feedback: z.string().trim().max(5000).nullable().optional(),
+  reason: z.string().trim().max(500).optional(),
 });
 
 export async function PATCH(
@@ -45,11 +47,66 @@ export async function PATCH(
     );
   }
 
+  const nextScore = parsed.data.score;
+  const nextFeedback = parsed.data.feedback || null;
+
+  if (needsApproval(user.role, submission, nextScore)) {
+    const reason = (parsed.data.reason ?? "").trim();
+    if (reason.length < 5) {
+      return Response.json(
+        { ok: false, error: "Bahoni o'zgartirish uchun sabab kiritilishi shart (kamida 5 belgi)" },
+        { status: 400 },
+      );
+    }
+
+    const existing = await prisma.gradeChangeRequest.findFirst({
+      where: { submissionId: id, status: "PENDING" },
+      select: { id: true },
+    });
+    if (existing) {
+      return Response.json(
+        { ok: false, error: "Bu baho uchun allaqachon tasdiq kutilmoqda" },
+        { status: 409 },
+      );
+    }
+
+    const changeRequest = await prisma.gradeChangeRequest.create({
+      data: {
+        submissionId: id,
+        requestedById: user.id,
+        oldScore: submission.score,
+        newScore: nextScore,
+        oldFeedback: submission.feedback,
+        newFeedback: nextFeedback,
+        reason,
+      },
+    });
+
+    await logAudit({
+      actorId: user.id,
+      action: "submission.regrade_request",
+      entity: "GradeChangeRequest",
+      entityId: changeRequest.id,
+      meta: {
+        submissionId: id,
+        studentId: submission.studentId,
+        from: submission.score,
+        to: nextScore,
+        reason,
+      },
+    });
+
+    return Response.json(
+      { ok: true, data: { pending: true, request: changeRequest } },
+      { status: 201 },
+    );
+  }
+
   const updated = await prisma.submission.update({
     where: { id },
     data: {
-      score: parsed.data.score,
-      feedback: parsed.data.feedback || null,
+      score: nextScore,
+      feedback: nextFeedback,
       status: "GRADED",
       gradedAt: new Date(),
     },
@@ -57,7 +114,7 @@ export async function PATCH(
 
   try {
     await notifyUser(submission.studentId, {
-      title: `Topshiriq baholandi: ${submission.assignment.title} — ${parsed.data.score} ball`,
+      title: `Topshiriq baholandi: ${submission.assignment.title} — ${nextScore} ball`,
       link: `/courses/${submission.assignment.course.slug}/assignments/${submission.assignmentId}`,
     });
   } catch {}
@@ -70,8 +127,10 @@ export async function PATCH(
     meta: {
       assignmentId: submission.assignmentId,
       studentId: submission.studentId,
-      score: parsed.data.score,
+      score: nextScore,
       maxScore: submission.assignment.maxScore,
+      previousScore: submission.score,
+      reason: parsed.data.reason ?? null,
     },
   });
 

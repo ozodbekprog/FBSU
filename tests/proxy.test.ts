@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
+import { SignJWT } from "jose";
 import { proxy } from "@/proxy";
 
 const VALID_SESSION = "header.payload.signature";
@@ -125,5 +126,42 @@ describe("proxy (CSRF gate)", () => {
       makeRequest("/dashboard", VALID_SESSION, { method: "POST" }),
     );
     expect(isPassthrough(res)).toBe(true);
+  });
+});
+
+async function signedSession(role: string): Promise<string> {
+  return new SignJWT({ role })
+    .setProtectedHeader({ alg: "HS256" })
+    .sign(new TextEncoder().encode("test-secret"));
+}
+
+describe("proxy (rol darvozasi: /approvals)", () => {
+  it("registrator tokeni bilan o'tadi", async () => {
+    process.env.AUTH_SECRET = "test-secret";
+    const token = await signedSession("REGISTRAR");
+    const res = await proxy(makeRequest("/approvals", token));
+    expect(isPassthrough(res)).toBe(true);
+  });
+
+  it("admin tokeni bilan o'tadi", async () => {
+    process.env.AUTH_SECRET = "test-secret";
+    const token = await signedSession("ADMIN");
+    const res = await proxy(makeRequest("/approvals", token));
+    expect(isPassthrough(res)).toBe(true);
+  });
+
+  it("talaba tokeni /dashboardga 307 yo'naltiriladi", async () => {
+    process.env.AUTH_SECRET = "test-secret";
+    const token = await signedSession("STUDENT");
+    const res = await proxy(makeRequest("/approvals", token));
+    expect(res.status).toBe(307);
+    expect(res.headers.get("location")).toBe("http://localhost/dashboard");
+  });
+
+  it("soxta token /dashboardga 307 yo'naltiriladi", async () => {
+    process.env.AUTH_SECRET = "test-secret";
+    const res = await proxy(makeRequest("/approvals", VALID_SESSION));
+    expect(res.status).toBe(307);
+    expect(res.headers.get("location")).toBe("http://localhost/dashboard");
   });
 });

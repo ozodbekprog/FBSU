@@ -16,6 +16,7 @@ export type SubmissionRow = {
   feedback: string | null;
   text: string | null;
   fileUrl: string | null;
+  pendingChange?: boolean;
 };
 
 function fileNameOf(url: string) {
@@ -26,37 +27,50 @@ function fileNameOf(url: string) {
 export function AssignmentsGrade({
   maxScore,
   submissions,
+  canDirectGrade = true,
 }: {
   maxScore: number;
   submissions: SubmissionRow[];
+  canDirectGrade?: boolean;
 }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [score, setScore] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const selected = submissions.find((item) => item.id === selectedId) ?? null;
   const gradedCount = submissions.filter((item) => item.status === "GRADED").length;
+  const needsRequest = Boolean(selected && selected.status === "GRADED" && !canDirectGrade);
 
   function select(submission: SubmissionRow) {
     setSelectedId(submission.id);
     setScore(submission.score != null ? String(submission.score) : "");
     setFeedback(submission.feedback ?? "");
+    setReason("");
     setError(null);
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selected) return;
+    if (needsRequest && reason.trim().length < 5) {
+      setError("Bahoni o'zgartirish uchun sabab kiritilishi shart (kamida 5 belgi)");
+      return;
+    }
     setSaving(true);
     setError(null);
 
     const response = await fetch(`/api/submissions/${selected.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ score: Number(score), feedback: feedback || null }),
+      body: JSON.stringify({
+        score: Number(score),
+        feedback: feedback || null,
+        ...(needsRequest ? { reason: reason.trim() } : {}),
+      }),
     });
     const json = (await response.json().catch(() => null)) as {
       ok?: boolean;
@@ -144,7 +158,12 @@ export function AssignmentsGrade({
                         {fmtDateTime(submission.submittedAt)}
                       </td>
                       <td className="px-3 py-3">
-                        <SubmissionBadge status={submission.status} />
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <SubmissionBadge status={submission.status} />
+                          {submission.pendingChange ? (
+                            <Badge tone="amber">Tuzatish kutilmoqda</Badge>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="px-3 py-3">
                         {submission.fileUrl ? (
@@ -243,6 +262,14 @@ export function AssignmentsGrade({
                     ) : null}
                   </div>
 
+                  {needsRequest ? (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-xs leading-relaxed text-amber-800">
+                      Bu baho allaqachon qo&apos;yilgan. Ballni o&apos;zgartirish{" "}
+                      <b>O&apos;quv bo&apos;limi tasdig&apos;i</b> bilan amalga oshadi — o&apos;zgartirish
+                      so&apos;rovi yuboriladi.
+                    </div>
+                  ) : null}
+
                   {selected.text ? (
                     <div className="rounded-xl border-l-[3px] border-brand-300 bg-slate-50 px-3.5 py-3">
                       <p className="text-xs font-semibold tracking-wide text-slate-600 uppercase">
@@ -322,6 +349,19 @@ export function AssignmentsGrade({
                         className="resize-y leading-relaxed"
                       />
                     </div>
+                    {needsRequest ? (
+                      <div>
+                        <Label>O&apos;zgartirish sababi *</Label>
+                        <Textarea
+                          value={reason}
+                          onChange={(event) => setReason(event.target.value)}
+                          rows={2}
+                          placeholder="Masalan: tekshirishda arifmetik xato aniqlandi"
+                          required
+                          className="resize-y leading-relaxed"
+                        />
+                      </div>
+                    ) : null}
                   </div>
 
                   {error ? (
@@ -333,7 +373,11 @@ export function AssignmentsGrade({
                       Yopish
                     </Button>
                     <Button type="submit" disabled={saving}>
-                      {saving ? "Saqlanmoqda..." : "Baholash"}
+                      {saving
+                        ? "Yuborilmoqda..."
+                        : needsRequest
+                          ? "Tuzatish so'rovini yuborish"
+                          : "Baholash"}
                     </Button>
                   </div>
                 </div>
