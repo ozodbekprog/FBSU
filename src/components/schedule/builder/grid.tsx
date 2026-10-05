@@ -40,7 +40,9 @@ function BuilderBlock({
   selected,
   snapping,
   canManage,
+  canApprove,
   onSelect,
+  onApprove,
   onDragStart,
   onDragEnd,
 }: {
@@ -49,7 +51,9 @@ function BuilderBlock({
   selected: boolean;
   snapping: boolean;
   canManage: boolean;
+  canApprove: boolean;
   onSelect: (event: MouseEvent<HTMLElement>, entry: BuilderEntry) => void;
+  onApprove: (entry: BuilderEntry) => void;
   onDragStart: (event: DragEvent<HTMLElement>, payload: DragPayload) => void;
   onDragEnd: () => void;
 }) {
@@ -89,7 +93,20 @@ function BuilderBlock({
           {entry.room ? <BlockBadge tone="slate">{entry.room}</BlockBadge> : null}
           {entry.parity ? <BlockBadge tone="amber">{entry.parity === "odd" ? "Toq" : "Juft"}</BlockBadge> : null}
           {meta ? <BlockBadge tone={meta.tone}>{meta.label}</BlockBadge> : null}
+          {entry.approval === "PENDING" ? <BlockBadge tone="amber">Kutilmoqda</BlockBadge> : null}
         </div>
+        {canApprove && entry.approval === "PENDING" ? (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onApprove(entry);
+            }}
+            className="mt-1.5 inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white transition-colors hover:bg-emerald-700"
+          >
+            Tasdiqlash
+          </button>
+        ) : null}
         <p className="mt-1 text-[10px] opacity-50">
           {`${dayName(entry.dayOfWeek).slice(0, 3)} ${formatDayShort(dayIsoInWeek(weekStart, entry.dayOfWeek))}`}
         </p>
@@ -113,6 +130,8 @@ export function BuilderGrid({
   onDragOverCell,
   onDragLeaveCell,
   onDropCell,
+  canApprove,
+  onApproveEntry,
   pending,
 }: {
   entries: BuilderEntry[];
@@ -129,6 +148,8 @@ export function BuilderGrid({
   onDragOverCell: (event: DragEvent<HTMLElement>, cell: CellRef) => void;
   onDragLeaveCell: (event: DragEvent<HTMLElement>) => void;
   onDropCell: (event: DragEvent<HTMLElement>, cell: CellRef) => void;
+  canApprove: boolean;
+  onApproveEntry: (entry: BuilderEntry) => void;
   pending: boolean;
 }) {
   const hasSelection = selection !== null;
@@ -187,6 +208,8 @@ export function BuilderGrid({
                             selected={selectedEntryId === entry.id}
                             snapping={snapId === entry.id}
                             canManage={canManageEntry(entry)}
+                            canApprove={canApprove}
+                            onApprove={onApproveEntry}
                             onSelect={onSelectEntry}
                             onDragStart={onDragStart}
                             onDragEnd={onDragEnd}

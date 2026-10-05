@@ -54,7 +54,7 @@ export function BuilderPalette({
   rooms: string[];
   room: string;
   onRoom: (room: string) => void;
-  role: "TEACHER" | "ADMIN";
+  role: "TEACHER" | "ADMIN" | "REGISTRAR";
   fixedTeacher: string;
   teacherValue: string;
   onTeacher: (value: string) => void;
@@ -171,7 +171,7 @@ export function BuilderPalette({
             </Select>
           </div>
 
-          {role === "ADMIN" ? (
+          {role === "ADMIN" || role === "REGISTRAR" ? (
             <div>
               <Label>{"O'qituvchi"}</Label>
               <Input

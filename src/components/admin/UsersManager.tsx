@@ -58,6 +58,7 @@ const ROLE_META: Record<
   { label: string; tone: "brand" | "purple" | "slate"; dot: string; ring: string }
 > = {
   ADMIN: { label: "Administrator", tone: "brand", dot: "bg-brand-500", ring: "ring-brand-200/80" },
+  REGISTRAR: { label: "O'quv bo'limi", tone: "brand", dot: "bg-sky-500", ring: "ring-sky-200/80" },
   TEACHER: { label: "O'qituvchi", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
   STUDENT: { label: "Talaba", tone: "slate", dot: "bg-slate-400", ring: "ring-slate-200" },
 };
@@ -313,6 +314,7 @@ export default function UsersManager({
                   >
                     <option value="STUDENT">Talaba</option>
                     <option value="TEACHER">O&apos;qituvchi</option>
+                    <option value="REGISTRAR">O&apos;quv bo&apos;limi</option>
                     <option value="ADMIN">Administrator</option>
                   </Select>
                 </div>

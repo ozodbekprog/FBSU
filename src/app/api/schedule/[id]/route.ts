@@ -34,7 +34,7 @@ async function requireStaff() {
   if (!user) {
     return { user: null, error: Response.json({ ok: false, error: "Unauthorized" }, { status: 401 }) };
   }
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (user.role !== "TEACHER" && user.role !== "ADMIN" && user.role !== "REGISTRAR") {
     return { user: null, error: Response.json({ ok: false, error: "Forbidden" }, { status: 403 }) };
   }
   return { user, error: null };
@@ -107,6 +107,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       ...(data.parity !== undefined ? { parity: data.parity ?? null } : {}),
       ...(data.subGroup !== undefined ? { subGroup: data.subGroup ? data.subGroup : null } : {}),
       ...(data.status !== undefined ? { status: data.status } : {}),
+      approval: guard.user.role === "TEACHER" ? "PENDING" : "APPROVED",
       ...(data.note !== undefined ? { note: data.note ? data.note : null } : {}),
     },
     include: {
@@ -115,7 +116,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     },
   });
 
-  if (data.status !== undefined && data.status !== entry.status) {
+  if (updated.approval === "APPROVED" && data.status !== undefined && data.status !== entry.status) {
     const parts: string[] = [];
     if (updated.note) parts.push(updated.note);
     parts.push(`${DAY_NAMES[updated.dayOfWeek - 1]}, ${updated.slot}-par`);

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { isStaff, requireUser } from "@/lib/auth";
+import { isStaff, isRegistrar, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
 import { ScheduleBuilder } from "@/components/schedule/builder/schedule-builder";
@@ -20,7 +20,7 @@ export default async function ScheduleBuilderPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const user = await requireUser();
-  if (!isStaff(user.role)) redirect("/schedule");
+  if (!isStaff(user.role) && !isRegistrar(user.role)) redirect("/schedule");
 
   const params = await searchParams;
   const groups: BuilderGroup[] = await prisma.group.findMany({
@@ -54,7 +54,7 @@ export default async function ScheduleBuilderPage({
   });
 
   const courseRows = await prisma.course.findMany({
-    where: user.role === "ADMIN" ? {} : { teacherId: user.id },
+    where: user.role === "ADMIN" || user.role === "REGISTRAR" ? {} : { teacherId: user.id },
     orderBy: { title: "asc" },
     select: {
       id: true,
@@ -106,7 +106,7 @@ export default async function ScheduleBuilderPage({
   }
 
   const teacherSet = new Map<string, BuilderTeacherRef>();
-  if (user.role === "ADMIN") {
+  if (user.role === "ADMIN" || user.role === "REGISTRAR") {
     const teacherRows = await prisma.user.findMany({
       where: { role: "TEACHER", isActive: true },
       orderBy: { name: "asc" },
@@ -139,6 +139,7 @@ export default async function ScheduleBuilderPage({
     parity: entry.parity,
     subGroup: entry.subGroup,
     status: entry.status,
+    approval: entry.approval,
     note: entry.note,
   }));
 
@@ -166,7 +167,8 @@ export default async function ScheduleBuilderPage({
       />
       <ScheduleBuilder
         key={`${selectedGroup.id}-${weekStart}`}
-        role={user.role === "ADMIN" ? "ADMIN" : "TEACHER"}
+        role={user.role === "TEACHER" ? "TEACHER" : user.role === "REGISTRAR" ? "REGISTRAR" : "ADMIN"}
+        canApprove={user.role === "ADMIN" || user.role === "REGISTRAR"}
         userId={user.id}
         userName={user.name}
         groups={groups}

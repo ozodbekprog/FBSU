@@ -113,3 +113,7 @@ export async function requireRole(roles: Role[]) {
 export function isStaff(role: Role) {
   return role === "ADMIN" || role === "TEACHER";
 }
+
+export function isRegistrar(role: Role) {
+  return role === "REGISTRAR";
+}

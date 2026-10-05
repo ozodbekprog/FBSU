@@ -9,7 +9,7 @@ import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
 import { getClientIp as getClientIpFromHeaders } from "@/lib/client-ip";
 
-const ROLES = ["ADMIN", "TEACHER", "STUDENT"] as const;
+const ROLES = ["ADMIN", "REGISTRAR", "TEACHER", "STUDENT"] as const;
 
 const createSchema = z.object({
   name: z.string().trim().min(2).max(100),

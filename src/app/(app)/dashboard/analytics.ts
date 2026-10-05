@@ -42,6 +42,7 @@ const SUBMISSION_META: Record<SubmissionStatus, { label: string; color: string }
 const ROLE_META: Record<Role, { label: string; color: string }> = {
   STUDENT: { label: "Talabalar", color: "#5373b8" },
   TEACHER: { label: "O'qituvchilar", color: "#34497f" },
+  REGISTRAR: { label: "O'quv bo'limi", color: "#0284c7" },
   ADMIN: { label: "Adminlar", color: "#c9a227" },
 };
 

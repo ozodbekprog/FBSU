@@ -65,6 +65,7 @@ function mergeEntry(current: BuilderEntry, incoming: BuilderEntry): BuilderEntry
 
 export function ScheduleBuilder({
   role,
+  canApprove,
   userId,
   userName,
   groups,
@@ -80,7 +81,8 @@ export function ScheduleBuilder({
   roomOptions,
   subGroups,
 }: {
-  role: "TEACHER" | "ADMIN";
+  role: "TEACHER" | "ADMIN" | "REGISTRAR";
+  canApprove: boolean;
   userId: string;
   userName: string;
   groups: BuilderGroup[];
@@ -162,7 +164,7 @@ export function ScheduleBuilder({
   const teacher = role === "TEACHER" ? userName : teacherInput.trim();
 
   function canManageEntry(entry: BuilderEntry) {
-    if (role === "ADMIN") return true;
+    if (role === "ADMIN" || role === "REGISTRAR") return true;
     if (entry.teacherId) return entry.teacherId === userId;
     if (!entry.teacher) return false;
     return normalizeTeacherName(entry.teacher) === normalizeTeacherName(userName);
@@ -192,7 +194,7 @@ export function ScheduleBuilder({
         : { kind: "new", subject: subject.name, subjectId: subject.id },
     );
     const linked = findCourseForSubject(subject, courses);
-    if (role === "ADMIN" && linked?.teacherName && (teacherInput.trim() === "" || teacherInput === autoTeacherRef.current)) {
+    if ((role === "ADMIN" || role === "REGISTRAR") && linked?.teacherName && (teacherInput.trim() === "" || teacherInput === autoTeacherRef.current)) {
       autoTeacherRef.current = linked.teacherName;
       setTeacherInput(linked.teacherName);
     }
@@ -325,6 +327,36 @@ export function ScheduleBuilder({
     showToast("success", "Dars o'chirildi");
   }
 
+  async function approveEntry(entry: BuilderEntry) {
+    setPending(true);
+    const result = await apiRequest<BuilderEntry>(`/api/schedule/${entry.id}/approve`, { method: "POST" });
+    setPending(false);
+    if (!result.ok) {
+      showToast("error", result.error);
+      return;
+    }
+    setEntries((prev) => prev.map((item) => (item.id === entry.id ? mergeEntry(item, result.data) : item)));
+    showToast("success", `Tasdiqlandi: ${entry.subject}`);
+  }
+
+  async function approveAll() {
+    setPending(true);
+    const result = await apiRequest<{ count: number }>("/api/schedule/approve-all", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ groupId: selectedGroupId }),
+    });
+    setPending(false);
+    if (!result.ok) {
+      showToast("error", result.error);
+      return;
+    }
+    setEntries((prev) =>
+      prev.map((item) => (item.approval === "PENDING" ? { ...item, approval: "APPROVED" as const } : item)),
+    );
+    showToast("success", `${result.data.count} ta yozuv tasdiqlandi`);
+  }
+
   function handleDragStart(event: DragEvent<HTMLElement>, payload: DragPayload) {
     const ghost = document.createElement("div");
     ghost.textContent = payload.subject;
@@ -404,6 +436,7 @@ export function ScheduleBuilder({
   const selectedEntry =
     selection?.kind === "move" ? entries.find((entry) => entry.id === selection.id) ?? null : null;
   const selectedSubject = selection?.kind === "new" ? selection.subject : null;
+  const pendingApprovals = entries.filter((entry) => entry.approval === "PENDING").length;
 
   return (
     <div className="space-y-4">
@@ -447,6 +480,19 @@ export function ScheduleBuilder({
           </p>
         </CardBody>
       </Card>
+
+      {canApprove && pendingApprovals > 0 ? (
+        <Card>
+          <CardBody className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-medium text-amber-800">
+              ⏳ {pendingApprovals} ta yozuv tasdiq kutmoqda
+            </p>
+            <Button size="sm" onClick={() => void approveAll()}>
+              Hammasini tasdiqlash
+            </Button>
+          </CardBody>
+        </Card>
+      ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
         <div className="space-y-4">
@@ -492,6 +538,8 @@ export function ScheduleBuilder({
           onDragOverCell={handleDragOverCell}
           onDragLeaveCell={handleDragLeaveCell}
           onDropCell={handleDropCell}
+          canApprove={canApprove}
+          onApproveEntry={(entry) => void approveEntry(entry)}
           pending={pending}
         />
       </div>

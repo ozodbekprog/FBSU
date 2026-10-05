@@ -5,6 +5,7 @@ import { cn, fmtDate } from "@/lib/utils";
 
 export const ROLE_META: Record<Role, { label: string; tone: "brand" | "purple" | "slate" }> = {
   ADMIN: { label: "Administrator", tone: "brand" },
+  REGISTRAR: { label: "O'quv bo'limi", tone: "brand" },
   TEACHER: { label: "O'qituvchi", tone: "purple" },
   STUDENT: { label: "Talaba", tone: "slate" },
 };

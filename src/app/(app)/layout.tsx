@@ -81,9 +81,11 @@ export default async function AppLayout({
   const roleLabel =
     user.role === "ADMIN"
       ? "Administrator"
-      : user.role === "TEACHER"
-        ? "O'qituvchi"
-        : user.group?.name ?? "Talaba";
+      : user.role === "REGISTRAR"
+        ? "O'quv bo'limi"
+        : user.role === "TEACHER"
+          ? "O'qituvchi"
+          : user.group?.name ?? "Talaba";
 
   const tabs: MobileTab[] = [
     { href: "/dashboard", label: "Dashboard", icon: "home" },

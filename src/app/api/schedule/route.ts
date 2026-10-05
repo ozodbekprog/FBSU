@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { canManageEntry } from "./_helpers";
+import { canManageEntry, initialApproval } from "./_helpers";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 
 const createSchema = z.object({
@@ -42,7 +42,10 @@ export async function GET(request: Request) {
   }
 
   const entries = await prisma.scheduleEntry.findMany({
-    where: { groupId: group.id },
+    where: {
+      groupId: group.id,
+      ...(user.role === "STUDENT" ? { approval: "APPROVED" as const } : {}),
+    },
     orderBy: [{ dayOfWeek: "asc" }, { slot: "asc" }],
     include: {
       subjectRef: { select: { name: true, color: true } },
@@ -58,7 +61,7 @@ export async function POST(request: Request) {
   if (!user) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (user.role !== "TEACHER" && user.role !== "ADMIN" && user.role !== "REGISTRAR") {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -125,6 +128,7 @@ export async function POST(request: Request) {
       parity,
       subGroup: data.subGroup ? data.subGroup : null,
       status: data.status ?? "NORMAL",
+      approval: initialApproval(user.role),
       note: data.note ? data.note : null,
     },
     include: {

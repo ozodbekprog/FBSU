@@ -83,6 +83,7 @@ async function main() {
 
   const users = [
     { email: "admin@ttpu.uz", name: "Administrator", role: "ADMIN", groupId: null },
+    { email: "registrar@ttpu.uz", name: "O'quv bo'limi", role: "REGISTRAR", groupId: null },
     { email: "n.mahamatov@ttpu.uz", name: "N. Mahamatov", role: "TEACHER", groupId: null },
     { email: "a.mamanazarov@ttpu.uz", name: "A. Mamanazarov", role: "TEACHER", groupId: null },
     { email: "o.ismoilova@ttpu.uz", name: "O. Ismoilova", role: "TEACHER", groupId: null },
@@ -617,7 +618,7 @@ async function main() {
   }
 
   console.log("Seed tayyor. Demo loginlar (parol: ttpu1234):");
-  console.log("  admin@ttpu.uz | n.mahamatov@ttpu.uz | ozodbek@ttpu.uz");
+  console.log("  admin@ttpu.uz | registrar@ttpu.uz | n.mahamatov@ttpu.uz | ozodbek@ttpu.uz");
 }
 
 main()
