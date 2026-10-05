@@ -184,6 +184,7 @@ function Scene({
 
 export function Nav3DLayer({ containerRef }: { containerRef: RefObject<HTMLDivElement | null> }) {
   const [slots, setSlots] = useState<Slot[]>([]);
+  const [clipTop, setClipTop] = useState(0);
   const [hovered, setHovered] = useState<string | null>(null);
   const supported = useWebGLSupport();
   const desktop = useMediaQuery("(min-width: 768px)");
@@ -195,6 +196,11 @@ export function Nav3DLayer({ containerRef }: { containerRef: RefObject<HTMLDivEl
     const root = containerRef.current;
     if (!root) return;
     const rootRect = root.getBoundingClientRect();
+    const nav = root.querySelector<HTMLElement>("#sidebar-nav");
+    if (nav) {
+      const top = Math.max(0, nav.getBoundingClientRect().top - rootRect.top);
+      setClipTop((prev) => (Math.abs(prev - top) < 0.5 ? prev : top));
+    }
     const next: Slot[] = [];
     root.querySelectorAll<HTMLElement>("[data-nav3d-href]").forEach((node) => {
       const href = node.dataset.nav3dHref ?? "";
@@ -263,7 +269,11 @@ export function Nav3DLayer({ containerRef }: { containerRef: RefObject<HTMLDivEl
   const still = reduced || !NAV3D_ANIMATED;
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden" aria-hidden="true">
+    <div
+      className="pointer-events-none absolute inset-0 z-20 overflow-hidden"
+      aria-hidden="true"
+      style={{ clipPath: `inset(${clipTop}px 0px 0px 0px)` }}
+    >
       <Canvas
         orthographic
         dpr={[1, 1.5]}

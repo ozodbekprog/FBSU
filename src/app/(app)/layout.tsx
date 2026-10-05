@@ -7,8 +7,10 @@ import { Avatar } from "@/components/ui";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { UnreadBadge } from "@/components/chat/UnreadBadge";
+import { LogoutForm } from "@/components/auth/logout-form";
 import { Logo } from "@/components/brand/logo";
 import { MobileTabBar, NavLinks, type MobileTab, type MobileTabIcon } from "./nav-links";
+import { MobileNav } from "@/components/nav/mobile-nav";
 import { BugAssistant } from "@/components/bugs/bug-assistant";
 
 export default async function AppLayout({
@@ -122,26 +124,17 @@ export default async function AppLayout({
               <p className="truncate text-xs text-slate-500">{roleLabel}</p>
             </div>
           </Link>
-          <form action="/api/auth/logout" method="post">
-            <button
-              type="submit"
-              className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <path d="m16 17 5-5-5-5" />
-                <path d="M21 12H9" />
-              </svg>
-              Chiqish
-            </button>
-          </form>
+          <LogoutForm />
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-slate-200/70 bg-white/90 px-4 backdrop-blur md:hidden">
-          <Link href="/dashboard" className="transition-opacity hover:opacity-80">
-            <Logo size={28} withText={false} />
-          </Link>
+          <div className="flex min-w-0 items-center gap-1">
+            <MobileNav groups={groups} />
+            <Link href="/dashboard" className="transition-opacity hover:opacity-80">
+              <Logo size={28} withText={false} />
+            </Link>
+          </div>
           <div className="flex items-center gap-1">
             <NotificationBell align="right" />
             <ThemeToggle />

@@ -4,6 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import sharp from "sharp";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { uploadsRoot } from "@/lib/uploads";
 
 const ALLOWED_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp"]);
 
@@ -90,9 +91,7 @@ export async function handleProfileImageUpload(
   }
 
   const fileName = `${randomUUID().replace(/-/g, "")}.webp`;
-  const baseDir = process.env.UPLOAD_DIR
-    ? path.resolve(process.env.UPLOAD_DIR)
-    : path.join(process.cwd(), "public", "uploads");
+  const baseDir = uploadsRoot();
   const uploadDir = path.join(baseDir, options.subdir);
   await mkdir(uploadDir, { recursive: true });
   await writeFile(path.join(uploadDir, fileName), processed);

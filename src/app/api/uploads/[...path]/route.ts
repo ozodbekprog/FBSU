@@ -2,27 +2,7 @@ import path from "node:path";
 import { readFile, stat } from "node:fs/promises";
 import { getCurrentUser } from "@/lib/auth";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
-
-const MIME_TYPES: Record<string, string> = {
-  webp: "image/webp",
-  png: "image/png",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  gif: "image/gif",
-  svg: "image/svg+xml",
-  pdf: "application/pdf",
-  zip: "application/zip",
-  txt: "text/plain; charset=utf-8",
-  csv: "text/csv; charset=utf-8",
-  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-};
-
-function uploadBaseDir() {
-  return process.env.UPLOAD_DIR
-    ? path.resolve(process.env.UPLOAD_DIR)
-    : path.join(process.cwd(), "uploads");
-}
+import { safeUploadContentType, uploadsRoot } from "@/lib/uploads";
 
 function isSafePath(baseDir: string, targetPath: string): boolean {
   const resolvedBase = path.resolve(baseDir);
@@ -55,7 +35,7 @@ export async function GET(
     return new Response("Not found", { status: 404 });
   }
 
-  const baseDir = uploadBaseDir();
+  const baseDir = uploadsRoot();
   const requestedPath = path.join(baseDir, ...segments);
 
   if (!isSafePath(baseDir, requestedPath)) {
@@ -85,7 +65,7 @@ export async function GET(
     });
     return new Response(new Uint8Array(data), {
       headers: {
-        "Content-Type": MIME_TYPES[extension] ?? "application/octet-stream",
+        "Content-Type": safeUploadContentType(requestedPath),
         "Content-Length": String(info.size),
         "Cache-Control": "private, max-age=3600",
         "X-Content-Type-Options": "nosniff",

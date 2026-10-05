@@ -45,9 +45,16 @@ describe("haversineMeters", () => {
 });
 
 describe("clientIpFromHeaders", () => {
-  it("x-forwarded-for dagi oxirgi hopni qaytaradi (soxtalashtirishga qarshi)", () => {
+  it("x-forwarded-for dagi birinchi (asliy mijoz) hopni qaytaradi", () => {
+    // `X-Forwarded-For: client, proxy1, proxy2` — har bir proxy keyingi
+    // qiymatni o'zi qo'shadi, shuning uchun chap tomondagi qiymat mijozniku.
     const headers = new Headers({ "x-forwarded-for": " 8.8.8.8, 10.0.0.1" });
-    expect(clientIpFromHeaders(headers)).toBe("10.0.0.1");
+    expect(clientIpFromHeaders(headers)).toBe("8.8.8.8");
+  });
+
+  it("soxtalashtirilgan zanjir ichidagi dastlabki qiymatni ishonch qilmaydi", () => {
+    const headers = new Headers({ "x-forwarded-for": "1.2.3.4, 5.6.7.8, 9.9.9.9" });
+    expect(clientIpFromHeaders(headers)).toBe("1.2.3.4");
   });
 
   it("x-real-ip x-forwarded-for dan ustun turadi", () => {

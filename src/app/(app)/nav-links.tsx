@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { useMediaQuery, useWebGLSupport } from "@/components/nav/nav-3d-env";
 import { useNavCollapsed } from "@/components/nav/nav-collapsed";
 import dynamic from "next/dynamic";
-import { useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const Nav3DLayer = dynamic(
   () => import("@/components/nav/nav-3d-layer").then((mod) => mod.Nav3DLayer),
@@ -149,6 +149,17 @@ export function NavLinks({ groups }: { groups: NavGroup[] }) {
   const desktop = useMediaQuery("(min-width: 768px)");
   const with3d = webgl && desktop;
   const { collapsed, toggle } = useNavCollapsed();
+  const [tip, setTip] = useState<{ label: string; y: number } | null>(null);
+
+  const hideTip = useCallback(() => setTip(null), []);
+
+  useEffect(() => {
+    if (!collapsed) hideTip();
+  }, [collapsed, hideTip]);
+
+  useEffect(() => {
+    hideTip();
+  }, [pathname, hideTip]);
 
   return (
     <div
@@ -158,49 +169,66 @@ export function NavLinks({ groups }: { groups: NavGroup[] }) {
       className="relative flex min-h-0 flex-1 flex-col"
     >
       {with3d ? <Nav3DLayer containerRef={shellRef} /> : null}
-      {collapsed ? null : (
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={!collapsed}
+        aria-controls="sidebar-nav"
+        aria-label="Menyuni yopish"
+        title="Menyuni yopish"
+        className="nav-burger-top absolute -top-12 right-25 z-30 hidden size-8 items-center justify-center rounded-xl text-slate-500 hover:bg-brand-50 hover:text-brand-900 md:inline-flex"
+      >
+        <BurgerIcon />
+      </button>
+      {collapsed ? (
         <button
           type="button"
           onClick={toggle}
           aria-expanded={false}
           aria-controls="sidebar-nav"
-          aria-label="Menyuni yopish"
-          title="Menyuni yopish"
-          className="absolute -top-12 right-25 z-30 hidden size-8 items-center justify-center rounded-xl text-slate-500 transition-colors duration-150 hover:bg-brand-50 hover:text-brand-900 md:inline-flex"
+          aria-label="Menyuni ochish"
+          title="Menyuni ochish"
+          className="nav-burger-rail z-30 mx-auto my-1.5 hidden size-9 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-colors duration-150 hover:bg-brand-50 hover:text-brand-900 md:inline-flex"
         >
           <BurgerIcon />
         </button>
-      )}
+      ) : null}
       <nav
         id="sidebar-nav"
+        onScroll={hideTip}
+        onPointerLeave={hideTip}
+        onPointerOver={(event) => {
+          if (!collapsed || !desktop || event.pointerType === "touch") {
+            hideTip();
+            return;
+          }
+          const target = event.target;
+          const link =
+            target instanceof Element ? target.closest<HTMLElement>("[data-nav-link]") : null;
+          const shell = shellRef.current;
+          if (!link || !shell) {
+            hideTip();
+            return;
+          }
+          const anchor = link.querySelector<HTMLElement>("[data-nav3d-href]") ?? link;
+          const shellRect = shell.getBoundingClientRect();
+          const rect = anchor.getBoundingClientRect();
+          const label = link.dataset.navLabel ?? "";
+          const y = rect.top - shellRect.top + rect.height / 2;
+          setTip((prev) =>
+            prev && prev.label === label && Math.abs(prev.y - y) < 0.5 ? prev : { label, y },
+          );
+        }}
         className={cn(
           "relative z-10 flex-1 overflow-y-auto px-3 py-4",
           collapsed ? "space-y-1.5" : "space-y-4",
         )}
       >
-        {collapsed ? (
-          <button
-            type="button"
-            onClick={toggle}
-            aria-expanded
-            aria-controls="sidebar-nav"
-            aria-label="Menyuni ochish"
-            title="Menyuni ochish"
-            className="sticky top-0 z-30 mx-auto mb-1.5 hidden size-9 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-colors duration-150 hover:bg-brand-50 hover:text-brand-900 md:inline-flex"
-          >
-            <BurgerIcon />
-          </button>
-        ) : null}
         {groups.map((group, groupIndex) => (
-          <div
-            key={group.label}
-            className={cn(collapsed && groupIndex > 0 && "border-t border-slate-200/60 pt-1.5")}
-          >
-            {collapsed ? null : (
-              <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600">
-                {group.label}
-              </p>
-            )}
+          <div key={group.label} className={cn("nav-group", groupIndex > 0 && "nav-group-sep")}>
+            <p className="nav-group-label px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600">
+              {group.label}
+            </p>
             <div className="space-y-0.5">
               {group.links.map((l, index) => {
                 const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
@@ -208,11 +236,12 @@ export function NavLinks({ groups }: { groups: NavGroup[] }) {
                   <Link
                     key={l.href}
                     href={l.href}
-                    title={collapsed ? l.label : undefined}
-                    aria-label={collapsed ? l.label : undefined}
+                    data-nav-link=""
+                    data-nav-label={l.label}
+                    data-active={active ? "true" : undefined}
+                    aria-label={l.label}
                     className={cn(
-                      "group flex items-center rounded-xl text-sm font-medium transition-all duration-150",
-                      collapsed ? "justify-center px-0 py-2" : "gap-2.5 px-3 py-2",
+                      "nav-link group flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium",
                       active
                         ? "bg-brand-900 text-white shadow-[0_6px_16px_-8px_rgba(29,52,96,0.7)]"
                         : "text-slate-600 hover:bg-brand-50 hover:text-brand-900",
@@ -222,7 +251,7 @@ export function NavLinks({ groups }: { groups: NavGroup[] }) {
                       data-nav3d-href={l.href}
                       data-nav3d-key={index}
                       data-nav3d-active={active ? "true" : "false"}
-                      className="flex size-6 shrink-0 items-center justify-center"
+                      className="nav-icon flex size-6 shrink-0 items-center justify-center"
                     >
                       {!with3d ? (
                         <span
@@ -233,8 +262,8 @@ export function NavLinks({ groups }: { groups: NavGroup[] }) {
                         />
                       ) : null}
                     </span>
-                    {collapsed ? null : l.label}
-                    {!collapsed && l.badge ? <span className="ml-auto">{l.badge}</span> : null}
+                    <span className="nav-label">{l.label}</span>
+                    {l.badge ? <span className="nav-badge">{l.badge}</span> : null}
                   </Link>
                 );
               })}
@@ -242,6 +271,17 @@ export function NavLinks({ groups }: { groups: NavGroup[] }) {
           </div>
         ))}
       </nav>
+      {collapsed && desktop && tip ? (
+        <div
+          key={`${tip.label}:${Math.round(tip.y)}`}
+          aria-hidden="true"
+          className="nav-tooltip"
+          style={{ top: tip.y }}
+        >
+          <span className="nav-tooltip-dot" />
+          {tip.label}
+        </div>
+      ) : null}
     </div>
   );
 }

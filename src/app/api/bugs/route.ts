@@ -8,6 +8,7 @@ import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
 import { analyzeBug } from "@/lib/ai";
+import { uploadsRoot } from "@/lib/uploads";
 
 const reportSchema = z.object({
   message: z.string().trim().min(3).max(3000),
@@ -49,9 +50,7 @@ async function saveAttachment(dataUrl: string): Promise<string | null> {
   const buffer = Buffer.from(match[2], "base64");
   if (buffer.length === 0 || buffer.length > 3_500_000) return null;
   if (!matchesImageSignature(extension, buffer)) return null;
-  const baseDir = process.env.UPLOAD_DIR
-    ? path.resolve(process.env.UPLOAD_DIR)
-    : path.join(process.cwd(), "uploads");
+  const baseDir = uploadsRoot();
   await mkdir(baseDir, { recursive: true });
   const fileName = `bug-${randomUUID().replace(/-/g, "")}.${extension}`;
   await writeFile(path.join(baseDir, fileName), buffer);

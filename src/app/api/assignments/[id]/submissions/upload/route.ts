@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, isStaff } from "@/lib/auth";
+import { uploadsRoot } from "@/lib/uploads";
 
 const MAX_SIZE = 10 * 1024 * 1024;
 const ALLOWED_EXTENSIONS = new Set(["png", "jpg", "jpeg", "pdf", "zip", "docx", "pptx", "txt"]);
@@ -86,9 +87,7 @@ export async function POST(
   }
 
   const fileName = `${randomUUID().replace(/-/g, "")}.${extension}`;
-  const baseDir = process.env.UPLOAD_DIR
-    ? path.resolve(process.env.UPLOAD_DIR)
-    : path.join(process.cwd(), "public", "uploads");
+  const baseDir = uploadsRoot();
   const uploadDir = path.join(baseDir, "submissions");
   await mkdir(uploadDir, { recursive: true });
   await writeFile(path.join(uploadDir, fileName), buffer);

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { jwtVerify, SignJWT } from "jose";
 
 /**
  * Fast auth pre-check for protected app routes.
@@ -43,6 +44,65 @@ const PUBLIC_FILES = new Set([
 /** Any path whose last segment looks like a static file (photo.png, app.webmanifest, ...). */
 const FILE_EXTENSION = /\.[a-z0-9]+$/i;
 
+/**
+ * Methods that never change state and therefore never need a CSRF token.
+ */
+const CSRF_SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+/**
+ * API endpoints that are reachable without a CSRF token.
+ *
+ * - `/api/csrf` only *mints* the token (GET).
+ * - The auth endpoints below are reachable from the login/register forms, which
+ *   fetch `/api/csrf` first (src/lib/csrf-client.ts auto-injects the header),
+ *   so they are kept here only as a safety net for direct/native clients.
+ * Everything else under `/api/` must present a valid double-submit token.
+ */
+const CSRF_EXEMPT_API = ["/api/csrf", "/api/health"];
+
+function csrfSecret(): Uint8Array {
+  const secret = process.env.CSRF_SECRET || process.env.AUTH_SECRET;
+  if (!secret) return new TextEncoder().encode("");
+  return new TextEncoder().encode(secret);
+}
+
+async function isValidCsrf(token: string | undefined, cookie: string | undefined): Promise<boolean> {
+  if (!token || !cookie || token !== cookie) return false;
+  try {
+    await jwtVerify(token, csrfSecret());
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Central CSRF gate for every state-changing API request.
+ *
+ * Individual route handlers may still call `verifyCsrfFromRequest()` (that is
+ * fine and keeps them safe if they are ever mounted outside the proxy), but
+ * this gate guarantees that a newly added route is protected by default
+ * instead of by memory.
+ */
+async function enforceCsrf(request: NextRequest): Promise<NextResponse | null> {
+  if (CSRF_SAFE_METHODS.has(request.method.toUpperCase())) return null;
+
+  const { pathname } = request.nextUrl;
+  if (!pathname.startsWith("/api/")) return null;
+  if (CSRF_EXEMPT_API.some((prefix) => pathname.startsWith(prefix))) return null;
+
+  const ok = await isValidCsrf(
+    request.headers.get("x-csrf-token") ?? undefined,
+    request.cookies.get("csrf_token")?.value,
+  );
+  if (ok) return null;
+
+  return NextResponse.json(
+    { ok: false, error: "CSRF token yaroqsiz" },
+    { status: 403 },
+  );
+}
+
 function isPublicPath(pathname: string): boolean {
   // Treat "/login/" the same as "/login" (Next normalizes the trailing slash
   // only after middleware has already run).
@@ -66,8 +126,12 @@ function looksLikeSessionCookie(value: string | undefined): boolean {
   return parts.length === 3 && parts.every((part) => part.length > 0);
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+
+  // State-changing API calls are CSRF-checked here before anything else runs.
+  const csrfError = await enforceCsrf(request);
+  if (csrfError) return csrfError;
 
   // Public pages and static/API assets never need the cookie gate.
   if (isPublicPath(pathname)) return NextResponse.next();
@@ -86,11 +150,10 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   /**
-   * Skip the middleware entirely for API routes and static assets (Next
-   * chunks/images, fonts, manifests, uploaded files, ...) so they are never
-   * redirected. `.*\..*` excludes any path containing a dot (file extension),
-   * matching the public-path allowlist above — protected page routes have no
-   * dots in their paths.
+   * `/api/**` is now matched too: the proxy enforces CSRF on state-changing API
+   * calls before any handler runs, and returns `NextResponse.next()` for public
+   * API paths so it never interferes with routing. `.*\..*` still excludes
+   * static files, which need no gate.
    */
-  matcher: ["/((?!api|_next|favicon.ico|.*\\..*).*)"],
+  matcher: ["/((?!_next|favicon.ico|.*\\..*).*)"],
 };
