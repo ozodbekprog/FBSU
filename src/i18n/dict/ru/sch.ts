@@ -401,4 +401,5 @@ export const sch = {
   schFaceRemoved: "Face ID удалён",
   schReasonFaceMissing: "Лицо не подтверждено",
   schReasonFaceMismatch: "Лицо не совпало",
+  schFaceRetryHint: "Лицо не подтверждено — отсканируйте лицо ещё раз",
 };

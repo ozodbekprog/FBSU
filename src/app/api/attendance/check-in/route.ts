@@ -105,10 +105,13 @@ export async function POST(request: Request) {
     },
   });
   if (existing && existing.status !== "ABSENT") {
-    return Response.json(
-      { ok: false, error: "Bugun bu kurs uchun davomat allaqachon belgilangan" },
-      { status: 409 },
-    );
+    const faceRetry = existing.status === "SUSPICIOUS" && parsed.data.faceDescriptor !== undefined;
+    if (!faceRetry) {
+      return Response.json(
+        { ok: false, error: "Bugun bu kurs uchun davomat allaqachon belgilangan" },
+        { status: 409 },
+      );
+    }
   }
 
   const tokenLocation = payload ? (payload.loc ?? lookupQrLocation(payload.jti)) : undefined;

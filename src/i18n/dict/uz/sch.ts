@@ -401,4 +401,5 @@ export const sch = {
   schFaceRemoved: "Face ID o'chirildi",
   schReasonFaceMissing: "Yuz tasdiqlanmadi",
   schReasonFaceMismatch: "Yuz mos kelmadi",
+  schFaceRetryHint: "Yuz tasdiqlanmadi — yuzingizni qayta skanerlang",
 };

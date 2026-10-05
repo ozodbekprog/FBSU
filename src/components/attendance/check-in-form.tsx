@@ -54,6 +54,7 @@ export function CheckInForm({
   const [pending, setPending] = useState<PendingBody | null>(null);
   const [pop, setPop] = useState(false);
   const tokenSubmitted = useRef(false);
+  const lastBodyRef = useRef<PendingBody | null>(null);
 
   async function send(body: PendingBody & { faceDescriptor?: number[] }) {
     const controller = new AbortController();
@@ -84,6 +85,16 @@ export function CheckInForm({
 
     setResult(json.data);
     setPop(false);
+    const faceFailed =
+      Array.isArray(json.data.reasons) &&
+      (json.data.reasons.includes("FACE_MISSING") || json.data.reasons.includes("FACE_MISMATCH"));
+    if (faceFailed && lastBodyRef.current) {
+      setReasons([]);
+      setPending(lastBodyRef.current);
+      setMessage(t("schFaceRetryHint"));
+      setStatus("face");
+      return;
+    }
     if (json.data.status === "SUSPICIOUS") {
       setReasons(Array.isArray(json.data.reasons) ? json.data.reasons : []);
       setStatus("suspicious");
@@ -94,7 +105,7 @@ export function CheckInForm({
     window.requestAnimationFrame(() => setPop(true));
   }
 
-  async function submitScan(payload: QrScanPayload) {
+    async function submitScan(payload: QrScanPayload) {
     const token = payload.token?.trim() ?? "";
     const code = (payload.code ?? "").trim().toUpperCase();
     if (!token && !code) {
@@ -118,7 +129,22 @@ export function CheckInForm({
         ? { code, lat: location.lat, lng: location.lng, accuracy: location.accuracy }
         : { code };
 
-    if (faceEnrolled) {
+    lastBodyRef.current = body;
+
+    let needsFace = faceEnrolled;
+    try {
+      const faceResponse = await apiFetch("/api/face");
+      const faceJson = (await faceResponse.json().catch(() => null)) as
+        | { ok?: boolean; data?: { enrolled?: boolean } }
+        | null;
+      if (faceResponse.ok && faceJson?.ok) {
+        needsFace = faceJson.data?.enrolled === true;
+      }
+    } catch {
+      void 0;
+    }
+
+    if (needsFace) {
       setPending(body);
       setStatus("face");
       return;
@@ -139,6 +165,11 @@ export function CheckInForm({
       <Card className="animate-fade-up relative mx-auto max-w-lg overflow-hidden">
         <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
         <CardBody className="space-y-5 px-6 py-8 sm:px-8">
+          {message ? (
+            <p className="rounded-xl bg-amber-50 px-3 py-2 text-center text-sm text-amber-800">
+              {message}
+            </p>
+          ) : null}
           <p className="text-center text-sm font-medium text-slate-700">{t("schFaceStep")}</p>
           <FaceScan
             onDescriptor={(descriptor) => {

@@ -400,4 +400,5 @@ export const sch = {
   schFaceRemoved: "Face ID removed",
   schReasonFaceMissing: "Face not verified",
   schReasonFaceMismatch: "Face mismatch",
+  schFaceRetryHint: "Face not verified — scan your face again",
 };
