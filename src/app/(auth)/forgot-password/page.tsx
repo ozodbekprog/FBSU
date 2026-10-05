@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button, Card, Input, Label } from "@/components/ui";
 import { Logo } from "@/components/brand/logo";
@@ -14,6 +14,11 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -118,7 +123,7 @@ export default function ForgotPasswordPage() {
                     <p>{error}</p>
                   </div>
                 ) : null}
-                <Button type="submit" disabled={loading} size="lg" className="w-full">
+                <Button type="submit" disabled={loading || !hydrated} size="lg" className="w-full">
                   {loading ? t("authForgotSubmitting") : t("authForgotSubmit")}
                 </Button>
               </form>

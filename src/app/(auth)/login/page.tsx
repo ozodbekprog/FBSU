@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, Card, Input, Label } from "@/components/ui";
@@ -87,6 +87,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   function fillDemo(demoEmail: string) {
     setEmail(demoEmail);
@@ -230,7 +235,7 @@ export default function LoginPage() {
                   <p>{error}</p>
                 </div>
               ) : null}
-              <Button type="submit" disabled={loading} size="lg" className="w-full">
+              <Button type="submit" disabled={loading || !hydrated} size="lg" className="w-full">
                 {loading ? t("authLoginSubmitting") : t("authLoginSubmit")}
               </Button>
             </form>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, Card, Input, Label } from "@/components/ui";
@@ -28,6 +28,11 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   function update(key: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -201,7 +206,7 @@ export default function RegisterPage() {
                   <p>{error}</p>
                 </div>
               ) : null}
-              <Button type="submit" disabled={loading} size="lg" className="w-full">
+              <Button type="submit" disabled={loading || !hydrated} size="lg" className="w-full">
                 {loading ? t("authRegisterSubmitting") : t("authRegisterSubmit")}
               </Button>
             </form>
