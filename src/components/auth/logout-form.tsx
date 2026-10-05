@@ -1,6 +1,7 @@
 "use client";
 
 import { logoutAction } from "@/server/logout-action";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 /**
  * Logout is a server action: it verifies the double-submit CSRF token
@@ -10,6 +11,7 @@ import { logoutAction } from "@/server/logout-action";
  * the cross-site forced-logout attack this avoids.
  */
 export function LogoutForm() {
+  const { t } = useI18n();
   return (
     <form action={logoutAction}>
       <button
@@ -21,7 +23,7 @@ export function LogoutForm() {
           <path d="m16 17 5-5-5-5" />
           <path d="M21 12H9" />
         </svg>
-        Chiqish
+        {t("shellLogout")}
       </button>
     </form>
   );

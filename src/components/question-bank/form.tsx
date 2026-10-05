@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { Button, Card, CardBody, CardHeader, Input, Label, Select, Textarea } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import type { Dictionary } from "@/i18n";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { apiFetch } from "@/components/quiz/api";
-import { QUESTION_TYPE_ICON, QUESTION_TYPE_LABEL, type QuestionType } from "@/components/quiz/shared";
+import { QUESTION_TYPE_ICON, QUESTION_TYPE_KEY, type QuestionType } from "@/components/quiz/shared";
 import {
   DIFFICULTY_ACTIVE,
-  DIFFICULTY_LABEL,
+  DIFFICULTY_LABEL_KEYS,
   type BankQuestionDraft,
   type BankQuestionItem,
 } from "@/components/question-bank/shared";
@@ -15,10 +17,10 @@ import {
 export type BankCourseOption = { id: string; title: string };
 export type BankSubjectOption = { id: string; name: string };
 
-const TYPE_SHORT: Record<QuestionType, string> = {
-  SINGLE: "Bitta javob",
-  MULTIPLE: "Bir nechta",
-  TEXT: "Matnli",
+const TYPE_SHORT_KEY: Record<QuestionType, keyof Dictionary> = {
+  SINGLE: "crsQuizTypeSingleShort",
+  MULTIPLE: "crsQuizTypeMultipleShort",
+  TEXT: "crsQuizTypeTextShort",
 };
 
 function letterOf(index: number): string {
@@ -38,6 +40,7 @@ export function BankQuestionForm({
   onSaved: (item: BankQuestionItem, created: boolean) => void;
   onCancel: () => void;
 }) {
+  const { t } = useI18n();
   const [courseId, setCourseId] = useState(initial?.courseId ?? "");
   const [subjectId, setSubjectId] = useState(initial?.subjectId ?? "");
   const [text, setText] = useState(initial?.text ?? "");
@@ -51,9 +54,9 @@ export function BankQuestionForm({
   const [saving, setSaving] = useState(false);
 
   function buildDraft(): BankQuestionDraft | string {
-    if (!courseId && !subjectId) return "Kurs yoki fanni tanlang";
+    if (!courseId && !subjectId) return t("grdQbErrCourseOrSubject");
     const trimmedText = text.trim();
-    if (!trimmedText) return "Savol matnini kiriting";
+    if (!trimmedText) return t("crsQuizErrQuestionText");
     const base = {
       courseId: courseId || null,
       subjectId: subjectId || null,
@@ -65,10 +68,10 @@ export function BankQuestionForm({
       return { ...base, options: [], correct: [] };
     }
     const cleaned = options.map((option) => option.trim());
-    if (cleaned.length < 2) return "Kamida 2 ta variant kiriting";
-    if (cleaned.some((option) => option.length === 0)) return "Barcha variantlarni to'ldiring";
-    if (type === "SINGLE" && correct.length !== 1) return "Bitta to'g'ri variantni belgilang";
-    if (type === "MULTIPLE" && correct.length < 1) return "Kamida bitta to'g'ri variantni belgilang";
+    if (cleaned.length < 2) return t("crsQuizErrMinOptions");
+    if (cleaned.some((option) => option.length === 0)) return t("crsQuizErrFillOptions");
+    if (type === "SINGLE" && correct.length !== 1) return t("crsQuizErrSingleCorrect");
+    if (type === "MULTIPLE" && correct.length < 1) return t("crsQuizErrMultipleCorrect");
     return {
       ...base,
       options: cleaned,
@@ -125,15 +128,15 @@ export function BankQuestionForm({
   return (
     <Card>
       <CardHeader
-        title={initial ? "Savolni tahrirlash" : "Yangi bank savoli"}
-        subtitle="Kurs yoki fan, savol matni, variantlar va qiyinlik"
+        title={initial ? t("crsQuizEditQuestion") : t("crsQuizNewQuestion")}
+        subtitle={t("grdQbFormSubtitle")}
       />
       <CardBody className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <Label>Kurs</Label>
+            <Label>{t("grdCourse")}</Label>
             <Select value={courseId} onChange={(event) => setCourseId(event.target.value)}>
-              <option value="">Tanlanmagan</option>
+              <option value="">{t("grdQbNotSelected")}</option>
               {courses.map((course) => (
                 <option key={course.id} value={course.id}>
                   {course.title}
@@ -142,9 +145,9 @@ export function BankQuestionForm({
             </Select>
           </div>
           <div>
-            <Label>Fan</Label>
+            <Label>{t("grdSubject")}</Label>
             <Select value={subjectId} onChange={(event) => setSubjectId(event.target.value)}>
-              <option value="">Tanlanmagan</option>
+              <option value="">{t("grdQbNotSelected")}</option>
               {subjects.map((subject) => (
                 <option key={subject.id} value={subject.id}>
                   {subject.name}
@@ -153,22 +156,22 @@ export function BankQuestionForm({
             </Select>
           </div>
         </div>
-        <p className="text-xs text-slate-600">Kamida bitta kurs yoki fan tanlanishi shart</p>
+        <p className="text-xs text-slate-600">{t("grdQbNeedCourseOrSubject")}</p>
 
         <div>
-          <Label>Savol matni</Label>
+          <Label>{t("crsQuizQuestionText")}</Label>
           <Textarea
             rows={3}
             value={text}
             onChange={(event) => setText(event.target.value)}
-            placeholder="Savolni kiriting..."
+            placeholder={t("crsQuizQuestionTextPlaceholder")}
           />
         </div>
 
         <div>
-          <Label>Savol turi</Label>
+          <Label>{t("crsQuizQuestionType")}</Label>
           <div className="grid grid-cols-3 gap-2">
-            {(Object.keys(QUESTION_TYPE_LABEL) as QuestionType[]).map((value) => {
+            {(Object.keys(QUESTION_TYPE_KEY) as QuestionType[]).map((value) => {
               const active = type === value;
               return (
                 <button
@@ -192,7 +195,7 @@ export function BankQuestionForm({
                       <path d={QUESTION_TYPE_ICON[value]} />
                     </svg>
                   </span>
-                  {TYPE_SHORT[value]}
+                  {t(TYPE_SHORT_KEY[value])}
                 </button>
               );
             })}
@@ -200,7 +203,7 @@ export function BankQuestionForm({
         </div>
 
         <div>
-          <Label>Qiyinlik</Label>
+          <Label>{t("grdQbDifficulty")}</Label>
           <div className="grid grid-cols-3 gap-2">
             {[1, 2, 3].map((value) => {
               const active = difficulty === value;
@@ -216,7 +219,7 @@ export function BankQuestionForm({
                       : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50",
                   )}
                 >
-                  {DIFFICULTY_LABEL[value]}
+                  {t(DIFFICULTY_LABEL_KEYS[value])}
                 </button>
               );
             })}
@@ -225,14 +228,14 @@ export function BankQuestionForm({
 
         {type === "TEXT" ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-            Matnli savol avtomatik baholanmaydi — o&apos;qituvchi qo&apos;lda ball qo&apos;yadi.
+            {t("crsQuizTextAutoNote")}
           </p>
         ) : (
           <div className="space-y-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-sm font-medium text-slate-700">Variantlar</span>
+              <span className="text-sm font-medium text-slate-700">{t("crsQuizOptions")}</span>
               <span className="text-xs text-slate-600">
-                {type === "SINGLE" ? "Bitta to'g'ri javobni belgilang" : "Bir nechta to'g'ri javobni belgilang"}
+                {type === "SINGLE" ? t("crsQuizMarkSingle") : t("crsQuizMarkMultiple")}
               </span>
             </div>
             {options.map((option, index) => {
@@ -271,7 +274,7 @@ export function BankQuestionForm({
                   <Input
                     value={option}
                     onChange={(event) => changeOption(index, event.target.value)}
-                    placeholder={`${index + 1}-variant`}
+                    placeholder={t("crsQuizOptionPlaceholder", { number: index + 1 })}
                     className="border-transparent! bg-transparent! px-0! shadow-none! focus:border-transparent! focus:ring-0!"
                   />
                   <Button
@@ -284,7 +287,7 @@ export function BankQuestionForm({
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
                     </svg>
-                    <span className="sr-only">Variantni o&apos;chirish</span>
+                    <span className="sr-only">{t("crsQuizRemoveOption")}</span>
                   </Button>
                 </div>
               );
@@ -293,7 +296,7 @@ export function BankQuestionForm({
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              Variant qo&apos;shish
+              {t("crsQuizAddOption")}
             </Button>
           </div>
         )}
@@ -302,10 +305,10 @@ export function BankQuestionForm({
 
         <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
           <Button variant="secondary" onClick={onCancel} disabled={saving}>
-            Bekor qilish
+            {t("commonCancel")}
           </Button>
           <Button onClick={() => void save()} disabled={saving}>
-            {saving ? "Saqlanmoqda..." : "Saqlash"}
+            {saving ? t("grdQbSaving") : t("commonSave")}
           </Button>
         </div>
       </CardBody>

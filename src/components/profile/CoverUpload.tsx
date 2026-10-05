@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 const MAX_SIZE = 30 * 1024 * 1024;
 const ACCEPT = "image/png,image/jpeg,image/webp";
@@ -12,6 +13,7 @@ const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 type ApiResult = { ok?: boolean; error?: string } | null;
 
 export function CoverUpload({ className }: { className?: string }) {
+  const { t } = useI18n();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -23,11 +25,11 @@ export function CoverUpload({ className }: { className?: string }) {
     if (!file) return;
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setError("Faqat png, jpg yoki webp rasm tanlang");
+      setError(t("mscImageTypeError"));
       return;
     }
     if (file.size > MAX_SIZE) {
-      setError("Rasm hajmi 30MB dan oshmasligi kerak");
+      setError(t("mscImageSizeError"));
       return;
     }
 
@@ -39,12 +41,12 @@ export function CoverUpload({ className }: { className?: string }) {
       const res = await apiFetch("/api/profile/cover", { method: "POST", body });
       const json = (await res.json().catch(() => null)) as ApiResult;
       if (!res.ok || !json?.ok) {
-        setError(json?.error ?? "Yuklashda xatolik yuz berdi");
+        setError(json?.error ?? t("mscUploadError"));
         return;
       }
       router.refresh();
     } catch {
-      setError("Tarmoq xatosi. Qayta urinib ko'ring.");
+      setError(t("commonNetworkError"));
     } finally {
       setBusy(false);
     }
@@ -73,9 +75,9 @@ export function CoverUpload({ className }: { className?: string }) {
         </span>
         <span className="min-w-0">
           <span className="block text-sm font-medium text-slate-700 transition-colors duration-150 group-hover:text-brand-800">
-            {busy ? "Yuklanmoqda..." : "Muqovani almashtirish"}
+            {busy ? t("mscUploading") : t("mscCoverReplace")}
           </span>
-          <span className="mt-0.5 block text-xs text-slate-600">PNG, JPG yoki WebP · 30 MB gacha (avtomatik siqiladi)</span>
+          <span className="mt-0.5 block text-xs text-slate-600">{t("mscCoverHint")}</span>
         </span>
       </button>
       <input ref={inputRef} type="file" accept={ACCEPT} className="hidden" onChange={onFileChange} />

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { PageHeader, Stat } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { getWeeklyJournals } from "@/app/api/journals/data";
 import { JournalWeek } from "@/components/journals/journal-week";
 import {
@@ -48,6 +49,8 @@ export default async function JournalsPage({
   searchParams: Promise<{ week?: string }>;
 }) {
   const user = await requireRole(["TEACHER", "ADMIN"]);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const query = await searchParams;
   const week = typeof query.week === "string" ? query.week : null;
   const data = await getWeeklyJournals(user, week);
@@ -73,7 +76,7 @@ export default async function JournalsPage({
     <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
       <WeekNavButton
         href={`/journals?week=${addDaysIso(data.week, -7)}`}
-        label="Oldingi hafta"
+        label={dictionary.schPrevWeek}
         direction="prev"
       />
       <Link
@@ -83,35 +86,42 @@ export default async function JournalsPage({
           isCurrent ? "bg-brand-900 text-white" : "text-slate-600 hover:bg-slate-100",
         )}
       >
-        Bugun
+        {dictionary.schTodayCap}
       </Link>
       <WeekNavButton
         href={`/journals?week=${addDaysIso(data.week, 7)}`}
-        label="Keyingi hafta"
+        label={dictionary.schNextWeek}
         direction="next"
       />
     </div>
   );
 
+  const subtitle =
+    translate(locale, "schJournalsSubtitle", { range: weekLabel(data.week), conducted }) +
+    (cancelled > 0 ? translate(locale, "schJournalsCancelledSuffix", { count: cancelled }) : "") +
+    (user.role === "ADMIN" ? dictionary.schJournalsAllTeachersSuffix : "");
+
   return (
     <>
       <PageHeader
-        eyebrow="Davomat"
-        title="Kundaliklar"
-        subtitle={`${weekLabel(data.week)} · ${conducted} ta dars${
-          cancelled > 0 ? ` · ${cancelled} ta bekor qilingan` : ""
-        }${user.role === "ADMIN" ? " · barcha o'qituvchilar" : ""}`}
+        eyebrow={dictionary.schAttendanceEyebrow}
+        title={dictionary.schJournalsTitle}
+        subtitle={subtitle}
         action={nav}
       />
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Belgilangan" value={done} hint="To'liq belgilangan darslar" />
-        <Stat label="Qisman" value={partial} hint="Qismatan belgilangan darslar" />
+        <Stat label={dictionary.schStatMarked} value={done} hint={dictionary.schStatMarkedHint} />
+        <Stat label={dictionary.schStatPartial} value={partial} hint={dictionary.schStatPartialHint} />
         <Stat
-          label="Belgilanmagan"
+          label={dictionary.schNotMarked}
           value={missed}
-          hint="O'tib ketgan, belgilanmagan darslar"
+          hint={dictionary.schStatUnmarkedHint}
         />
-        <Stat label="Bekor qilindi" value={cancelled} hint="Statistikaga kirmaydi" />
+        <Stat
+          label={dictionary.schStatusCancelledLong}
+          value={cancelled}
+          hint={dictionary.schStatCancelledHint}
+        />
       </div>
       <JournalWeek lessons={data.lessons} today={data.today} />
     </>

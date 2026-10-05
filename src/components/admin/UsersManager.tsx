@@ -18,6 +18,8 @@ import {
 } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
+import type { Dictionary } from "@/i18n";
 
 export type AdminUser = {
   id: string;
@@ -59,16 +61,16 @@ const EMPTY_FORM: FormState = {
 
 const ROLE_META: Record<
   Role,
-  { label: string; tone: "brand" | "purple" | "slate" | "blue" | "green" | "gold"; dot: string; ring: string }
+  { label: keyof Dictionary; tone: "brand" | "purple" | "slate" | "blue" | "green" | "gold"; dot: string; ring: string }
 > = {
-  ADMIN: { label: "Administrator", tone: "brand", dot: "bg-brand-500", ring: "ring-brand-200/80" },
-  REKTOR: { label: "Rektor", tone: "gold", dot: "bg-gold-500", ring: "ring-gold-300/60" },
-  DEKAN: { label: "Dekan", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
-  KAFEDRA_MUDIRI: { label: "Kafedra mudiri", tone: "blue", dot: "bg-sky-500", ring: "ring-sky-200/80" },
-  REGISTRAR: { label: "O'quv bo'limi", tone: "brand", dot: "bg-sky-500", ring: "ring-sky-200/80" },
-  TYUTOR: { label: "Tyutor", tone: "green", dot: "bg-emerald-500", ring: "ring-emerald-200/80" },
-  TEACHER: { label: "O'qituvchi", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
-  STUDENT: { label: "Talaba", tone: "slate", dot: "bg-slate-400", ring: "ring-slate-200" },
+  ADMIN: { label: "admRoleAdmin", tone: "brand", dot: "bg-brand-500", ring: "ring-brand-200/80" },
+  REKTOR: { label: "admRoleRector", tone: "gold", dot: "bg-gold-500", ring: "ring-gold-300/60" },
+  DEKAN: { label: "admRoleDean", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
+  KAFEDRA_MUDIRI: { label: "admRoleHead", tone: "blue", dot: "bg-sky-500", ring: "ring-sky-200/80" },
+  REGISTRAR: { label: "admRoleRegistrar", tone: "brand", dot: "bg-sky-500", ring: "ring-sky-200/80" },
+  TYUTOR: { label: "admRoleTutor", tone: "green", dot: "bg-emerald-500", ring: "ring-emerald-200/80" },
+  TEACHER: { label: "admRoleTeacher", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
+  STUDENT: { label: "admRoleStudent", tone: "slate", dot: "bg-slate-400", ring: "ring-slate-200" },
 };
 
 export default function UsersManager({
@@ -83,6 +85,7 @@ export default function UsersManager({
   currentUserId: string;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [mode, setMode] = useState<FormMode | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -145,12 +148,12 @@ export default function UsersManager({
       });
       const json = (await res.json().catch(() => null)) as ApiResult | null;
       if (!res.ok || !json || !json.ok) {
-        setError(json?.error ?? "Amalni bajarib bo'lmadi");
+        setError(json?.error ?? t("admErrorGeneric"));
         return null;
       }
       return json;
     } catch {
-      setError("Tarmoqda xatolik");
+      setError(t("admNetworkError"));
       return null;
     } finally {
       setBusy(false);
@@ -168,7 +171,7 @@ export default function UsersManager({
     });
     if (!json) return;
     closeForm();
-    setNotice("Foydalanuvchi yaratildi");
+    setNotice(t("admUsersCreatedNotice"));
     router.refresh();
   }
 
@@ -183,7 +186,7 @@ export default function UsersManager({
     });
     if (!json) return;
     closeForm();
-    setNotice("Foydalanuvchi yangilandi");
+    setNotice(t("admUsersUpdatedNotice"));
     router.refresh();
   }
 
@@ -193,15 +196,15 @@ export default function UsersManager({
     if (!json) return;
     closeForm();
     setResetPassword("");
-    setNotice("Parol yangilandi");
+    setNotice(t("admUsersPasswordNotice"));
     router.refresh();
   }
 
   async function remove(user: AdminUser) {
-    if (!window.confirm(`${user.name} o'chirilsinmi?`)) return;
+    if (!window.confirm(t("admUsersDeleteConfirm", { name: user.name }))) return;
     const json = await send(`/api/admin/users/${user.id}`, "DELETE");
     if (!json) return;
-    setNotice("Foydalanuvchi o'chirildi");
+    setNotice(t("admUsersDeletedNotice"));
     router.refresh();
   }
 
@@ -211,7 +214,7 @@ export default function UsersManager({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={openCreate}>+ Yangi foydalanuvchi</Button>
+        <Button onClick={openCreate}>+ {t("admUsersNew")}</Button>
         {notice ? (
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -232,16 +235,14 @@ export default function UsersManager({
           <CardHeader
             title={
               mode === "create"
-                ? "Yangi foydalanuvchi"
+                ? t("admUsersNew")
                 : mode === "edit"
-                  ? "Foydalanuvchini tahrirlash"
-                  : "Parolni tiklash"
+                  ? t("admUsersEditTitle")
+                  : t("admUsersResetTitle")
             }
             subtitle={mode === "reset" ? editedUser?.name : undefined}
             action={
-              <Button variant="ghost" size="sm" onClick={closeForm}>
-                Yopish
-              </Button>
+              <Button variant="ghost" size="sm" onClick={closeForm}>{t("admClose")}</Button>
             }
           />
           <CardBody>
@@ -254,18 +255,18 @@ export default function UsersManager({
                 }}
               >
                 <div>
-                  <Label>Yangi parol</Label>
+                  <Label>{t("admUsersNewPassword")}</Label>
                   <Input
                     type="password"
                     minLength={6}
                     value={resetPassword}
                     onChange={(e) => setResetPassword(e.target.value)}
-                    placeholder="Kamida 6 belgi"
+                    placeholder={t("admPasswordPlaceholder")}
                   />
                 </div>
                 <div className="flex items-end sm:col-span-2">
                   <Button type="submit" disabled={busy || resetPassword.length < 6}>
-                    {busy ? "Saqlanmoqda..." : "Parolni yangilash"}
+                    {busy ? t("admSaving") : t("admUsersUpdatePassword")}
                   </Button>
                 </div>
                 {error ? <p className="text-sm text-rose-600 sm:col-span-2">{error}</p> : null}
@@ -280,17 +281,17 @@ export default function UsersManager({
                 }}
               >
                 <div>
-                  <Label>Ism</Label>
+                  <Label>{t("admNameLabel")}</Label>
                   <Input
                     value={form.name}
                     onChange={(e) => update("name", e.target.value)}
-                    placeholder="To'liq ism"
+                    placeholder={t("admFullNamePlaceholder")}
                     required
                   />
                 </div>
                 {mode === "create" ? (
                   <div>
-                    <Label>Email</Label>
+                    <Label>{t("admEmailLabel")}</Label>
                     <Input
                       type="email"
                       value={form.email}
@@ -301,44 +302,44 @@ export default function UsersManager({
                   </div>
                 ) : (
                   <div>
-                    <Label>Email</Label>
+                    <Label>{t("admEmailLabel")}</Label>
                     <p className="py-2 text-sm text-slate-600">{editedUser?.email}</p>
                   </div>
                 )}
                 {mode === "create" ? (
                   <div>
-                    <Label>Parol</Label>
+                    <Label>{t("admPasswordLabel")}</Label>
                     <Input
                       type="password"
                       value={form.password}
                       onChange={(e) => update("password", e.target.value)}
-                      placeholder="Kamida 6 belgi"
+                      placeholder={t("admPasswordPlaceholder")}
                       minLength={6}
                       required
                     />
                   </div>
                 ) : null}
                 <div>
-                  <Label>Rol</Label>
+                  <Label>{t("admRole")}</Label>
                   <Select
                     value={form.role}
                     disabled={isSelfEdit}
                     onChange={(e) => update("role", e.target.value as Role)}
                   >
-                    <option value="STUDENT">Talaba</option>
-                    <option value="TEACHER">O&apos;qituvchi</option>
-                    <option value="TYUTOR">Tyutor</option>
-                    <option value="KAFEDRA_MUDIRI">Kafedra mudiri</option>
-                    <option value="DEKAN">Dekan</option>
-                    <option value="REKTOR">Rektor</option>
-                    <option value="REGISTRAR">O&apos;quv bo&apos;limi</option>
-                    <option value="ADMIN">Administrator</option>
+                    <option value="STUDENT">{t("admRoleStudent")}</option>
+                    <option value="TEACHER">{t("admRoleTeacher")}</option>
+                    <option value="TYUTOR">{t("admRoleTutor")}</option>
+                    <option value="KAFEDRA_MUDIRI">{t("admRoleHead")}</option>
+                    <option value="DEKAN">{t("admRoleDean")}</option>
+                    <option value="REKTOR">{t("admRoleRector")}</option>
+                    <option value="REGISTRAR">{t("admRoleRegistrar")}</option>
+                    <option value="ADMIN">{t("admRoleAdmin")}</option>
                   </Select>
                 </div>
                 <div>
-                  <Label>Guruh</Label>
+                  <Label>{t("admGroupLabel")}</Label>
                   <Select value={form.groupId} onChange={(e) => update("groupId", e.target.value)}>
-                    <option value="">Guruhsiz</option>
+                    <option value="">{t("admNoGroup")}</option>
                     {groups.map((g) => (
                       <option key={g.id} value={g.id}>
                         {g.name}
@@ -347,12 +348,12 @@ export default function UsersManager({
                   </Select>
                 </div>
                 <div>
-                  <Label>Kafedra</Label>
+                  <Label>{t("admDepartmentLabel")}</Label>
                   <Select
                     value={form.departmentId}
                     onChange={(e) => update("departmentId", e.target.value)}
                   >
-                    <option value="">Kafedrasiz</option>
+                    <option value="">{t("admNoDepartment")}</option>
                     {departments.map((d) => (
                       <option key={d.id} value={d.id}>
                         {d.name}
@@ -369,12 +370,12 @@ export default function UsersManager({
                       disabled={isSelfEdit}
                       onChange={(e) => update("isActive", e.target.checked)}
                     />
-                    Faol
+                    {t("admActive")}
                   </label>
                 ) : null}
                 <div className="flex items-end sm:col-span-2">
                   <Button type="submit" disabled={busy}>
-                    {busy ? "Saqlanmoqda..." : mode === "create" ? "Yaratish" : "Saqlash"}
+                    {busy ? t("admSaving") : mode === "create" ? t("admCreate") : t("admSave")}
                   </Button>
                 </div>
                 {error ? <p className="text-sm text-rose-600 sm:col-span-2">{error}</p> : null}
@@ -385,21 +386,21 @@ export default function UsersManager({
       ) : null}
 
       <Card>
-        <CardHeader title="Foydalanuvchilar" subtitle={`${users.length} ta`} />
+        <CardHeader title={t("admUsersTitle")} subtitle={t("admUsersListSubtitle", { count: users.length })} />
         {users.length === 0 ? (
           <CardBody>
-            <EmptyState title="Foydalanuvchilar topilmadi" description="Qidiruv shartlarini o'zgartirib ko'ring." />
+            <EmptyState title={t("admUsersEmptyTitle")} description={t("admUsersEmptyDesc")} />
           </CardBody>
         ) : (
           <Table className="max-h-[68vh] overflow-y-auto">
             <thead>
               <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">Foydalanuvchi</th>
-                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">Rol</th>
-                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">Guruh</th>
-                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">Holat</th>
-                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">Ro&apos;yxatdan o&apos;tgan</th>
-                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 text-right font-semibold backdrop-blur">Amallar</th>
+                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admColUser")}</th>
+                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admRole")}</th>
+                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admGroupLabel")}</th>
+                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admStatus")}</th>
+                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admColRegistered")}</th>
+                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 text-right font-semibold backdrop-blur">{t("admActions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -423,12 +424,12 @@ export default function UsersManager({
                       className={cn("gap-1.5 ring-1 ring-inset", ROLE_META[user.role].ring)}
                     >
                       <span className={cn("size-1.5 rounded-full", ROLE_META[user.role].dot)} />
-                      {ROLE_META[user.role].label}
+                      {t(ROLE_META[user.role].label)}
                     </Badge>
                   </td>
                   <td className="px-5 py-3 text-slate-600">{user.group?.name ?? "—"}</td>
                   <td className="px-5 py-3">
-                    <Badge tone={user.isActive ? "green" : "rose"}>{user.isActive ? "Faol" : "Nofaol"}</Badge>
+                    <Badge tone={user.isActive ? "green" : "rose"}>{user.isActive ? t("admActive") : t("admInactive")}</Badge>
                   </td>
                   <td className="px-5 py-3 text-xs text-slate-500">{fmtDate(user.createdAt)}</td>
                   <td className="px-5 py-3">
@@ -437,16 +438,12 @@ export default function UsersManager({
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M12 20h9" />
                           <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                        </svg>
-                        Tahrirlash
-                      </Button>
+                        </svg>{t("admEdit")}</Button>
                       <Button size="sm" variant="ghost" onClick={() => openReset(user)}>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                           <rect x="4" y="10" width="16" height="10" rx="2" />
                           <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-                        </svg>
-                        Parol
-                      </Button>
+                        </svg>{t("admPasswordAction")}</Button>
                       {user.id !== currentUserId ? (
                         <Button
                           size="sm"
@@ -459,9 +456,7 @@ export default function UsersManager({
                             <path d="M8 6V4h8v2" />
                             <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
                             <path d="M10 11v6M14 11v6" />
-                          </svg>
-                          O&apos;chirish
-                        </Button>
+                          </svg>{t("admDelete")}</Button>
                       ) : null}
                     </div>
                   </td>

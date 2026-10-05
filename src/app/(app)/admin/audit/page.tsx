@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Button, Card, CardBody, Input, Label, PageHeader, Select } from "@/components/ui";
 import AuditLogTable, { type AuditLogItem } from "@/components/admin/AuditLogTable";
 import { auditActionLabel } from "./labels";
+import { getDictionary, getLocale, t as translate, type Dictionary } from "@/i18n";
 
 const PAGE_SIZE = 100;
 
@@ -14,6 +15,9 @@ export default async function AdminAuditPage({
   searchParams: Promise<{ action?: string; date?: string; page?: string }>;
 }) {
   await requireRole(["ADMIN"]);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const tr = (key: keyof Dictionary, params?: Record<string, string | number>) => translate(locale, key, params);
   const params = await searchParams;
 
   const action = typeof params.action === "string" ? params.action.trim() : "";
@@ -58,24 +62,24 @@ export default async function AdminAuditPage({
 
   return (
     <>
-      <PageHeader eyebrow="Boshqaruv" title="Audit jurnali" subtitle={`${total} ta yozuv qayd etilgan`} />
+      <PageHeader eyebrow={dictionary.admEyebrowManage} title={dictionary.admAuditTitle} subtitle={translate(locale, "admAuditSubtitle", { total })} />
 
       <form action="/admin/audit" method="get" className="mb-4">
         <Card>
           <CardBody className="flex flex-wrap items-end gap-3">
             <div className="w-full sm:w-64">
-              <Label>Amal</Label>
+              <Label>{dictionary.admAuditActionLabel}</Label>
               <Select name="action" defaultValue={action}>
-                <option value="">Barcha amallar</option>
+                <option value="">{dictionary.admAuditAllActions}</option>
                 {actionGroups.map((group) => (
                   <option key={group.action} value={group.action}>
-                    {auditActionLabel(group.action)} ({group._count._all})
+                    {auditActionLabel(group.action, tr)} ({group._count._all})
                   </option>
                 ))}
               </Select>
             </div>
             <div className="w-full sm:w-48">
-              <Label>Sana</Label>
+              <Label>{dictionary.admDateLabel}</Label>
               <Input type="date" name="date" defaultValue={date} />
             </div>
             <Button type="submit" variant="secondary" className="gap-1.5">
@@ -83,7 +87,7 @@ export default async function AdminAuditPage({
                 <circle cx="11" cy="11" r="7" />
                 <path d="m20 20-3.5-3.5" />
               </svg>
-              Filtrlash
+              {dictionary.admFilter}
             </Button>
             {hasFilters ? (
               <Link
@@ -93,7 +97,7 @@ export default async function AdminAuditPage({
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6 6 18M6 6l12 12" />
                 </svg>
-                Tozalash
+                {dictionary.admClear}
               </Link>
             ) : null}
           </CardBody>

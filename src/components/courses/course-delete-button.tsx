@@ -4,29 +4,31 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 type ApiResult = { ok?: boolean; error?: string } | null;
 
 export function CourseDeleteButton({ courseId, courseTitle }: { courseId: string; courseTitle: string }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onDelete() {
-    if (!window.confirm(`"${courseTitle}" kursi butunlay o'chiriladi. Davom etilsinmi?`)) return;
+    if (!window.confirm(t("crsDeleteCourseConfirm", { title: courseTitle }))) return;
     setBusy(true);
     setError(null);
     try {
       const res = await apiFetch(`/api/courses/${courseId}`, { method: "DELETE" });
       const json = (await res.json().catch(() => null)) as ApiResult;
       if (!res.ok || !json?.ok) {
-        setError(json?.error ?? "O'chirishda xatolik yuz berdi");
+        setError(json?.error ?? t("crsDeleteCourseError"));
         return;
       }
       router.push("/courses");
       router.refresh();
     } catch {
-      setError("Tarmoq xatosi. Qayta urinib ko'ring.");
+      setError(t("crsNetworkError"));
     } finally {
       setBusy(false);
     }
@@ -49,7 +51,7 @@ export function CourseDeleteButton({ courseId, courseTitle }: { courseId: string
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
           <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
         </svg>
-        {busy ? "O'chirilmoqda..." : "Kursni o'chirish"}
+        {busy ? t("crsDeleting") : t("crsDeleteCourse")}
       </Button>
       {error ? <p className="text-xs text-rose-600">{error}</p> : null}
     </div>

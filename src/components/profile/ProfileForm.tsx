@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { CoverUpload } from "@/components/profile/CoverUpload";
 import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 const BIO_MAX = 300;
 
@@ -21,6 +22,7 @@ export function ProfileForm({
   initialBio: string | null;
   avatarUrl: string | null;
 }) {
+  const { t } = useI18n();
   const router = useRouter();
   const [name, setName] = useState(initialName);
   const [bio, setBio] = useState(initialBio ?? "");
@@ -44,13 +46,13 @@ export function ProfileForm({
       });
       const json = (await res.json().catch(() => null)) as ApiResult;
       if (!res.ok || !json?.ok) {
-        setError(json?.error ?? "Saqlashda xatolik yuz berdi");
+        setError(json?.error ?? t("mscProfileSaveError"));
         return;
       }
-      setSuccess("Profil saqlandi");
+      setSuccess(t("mscProfileSaved"));
       router.refresh();
     } catch {
-      setError("Tarmoq xatosi. Qayta urinib ko'ring.");
+      setError(t("commonNetworkError"));
     } finally {
       setBusy(false);
     }
@@ -67,30 +69,30 @@ export function ProfileForm({
                 <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
               </svg>
             </span>
-            Profilni tahrirlash
+            {t("mscProfileEditTitle")}
           </span>
         }
-        subtitle="Avatar, muqova, ism va bio"
+        subtitle={t("mscProfileEditSubtitle")}
       />
       <CardBody>
         <form onSubmit={onSubmit} className="space-y-5">
           <div className="grid gap-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-5 sm:grid-cols-[auto_1fr] sm:items-center">
             <div className="flex flex-col items-center gap-2">
               <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                Avatar
+                {t("mscProfileAvatar")}
               </span>
               <AvatarUpload name={initialName} src={avatarUrl} size={92} />
             </div>
             <div className="flex flex-col gap-2">
               <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
-                Muqova
+                {t("mscProfileCover")}
               </span>
               <CoverUpload />
             </div>
           </div>
 
           <div>
-            <Label>Ism</Label>
+            <Label>{t("mscProfileName")}</Label>
             <div className="relative">
               <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-600">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -102,7 +104,7 @@ export function ProfileForm({
                 className="pl-10!"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Masalan: Ozodbek Hoshimov"
+                placeholder={t("mscProfileNamePlaceholder")}
                 required
                 minLength={2}
                 maxLength={80}
@@ -112,7 +114,7 @@ export function ProfileForm({
 
           <div>
             <div className="mb-1.5 flex items-center justify-between gap-3">
-              <Label className="mb-0">Bio</Label>
+              <Label className="mb-0">{t("mscProfileBio")}</Label>
               <span
                 className={cn(
                   "text-xs tabular-nums",
@@ -127,7 +129,7 @@ export function ProfileForm({
               onChange={(e) => setBio(e.target.value)}
               maxLength={BIO_MAX}
               rows={4}
-              placeholder="O'zingiz haqingizda qisqacha..."
+              placeholder={t("mscProfileBioPlaceholder")}
             />
             <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-100">
               <div
@@ -171,7 +173,7 @@ export function ProfileForm({
                   <path d="M17 21v-8H7v8M7 3v5h8" />
                 </svg>
               )}
-              {busy ? "Saqlanmoqda..." : "Saqlash"}
+              {busy ? t("mscSaving") : t("commonSave")}
             </Button>
           </div>
         </form>

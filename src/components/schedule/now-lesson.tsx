@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Badge, Card, CardBody } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { SLOT_TIMES } from "@/components/attendance/lesson-utils";
 import { cn } from "@/lib/utils";
 import type { ScheduleEntryItem } from "./types";
@@ -104,6 +105,7 @@ export function NowLesson({
   isCurrentWeek: boolean;
   nowMinutes: number;
 }) {
+  const { t } = useI18n();
   const [now, setNow] = useState(nowMinutes);
 
   useEffect(() => {
@@ -132,15 +134,15 @@ export function NowLesson({
             <CheckIcon className="size-4" />
           </span>
           <div>
-            <p className="text-sm font-semibold text-slate-800">Bugun darslar tugadi</p>
-            <p className="text-xs text-slate-600">Keyingi darslar jadvalini hafta navigatsiyasidan tanlang</p>
+            <p className="text-sm font-semibold text-slate-800">{t("schLessonsDone")}</p>
+            <p className="text-xs text-slate-600">{t("schNextLessonsHint")}</p>
           </div>
         </CardBody>
       </Card>
     );
   }
 
-  const timeLabel = SLOT_TIMES[active.entry.slot] ?? `${active.entry.slot}-par`;
+  const timeLabel = SLOT_TIMES[active.entry.slot] ?? t("schSlotLabel", { slot: active.entry.slot });
   const [fromLabel, toLabel] = timeLabel.split("–");
   const total = Math.max(1, active.range.end - active.range.start);
   const progress = current ? Math.min(100, Math.max(0, ((now - active.range.start) / total) * 100)) : 0;
@@ -176,13 +178,14 @@ export function NowLesson({
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone={current ? "green" : "blue"} className="gap-1.5">
                 {current ? <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" /> : null}
-                {current ? "Hozir" : "Keyingi dars"}
-              </Badge>
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+                {current ? t("schNow") : t("schNextLesson")}
+              </Badge>              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
                 {timeLabel}
               </span>
               <span className={cn("text-xs font-medium", current ? "text-emerald-600" : "text-brand-700")}>
-                {current ? `Tugashiga ${left} daqiqa` : `Boshlanishiga ${untilStart} daqiqa`}
+                {current
+                  ? t("schEndsIn", { count: left })
+                  : t("schStartsIn", { count: untilStart })}
               </span>
             </div>
             <p className="mt-1 truncate text-base font-semibold text-slate-900">{active.entry.subject}</p>
@@ -203,7 +206,7 @@ export function NowLesson({
           <div className="mb-1 flex items-center justify-between text-[11px] text-slate-600">
             <span>{fromLabel}</span>
             <span className={cn("font-medium", current ? "text-emerald-600" : "text-brand-600")}>
-              {current ? `${Math.round(progress)}% bajarildi` : "kutilmoqda"}
+              {current ? t("schProgressDone", { percent: Math.round(progress) }) : t("schPendingStart")}
             </span>
             <span>{toLabel}</span>
           </div>

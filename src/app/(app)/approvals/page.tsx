@@ -5,10 +5,14 @@ import { Avatar, Badge, Card, CardBody, CardHeader, EmptyState, PageHeader } fro
 import { GradeChangeActions } from "@/components/approvals/grade-change-actions";
 import { EnrollmentActions } from "@/components/approvals/enrollment-actions";
 import { fmtDateTime } from "@/lib/utils";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 export default async function ApprovalsPage() {
   const user = await requireUser();
   if (user.role !== "ADMIN" && user.role !== "REGISTRAR") redirect("/dashboard");
+
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
   const requests = await prisma.gradeChangeRequest.findMany({
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
@@ -50,22 +54,22 @@ export default async function ApprovalsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Boshqaruv"
-        title="Tasdiqlashlar"
-        subtitle="Baho o'zgartirish so'rovlari — o'qituvchi so'raydi, o'quv bo'limi tasdiqlaydi"
+        eyebrow={dictionary.admEyebrowManage}
+        title={dictionary.admApprovalsTitle}
+        subtitle={dictionary.admApprovalsSubtitle}
       />
       <div className="space-y-6">
         <Card>
           <CardHeader
-            title="Tasdiq kutayotgan so'rovlar"
-            subtitle={`${pending.length} ta`}
-            action={pending.length > 0 ? <Badge tone="amber">Navbatda</Badge> : null}
+            title={dictionary.admApprovalsPendingTitle}
+            subtitle={translate(locale, "admCount", { count: pending.length })}
+            action={pending.length > 0 ? <Badge tone="amber">{dictionary.admApprovalsInQueue}</Badge> : null}
           />
           <CardBody>
             {pending.length === 0 ? (
               <EmptyState
-                title="Tasdiq kutayotgan so'rov yo'q"
-                description="O'qituvchilar baho tuzatish so'rovini yuborganda shu yerda paydo bo'ladi."
+                title={dictionary.admApprovalsPendingEmptyTitle}
+                description={dictionary.admApprovalsPendingEmptyDesc}
               />
             ) : (
               <div className="space-y-3">
@@ -93,14 +97,14 @@ export default async function ApprovalsPage() {
                           </div>
                         </div>
                         <p className="mt-2.5 text-sm text-slate-700">
-                          Ball:{" "}
+                          {dictionary.admApprovalsScore}{" "}
                           <span className="font-semibold text-slate-500">{row.oldScore ?? "—"}</span>
                           {" → "}
                           <span className="font-semibold text-amber-800">{row.newScore}</span>
                           <span className="text-slate-500"> / {row.submission.assignment.maxScore}</span>
                         </p>
                         <p className="mt-1 text-xs leading-relaxed text-slate-600">
-                          Sabab: {row.reason}
+                          {translate(locale, "admApprovalsReason", { reason: row.reason })}
                         </p>
                         <p className="mt-1 text-[11px] text-slate-500">
                           {row.requestedBy.name} · {fmtDateTime(row.createdAt)}
@@ -117,17 +121,17 @@ export default async function ApprovalsPage() {
 
         <Card>
           <CardHeader
-            title="Kursga yozilish so'rovlari"
-            subtitle={`${enrollmentRequests.length} ta`}
+            title={dictionary.admApprovalsEnrollTitle}
+            subtitle={translate(locale, "admCount", { count: enrollmentRequests.length })}
             action={
-              enrollmentRequests.length > 0 ? <Badge tone="amber">Navbatda</Badge> : null
+              enrollmentRequests.length > 0 ? <Badge tone="amber">{dictionary.admApprovalsInQueue}</Badge> : null
             }
           />
           <CardBody>
             {enrollmentRequests.length === 0 ? (
               <EmptyState
-                title="So'rov yo'q"
-                description="Talabalar katalogdan kursga yozilish so'rovini yuborganda shu yerda paydo bo'ladi."
+                title={dictionary.admApprovalsEnrollEmptyTitle}
+                description={dictionary.admApprovalsEnrollEmptyDesc}
               />
             ) : (
               <div className="space-y-3">
@@ -145,12 +149,13 @@ export default async function ApprovalsPage() {
                               {row.user.name}
                             </p>
                             <p className="truncate text-xs text-slate-500">
-                              {row.user.group?.name ?? "Guruhsiz"} · {row.course.title}
+                              {row.user.group?.name ?? dictionary.admNoGroup} · {row.course.title}
                             </p>
                           </div>
                         </div>
                         <p className="mt-1.5 text-[11px] text-slate-500">
-                          O&apos;qituvchi: {row.course.teacher.name} · {fmtDateTime(row.createdAt)}
+                          {translate(locale, "admApprovalsTeacher", { name: row.course.teacher.name })} ·{" "}
+                          {fmtDateTime(row.createdAt)}
                         </p>
                       </div>
                       <EnrollmentActions enrollmentId={row.id} />
@@ -164,7 +169,10 @@ export default async function ApprovalsPage() {
 
         {history.length > 0 ? (
           <Card>
-            <CardHeader title="Oxirgi ko'rib chiqilganlar" subtitle={`${history.length} ta`} />
+            <CardHeader
+              title={dictionary.admApprovalsHistoryTitle}
+              subtitle={translate(locale, "admCount", { count: history.length })}
+            />
             <CardBody>
               <div className="space-y-2">
                 {history.map((row) => (
@@ -180,7 +188,7 @@ export default async function ApprovalsPage() {
                       ) : null}
                     </div>
                     <Badge tone={row.status === "APPROVED" ? "green" : "rose"}>
-                      {row.status === "APPROVED" ? "Tasdiqlangan" : "Rad etilgan"}
+                      {row.status === "APPROVED" ? dictionary.admStatusApproved : dictionary.admStatusRejected}
                     </Badge>
                   </div>
                 ))}

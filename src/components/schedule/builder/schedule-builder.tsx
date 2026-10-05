@@ -5,8 +5,9 @@ import type { DragEvent, MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ensureCsrfToken } from "@/lib/api";
 import { Badge, Button, Card, CardBody, Label, Select } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { normalizeTeacherName } from "@/components/attendance/lesson-utils";
-import { formatWeekRange, shiftWeek } from "@/components/schedule/week-utils";
+import { MONTH_KEYS, formatWeekRange, shiftWeek } from "@/components/schedule/week-utils";
 import type { ScheduleStatus } from "@/components/schedule/types";
 import { BlockPanel } from "./block-panel";
 import { fallbackLessonTypes, fallbackSubjects, findCourseForSubject, parseDictionaries } from "./dictionaries";
@@ -29,7 +30,11 @@ import type {
 
 type ApiResponse<T> = { ok: true; data: T } | { ok: false; error: string; status?: number };
 
-async function apiRequest<T>(url: string, init?: RequestInit): Promise<ApiResponse<T>> {
+async function apiRequest<T>(
+  url: string,
+  init: RequestInit | undefined,
+  messages: { network: string; busy: string },
+): Promise<ApiResponse<T>> {
   try {
     const method = (init?.method || "GET").toString().toUpperCase();
     const headers: Record<string, string> = { ...((init?.headers as Record<string, string>) ?? {}) };
@@ -39,12 +44,12 @@ async function apiRequest<T>(url: string, init?: RequestInit): Promise<ApiRespon
     }
     const response = await fetch(url, { ...init, headers });
     const payload = (await response.json().catch(() => null)) as ApiResponse<T> | null;
-    if (!payload) return { ok: false, error: "Server bilan aloqa xatosi" };
+    if (!payload) return { ok: false, error: messages.network };
     if (payload.ok) return payload;
-    if (response.status === 409) return { ok: false, error: "Bu vaqt band", status: 409 };
+    if (response.status === 409) return { ok: false, error: messages.busy, status: 409 };
     return { ok: false, error: payload.error, status: response.status };
   } catch {
-    return { ok: false, error: "Server bilan aloqa xatosi" };
+    return { ok: false, error: messages.network };
   }
 }
 
@@ -99,6 +104,8 @@ export function ScheduleBuilder({
   subGroups: string[];
 }) {
   const router = useRouter();
+  const { t } = useI18n();
+  const months = MONTH_KEYS.map((key) => t(key));
   const [entries, setEntries] = useState(initialEntries);
   const [selection, setSelection] = useState<Selection | null>(null);
   const [hover, setHover] = useState<CellRef | null>(null);
@@ -110,11 +117,17 @@ export function ScheduleBuilder({
   const [teacherInput, setTeacherInput] = useState("");
   const [subjects, setSubjects] = useState<BuilderSubject[] | null>(null);
   const [lessonTypes, setLessonTypes] = useState<BuilderLessonType[] | null>(null);
-  const [lessonType, setLessonType] = useState("Ma'ruza");
+  const [lessonType, setLessonType] = useState(t("schLessonLecture"));
   const [subGroup, setSubGroup] = useState("");
   const autoTeacherRef = useRef<string | null>(null);
 
   const dismissToast = useCallback(() => setToast(null), []);
+
+  const request = useCallback(
+    <T,>(url: string, init?: RequestInit) =>
+      apiRequest<T>(url, init, { network: t("schNetworkError"), busy: t("schTimeBusy") }),
+    [t],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -149,8 +162,16 @@ export function ScheduleBuilder({
     [role, mySubjects, subjects, courses],
   );
   const lessonTypeOptions = useMemo(
-    () => (lessonTypes && lessonTypes.length > 0 ? lessonTypes : fallbackLessonTypes()),
-    [lessonTypes],
+    () =>
+      lessonTypes && lessonTypes.length > 0
+        ? lessonTypes
+        : fallbackLessonTypes([
+            t("schLessonLecture"),
+            t("schLessonPractice"),
+            t("schLessonSeminar"),
+            t("schLessonLab"),
+          ]),
+    [lessonTypes, t],
   );
   const myGroupIdSet = useMemo(() => new Set(myGroupIds), [myGroupIds]);
   const myGroups = useMemo(() => groups.filter((group) => myGroupIdSet.has(group.id)), [groups, myGroupIdSet]);
@@ -224,13 +245,13 @@ export function ScheduleBuilder({
       status: "NORMAL" as const,
     };
     const richBody = { ...baseBody, lessonType: lessonType || null, ...(subjectId ? { subjectId } : {}) };
-    let result = await apiRequest<BuilderEntry>("/api/schedule", {
+    let result = await request<BuilderEntry>("/api/schedule", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(richBody),
     });
     if (!result.ok && result.status === 400) {
-      result = await apiRequest<BuilderEntry>("/api/schedule", {
+      result = await request<BuilderEntry>("/api/schedule", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(baseBody),
@@ -254,7 +275,7 @@ export function ScheduleBuilder({
       },
     ]);
     flashSnap(created.id);
-    showToast("success", `${subject} qo'yildi`);
+    showToast("success", t("schToastPlaced", { subject }));
   }
 
   async function moveEntry(id: string, cell: CellRef) {
@@ -266,7 +287,7 @@ export function ScheduleBuilder({
     );
     flashSnap(id);
     setPending(true);
-    const result = await apiRequest<BuilderEntry>(`/api/schedule/${id}`, {
+    const result = await request<BuilderEntry>(`/api/schedule/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ dayOfWeek: cell.day, slot: cell.slot }),
@@ -278,12 +299,12 @@ export function ScheduleBuilder({
       return;
     }
     setEntries((prev) => prev.map((entry) => (entry.id === id ? mergeEntry(entry, result.data) : entry)));
-    showToast("success", "Dars ko'chirildi");
+    showToast("success", t("schToastMoved"));
   }
 
   async function saveRoom(id: string, value: string) {
     setPending(true);
-    const result = await apiRequest<BuilderEntry>(`/api/schedule/${id}`, {
+    const result = await request<BuilderEntry>(`/api/schedule/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ room: value || null }),
@@ -294,12 +315,12 @@ export function ScheduleBuilder({
       return;
     }
     setEntries((prev) => prev.map((entry) => (entry.id === id ? mergeEntry(entry, result.data) : entry)));
-    showToast("success", "Xona yangilandi");
+    showToast("success", t("schToastRoomUpdated"));
   }
 
   async function changeStatus(id: string, status: ScheduleStatus) {
     setPending(true);
-    const result = await apiRequest<BuilderEntry>(`/api/schedule/${id}`, {
+    const result = await request<BuilderEntry>(`/api/schedule/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
@@ -310,13 +331,13 @@ export function ScheduleBuilder({
       return;
     }
     setEntries((prev) => prev.map((entry) => (entry.id === id ? mergeEntry(entry, result.data) : entry)));
-    showToast("success", "Holat yangilandi");
+    showToast("success", t("schToastStatusUpdated"));
   }
 
   async function deleteEntry(entry: BuilderEntry) {
-    if (!window.confirm(`${entry.subject} darsini o'chirishni tasdiqlaysizmi?`)) return;
+    if (!window.confirm(t("schConfirmDeleteLesson", { subject: entry.subject }))) return;
     setPending(true);
-    const result = await apiRequest<{ id: string }>(`/api/schedule/${entry.id}`, { method: "DELETE" });
+    const result = await request<{ id: string }>(`/api/schedule/${entry.id}`, { method: "DELETE" });
     setPending(false);
     if (!result.ok) {
       showToast("error", result.error);
@@ -324,24 +345,24 @@ export function ScheduleBuilder({
     }
     setEntries((prev) => prev.filter((item) => item.id !== entry.id));
     setSelection(null);
-    showToast("success", "Dars o'chirildi");
+    showToast("success", t("schToastDeleted"));
   }
 
   async function approveEntry(entry: BuilderEntry) {
     setPending(true);
-    const result = await apiRequest<BuilderEntry>(`/api/schedule/${entry.id}/approve`, { method: "POST" });
+    const result = await request<BuilderEntry>(`/api/schedule/${entry.id}/approve`, { method: "POST" });
     setPending(false);
     if (!result.ok) {
       showToast("error", result.error);
       return;
     }
     setEntries((prev) => prev.map((item) => (item.id === entry.id ? mergeEntry(item, result.data) : item)));
-    showToast("success", `Tasdiqlandi: ${entry.subject}`);
+    showToast("success", t("schToastApproved", { subject: entry.subject }));
   }
 
   async function approveAll() {
     setPending(true);
-    const result = await apiRequest<{ count: number }>("/api/schedule/approve-all", {
+    const result = await request<{ count: number }>("/api/schedule/approve-all", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ groupId: selectedGroupId }),
@@ -354,7 +375,7 @@ export function ScheduleBuilder({
     setEntries((prev) =>
       prev.map((item) => (item.approval === "PENDING" ? { ...item, approval: "APPROVED" as const } : item)),
     );
-    showToast("success", `${result.data.count} ta yozuv tasdiqlandi`);
+    showToast("success", t("schToastApprovedCount", { count: result.data.count }));
   }
 
   function handleDragStart(event: DragEvent<HTMLElement>, payload: DragPayload) {
@@ -443,13 +464,13 @@ export function ScheduleBuilder({
       <Card>
         <CardBody className="flex flex-wrap items-end gap-3">
           <div className="w-full sm:w-52">
-            <Label>Guruh</Label>
+            <Label>{t("schGroup")}</Label>
             <Select value={selectedGroupId} onChange={(event) => changeGroup(event.target.value)}>
               {role === "TEACHER" && myGroups.length > 0 ? (
                 <>
-                  <optgroup label="Mening guruhlarim">{myGroups.map(groupOption)}</optgroup>
+                  <optgroup label={t("schMyGroups")}>{myGroups.map(groupOption)}</optgroup>
                   {otherGroups.length > 0 ? (
-                    <optgroup label="Boshqa guruhlar">{otherGroups.map(groupOption)}</optgroup>
+                    <optgroup label={t("schOtherGroups")}>{otherGroups.map(groupOption)}</optgroup>
                   ) : null}
                 </>
               ) : (
@@ -463,8 +484,10 @@ export function ScheduleBuilder({
               ←
             </Button>
             <div className="text-center">
-              <p className="text-sm font-semibold text-slate-900">{formatWeekRange(weekStart)}</p>
-              <p className="text-[11px] text-slate-500">{`#${weekNumber} hafta`}</p>
+              <p className="text-sm font-semibold text-slate-900">{formatWeekRange(weekStart, months)}</p>
+              <p className="text-[11px] text-slate-500">
+                {t("schWeekNumberHash", { count: weekNumber })}
+              </p>
             </div>
             <Button variant="secondary" size="sm" onClick={() => goWeek(shiftWeek(weekStart, 1))}>
               →
@@ -472,11 +495,11 @@ export function ScheduleBuilder({
           </div>
 
           <Badge tone={weekParity === "even" ? "blue" : "slate"}>
-            {weekParity === "even" ? "Juft hafta" : "Toq hafta"}
+            {weekParity === "even" ? t("schEvenWeek") : t("schOddWeek")}
           </Badge>
 
           <p className="hidden text-xs text-slate-600 sm:ml-auto lg:block">
-            Kompyuterda sudrab tashlang; telefonda blokni bosib, katakni bosing
+            {t("schBuilderHint")}
           </p>
         </CardBody>
       </Card>
@@ -485,10 +508,10 @@ export function ScheduleBuilder({
         <Card>
           <CardBody className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm font-medium text-amber-800">
-              ⏳ {pendingApprovals} ta yozuv tasdiq kutmoqda
+              ⏳ {t("schPendingEntries", { count: pendingApprovals })}
             </p>
             <Button size="sm" onClick={() => void approveAll()}>
-              Hammasini tasdiqlash
+              {t("schApproveAll")}
             </Button>
           </CardBody>
         </Card>

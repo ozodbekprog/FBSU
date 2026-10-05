@@ -2,9 +2,12 @@ import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/ui";
 import { DepartmentsManager } from "@/components/admin/DepartmentsManager";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 export default async function AdminDepartmentsPage() {
   await requireRole(["ADMIN"]);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
   const [departments, faculties] = await Promise.all([
     prisma.department.findMany({
@@ -30,9 +33,9 @@ export default async function AdminDepartmentsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Tuzilma"
-        title="Kafedralar"
-        subtitle={`${rows.length} ta kafedra — fanlar va o'qituvchilar birlashmasi`}
+        eyebrow={dictionary.admEyebrowStructure}
+        title={dictionary.admDepartments}
+        subtitle={translate(locale, "admDepartmentsSubtitle", { count: rows.length })}
       />
       <DepartmentsManager departments={rows} faculties={faculties} />
     </>

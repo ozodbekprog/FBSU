@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Avatar, Badge, Button, Card, CardHeader, EmptyState, Table } from "@/components/ui";
 import { fmtDateTime } from "@/lib/utils";
 import { auditActionLabel, auditActionTone } from "@/app/(app)/admin/audit/labels";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type AuditActor = { id: string; name: string; email: string } | null;
 
@@ -63,6 +64,7 @@ export default function AuditLogTable({
   query: AuditQuery;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   function pageHref(target: number) {
@@ -77,23 +79,23 @@ export default function AuditLogTable({
   if (logs.length === 0) {
     return (
       <EmptyState
-        title="Audit yozuvlari topilmadi"
-        description="Tanlangan filtrlarga mos amallar hali qayd etilmagan."
+        title={t("admAuditEmptyTitle")}
+        description={t("admAuditEmptyDesc")}
       />
     );
   }
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader title="Amallar tarixi" subtitle={`Jami ${total} ta yozuv`} />
+      <CardHeader title={t("admAuditHistoryTitle")} subtitle={t("admAuditHistorySubtitle", { total })} />
       <Table className="max-h-[68vh] overflow-y-auto">
         <thead>
           <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-            <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">Vaqt</th>
-            <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">Kim</th>
-            <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">Amal</th>
-            <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">Obyekt</th>
-            <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">Tafsilot</th>
+            <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admTime")}</th>
+            <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admWho")}</th>
+            <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admAction")}</th>
+            <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admEntity")}</th>
+            <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admDetail")}</th>
           </tr>
         </thead>
         <tbody>
@@ -123,12 +125,12 @@ export default function AuditLogTable({
                             <path d="M7 9h10M7 13h6" />
                           </svg>
                         </span>
-                        <span className="text-sm font-medium text-slate-500">Tizim</span>
+                        <span className="text-sm font-medium text-slate-500">{t("admSystem")}</span>
                       </div>
                     )}
                   </td>
                   <td className="px-5 py-3">
-                    <Badge tone={auditActionTone(log.action)}>{auditActionLabel(log.action)}</Badge>
+                    <Badge tone={auditActionTone(log.action)}>{auditActionLabel(log.action, t)}</Badge>
                     <span className="mt-1 block font-mono text-[11px] text-slate-600">{log.action}</span>
                   </td>
                   <td className="px-5 py-3">
@@ -154,7 +156,7 @@ export default function AuditLogTable({
                       onClick={() => setExpandedId(expanded ? null : log.id)}
                       className="-ml-1 mt-1 inline-flex min-h-8 items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium text-brand-600 transition-colors duration-150 hover:bg-brand-50 hover:text-brand-800"
                     >
-                      {expanded ? "Yopish" : "Batafsil"}
+                      {expanded ? t("admShowLess") : t("admShowMore")}
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={expanded ? "rotate-180 transition-transform duration-150" : "transition-transform duration-150"}>
                         <path d="m6 9 6 6 6-6" />
                       </svg>
@@ -177,14 +179,14 @@ export default function AuditLogTable({
       </Table>
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3">
         <span className="text-xs text-slate-500">
-          Sahifa {page} / {pageCount} · jami {total} ta
+          {t("admAuditPageInfo", { page, pageCount, total })}
         </span>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => router.push(pageHref(page - 1))}>
-            Oldingi
+            {t("admPrevious")}
           </Button>
           <Button size="sm" variant="secondary" disabled={page >= pageCount} onClick={() => router.push(pageHref(page + 1))}>
-            Keyingi
+            {t("admNext")}
           </Button>
         </div>
       </div>

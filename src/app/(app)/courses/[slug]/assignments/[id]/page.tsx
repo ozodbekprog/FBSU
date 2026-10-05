@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import {
   Badge,
   ButtonLink,
@@ -41,6 +42,8 @@ export default async function AssignmentDetailPage({
   params: Promise<{ slug: string; id: string }>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const { slug, id } = await params;
 
   const course = await prisma.course.findUnique({ where: { slug } });
@@ -63,14 +66,14 @@ export default async function AssignmentDetailPage({
 
   const back = (
     <ButtonLink href={`/courses/${course.slug}/assignments`} variant="secondary" size="sm">
-      Ro&apos;yxatga qaytish
+      {dictionary.crsBackToList}
     </ButtonLink>
   );
 
   const infoCard = (
     <Card className="animate-fade-up">
       <CardHeader
-        title="Topshiriq haqida"
+        title={dictionary.crsAboutAssignment}
         subtitle={course.title}
         action={
           <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
@@ -87,7 +90,7 @@ export default async function AssignmentDetailPage({
               <circle cx="12" cy="12" r="9" />
               <path d="M12 7v5l3 2" />
             </svg>
-            Yaratilgan: {fmtDate(assignment.createdAt)}
+            {translate(locale, "crsCreatedAt", { date: fmtDate(assignment.createdAt) })}
           </span>
         }
       />
@@ -108,20 +111,20 @@ export default async function AssignmentDetailPage({
               <circle cx="12" cy="12" r="9" />
               <path d="M12 7v5l3 2" />
             </svg>
-            Maksimal ball: {assignment.maxScore}
+            {translate(locale, "crsMaxScoreLabel", { score: assignment.maxScore })}
           </span>
         </div>
         {assignment.dueAt ? (
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="rounded-2xl border border-slate-200/70 bg-slate-50/70 px-4 py-3">
-              <p className="text-xs font-semibold tracking-wide text-slate-600 uppercase">Muddat</p>
+              <p className="text-xs font-semibold tracking-wide text-slate-600 uppercase">{dictionary.crsDueDate}</p>
               <p className="mt-1 text-sm font-medium text-slate-800">
                 {fmtDateTime(assignment.dueAt)}
               </p>
             </div>
             <div className="rounded-2xl border border-slate-200/70 bg-slate-50/70 px-4 py-3">
               <p className="text-xs font-semibold tracking-wide text-slate-600 uppercase">
-                Holat
+                {dictionary.crsStatus}
               </p>
               <p
                 className={cn(
@@ -129,17 +132,17 @@ export default async function AssignmentDetailPage({
                   now > assignment.dueAt ? "text-rose-600" : "text-emerald-600",
                 )}
               >
-                {now > assignment.dueAt ? "Muddat o'tgan" : "Qabul qilinmoqda"}
+                {now > assignment.dueAt ? dictionary.crsDueOverdue : dictionary.crsAccepting}
               </p>
             </div>
           </div>
         ) : null}
         <div>
           <p className="text-xs font-semibold tracking-wide text-slate-600 uppercase">
-            Topshiriq sharti
+            {dictionary.crsAssignmentCondition}
           </p>
           <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap text-slate-600">
-            {assignment.description ?? "Tavsif kiritilmagan."}
+            {assignment.description ?? dictionary.crsNoDescription}
           </p>
         </div>
       </CardBody>
@@ -217,9 +220,9 @@ export default async function AssignmentDetailPage({
             </svg>
           </span>
           <div>
-            <p className="text-sm font-semibold text-rose-700">Muddat o&apos;tgan (LATE)</p>
+            <p className="text-sm font-semibold text-rose-700">{dictionary.crsOverdueLate}</p>
             <p className="mt-0.5 text-sm text-rose-600/90">
-              Topshirilgan ish kechikkan (LATE) holatida qayd etiladi.
+              {dictionary.crsLateNotice}
             </p>
           </div>
         </div>
@@ -228,11 +231,11 @@ export default async function AssignmentDetailPage({
         {infoCard}
         <Card className="animate-fade-up">
           <CardHeader
-            title="Mening javobim"
+            title={dictionary.crsMyAnswer}
             subtitle={
               submission
-                ? `Topshirilgan: ${fmtDateTime(submission.submittedAt)}`
-                : "Hali topshirilmagan"
+                ? translate(locale, "crsSubmittedAt", { date: fmtDateTime(submission.submittedAt) })
+                : dictionary.crsNotSubmittedYet
             }
             action={<SubmissionBadge status={submission?.status} />}
           />
@@ -250,7 +253,7 @@ export default async function AssignmentDetailPage({
                       >
                         {submission.score}
                       </span>
-                      <span className="text-sm text-slate-600">/ {assignment.maxScore} ball</span>
+                      <span className="text-sm text-slate-600">{translate(locale, "crsScoreOutOf", { score: assignment.maxScore })}</span>
                     </div>
                     {percent != null ? (
                       <Badge tone={percent >= 80 ? "green" : percent >= 60 ? "amber" : "rose"}>
@@ -279,7 +282,7 @@ export default async function AssignmentDetailPage({
                       >
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                       </svg>
-                      O&apos;qituvchi izohi
+                      {dictionary.crsTeacherFeedback}
                     </p>
                     <p className="mt-2 text-sm leading-relaxed text-slate-700">
                       {submission.feedback}
@@ -289,7 +292,7 @@ export default async function AssignmentDetailPage({
                 {submission.text ? (
                   <div className="rounded-xl bg-slate-50 p-4">
                     <p className="text-xs font-semibold tracking-wide text-slate-600 uppercase">
-                      Yuborilgan javob
+                      {dictionary.crsSubmittedAnswer}
                     </p>
                     <p className="mt-1.5 text-sm leading-relaxed whitespace-pre-wrap text-slate-600">
                       {submission.text}
@@ -307,13 +310,13 @@ export default async function AssignmentDetailPage({
                       <DownloadIcon />
                     </span>
                     <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">
-                      {submission.fileUrl.split("?")[0]?.split("/").pop() || "Yuklangan fayl"}
+                      {submission.fileUrl.split("?")[0]?.split("/").pop() || dictionary.crsUploadedFile}
                     </span>
-                    <span className="shrink-0 text-xs text-slate-600">Ochish</span>
+                    <span className="shrink-0 text-xs text-slate-600">{dictionary.crsOpen}</span>
                   </a>
                 ) : null}
                 <p className="text-xs text-slate-600">
-                  Baholangan: {fmtDateTime(submission.gradedAt)}
+                  {translate(locale, "crsGradedAt", { date: fmtDateTime(submission.gradedAt) })}
                 </p>
               </>
             ) : (

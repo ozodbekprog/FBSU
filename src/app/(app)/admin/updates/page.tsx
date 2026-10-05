@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Badge, Card, CardBody, EmptyState, PageHeader } from "@/components/ui";
 import { cn, fmtDateTime } from "@/lib/utils";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 const PAGE_SIZE = 50;
 
@@ -58,6 +59,8 @@ export default async function AdminUpdatesPage({
   searchParams: Promise<{ page?: string }>;
 }) {
   await requireRole(["ADMIN"]);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const params = await searchParams;
   const pageParam = Number(params.page);
   const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
@@ -75,15 +78,15 @@ export default async function AdminUpdatesPage({
   return (
     <>
       <PageHeader
-        eyebrow="Admin"
-        title="Yangilanishlar tarixi"
-        subtitle={`${total} ta yozuv · har deploy o'zi qayd etiladi`}
+        eyebrow={dictionary.admEyebrowAdmin}
+        title={dictionary.admUpdatesTitle}
+        subtitle={translate(locale, "admUpdatesSubtitle", { total })}
       />
 
       {logs.length === 0 ? (
         <EmptyState
-          title="Hozircha yangilanishlar yo'q"
-          description="Deploy bo'lganda scripts/log-update.mjs commit, fayllar va o'zgarishlar hajmini avtomatik yozib boradi."
+          title={dictionary.admUpdatesEmptyTitle}
+          description={dictionary.admUpdatesEmptyDesc}
         />
       ) : (
         <div className="space-y-3">
@@ -117,7 +120,7 @@ export default async function AdminUpdatesPage({
                   {changes.files.length > 0 ? (
                     <details className="overflow-hidden rounded-xl border border-slate-100 bg-slate-50/50">
                       <summary className="cursor-pointer select-none px-4 py-2.5 text-sm font-medium text-slate-700">
-                        {changes.files.length} fayl o&apos;zgardi
+                        {translate(locale, "admUpdatesFilesChanged", { count: changes.files.length })}
                         <span className="ml-2 text-xs font-normal text-slate-500">
                           +{changes.insertions} / −{changes.deletions}
                         </span>
@@ -161,20 +164,18 @@ export default async function AdminUpdatesPage({
         <div className="mt-6 flex items-center justify-between gap-3">
           {page > 1 ? (
             <Link href={`/admin/updates?page=${page - 1}`} className={PAGE_LINK}>
-              ← Oldingi
+              {dictionary.admPreviousArrow}
             </Link>
           ) : (
-            <span className={cn(PAGE_LINK, "pointer-events-none opacity-40")}>← Oldingi</span>
+            <span className={cn(PAGE_LINK, "pointer-events-none opacity-40")}>{dictionary.admPreviousArrow}</span>
           )}
-          <span className="text-sm text-slate-500">
-            Sahifa {page} / {pageCount}
-          </span>
+          <span className="text-sm text-slate-500">{translate(locale, "admPagination", { page, pageCount })}          </span>
           {page < pageCount ? (
             <Link href={`/admin/updates?page=${page + 1}`} className={PAGE_LINK}>
-              Keyingi →
+              {dictionary.admNextArrow}
             </Link>
           ) : (
-            <span className={cn(PAGE_LINK, "pointer-events-none opacity-40")}>Keyingi →</span>
+            <span className={cn(PAGE_LINK, "pointer-events-none opacity-40")}>{dictionary.admNextArrow}</span>
           )}
         </div>
       ) : null}

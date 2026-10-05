@@ -8,11 +8,13 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 export function AttendanceRing({
   percent,
-  caption = "davomat",
+  caption,
+  ariaLabel,
   className,
 }: {
   percent: number;
-  caption?: string;
+  caption: string;
+  ariaLabel: string;
   className?: string;
 }) {
   const value = Math.max(0, Math.min(100, Math.round(percent)));
@@ -25,7 +27,7 @@ export function AttendanceRing({
         viewBox={`0 0 ${VIEW} ${VIEW}`}
         className="relative h-48 w-48 sm:h-56 sm:w-56"
         role="img"
-        aria-label={`Davomat ${value}%`}
+        aria-label={`${ariaLabel} ${value}%`}
       >
         <defs>
           <linearGradient id="attendance-ring-gradient" x1="0%" y1="0%" x2="100%" y2="100%">

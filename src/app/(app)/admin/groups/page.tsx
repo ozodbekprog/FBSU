@@ -2,9 +2,12 @@ import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/ui";
 import GroupsManager from "@/components/admin/GroupsManager";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 export default async function AdminGroupsPage() {
   await requireRole(["ADMIN"]);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
   const groups = await prisma.group.findMany({
     include: { _count: { select: { users: true } } },
@@ -22,7 +25,10 @@ export default async function AdminGroupsPage() {
 
   return (
     <>
-      <PageHeader title="Guruhlar" subtitle={`${data.length} ta guruh · ${totalUsers} a'zo`} />
+      <PageHeader
+        title={dictionary.admGroups}
+        subtitle={translate(locale, "admGroupsSubtitle", { groups: data.length, members: totalUsers })}
+      />
       <GroupsManager groups={data} />
     </>
   );

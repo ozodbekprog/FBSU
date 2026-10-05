@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { isStaff, requireUser } from "@/lib/auth";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import {
   canManageSession,
   getSessionSheetRows,
@@ -18,6 +19,8 @@ const PRINT_STYLES = `@media print {
 
 export default async function SessionPrintPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   if (!isStaff(user.role)) notFound();
 
   const { id } = await params;
@@ -33,7 +36,7 @@ export default async function SessionPrintPage({ params }: { params: Promise<{ i
       <style dangerouslySetInnerHTML={{ __html: PRINT_STYLES }} />
       <div className="mb-5 flex items-center justify-between gap-3 print:hidden">
         <ButtonLink href={`/exams/sessions/${session.id}`} variant="secondary" size="sm">
-          Orqaga
+          {dictionary.grdBack}
         </ButtonLink>
         <PrintButton />
       </div>
@@ -42,7 +45,7 @@ export default async function SessionPrintPage({ params }: { params: Promise<{ i
           <p className="text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">
             Turin Politexnika Universiteti
           </p>
-          <h1 className="mt-2 text-lg font-bold">Imtihonga ruxsat ro&apos;yxati</h1>
+          <h1 className="mt-2 text-lg font-bold">{dictionary.grdAdmissionListTitle}</h1>
           <p className="mt-1 text-sm text-slate-600">
             {session.title} · {sessionTypeLabel(session.type)}
           </p>
@@ -50,23 +53,30 @@ export default async function SessionPrintPage({ params }: { params: Promise<{ i
 
         <div className="mt-6 grid grid-cols-2 gap-2 text-sm">
           <p>
-            <span className="font-semibold">Kurs:</span> {session.course.title}
+            <span className="font-semibold">{dictionary.grdCourseLabel}</span>{" "}
+            {session.course.title}
           </p>
           <p>
-            <span className="font-semibold">Sana:</span> {fmtDate(session.date)}
+            <span className="font-semibold">{dictionary.grdDateLabel}</span>{" "}
+            {fmtDate(session.date)}
           </p>
           <p>
-            <span className="font-semibold">Vaqt:</span>{" "}
-            {session.startTime ? `${session.startTime}${session.endTime ? `–${session.endTime}` : ""}` : "—"}
+            <span className="font-semibold">{dictionary.grdTimeLabel}</span>{" "}
+            {session.startTime
+              ? `${session.startTime}${session.endTime ? `–${session.endTime}` : ""}`
+              : "—"}
           </p>
           <p>
-            <span className="font-semibold">Xona:</span> {session.room ?? "—"}
+            <span className="font-semibold">{dictionary.grdRoomLabel}</span>{" "}
+            {session.room ?? "—"}
           </p>
           <p>
-            <span className="font-semibold">O&apos;qituvchi:</span> {session.course.teacher.name}
+            <span className="font-semibold">{dictionary.grdTeacherLabelColon}</span>{" "}
+            {session.course.teacher.name}
           </p>
           <p>
-            <span className="font-semibold">Ro&apos;yxatda:</span> {admitted.length} ta talaba
+            <span className="font-semibold">{dictionary.grdAdmittedLabel}</span>{" "}
+            {translate(locale, "grdNStudents", { count: admitted.length })}
           </p>
         </div>
 
@@ -74,11 +84,21 @@ export default async function SessionPrintPage({ params }: { params: Promise<{ i
           <thead>
             <tr>
               <th className="border border-slate-300 px-3 py-2 text-left font-semibold">#</th>
-              <th className="border border-slate-300 px-3 py-2 text-left font-semibold">F.I.Sh.</th>
-              <th className="border border-slate-300 px-3 py-2 text-left font-semibold">Guruh</th>
-              <th className="border border-slate-300 px-3 py-2 text-left font-semibold">O&apos;rindiq</th>
-              <th className="border border-slate-300 px-3 py-2 text-left font-semibold">Davomat</th>
-              <th className="border border-slate-300 px-3 py-2 text-left font-semibold">Ruxsat</th>
+              <th className="border border-slate-300 px-3 py-2 text-left font-semibold">
+                {dictionary.grdFullName}
+              </th>
+              <th className="border border-slate-300 px-3 py-2 text-left font-semibold">
+                {dictionary.grdGroup}
+              </th>
+              <th className="border border-slate-300 px-3 py-2 text-left font-semibold">
+                {dictionary.grdSeat}
+              </th>
+              <th className="border border-slate-300 px-3 py-2 text-left font-semibold">
+                {dictionary.grdAttendance}
+              </th>
+              <th className="border border-slate-300 px-3 py-2 text-left font-semibold">
+                {dictionary.grdPermission}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -90,7 +110,9 @@ export default async function SessionPrintPage({ params }: { params: Promise<{ i
                 <td className="border border-slate-300 px-3 py-2">{row.seat ?? "—"}</td>
                 <td className="border border-slate-300 px-3 py-2">{row.attendance.percent}%</td>
                 <td className="border border-slate-300 px-3 py-2">
-                  {row.attendance.eligible ? "Ruxsat" : "Majburiy"}
+                  {row.attendance.eligible
+                    ? dictionary.grdEligibleShort
+                    : dictionary.grdMandatory}
                 </td>
               </tr>
             ))}
@@ -99,13 +121,17 @@ export default async function SessionPrintPage({ params }: { params: Promise<{ i
 
         {admitted.length === 0 ? (
           <p className="mt-6 text-center text-sm text-slate-500">
-            Ro&apos;yxat hali shakllantirilmagan.
+            {dictionary.grdListNotFormed}
           </p>
         ) : null}
 
         <div className="mt-10 flex justify-between text-sm">
-          <p>Imtihon komissiyasi raisi: _______________</p>
-          <p>Imzo: _______________</p>
+          <p>
+            {dictionary.grdCommissionChair} _______________
+          </p>
+          <p>
+            {dictionary.grdSignatureLine} _______________
+          </p>
         </div>
       </div>
     </>

@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, CardBody, CardHeader, Input, Label, Textarea } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export function AnnouncementsCreate({ courseId }: { courseId: string }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -29,7 +31,7 @@ export function AnnouncementsCreate({ courseId }: { courseId: string }) {
 
     setSaving(false);
     if (!response.ok || !json?.ok) {
-      setError(json?.error ?? "Saqlashda xatolik yuz berdi");
+      setError(json?.error ?? t("msgSaveError"));
       return;
     }
 
@@ -42,46 +44,49 @@ export function AnnouncementsCreate({ courseId }: { courseId: string }) {
   if (!open) {
     return (
       <div className="mb-4 flex justify-end">
-        <Button onClick={() => setOpen(true)}>Yangi e&apos;lon</Button>
+        <Button onClick={() => setOpen(true)}>{t("msgNewAnnouncement")}</Button>
       </div>
     );
   }
 
   return (
     <Card className="mb-6 overflow-hidden">
-      <CardHeader title="Yangi e'lon" subtitle="E'lon sarlavhasi va matnini kiriting" />
+      <CardHeader
+        title={t("msgNewAnnouncement")}
+        subtitle={t("msgAnnouncementFormHint")}
+      />
       <CardBody>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <Label>Sarlavha</Label>
+              <Label>{t("msgTitleLabel")}</Label>
               <Input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 maxLength={200}
                 required
-                placeholder="Masalan: Imtihon jadvali o'zgardi"
+                placeholder={t("msgAnnouncementTitlePlaceholder")}
               />
             </div>
             <div>
-              <Label>Matn</Label>
+              <Label>{t("msgBodyLabel")}</Label>
               <Textarea
                 value={body}
                 onChange={(event) => setBody(event.target.value)}
                 rows={4}
                 maxLength={10000}
                 required
-                placeholder="E'lon matni..."
+                placeholder={t("msgAnnouncementBodyPlaceholder")}
               />
             </div>
           </div>
           {error ? <p className="mt-3 text-sm text-rose-600">{error}</p> : null}
           <div className="mt-5 flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setOpen(false)}>
-              Bekor qilish
+              {t("commonCancel")}
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? "Saqlanmoqda..." : "Chop etish"}
+              {saving ? t("msgSaving") : t("msgPublish")}
             </Button>
           </div>
         </form>

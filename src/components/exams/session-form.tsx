@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, CardBody, CardHeader, Input, Label, Select } from "@/components/ui";
-import { SESSION_TYPES, SESSION_TYPE_LABEL } from "./session-shared";
+import { useI18n } from "@/components/i18n/LocaleProvider";
+import { SESSION_TYPES, SESSION_TYPE_KEY } from "./session-shared";
 
 type CourseOption = { id: string; title: string };
 type TermOption = { id: string; name: string; isActive: boolean };
 
 export function SessionCreateForm({ courses, terms }: { courses: CourseOption[]; terms: TermOption[] }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [courseId, setCourseId] = useState(courses[0]?.id ?? "");
   const [title, setTitle] = useState("");
@@ -51,7 +53,7 @@ export function SessionCreateForm({ courses, terms }: { courses: CourseOption[];
 
     setSaving(false);
     if (!response.ok || !json?.ok || !json.data?.id) {
-      setError(json?.error ?? "Saqlashda xatolik yuz berdi");
+      setError(json?.error ?? t("grdExSaveError"));
       return;
     }
 
@@ -64,7 +66,7 @@ export function SessionCreateForm({ courses, terms }: { courses: CourseOption[];
       <Card className="mb-6">
         <CardBody>
           <p className="text-sm text-slate-500">
-            Sessiya yaratish uchun avval kurs kerak. Kurslar bo&apos;limidan kurs qo&apos;shing.
+            {t("grdExNeedCourse")}
           </p>
         </CardBody>
       </Card>
@@ -78,7 +80,7 @@ export function SessionCreateForm({ courses, terms }: { courses: CourseOption[];
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 5v14M5 12h14" />
           </svg>
-          Yangi sessiya
+          {t("grdExNewSession")}
         </Button>
       </div>
     );
@@ -87,14 +89,14 @@ export function SessionCreateForm({ courses, terms }: { courses: CourseOption[];
   return (
     <Card className="animate-fade-up mb-6">
       <CardHeader
-        title="Yangi imtihon sessiyasi"
-        subtitle="Kurs, tur, sana va vaqtni belgilang"
+        title={t("grdExNewSessionTitle")}
+        subtitle={t("grdExNewSessionSubtitle")}
         action={
           <button
             type="button"
             onClick={() => setOpen(false)}
             className="rounded-lg p-1.5 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-700"
-            aria-label="Yopish"
+            aria-label={t("grdExClose")}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 6 6 18M6 6l12 12" />
@@ -106,7 +108,7 @@ export function SessionCreateForm({ courses, terms }: { courses: CourseOption[];
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label>Kurs</Label>
+              <Label>{t("grdCourse")}</Label>
               <Select value={courseId} onChange={(event) => setCourseId(event.target.value)} required>
                 {courses.map((course) => (
                   <option key={course.id} value={course.id}>
@@ -116,55 +118,55 @@ export function SessionCreateForm({ courses, terms }: { courses: CourseOption[];
               </Select>
             </div>
             <div>
-              <Label>Imtihon turi</Label>
+              <Label>{t("grdExExamType")}</Label>
               <Select value={type} onChange={(event) => setType(event.target.value)}>
                 {SESSION_TYPES.map((item) => (
                   <option key={item} value={item}>
-                    {SESSION_TYPE_LABEL[item]}
+                    {t(SESSION_TYPE_KEY[item])}
                   </option>
                 ))}
               </Select>
             </div>
             <div className="sm:col-span-2">
-              <Label>Sarlavha</Label>
+              <Label>{t("grdExTitle")}</Label>
               <Input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 maxLength={200}
                 required
-                placeholder="Masalan: Programming Fundamentals yakuniy imtihoni"
+                placeholder={t("grdExTitlePlaceholder")}
               />
             </div>
             <div>
-              <Label>Sana</Label>
+              <Label>{t("grdDate")}</Label>
               <Input type="date" value={date} onChange={(event) => setDate(event.target.value)} required />
             </div>
             <div>
-              <Label>Xona</Label>
+              <Label>{t("grdRoom")}</Label>
               <Input
                 value={room}
                 onChange={(event) => setRoom(event.target.value)}
                 maxLength={100}
-                placeholder="Masalan: 305"
+                placeholder={t("grdExRoomPlaceholder")}
               />
             </div>
             <div>
-              <Label>Boshlanish vaqti</Label>
+              <Label>{t("grdExStartTime")}</Label>
               <Input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
             </div>
             <div>
-              <Label>Tugash vaqti</Label>
+              <Label>{t("grdExEndTime")}</Label>
               <Input type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} />
             </div>
             {terms.length > 0 ? (
               <div>
-                <Label>Semestr</Label>
+                <Label>{t("grdTerm")}</Label>
                 <Select value={termId} onChange={(event) => setTermId(event.target.value)}>
-                  <option value="">Semestrsiz</option>
+                  <option value="">{t("grdNoTerm")}</option>
                   {terms.map((term) => (
                     <option key={term.id} value={term.id}>
                       {term.name}
-                      {term.isActive ? " (faol)" : ""}
+                      {term.isActive ? t("grdExActiveSuffix") : ""}
                     </option>
                   ))}
                 </Select>
@@ -177,7 +179,7 @@ export function SessionCreateForm({ courses, terms }: { courses: CourseOption[];
                 onChange={(event) => setAdmissionOpen(event.target.checked)}
                 className="size-4 rounded border-slate-300 accent-brand-700"
               />
-              Ruxsatni darhol ochish
+              {t("grdExAdmissionImmediate")}
             </label>
           </div>
           {error ? (
@@ -185,10 +187,10 @@ export function SessionCreateForm({ courses, terms }: { courses: CourseOption[];
           ) : null}
           <div className="mt-5 flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setOpen(false)}>
-              Bekor qilish
+              {t("commonCancel")}
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? "Saqlanmoqda..." : "Sessiya yaratish"}
+              {saving ? t("grdExSaving") : t("grdCreateSession")}
             </Button>
           </div>
         </form>

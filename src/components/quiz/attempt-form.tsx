@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { Badge, Button, Textarea } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/components/quiz/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import {
-  QUESTION_TYPE_LABEL,
+  QUESTION_TYPE_KEY,
   QUESTION_TYPE_SOFT,
   QUESTION_TYPE_TONE,
   type AnswerValue,
@@ -41,6 +42,7 @@ export function AttemptForm({
   questions: QuestionPublic[];
   endsAt: string | null;
 }) {
+  const { t } = useI18n();
   const router = useRouter();
   const [answers, setAnswers] = useState<QuizAnswers>({});
   const [error, setError] = useState<string | null>(null);
@@ -60,9 +62,12 @@ export function AttemptForm({
     submittedRef.current = true;
     setSubmitting(true);
     setError(null);
-    const result = await apiFetch(`/api/attempts/${attemptId}`, "PATCH", {
-      answers: answersRef.current,
-    });
+    const result = await apiFetch(
+      `/api/attempts/${attemptId}`,
+      "PATCH",
+      { answers: answersRef.current },
+      t("crsQuizServerError"),
+    );
     if (!result.ok) {
       submittedRef.current = false;
       setSubmitting(false);
@@ -70,7 +75,7 @@ export function AttemptForm({
       return;
     }
     router.push(`/quizzes/${quizId}/results`);
-  }, [attemptId, quizId, router]);
+  }, [attemptId, quizId, router, t]);
 
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -162,7 +167,7 @@ export function AttemptForm({
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold tracking-tight text-brand-900">{title}</p>
             <p className="mt-0.5 text-xs text-slate-500">
-              {answeredCount}/{questions.length} savol belgilandi
+              {t("crsQuizMarkedCount", { answered: answeredCount, total: questions.length })}
             </p>
             <div className="mt-2.5 flex items-center gap-3">
               <div className="flex flex-1 items-center gap-1">
@@ -171,7 +176,7 @@ export function AttemptForm({
                     key={question.id}
                     type="button"
                     onClick={() => goTo(index)}
-                    aria-label={`Savol ${index + 1}`}
+                    aria-label={t("crsQuizQuestionAria", { number: index + 1 })}
                     className={cn(
                       "h-1.5 flex-1 rounded-full transition-all duration-300",
                       index === activeIndex
@@ -184,7 +189,7 @@ export function AttemptForm({
                 ))}
               </div>
               <span className="shrink-0 text-xs font-semibold tabular-nums text-slate-500">
-                Savol {Math.min(activeIndex + 1, questions.length)}/{questions.length}
+                {t("crsQuizQuestionProgress", { current: Math.min(activeIndex + 1, questions.length), total: questions.length })}
               </span>
             </div>
           </div>
@@ -195,7 +200,7 @@ export function AttemptForm({
             )}
           >
             <p className="text-[11px] font-medium uppercase tracking-wider text-slate-600">
-              Qolgan vaqt
+              {t("crsQuizTimeLeft")}
             </p>
             {remaining !== null ? (
               <p
@@ -208,7 +213,7 @@ export function AttemptForm({
                 {formatClock(remaining)}
               </p>
             ) : (
-              <p className="py-1 text-sm text-slate-600">Cheklovsiz</p>
+              <p className="py-1 text-sm text-slate-600">{t("crsQuizUnlimited")}</p>
             )}
           </div>
         </div>
@@ -235,11 +240,11 @@ export function AttemptForm({
                   {index + 1}
                 </span>
                 <Badge tone={QUESTION_TYPE_TONE[question.type]}>
-                  {QUESTION_TYPE_LABEL[question.type]}
+                  {t(QUESTION_TYPE_KEY[question.type])}
                 </Badge>
               </div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-300/25 px-2.5 py-1 text-xs font-semibold text-gold-800">
-                {question.points} ball
+                {t("crsQuizPoints", { points: question.points })}
               </span>
             </div>
             <p className="mt-3.5 text-base font-medium leading-relaxed text-slate-900">
@@ -293,7 +298,7 @@ export function AttemptForm({
             ) : (
               <Textarea
                 rows={5}
-                placeholder="Javobingizni yozing..."
+                placeholder={t("crsQuizAnswerPlaceholder")}
                 value={textValue(question.id)}
                 onChange={(event) => setValue(question.id, event.target.value)}
                 className="mt-4"
@@ -318,7 +323,7 @@ export function AttemptForm({
           <span className="shrink-0 text-xs tabular-nums text-slate-500">{progress}%</span>
         </div>
         <p className="mb-2 px-1 text-xs text-slate-500">
-          {unanswered > 0 ? `Javob berilmagan savollar: ${unanswered} ta` : "Barcha savollarga javob belgilandi"}
+          {unanswered > 0 ? t("crsQuizUnanswered", { count: unanswered }) : t("crsQuizAllAnswered")}
         </p>
         <Button
           size="lg"
@@ -326,7 +331,7 @@ export function AttemptForm({
           onClick={() => setConfirmOpen(true)}
           disabled={submitting}
         >
-          {submitting ? "Topshirilmoqda..." : "Topshirish"}
+          {submitting ? t("crsQuizSubmitting") : t("crsSubmit")}
         </Button>
       </div>
 
@@ -334,7 +339,7 @@ export function AttemptForm({
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Topshirishni tasdiqlash"
+          aria-label={t("crsQuizConfirmAria")}
           className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/40 p-4 backdrop-blur-sm"
         >
           <div className="w-full max-w-md animate-fade-up rounded-2xl border border-slate-200 bg-white p-6 shadow-lift">
@@ -347,19 +352,19 @@ export function AttemptForm({
               </span>
               <div className="min-w-0">
                 <p className="text-base font-semibold tracking-tight text-slate-900">
-                  Testni topshirasizmi?
+                  {t("crsQuizConfirmTitle")}
                 </p>
                 <p className="mt-1 text-sm text-slate-500">
-                  {answeredCount}/{questions.length} savol belgilangan.
+                  {t("crsQuizConfirmMarked", { answered: answeredCount, total: questions.length })}{" "}
                   {unanswered > 0
-                    ? ` ${unanswered} ta savol javobsiz qoladi.`
-                    : " Barcha savollar belgilangan."}
+                    ? t("crsQuizConfirmUnanswered", { count: unanswered })
+                    : t("crsQuizConfirmAll")}
                 </p>
               </div>
             </div>
             <div className="mt-5 flex items-center justify-end gap-2">
               <Button variant="secondary" onClick={() => setConfirmOpen(false)} disabled={submitting}>
-                Bekor qilish
+                {t("commonCancel")}
               </Button>
               <Button
                 onClick={() => {
@@ -368,7 +373,7 @@ export function AttemptForm({
                 }}
                 disabled={submitting}
               >
-                {submitting ? "Topshirilmoqda..." : "Ha, topshirish"}
+                {submitting ? t("crsQuizSubmitting") : t("crsQuizConfirmSubmit")}
               </Button>
             </div>
           </div>

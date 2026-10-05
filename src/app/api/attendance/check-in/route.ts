@@ -102,7 +102,7 @@ export async function POST(request: Request) {
       },
     },
   });
-  if (existing) {
+  if (existing && existing.status !== "ABSENT") {
     return Response.json(
       { ok: false, error: "Bugun bu kurs uchun davomat allaqachon belgilangan" },
       { status: 409 },

@@ -17,13 +17,13 @@ import {
   Textarea,
 } from "@/components/ui";
 import { cn, fmtDateTime } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import {
   ORDER_STATUS_DOT,
-  ORDER_STATUS_LABEL,
   ORDER_STATUS_TONE,
   ORDER_STATUSES,
   ORDER_TYPES,
-  ORDER_TYPE_LABEL,
+  orderLabels,
   toOrderStatus,
   toOrderType,
   type OrderStatus,
@@ -61,6 +61,8 @@ function SearchIcon() {
 }
 
 function AdminOrderRow({ order }: { order: AdminOrderItem }) {
+  const { t } = useI18n();
+  const labels = orderLabels(t);
   const router = useRouter();
   const [status, setStatus] = useState<OrderStatus>(toOrderStatus(order.status));
   const [comment, setComment] = useState(order.adminComment ?? "");
@@ -83,13 +85,13 @@ function AdminOrderRow({ order }: { order: AdminOrderItem }) {
       });
       const json = (await res.json().catch(() => null)) as ApiResult | null;
       if (!res.ok || !json || !json.ok) {
-        setError(json?.error ?? "Saqlab bo'lmadi");
+        setError(json?.error ?? t("mscOrderActionError"));
         return;
       }
       setSaved(true);
       router.refresh();
     } catch {
-      setError("Tarmoqda xatolik");
+      setError(t("mscOrderNetworkError"));
     } finally {
       setBusy(false);
     }
@@ -111,7 +113,7 @@ function AdminOrderRow({ order }: { order: AdminOrderItem }) {
       </td>
       <td className="px-5 py-4">
         <span className="block max-w-sm font-medium text-slate-900">
-          {order.subject ?? ORDER_TYPE_LABEL[toOrderType(order.type)]}
+          {order.subject ?? labels.type[toOrderType(order.type)]}
         </span>
         {order.note ? (
           <span className="mt-1 block max-w-sm text-xs leading-relaxed text-slate-500">
@@ -120,16 +122,16 @@ function AdminOrderRow({ order }: { order: AdminOrderItem }) {
         ) : null}
       </td>
       <td className="px-5 py-4">
-        <Badge tone="slate">{ORDER_TYPE_LABEL[toOrderType(order.type)]}</Badge>
+        <Badge tone="slate">{labels.type[toOrderType(order.type)]}</Badge>
       </td>
       <td className="px-5 py-4">
-        <Badge tone={ORDER_STATUS_TONE[current]}>{ORDER_STATUS_LABEL[current]}</Badge>
+        <Badge tone={ORDER_STATUS_TONE[current]}>{labels.status[current]}</Badge>
       </td>
       <td className="px-5 py-4 text-xs text-slate-500">{fmtDateTime(order.createdAt)}</td>
       <td className="px-5 py-4">
         <div className="w-64 space-y-2.5 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3">
           <div>
-            <Label>Holat</Label>
+            <Label>{t("mscOrderStatusLabel")}</Label>
             <div className="relative">
               <span
                 className={cn(
@@ -144,28 +146,28 @@ function AdminOrderRow({ order }: { order: AdminOrderItem }) {
               >
                 {ORDER_STATUSES.map((value) => (
                   <option key={value} value={value}>
-                    {ORDER_STATUS_LABEL[value]}
+                    {labels.status[value]}
                   </option>
                 ))}
               </Select>
             </div>
           </div>
           <div>
-            <Label>Admin izohi</Label>
+            <Label>{t("mscOrderAdminComment")}</Label>
             <Textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Talabaga ko'rinadi"
+              placeholder={t("mscOrderAdminCommentPlaceholder")}
               rows={2}
               maxLength={2000}
             />
           </div>
           <div className="flex items-center gap-2">
             <Button size="sm" disabled={busy || !dirty} onClick={save} className="flex-1">
-              {busy ? "Saqlanmoqda..." : "Saqlash"}
+              {busy ? t("mscOrderSaving") : t("mscOrderSave")}
             </Button>
             {saved && !dirty ? (
-              <span className="text-xs font-medium text-emerald-600">Saqlandi</span>
+              <span className="text-xs font-medium text-emerald-600">{t("mscOrderSaved")}</span>
             ) : null}
             {error ? <span className="text-xs font-medium text-rose-600">{error}</span> : null}
           </div>
@@ -176,6 +178,8 @@ function AdminOrderRow({ order }: { order: AdminOrderItem }) {
 }
 
 export default function AdminOrdersManager({ orders }: { orders: AdminOrderItem[] }) {
+  const { t } = useI18n();
+  const labels = orderLabels(t);
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
 
@@ -191,22 +195,25 @@ export default function AdminOrdersManager({ orders }: { orders: AdminOrderItem[
         order.user.group?.name ?? "",
         order.subject ?? "",
         order.note ?? "",
-        ORDER_TYPE_LABEL[type],
+        labels.type[type],
       ]
         .join(" ")
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [orders, query, typeFilter]);
+  }, [orders, query, typeFilter, labels]);
 
   return (
     <Card>
-      <CardHeader title="Arizalar" subtitle={`${filtered.length} / ${orders.length} ta ko'rsatilmoqda`} />
+      <CardHeader
+        title={t("mscOrdersTitle")}
+        subtitle={t("mscOrdersShownCount", { shown: filtered.length, total: orders.length })}
+      />
       {orders.length === 0 ? (
         <CardBody>
           <EmptyState
-            title="Arizalar topilmadi"
-            description="Tanlangan holat bo'yicha arizalar yo'q."
+            title={t("mscOrdersNotFound")}
+            description={t("mscOrdersNotFoundBody")}
           />
         </CardBody>
       ) : (
@@ -219,7 +226,7 @@ export default function AdminOrdersManager({ orders }: { orders: AdminOrderItem[
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Talaba, mavzu yoki izoh bo'yicha qidirish..."
+                placeholder={t("mscOrdersSearchPlaceholder")}
                 className="pl-9"
               />
             </div>
@@ -228,10 +235,10 @@ export default function AdminOrdersManager({ orders }: { orders: AdminOrderItem[
               onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
               className="w-full sm:w-52!"
             >
-              <option value="ALL">Barcha turlar</option>
+              <option value="ALL">{t("mscOrdersAllTypes")}</option>
               {ORDER_TYPES.map((value) => (
                 <option key={value} value={value}>
-                  {ORDER_TYPE_LABEL[value]}
+                  {labels.type[value]}
                 </option>
               ))}
             </Select>
@@ -239,20 +246,20 @@ export default function AdminOrdersManager({ orders }: { orders: AdminOrderItem[
           {filtered.length === 0 ? (
             <CardBody>
               <EmptyState
-                title="Mos ariza yo'q"
-                description="Qidiruv so'zi yoki turni o'zgartirib qayta urinib ko'ring."
+                title={t("mscOrdersNoMatch")}
+                description={t("mscOrdersNoMatchBody")}
               />
             </CardBody>
           ) : (
             <Table>
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/70 text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-                  <th className="px-5 py-3.5 font-semibold">Talaba</th>
-                  <th className="px-5 py-3.5 font-semibold">Ariza</th>
-                  <th className="px-5 py-3.5 font-semibold">Tur</th>
-                  <th className="px-5 py-3.5 font-semibold">Holat</th>
-                  <th className="px-5 py-3.5 font-semibold">Yuborilgan</th>
-                  <th className="px-5 py-3.5 font-semibold">Boshqarish</th>
+                  <th className="px-5 py-3.5 font-semibold">{t("mscOrdersColStudent")}</th>
+                  <th className="px-5 py-3.5 font-semibold">{t("mscOrdersColOrder")}</th>
+                  <th className="px-5 py-3.5 font-semibold">{t("mscOrdersColType")}</th>
+                  <th className="px-5 py-3.5 font-semibold">{t("mscOrdersColStatus")}</th>
+                  <th className="px-5 py-3.5 font-semibold">{t("mscOrdersColSent")}</th>
+                  <th className="px-5 py-3.5 font-semibold">{t("mscOrdersColManage")}</th>
                 </tr>
               </thead>
               <tbody>

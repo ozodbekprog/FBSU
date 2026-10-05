@@ -6,6 +6,7 @@ import { Badge, Button, Card, CardBody, Select } from "@/components/ui";
 import { apiFetch, ensureCsrfToken } from "@/lib/api";
 import { ThemePicker } from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import {
   REMINDER_HOURS,
   reminderHourLabel,
@@ -27,47 +28,6 @@ type ToggleItem = {
   enabledNotice: string;
   disabledNotice: string;
 };
-
-const REMINDER_ITEMS: ToggleItem[] = [
-  {
-    key: "reminderBot",
-    title: "Bot eslatmalari",
-    description: "Telegram bot har kuni dars jadvali va vazifalar haqida eslatib turadi.",
-    enabledNotice: "Bot eslatmalari yoqildi",
-    disabledNotice: "Bot eslatmalari o'chirildi",
-  },
-  {
-    key: "deadlineReminder",
-    title: "Deadline eslatmasi",
-    description: "Topshiriq muddati yaqinlashganda qo'shimcha eslatma yuboriladi.",
-    enabledNotice: "Deadline eslatmasi yoqildi",
-    disabledNotice: "Deadline eslatmasi o'chirildi",
-  },
-  {
-    key: "emailNotify",
-    title: "Email bildirishnomalari",
-    description: "Muhim bildirishnomalar email manzilingizga ham yuboriladi.",
-    enabledNotice: "Email bildirishnomalari yoqildi",
-    disabledNotice: "Email bildirishnomalari o'chirildi",
-  },
-];
-
-const VIEW_ITEMS: ToggleItem[] = [
-  {
-    key: "showCharts",
-    title: "Dashboard chartlari",
-    description: "Bosh sahifada statistika diagrammalarini ko'rsatish.",
-    enabledNotice: "Chartlar ko'rsatiladi",
-    disabledNotice: "Chartlar yashirildi",
-  },
-  {
-    key: "scheduleListView",
-    title: "Jadval ro'yxat ko'rinishi",
-    description: "Dars jadvali sahifasi default holatda ro'yxat shaklida ochiladi.",
-    enabledNotice: "Jadval ro'yxat ko'rinishida ochiladi",
-    disabledNotice: "Jadval oddiy ko'rinishda ochiladi",
-  },
-];
 
 const TOGGLE_TONES: Record<ToggleKey, string> = {
   reminderBot: "from-sky-400 to-blue-600 shadow-sky-500/30",
@@ -152,6 +112,7 @@ export default function SettingsManager({
   email: string;
   telegramLinked: boolean;
 }) {
+  const { t, locale } = useI18n();
   const router = useRouter();
   const [preferences, setPreferences] = useState<UserPreferences>(initialPreferences);
   const [busyKey, setBusyKey] = useState<BusyKey | null>(null);
@@ -160,6 +121,47 @@ export default function SettingsManager({
   const [code, setCode] = useState<string | null>(null);
   const [codeExpires, setCodeExpires] = useState<string | null>(null);
   const [codeBusy, setCodeBusy] = useState(false);
+
+  const REMINDER_ITEMS: ToggleItem[] = [
+    {
+      key: "reminderBot",
+      title: t("mscSettingsReminderBotTitle"),
+      description: t("mscSettingsReminderBotDesc"),
+      enabledNotice: t("mscSettingsReminderBotOn"),
+      disabledNotice: t("mscSettingsReminderBotOff"),
+    },
+    {
+      key: "deadlineReminder",
+      title: t("mscSettingsDeadlineTitle"),
+      description: t("mscSettingsDeadlineDesc"),
+      enabledNotice: t("mscSettingsDeadlineOn"),
+      disabledNotice: t("mscSettingsDeadlineOff"),
+    },
+    {
+      key: "emailNotify",
+      title: t("mscSettingsEmailTitle"),
+      description: t("mscSettingsEmailDesc"),
+      enabledNotice: t("mscSettingsEmailOn"),
+      disabledNotice: t("mscSettingsEmailOff"),
+    },
+  ];
+
+  const VIEW_ITEMS: ToggleItem[] = [
+    {
+      key: "showCharts",
+      title: t("mscSettingsChartsTitle"),
+      description: t("mscSettingsChartsDesc"),
+      enabledNotice: t("mscSettingsChartsOn"),
+      disabledNotice: t("mscSettingsChartsOff"),
+    },
+    {
+      key: "scheduleListView",
+      title: t("mscSettingsListViewTitle"),
+      description: t("mscSettingsListViewDesc"),
+      enabledNotice: t("mscSettingsListViewOn"),
+      disabledNotice: t("mscSettingsListViewOff"),
+    },
+  ];
 
   useEffect(() => {
     if (!notice) return;
@@ -189,7 +191,7 @@ export default function SettingsManager({
       const json = (await res.json().catch(() => null)) as ApiResult | null;
       if (!res.ok || !json?.ok || !json.data) {
         setPreferences((prev) => ({ ...prev, ...revert }));
-        setError(json?.error ?? "Saqlab bo'lmadi");
+        setError(json?.error ?? t("mscSettingsSaveError"));
         return;
       }
       setPreferences(json.data.preferences);
@@ -197,7 +199,7 @@ export default function SettingsManager({
       router.refresh();
     } catch {
       setPreferences((prev) => ({ ...prev, ...revert }));
-      setError("Tarmoqda xatolik");
+      setError(t("mscSettingsNetworkError"));
     } finally {
       setBusyKey(null);
     }
@@ -218,7 +220,7 @@ export default function SettingsManager({
       { reminderHour: hour },
       { reminderHour: preferences.reminderHour },
       "reminderHour",
-      `Eslatma vaqti ${reminderHourLabel(hour)} ga o'zgartirildi`,
+      t("mscSettingsHourChanged", { time: reminderHourLabel(hour) }),
     );
   }
 
@@ -230,21 +232,21 @@ export default function SettingsManager({
       const res = await apiFetch("/api/settings/telegram-code", { method: "POST" });
       const json = (await res.json().catch(() => null)) as CodeResult | null;
       if (!res.ok || !json?.ok || !json.data) {
-        setError(json?.error ?? "Kodni olib bo'lmadi");
+        setError(json?.error ?? t("mscSettingsCodeError"));
         return;
       }
       setCode(json.data.code);
       setCodeExpires(json.data.expiresAt);
-      setNotice("Tasdiqlash kodi yaratildi");
+      setNotice(t("mscSettingsCodeCreated"));
     } catch {
-      setError("Tarmoqda xatolik");
+      setError(t("mscSettingsNetworkError"));
     } finally {
       setCodeBusy(false);
     }
   }
 
   const codeUntil = codeExpires
-    ? new Date(codeExpires).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })
+    ? new Date(codeExpires).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })
     : null;
 
   function renderToggle(item: ToggleItem) {
@@ -277,7 +279,9 @@ export default function SettingsManager({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-semibold tracking-tight text-brand-950">{item.title}</p>
-              <Badge tone={enabled ? "green" : "slate"}>{enabled ? "Yoqilgan" : "O'chirilgan"}</Badge>
+              <Badge tone={enabled ? "green" : "slate"}>
+                {enabled ? t("mscSettingsEnabled") : t("mscSettingsDisabled")}
+              </Badge>
             </div>
             <p className="mt-1 text-xs leading-relaxed text-slate-500">{item.description}</p>
           </div>
@@ -348,8 +352,8 @@ export default function SettingsManager({
               <path d="M13.7 21a2 2 0 0 1-3.4 0" />
             </SectionIcon>
           }
-          title="Bildirishnomalar"
-          note={`${REMINDER_ITEMS.length} ta sozlama`}
+          title={t("mscSettingsSectionNotifications")}
+          note={t("mscSettingsCount", { count: REMINDER_ITEMS.length })}
         />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {REMINDER_ITEMS.map(renderToggle)}
@@ -369,19 +373,19 @@ export default function SettingsManager({
                   </svg>
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold tracking-tight text-brand-950">Eslatma vaqti</p>
+                  <p className="font-semibold tracking-tight text-brand-950">{t("mscSettingsReminderHour")}</p>
                   <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                    Bot eslatmalari yuboriladigan vaqt (07:00–10:00).
+                    {t("mscSettingsReminderHourDesc")}
                   </p>
                 </div>
               </div>
               <label className="flex items-center gap-2.5 rounded-xl bg-slate-50 px-3 py-2 ring-1 ring-inset ring-slate-200/70">
-                <span className="text-xs font-medium text-slate-500">Soat</span>
+                <span className="text-xs font-medium text-slate-500">{t("mscSettingsHour")}</span>
                 <Select
                   className="h-11 flex-1 cursor-pointer text-center text-base font-semibold tabular-nums"
                   value={preferences.reminderHour}
                   disabled={hourBusy}
-                  aria-label="Eslatma vaqti"
+                  aria-label={t("mscSettingsReminderHour")}
                   onChange={(e) => changeHour(Number(e.target.value))}
                 >
                   {REMINDER_HOURS.map((hour) => (
@@ -404,8 +408,8 @@ export default function SettingsManager({
               <circle cx="12" cy="12" r="3" />
             </SectionIcon>
           }
-          title="Ko'rinish"
-          note={`${VIEW_ITEMS.length + 1} ta sozlama`}
+          title={t("mscSettingsSectionAppearance")}
+          note={t("mscSettingsCount", { count: VIEW_ITEMS.length + 1 })}
         />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {VIEW_ITEMS.map(renderToggle)}
@@ -419,9 +423,9 @@ export default function SettingsManager({
                   </svg>
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold tracking-tight text-brand-950">Mavzu</p>
+                  <p className="font-semibold tracking-tight text-brand-950">{t("mscSettingsTheme")}</p>
                   <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                    Yorug&apos;, tungi yoki tizim rejimini tanlang.
+                    {t("mscSettingsThemeDesc")}
                   </p>
                 </div>
               </div>
@@ -439,8 +443,8 @@ export default function SettingsManager({
               <path d="M22 2 11 13" />
             </SectionIcon>
           }
-          title="Aloqa"
-          note={telegramLinked ? "Bog'langan" : "Bog'lanmagan"}
+          title={t("mscSettingsSectionContact")}
+          note={telegramLinked ? t("mscSettingsLinked") : t("mscSettingsNotLinked")}
         />
         <Card
           className={cn(
@@ -468,15 +472,15 @@ export default function SettingsManager({
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="font-semibold tracking-tight text-brand-950">Telegram bot</p>
+                <p className="font-semibold tracking-tight text-brand-950">{t("mscSettingsTelegramBot")}</p>
                 <Badge tone={telegramLinked ? "green" : "amber"}>
-                  {telegramLinked ? "Bog'langan" : "Bog'lanmagan"}
+                  {telegramLinked ? t("mscSettingsLinked") : t("mscSettingsNotLinked")}
                 </Badge>
               </div>
               <p className="mt-1 text-xs leading-relaxed text-slate-500">
                 {telegramLinked
-                  ? "Bot eslatmalari quyidagi email orqali bog'langan."
-                  : "Botga ulanish uchun saytda bir martalik kod oling va uni botga yuboring."}
+                  ? t("mscSettingsTelegramLinkedDesc")
+                  : t("mscSettingsTelegramUnlinkedDesc")}
               </p>
               <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1 text-sm font-medium text-slate-700 ring-1 ring-inset ring-slate-200/70">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-slate-600">
@@ -488,7 +492,7 @@ export default function SettingsManager({
               {!telegramLinked ? (
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <Button type="button" size="sm" disabled={codeBusy} onClick={() => void requestTelegramCode()}>
-                    {codeBusy ? "Kod olinmoqda..." : "Tasdiqlash kodi olish"}
+                    {codeBusy ? t("mscSettingsGetCodeBusy") : t("mscSettingsGetCode")}
                   </Button>
                   {code ? (
                     <span className="inline-flex items-center rounded-lg bg-brand-50 px-3 py-1 text-base font-semibold tracking-[0.3em] text-brand-800 ring-1 ring-inset ring-brand-100">
@@ -499,8 +503,8 @@ export default function SettingsManager({
               ) : null}
               {!telegramLinked && code ? (
                 <p className="mt-2 text-xs leading-relaxed text-slate-500">
-                  Telegram botga /start yuborib, shu kodni yuboring.
-                  {codeUntil ? ` Kod ${codeUntil} gacha amal qiladi.` : ""}
+                  {t("mscSettingsCodeHint")}
+                  {codeUntil ? ` ${t("mscSettingsCodeExpiry", { time: codeUntil })}` : ""}
                 </p>
               ) : null}
             </div>

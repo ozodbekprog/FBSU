@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input, Label, Textarea } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 const ALLOWED_EXTENSIONS = ["png", "jpg", "jpeg", "pdf", "zip", "docx", "pptx", "txt"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -18,15 +19,6 @@ function extensionOf(name: string) {
   return name.split(".").pop()?.toLowerCase() ?? "";
 }
 
-function uploadErrorMessage(status: number, message?: string) {
-  if (status === 401) return "Avval tizimga kiring";
-  if (status === 403) return "Sizda bu topshiriqqa fayl yuklash huquqi yo'q";
-  if (status === 404) return "Topshiriq topilmadi";
-  if (status === 413) return "Fayl juda katta (maks 10MB)";
-  if (status === 400) return message ?? `Ruxsat etilgan turlar: ${ALLOWED_EXTENSIONS.join(", ")}`;
-  return message ?? "Faylni yuklashda xatolik yuz berdi";
-}
-
 export function AssignmentsSubmit({
   assignmentId,
   overdue,
@@ -37,6 +29,7 @@ export function AssignmentsSubmit({
   existing: { text: string | null; fileUrl: string | null } | null;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState(existing?.text ?? "");
   const [fileUrl, setFileUrl] = useState(existing?.fileUrl ?? "");
@@ -47,13 +40,24 @@ export function AssignmentsSubmit({
   const [uploading, setUploading] = useState(false);
   const [done, setDone] = useState(false);
 
+  function uploadErrorMessage(status: number, message?: string) {
+    if (status === 401) return t("crsAuthRequired");
+    if (status === 403) return t("crsNoUploadPermission");
+    if (status === 404) return t("crsAssignmentNotFound");
+    if (status === 413) return t("crsFileTooLarge");
+    if (status === 400) {
+      return message ?? t("crsAllowedTypes", { types: ALLOWED_EXTENSIONS.join(", ") });
+    }
+    return message ?? t("crsUploadError");
+  }
+
   function validateFile(candidate: File) {
     const extension = extensionOf(candidate.name);
     if (!ALLOWED_EXTENSIONS.includes(extension)) {
-      return `Ruxsat etilgan turlar: ${ALLOWED_EXTENSIONS.join(", ")}`;
+      return t("crsAllowedTypes", { types: ALLOWED_EXTENSIONS.join(", ") });
     }
     if (candidate.size > MAX_FILE_SIZE) {
-      return "Fayl juda katta (maks 10MB)";
+      return t("crsFileTooLarge");
     }
     return null;
   }
@@ -137,7 +141,7 @@ export function AssignmentsSubmit({
 
     setSaving(false);
     if (!response.ok || !json?.ok) {
-      setError(json?.error ?? "Topshirishda xatolik yuz berdi");
+      setError(json?.error ?? t("crsSubmitError"));
       return;
     }
 
@@ -168,27 +172,27 @@ export function AssignmentsSubmit({
             </svg>
           </span>
           <span>
-            <span className="block font-semibold">Muddat o&apos;tgan (LATE)</span>
+            <span className="block font-semibold">{t("crsOverdueLate")}</span>
             <span className="mt-0.5 block text-rose-600/90">
-              Yuborilgan ish kechikkan (LATE) holatida qayd etiladi va o&apos;qituvchi buni ko&apos;radi.
+              {t("crsLateNoticeSubmit")}
             </span>
           </span>
         </div>
       ) : null}
 
       <div>
-        <Label>Javob matni</Label>
+        <Label>{t("crsAnswerText")}</Label>
         <Textarea
           value={text}
           onChange={(event) => setText(event.target.value)}
           rows={5}
-          placeholder="Javobingizni yozing..."
+          placeholder={t("crsAnswerPlaceholder")}
           className="resize-y leading-relaxed"
         />
       </div>
 
       <div>
-        <Label>Fayl biriktirish (ixtiyoriy)</Label>
+        <Label>{t("crsAttachFile")}</Label>
         {file ? (
           <div className="flex items-center gap-3 rounded-2xl border border-brand-200 bg-brand-50/60 px-4 py-3">
             <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-white text-brand-700 ring-1 ring-brand-100">
@@ -208,13 +212,13 @@ export function AssignmentsSubmit({
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-slate-800">{file.name}</p>
-              <p className="text-xs text-slate-500">{formatSize(file.size)} · yuklashga tayyor</p>
+              <p className="text-xs text-slate-500">{t("crsReadyToUpload", { size: formatSize(file.size) })}</p>
             </div>
             <button
               type="button"
               onClick={clearFile}
               className="shrink-0 rounded-lg p-1.5 text-slate-600 transition-colors hover:bg-rose-50 hover:text-rose-600"
-              aria-label="Faylni olib tashlash"
+              aria-label={t("crsRemoveFile")}
             >
               <svg
                 width="15"
@@ -267,10 +271,10 @@ export function AssignmentsSubmit({
               </svg>
             </span>
             <span className="text-sm font-medium text-slate-700">
-              Faylni bu yerga tashlang yoki <span className="text-brand-700 underline decoration-brand-300 underline-offset-2">tanlang</span>
+              {t("crsDropFilePrefix")}<span className="text-brand-700 underline decoration-brand-300 underline-offset-2">{t("crsChooseFile")}</span>
             </span>
             <span className="text-xs text-slate-600">
-              Maks 10MB: {ALLOWED_EXTENSIONS.join(", ")}
+              {t("crsMaxFileInfo", { types: ALLOWED_EXTENSIONS.join(", ") })}
             </span>
             <input
               ref={fileInputRef}
@@ -284,12 +288,12 @@ export function AssignmentsSubmit({
       </div>
 
       <div>
-        <Label>Fayl havolasi (ixtiyoriy)</Label>
+        <Label>{t("crsFileUrlOptional")}</Label>
         <Input
           value={fileUrl}
           onChange={(event) => setFileUrl(event.target.value)}
           maxLength={500}
-          placeholder="https://... yoki /api/uploads/fayl.pdf"
+          placeholder={t("crsFileUrlPlaceholder")}
         />
       </div>
 
@@ -326,19 +330,19 @@ export function AssignmentsSubmit({
           >
             <path d="M20 6 9 17l-5-5" />
           </svg>
-          Topshiriq yuborildi
+          {t("crsAssignmentSent")}
         </p>
       ) : null}
 
       <div className="flex justify-end">
         <Button type="submit" disabled={saving} size="lg">
           {uploading
-            ? "Fayl yuklanmoqda..."
+            ? t("crsUploadingFile")
             : saving
-              ? "Yuborilmoqda..."
+              ? t("crsSending")
               : existing
-                ? "Qayta topshirish"
-                : "Topshirish"}
+                ? t("crsResubmit")
+                : t("crsSubmit")}
         </Button>
       </div>
     </form>

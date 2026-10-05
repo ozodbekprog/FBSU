@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button, ButtonLink, Card, CardBody, CardHeader, Input, Label, Textarea } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type CourseFormData = {
   id: string;
@@ -21,6 +22,7 @@ type ApiResult = { ok?: boolean; error?: string; data?: { slug?: string } } | nu
 
 export function CourseForm({ course }: { course?: CourseFormData }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [title, setTitle] = useState(course?.title ?? "");
   const [description, setDescription] = useState(course?.description ?? "");
   const [coverColor, setCoverColor] = useState(course?.coverColor ?? COLORS[0]);
@@ -39,14 +41,14 @@ export function CourseForm({ course }: { course?: CourseFormData }) {
       });
       const json = (await res.json().catch(() => null)) as ApiResult;
       if (!res.ok || !json?.ok) {
-        setError(json?.error ?? "Saqlashda xatolik yuz berdi");
+        setError(json?.error ?? t("crsSaveError"));
         return;
       }
       const slug = json.data?.slug ?? course?.slug;
       router.push(slug ? `/courses/${slug}` : "/courses");
       router.refresh();
     } catch {
-      setError("Tarmoq xatosi. Qayta urinib ko'ring.");
+      setError(t("crsNetworkError"));
     } finally {
       setBusy(false);
     }
@@ -55,8 +57,8 @@ export function CourseForm({ course }: { course?: CourseFormData }) {
   return (
     <Card className="max-w-3xl overflow-hidden">
       <CardHeader
-        title={course ? "Kurs ma'lumotlari" : "Yangi kurs yaratish"}
-        subtitle="Maydonlarni to'ldiring va saqlang"
+        title={course ? t("crsCourseInfo") : t("crsCreateNewCourse")}
+        subtitle={t("crsFillAndSave")}
       />
       <CardBody>
         <div
@@ -66,13 +68,13 @@ export function CourseForm({ course }: { course?: CourseFormData }) {
           <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_-20%,rgba(255,255,255,0.25),transparent_55%)]" />
           <span className="pointer-events-none absolute -right-8 -top-12 size-32 rounded-full bg-white/10 blur-2xl" />
           <p className="relative text-[10px] font-semibold uppercase tracking-[0.18em] text-white/65">
-            Ko&apos;rinish
+            {t("crsAppearance")}
           </p>
           <p className="relative mt-1 font-semibold tracking-tight">
-            {title.trim() ? title : "Kurs nomi"}
+            {title.trim() ? title : t("crsCourseName")}
           </p>
           <p className="relative mt-1 text-xs text-white/70">
-            {isPublished ? "E'lon qilingan" : "Qoralama"}
+            {isPublished ? t("crsPublished") : t("crsDraft")}
           </p>
         </div>
         <form onSubmit={onSubmit} className="space-y-7">
@@ -93,25 +95,25 @@ export function CourseForm({ course }: { course?: CourseFormData }) {
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                 </svg>
               </span>
-              <h3 className="text-sm font-semibold text-brand-950">Asosiy ma&apos;lumotlar</h3>
+              <h3 className="text-sm font-semibold text-brand-950">{t("crsBasicInfo")}</h3>
             </div>
             <div>
-              <Label>Kurs nomi</Label>
+              <Label>{t("crsCourseName")}</Label>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Masalan: Programming Fundamentals"
+                placeholder={t("crsCourseNamePlaceholder")}
                 required
                 minLength={2}
                 maxLength={200}
               />
             </div>
             <div>
-              <Label>Tavsif</Label>
+              <Label>{t("crsDescription")}</Label>
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Kurs haqida qisqacha"
+                placeholder={t("crsDescriptionPlaceholder")}
                 rows={4}
               />
             </div>
@@ -135,10 +137,10 @@ export function CourseForm({ course }: { course?: CourseFormData }) {
                   <path d="M12 22a7 7 0 0 0 7-7c0-4-7-13-7-13S5 11 5 15a7 7 0 0 0 7 7z" />
                 </svg>
               </span>
-              <h3 className="text-sm font-semibold text-brand-950">Ko&apos;rinish</h3>
+              <h3 className="text-sm font-semibold text-brand-950">{t("crsAppearance")}</h3>
             </div>
             <div>
-              <Label>Kurs rangi</Label>
+              <Label>{t("crsCourseColor")}</Label>
               <div className="flex flex-wrap items-center gap-2.5">
                 {COLORS.map((color) => (
                   <button
@@ -200,7 +202,7 @@ export function CourseForm({ course }: { course?: CourseFormData }) {
                   <circle cx="12" cy="12" r="3" />
                 </svg>
               </span>
-              <h3 className="text-sm font-semibold text-brand-950">Holat</h3>
+              <h3 className="text-sm font-semibold text-brand-950">{t("crsStatus")}</h3>
             </div>
             <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50/60 p-4 transition-all duration-150 hover:border-brand-200 hover:bg-white">
               <span className="flex items-start gap-3">
@@ -222,10 +224,10 @@ export function CourseForm({ course }: { course?: CourseFormData }) {
                 </span>
                 <span>
                   <span className="block text-sm font-medium text-slate-800">
-                    Kursni e&apos;lon qilish
+                    {t("crsPublishCourse")}
                   </span>
                   <span className="mt-0.5 block text-xs text-slate-500">
-                    E&apos;lon qilinganda talabalar kursni ko&apos;radi.
+                    {t("crsPublishHint")}
                   </span>
                 </span>
               </span>
@@ -248,14 +250,14 @@ export function CourseForm({ course }: { course?: CourseFormData }) {
 
           <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-5">
             <Button type="submit" size="lg" disabled={busy}>
-              {busy ? "Saqlanmoqda..." : course ? "Saqlash" : "Kurs yaratish"}
+              {busy ? t("crsSaving") : course ? t("crsSave") : t("crsCreateCourse")}
             </Button>
             <ButtonLink
               href={course ? `/courses/${course.slug}` : "/courses"}
               variant="secondary"
               size="lg"
             >
-              Bekor qilish
+              {t("crsCancel")}
             </ButtonLink>
           </div>
         </form>

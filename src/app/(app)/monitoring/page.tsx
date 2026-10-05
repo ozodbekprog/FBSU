@@ -15,6 +15,7 @@ import {
 } from "@/components/ui";
 import { atRiskStudents, attendancePercent } from "@/modules/monitoring/attendance-kpi";
 import { canViewMonitoring } from "@/modules/roles/access";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 function toneFor(percent: number): "green" | "amber" | "rose" {
   if (percent >= 80) return "green";
@@ -29,6 +30,9 @@ export default async function MonitoringPage({
 }) {
   const user = await requireUser();
   if (!canViewMonitoring(user.role)) redirect("/dashboard");
+
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
   const params = await searchParams;
   const rawFacultyId =
@@ -141,9 +145,9 @@ export default async function MonitoringPage({
   return (
     <>
       <PageHeader
-        eyebrow="Boshqaruv"
-        title="Monitoring"
-        subtitle="Rahbariyat uchun ko'rsatkichlar — fakultet va guruh kesimida"
+        eyebrow={dictionary.admEyebrowManage}
+        title={dictionary.admMonitoringTitle}
+        subtitle={dictionary.admMonitoringSubtitle}
       />
 
       <form method="get" className="mb-5">
@@ -151,9 +155,9 @@ export default async function MonitoringPage({
           <CardBody className="flex flex-wrap items-end gap-3">
             {!isDean && !isDeptHead ? (
               <div className="w-full sm:w-64">
-                <label className="mb-1.5 block text-xs font-medium text-slate-600">Fakultet</label>
+                <label className="mb-1.5 block text-xs font-medium text-slate-600">{dictionary.admFaculty}</label>
                 <Select name="facultyId" defaultValue={facultyId ?? ""}>
-                  <option value="">Barcha fakultetlar</option>
+                  <option value="">{dictionary.admAllFaculties}</option>
                   {faculties.map((faculty) => (
                     <option key={faculty.id} value={faculty.id}>
                       {faculty.name}
@@ -163,9 +167,9 @@ export default async function MonitoringPage({
               </div>
             ) : null}
             <div className="w-full sm:w-56">
-              <label className="mb-1.5 block text-xs font-medium text-slate-600">Guruh</label>
+              <label className="mb-1.5 block text-xs font-medium text-slate-600">{dictionary.admGroupLabel}</label>
               <Select name="groupId" defaultValue={groupId ?? ""}>
-                <option value="">Barcha guruhlar</option>
+                <option value="">{dictionary.admAllGroups}</option>
                 {groupOptions.map((group) => (
                   <option key={group.id} value={group.id}>
                     {group.name}
@@ -174,21 +178,25 @@ export default async function MonitoringPage({
               </Select>
             </div>
             <Button type="submit" variant="secondary">
-              Ko&apos;rish
+              {dictionary.admView}
             </Button>
             {isDean ? (
               <p className="text-xs font-medium text-slate-500">
-                Doira: {user.faculty?.name ?? "Fakultet biriktirilmagan"}
+                {translate(locale, "admScope", {
+                  value: user.faculty?.name ?? dictionary.admNoFacultyAssigned,
+                })}
               </p>
             ) : null}
             {isDeptHead ? (
               <p className="text-xs font-medium text-slate-500">
-                Doira: {user.department?.name ?? "Kafedra biriktirilmagan"}
+                {translate(locale, "admScope", {
+                  value: user.department?.name ?? dictionary.admNoDepartmentAssigned,
+                })}
               </p>
             ) : null}
             {scopeBlocked ? (
               <p className="text-xs font-medium text-rose-600">
-                {isDean ? "Sizga fakultet biriktirilmagan" : "Sizga kafedra biriktirilmagan"}
+                {isDean ? dictionary.admNoFacultyAssignedToYou : dictionary.admNoDepartmentAssignedToYou}
               </p>
             ) : null}
             {facultyId || groupId ? (
@@ -196,7 +204,7 @@ export default async function MonitoringPage({
                 href="/monitoring"
                 className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-800"
               >
-                Tozalash
+                {dictionary.admClear}
               </a>
             ) : null}
           </CardBody>
@@ -204,43 +212,46 @@ export default async function MonitoringPage({
       </form>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <Stat label="Talabalar" value={students.length} hint={scopeGroups.length > 0 ? `${scopeGroups.length} ta guruh` : "Guruh tanlanmagan"} />
-        <Stat label="O'qituvchilar" value={teachersCount} hint="Faol o'qituvchilar" />
-        <Stat label="Kurslar" value={coursesCount} hint="Jami kurslar" />
+        <Stat label={dictionary.admStudents} value={students.length} hint={scopeGroups.length > 0 ? translate(locale, "admMonitoringStatStudentsHint", { count: scopeGroups.length }) : dictionary.admNoGroupSelected} />
+        <Stat label={dictionary.admColTeachers} value={teachersCount} hint={dictionary.admMonitoringStatTeachersHint} />
+        <Stat label={dictionary.admCourses} value={coursesCount} hint={dictionary.admMonitoringStatCoursesHint} />
         <Stat
-          label="Umumiy davomat"
+          label={dictionary.admMonitoringStatAttendance}
           value={`${overallPercent}%`}
-          hint="PRESENT + LATE asosida"
+          hint={dictionary.admMonitoringStatAttendanceHint}
         />
         <Stat
-          label="Baholangan topshiriqlar"
+          label={dictionary.admMonitoringStatGraded}
           value={`${gradedPercent}%`}
-          hint={`${submissionsGraded}/${submissionsTotal} ta javob baholangan`}
+          hint={translate(locale, "admMonitoringStatGradedHint", {
+            graded: submissionsGraded,
+            total: submissionsTotal,
+          })}
         />
         <Stat
-          label="Tasdiq kutayotgan jadval"
+          label={dictionary.admMonitoringStatPendingSchedule}
           value={pendingSchedule}
-          hint={pendingSchedule > 0 ? "Tasdiqlashlar bo'limini ko'ring" : "Navbat toza"}
+          hint={pendingSchedule > 0 ? dictionary.admMonitoringStatPendingScheduleHint : dictionary.admMonitoringQueueClear}
         />
       </div>
 
       <div className="mt-6 grid gap-4 xl:grid-cols-2">
         <Card>
           <CardHeader
-            title="Guruhlar kesimida davomat"
-            subtitle="Eng past ko'rsatkichdan boshlab"
+            title={dictionary.admMonitoringGroupsTitle}
+            subtitle={dictionary.admMonitoringGroupsSubtitle}
           />
           <CardBody>
             {groupStats.length === 0 ? (
-              <EmptyState title="Ma'lumot yo'q" description="Tanlangan filtr bo'yicha guruh topilmadi." />
+              <EmptyState title={dictionary.admNoDataTitle} description={dictionary.admNoGroupsFoundDesc} />
             ) : (
               <Table>
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                    <th className="rounded-l-xl py-2.5 pr-3 pl-3 text-left font-medium">Guruh</th>
-                    <th className="px-3 py-2.5 text-left font-medium">Talabalar</th>
-                    <th className="px-3 py-2.5 text-left font-medium">Yozuvlar</th>
-                    <th className="rounded-r-xl px-3 py-2.5 text-left font-medium">Davomat</th>
+                    <th className="rounded-l-xl py-2.5 pr-3 pl-3 text-left font-medium">{dictionary.admColGroup}</th>
+                    <th className="px-3 py-2.5 text-left font-medium">{dictionary.admStudents}</th>
+                    <th className="px-3 py-2.5 text-left font-medium">{dictionary.admColRecords}</th>
+                    <th className="rounded-r-xl px-3 py-2.5 text-left font-medium">{dictionary.admColAttendance}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -262,14 +273,14 @@ export default async function MonitoringPage({
 
         <Card>
           <CardHeader
-            title="Xavf ostidagi talabalar"
-            subtitle="Davomat 80% dan past (imtihonga ruxsat xavfi)"
+            title={dictionary.admMonitoringRiskTitle}
+            subtitle={dictionary.admMonitoringRiskSubtitle}
           />
           <CardBody>
             {riskTop.length === 0 ? (
               <EmptyState
-                title="Xavf yo'q"
-                description="Tanlangan doira bo'yicha 80% dan past davomatli talaba topilmadi."
+                title={dictionary.admMonitoringNoRiskTitle}
+                description={dictionary.admMonitoringNoRiskDesc}
               />
             ) : (
               <div className="space-y-2">
@@ -285,7 +296,8 @@ export default async function MonitoringPage({
                           {person?.name ?? "—"}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {person?.group?.name ?? "—"} · {row.attended}/{row.total} dars
+                          {person?.group?.name ?? "—"} ·{" "}
+                          {translate(locale, "admMonitoringLessons", { attended: row.attended, total: row.total })}
                         </p>
                       </div>
                       <Badge tone={toneFor(row.percent)}>{row.percent}%</Badge>

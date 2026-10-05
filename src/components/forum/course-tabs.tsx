@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { getDictionary, getLocale } from "@/i18n";
 
 export type CourseTabKey =
   | "materials"
@@ -9,7 +10,7 @@ export type CourseTabKey =
   | "forum"
   | "students";
 
-export function CourseTabs({
+export async function CourseTabs({
   slug,
   active,
   canManage,
@@ -18,14 +19,26 @@ export function CourseTabs({
   active: CourseTabKey;
   canManage: boolean;
 }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const tabs: Array<{ id: CourseTabKey; href: string; label: string }> = [
-    { id: "materials", href: `/courses/${slug}`, label: "Materiallar" },
-    { id: "assignments", href: `/courses/${slug}/assignments`, label: "Topshiriqlar" },
-    { id: "attendance", href: `/courses/${slug}/attendance`, label: "Davomat" },
-    { id: "announcements", href: `/courses/${slug}/announcements`, label: "E'lonlar" },
-    { id: "forum", href: `/courses/${slug}/forum`, label: "Forum" },
+    { id: "materials", href: `/courses/${slug}`, label: dictionary.msgTabMaterials },
+    { id: "assignments", href: `/courses/${slug}/assignments`, label: dictionary.msgTabAssignments },
+    { id: "attendance", href: `/courses/${slug}/attendance`, label: dictionary.msgTabAttendance },
+    {
+      id: "announcements",
+      href: `/courses/${slug}/announcements`,
+      label: dictionary.msgTabAnnouncements,
+    },
+    { id: "forum", href: `/courses/${slug}/forum`, label: dictionary.msgTabForum },
     ...(canManage
-      ? [{ id: "students" as const, href: `/courses/${slug}?tab=students`, label: "Talabalar" }]
+      ? [
+          {
+            id: "students" as const,
+            href: `/courses/${slug}?tab=students`,
+            label: dictionary.msgTabStudents,
+          },
+        ]
       : []),
   ];
 

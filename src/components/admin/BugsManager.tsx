@@ -5,6 +5,8 @@ import { Badge, Button, Card, CardBody, CardHeader, EmptyState, Textarea } from 
 import { classifyBug } from "@/components/bugs/bug-utils";
 import { apiFetch } from "@/lib/api";
 import { fmtDateTime } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
+import type { Dictionary } from "@/i18n";
 
 type BugStatus = "NEW" | "IN_REVIEW" | "FIXED" | "REJECTED";
 
@@ -20,26 +22,27 @@ export type BugItem = {
   user: { name: string; role: string; email: string } | null;
 };
 
-const STATUS_META: Record<BugStatus, { label: string; tone: "amber" | "blue" | "green" | "slate" }> = {
-  NEW: { label: "Yangi", tone: "amber" },
-  IN_REVIEW: { label: "Ko'rib chiqilmoqda", tone: "blue" },
-  FIXED: { label: "Tuzatildi", tone: "green" },
-  REJECTED: { label: "Rad etildi", tone: "slate" },
+const STATUS_META: Record<BugStatus, { label: keyof Dictionary; tone: "amber" | "blue" | "green" | "slate" }> = {
+  NEW: { label: "admStatusNew", tone: "amber" },
+  IN_REVIEW: { label: "admStatusInReview", tone: "blue" },
+  FIXED: { label: "admStatusFixed", tone: "green" },
+  REJECTED: { label: "admStatusRejected", tone: "slate" },
 };
 
-const ROLE_LABELS: Record<string, string> = {
-  ADMIN: "Administrator",
-  TEACHER: "O'qituvchi",
-  STUDENT: "Talaba",
+const ROLE_LABELS: Record<string, keyof Dictionary> = {
+  ADMIN: "admRoleAdmin",
+  TEACHER: "admRoleTeacher",
+  STUDENT: "admRoleStudent",
 };
 
-const SEVERITY_LABELS: Record<string, string> = {
-  low: "Past",
-  medium: "O'rta",
-  high: "Yuqori",
+const SEVERITY_LABELS: Record<string, keyof Dictionary> = {
+  low: "admSeverityLow",
+  medium: "admSeverityMedium",
+  high: "admSeverityHigh",
 };
 
 export function BugsManager({ reports }: { reports: BugItem[] }) {
+  const { t } = useI18n();
   const [items, setItems] = useState(reports);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -60,7 +63,7 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
         | { ok?: boolean; error?: string; data?: { report: { status: BugStatus; adminNote: string | null } } }
         | null;
       if (!res.ok || !json?.ok || !json.data) {
-        setError(json?.error ?? "Saqlashda xatolik yuz berdi");
+        setError(json?.error ?? t("admBugSaveError"));
         return;
       }
       setItems((prev) =>
@@ -71,7 +74,7 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
         ),
       );
     } catch {
-      setError("Tarmoqda xatolik");
+      setError(t("admNetworkError"));
     } finally {
       setBusyId(null);
     }
@@ -90,13 +93,13 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
         | { ok?: boolean; error?: string; data?: { report: { meta?: Record<string, unknown> } } }
         | null;
       if (!res.ok || !json?.ok || !json.data) {
-        setError(json?.error ?? "Amalni bajarib bo'lmadi");
+        setError(json?.error ?? t("admErrorGeneric"));
         return;
       }
       const meta = json.data.report.meta ?? {};
       setItems((prev) => prev.map((item) => (item.id === id ? { ...item, meta } : item)));
     } catch {
-      setError("Tarmoqda xatolik");
+      setError(t("admNetworkError"));
     } finally {
       setBusyId(null);
     }
@@ -104,8 +107,8 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
 
   if (items.length === 0) {    return (
       <EmptyState
-        title="Xatolik xabarlari yo'q"
-        description="Foydalanuvchilar AI yordamchi orqali xatolik yuborganda shu yerda paydo bo'ladi."
+        title={t("admBugEmptyTitle")}
+        description={t("admBugEmptyDesc")}
       />
     );
   }
@@ -139,32 +142,32 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
           <Card key={item.id}>
             <CardHeader
               title={item.message.length > 70 ? `${item.message.slice(0, 70)}…` : item.message}
-              subtitle={`${item.user?.name ?? "Noma'lum"} · ${ROLE_LABELS[item.user?.role ?? ""] ?? "—"} · ${fmtDateTime(item.createdAt)}`}
-              action={<Badge tone={statusMeta.tone}>{statusMeta.label}</Badge>}
+              subtitle={`${item.user?.name ?? t("admUnknown")} · ${ROLE_LABELS[item.user?.role ?? ""] ? t(ROLE_LABELS[item.user?.role ?? ""]) : "—"} · ${fmtDateTime(item.createdAt)}`}
+              action={<Badge tone={statusMeta.tone}>{t(statusMeta.label)}</Badge>}
             />
             <CardBody className="space-y-3">
               <p className="rounded-xl bg-brand-50/70 px-3 py-2 text-sm text-brand-900">
-                🤖 AI tahlili: <span className="font-semibold">{suggestion.title}</span> — {suggestion.hint}
+                {t("admBugAiAnalysis")} <span className="font-semibold">{suggestion.title}</span> — {suggestion.hint}
               </p>
 
               {ai ? (
                 <div className="space-y-1 rounded-xl bg-violet-50/70 px-3 py-2 text-sm text-violet-950">
-                  <p className="font-semibold">🧠 DeepSeek tahlili</p>
+                  <p className="font-semibold">{t("admBugDeepSeek")}</p>
                   {ai.summary ? <p>{ai.summary}</p> : null}
                   {ai.cause ? (
                     <p>
-                      <span className="font-medium">Sabab:</span> {ai.cause}
+                      <span className="font-medium">{t("admBugCause")}</span> {ai.cause}
                     </p>
                   ) : null}
                   {ai.fixHint ? (
                     <p>
-                      <span className="font-medium">Yechim:</span> {ai.fixHint}
+                      <span className="font-medium">{t("admBugSolution")}</span> {ai.fixHint}
                     </p>
                   ) : null}
                   {ai.severity ? (
                     <p>
-                      <span className="font-medium">Jiddiylik:</span>{" "}
-                      {SEVERITY_LABELS[ai.severity] ?? ai.severity}
+                      {t("admBugSeverity")}{" "}
+                      {SEVERITY_LABELS[ai.severity] ? t(SEVERITY_LABELS[ai.severity]) : ai.severity}
                     </p>
                   ) : null}
                 </div>
@@ -174,26 +177,26 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
                 <div className="space-y-1 rounded-xl bg-emerald-50/70 px-3 py-2 text-sm text-emerald-950">
                   <p className="font-semibold">
                     {fix.status === "queued"
-                      ? "⏳ AI tuzatish navbatda"
+                      ? t("admBugFixQueued")
                       : fix.status === "working"
-                        ? "🤖 AI tuzatmoqda…"
+                        ? t("admBugFixWorking")
                         : fix.status === "ready"
-                          ? "🛠️ Tuzatish tayyor — tasdiqlashingiz mumkin"
+                          ? t("admBugFixReady")
                           : fix.status === "deploying"
-                            ? "🚀 Deploy qilinmoqda…"
+                            ? t("admBugFixDeploying")
                             : fix.status === "deployed"
-                              ? "✅ Deploy qilindi"
+                              ? t("admBugFixDeployed")
                               : fix.status === "failed"
-                                ? "⚠️ Tuzatishda xatolik"
-                                : "Tuzatish bekor qilingan"}
+                                ? t("admBugFixFailed")
+                                : t("admBugFixCancelled")}
                   </p>
                   {fix.summary ? <p>{fix.summary}</p> : null}
                   {typeof fix.files === "number" ? (
                     <p>
-                      <span className="font-medium">O&apos;zgargan fayllar:</span> {fix.files} ta
+                      <span className="font-medium">{t("admBugChangedFiles")}</span> {t("admCount", { count: fix.files })}
                     </p>
                   ) : null}
-                  {fix.log ? <p className="text-xs text-emerald-900/70">Log: {fix.log}</p> : null}
+                  {fix.log ? <p className="text-xs text-emerald-900/70">{t("admBugLog", { log: fix.log })}</p> : null}
                 </div>
               ) : null}
 
@@ -201,7 +204,7 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
                 <a href={attachment} target="_blank" rel="noreferrer" className="block w-fit">
                   <img
                     src={attachment}
-                    alt="Foydalanuvchi skrinshoti"
+                    alt={t("admBugScreenshotAlt")}
                     className="max-h-52 rounded-xl border border-slate-200 shadow-sm"
                   />
                 </a>
@@ -209,7 +212,7 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
 
               <div className="grid gap-1.5 text-xs text-slate-500 sm:grid-cols-2">
                 <p>
-                  <span className="font-medium text-slate-600">Sahifa:</span> {item.url ?? "—"}
+                  <span className="font-medium text-slate-600">{t("admBugPage")}</span> {item.url ?? "—"}
                 </p>
                 <p>
                   <span className="font-medium text-slate-600">Email:</span> {item.user?.email ?? "—"}
@@ -218,14 +221,14 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
 
               {note ? (
                 <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">
-                  <span className="font-medium text-slate-700">Foydalanuvchi izohi:</span> {note}
+                  <span className="font-medium text-slate-700">{t("admBugUserNote")}</span> {note}
                 </p>
               ) : null}
 
               {item.stack ? (
                 <details className="rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-2">
                   <summary className="cursor-pointer text-xs font-medium text-slate-500">
-                    Texnik tafsilotlar (faqat admin uchun)
+                    {t("admBugTechDetails")}
                   </summary>
                   <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-all text-[11px] leading-relaxed text-slate-600">
                     {item.stack}
@@ -238,7 +241,7 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
                 onChange={(event) =>
                   setDrafts((prev) => ({ ...prev, [item.id]: event.target.value }))
                 }
-                placeholder="Admin izohi (faqat adminlarga ko'rinadi)"
+                placeholder={t("admBugAdminNotePlaceholder")}
                 rows={2}
               />
 
@@ -250,18 +253,14 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
                   onClick={() => {
                     void update(item.id, { status: "IN_REVIEW" });
                   }}
-                >
-                  Ko&apos;rib chiqish
-                </Button>
+                >{t("admBugReview")}</Button>
                 <Button
                   size="sm"
                   disabled={busy}
                   onClick={() => {
                     void update(item.id, { status: "FIXED" });
                   }}
-                >
-                  Tuzatildi
-                </Button>
+                >{t("admBugMarkFixed")}</Button>
                 <Button
                   size="sm"
                   variant="secondary"
@@ -269,9 +268,7 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
                   onClick={() => {
                     void update(item.id, { status: "REJECTED" });
                   }}
-                >
-                  Rad etish
-                </Button>
+                >{t("admBugReject")}</Button>
                 {fix && ["queued", "working", "deploying"].includes(fix.status ?? "") ? null : fix?.status ===
                   "ready" ? (
                   <Button
@@ -281,7 +278,7 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
                       void fixAction(item.id, "deploy");
                     }}
                   >
-                    🚀 Tasdiqlash va deploy
+                    {t("admBugApproveDeploy")}
                   </Button>
                 ) : (
                   <Button
@@ -292,7 +289,7 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
                       void fixAction(item.id, "request");
                     }}
                   >
-                    🤖 AI tuzatsin
+                    {t("admBugAiFix")}
                   </Button>
                 )}
                 <Button
@@ -304,9 +301,7 @@ export function BugsManager({ reports }: { reports: BugItem[] }) {
                       adminNote: (drafts[item.id] ?? item.adminNote ?? "").trim() || null,
                     });
                   }}
-                >
-                  Izohni saqlash
-                </Button>
+                >{t("admBugSaveNote")}</Button>
               </div>
             </CardBody>
           </Card>

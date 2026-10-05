@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 import type { Role } from "@prisma/client";
 import { Card, CardBody, CardHeader } from "@/components/ui";
 import { fmtDate } from "@/lib/utils";
-import { ROLE_META } from "@/components/profile/ProfileHero";
+import { roleLabel } from "@/components/profile/ProfileHero";
+import { getDictionary, getLocale } from "@/i18n";
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -21,7 +22,7 @@ function Icon({ children }: { children: ReactNode }) {
   );
 }
 
-export function ProfileDetails({
+export async function ProfileDetails({
   email,
   role,
   groupName,
@@ -32,9 +33,11 @@ export function ProfileDetails({
   groupName: string | null;
   createdAt: Date;
 }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const rows = [
     {
-      label: "Email",
+      label: dictionary.mscProfileFieldEmail,
       value: email,
       icon: (
         <Icon>
@@ -44,8 +47,8 @@ export function ProfileDetails({
       ),
     },
     {
-      label: "Rol",
-      value: ROLE_META[role].label,
+      label: dictionary.mscProfileFieldRole,
+      value: roleLabel(dictionary, role),
       icon: (
         <Icon>
           <path d="M12 3 5 6v6c0 4.4 3 8.4 7 9 4-0.6 7-4.6 7-9V6z" />
@@ -53,7 +56,7 @@ export function ProfileDetails({
       ),
     },
     {
-      label: "Guruh",
+      label: dictionary.mscProfileFieldGroup,
       value: groupName ?? "—",
       icon: (
         <Icon>
@@ -64,7 +67,7 @@ export function ProfileDetails({
       ),
     },
     {
-      label: "Ro'yxatdan o'tgan",
+      label: dictionary.mscProfileFieldRegistered,
       value: fmtDate(createdAt),
       icon: (
         <Icon>
@@ -77,7 +80,10 @@ export function ProfileDetails({
 
   return (
     <Card className="mt-6 overflow-hidden">
-      <CardHeader title="Hisob ma'lumotlari" subtitle="Ochiq profil ma'lumotlari" />
+      <CardHeader
+        title={dictionary.mscProfileDetailsTitle}
+        subtitle={dictionary.mscProfileDetailsSubtitle}
+      />
       <CardBody className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {rows.map((row) => (
           <div

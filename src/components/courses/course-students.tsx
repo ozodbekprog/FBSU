@@ -16,6 +16,7 @@ import {
 } from "@/components/ui";
 import { fmtDate } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type CourseStudent = {
   id: string;
@@ -63,6 +64,7 @@ export function CourseStudents({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useI18n();
   const pathnameCourse = pathname.split("/").filter(Boolean)[1] ?? null;
   const resolvedCourseId = courseId ?? enrollments[0]?.courseId ?? pathnameCourse;
 
@@ -82,12 +84,12 @@ export function CourseStudents({
       const res = await apiFetch(`/api/courses/${resolvedCourseId}/enrollments`);
       const json = (await res.json().catch(() => null)) as StudentsResponse;
       if (!res.ok || !json?.ok) {
-        setError(json?.error ?? "Talabalar ro'yxatini yuklab bo'lmadi");
+        setError(json?.error ?? t("crsStudentsLoadError"));
         return;
       }
       setStudents(json.data?.students ?? []);
     } catch {
-      setError("Tarmoq xatosi. Qayta urinib ko'ring.");
+      setError(t("crsNetworkError"));
     } finally {
       setLoading(false);
     }
@@ -110,7 +112,7 @@ export function CourseStudents({
       });
       const json = (await res.json().catch(() => null)) as EnrollmentResponse;
       if (!res.ok || !json?.ok) {
-        setError(json?.error ?? "Talabani qo'shib bo'lmadi");
+        setError(json?.error ?? t("crsAddStudentError"));
         return;
       }
       setStudents((prev) =>
@@ -120,7 +122,7 @@ export function CourseStudents({
       setQuery("");
       router.refresh();
     } catch {
-      setError("Tarmoq xatosi. Qayta urinib ko'ring.");
+      setError(t("crsNetworkError"));
     } finally {
       setBusy(false);
     }
@@ -128,14 +130,14 @@ export function CourseStudents({
 
   async function removeStudent(enrollmentId: string, userId: string, name: string) {
     if (busy) return;
-    if (!window.confirm(`${name} kursdan chiqarilsinmi?`)) return;
+    if (!window.confirm(t("crsRemoveStudentConfirm", { name }))) return;
     setBusy(true);
     setError(null);
     try {
       const res = await apiFetch(`/api/enrollments/${enrollmentId}`, { method: "DELETE" });
       const json = (await res.json().catch(() => null)) as EnrollmentResponse;
       if (!res.ok || !json?.ok) {
-        setError(json?.error ?? "Talabani chiqarib bo'lmadi");
+        setError(json?.error ?? t("crsRemoveStudentError"));
         return;
       }
       setStudents((prev) =>
@@ -143,7 +145,7 @@ export function CourseStudents({
       );
       router.refresh();
     } catch {
-      setError("Tarmoq xatosi. Qayta urinib ko'ring.");
+      setError(t("crsNetworkError"));
     } finally {
       setBusy(false);
     }
@@ -189,14 +191,14 @@ export function CourseStudents({
                       <path d="M22 11h-6" />
                     </svg>
                   </span>
-                  {"Talaba qo'shish"}
+                  {t("crsAddStudent")}
                 </span>
               }
-              subtitle="Talabani ism yoki email bo'yicha toping"
+              subtitle={t("crsAddStudentHint")}
             />
             <CardBody className="flex flex-wrap items-end gap-3">
               <div className="min-w-52 flex-1">
-                <Label>Qidiruv</Label>
+                <Label>{t("crsSearchLabel")}</Label>
                 <div className="relative">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-600">
                     <svg
@@ -216,31 +218,30 @@ export function CourseStudents({
                   <Input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Ism yoki email"
+                    placeholder={t("crsNameOrEmail")}
                     className="pl-9"
                   />
                 </div>
               </div>
               <div className="min-w-52 flex-1">
-                <Label>Talaba</Label>
+                <Label>{t("crsStudent")}</Label>
                 <Select
                   value={selectedId}
                   onChange={(e) => setSelectedId(e.target.value)}
                   disabled={loading}
                 >
-                  <option value="">{loading ? "Yuklanmoqda..." : "Talabani tanlang"}</option>
+                  <option value="">{loading ? t("crsLoading") : t("crsSelectStudent")}</option>
                   {options.map((student) => (
                     <option key={student.id} value={student.id} disabled={student.isEnrolled}>
                       {student.name} — {student.email}
                       {student.group ? ` (${student.group.name})` : ""}
-                      {student.isEnrolled ? " — yozilgan" : ""}
+                      {student.isEnrolled ? t("crsEnrolledSuffix") : ""}
                     </option>
                   ))}
                 </Select>
                 {noMatches ? (
                   <p className="mt-1.5 text-xs text-amber-600">
-                    Mos talaba topilmadi — imlo farq qilishi mumkin (Ahmad/Axmad). Boshqacha
-                    yozib ko&apos;ring.
+                    {t("crsNoStudentMatch")}
                   </p>
                 ) : null}
               </div>
@@ -258,10 +259,10 @@ export function CourseStudents({
                   <path d="M12 5v14" />
                   <path d="M5 12h14" />
                 </svg>
-                {"Qo'shish"}
+                {t("crsAdd")}
               </Button>
               <Button variant="secondary" onClick={() => setAdding(false)}>
-                Bekor
+                {t("crsCancelShort")}
               </Button>
             </CardBody>
           </Card>
@@ -283,17 +284,17 @@ export function CourseStudents({
                 <path d="M19 8v6" />
                 <path d="M22 11h-6" />
               </svg>
-              {"Talaba qo'shish"}
+              {t("crsAddStudent")}
             </Button>
           </div>
         )
       ) : null}
 
       {enrollments.length === 0 ? (
-        <EmptyState title="Talabalar yo'q" description="Bu kursga hali talaba yozilmagan." />
+        <EmptyState title={t("crsNoStudents")} description={t("crsNoStudentsDesc")} />
       ) : (
         <Card className="overflow-hidden">
-          <CardHeader title="Talabalar" subtitle={`${enrollments.length} ta yozilgan`} />
+          <CardHeader title={t("crsStudents")} subtitle={t("crsEnrolledCount", { count: enrollments.length })} />
           <Table>
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/80 text-[11px] uppercase tracking-[0.08em] text-slate-600">
@@ -313,7 +314,7 @@ export function CourseStudents({
                       <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                       <circle cx="12" cy="7" r="4" />
                     </svg>
-                    Talaba
+                    {t("crsStudent")}
                   </span>
                 </th>
                 <th className="px-5 py-3.5 font-semibold">
@@ -331,7 +332,7 @@ export function CourseStudents({
                       <rect x="2" y="4" width="20" height="16" rx="2" />
                       <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                     </svg>
-                    Email
+                    {t("crsEmail")}
                   </span>
                 </th>
                 <th className="px-5 py-3.5 font-semibold">
@@ -351,7 +352,7 @@ export function CourseStudents({
                       <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
                       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                     </svg>
-                    Guruh
+                    {t("crsGroup")}
                   </span>
                 </th>
                 <th className="px-5 py-3.5 font-semibold">
@@ -371,10 +372,10 @@ export function CourseStudents({
                       <path d="M8 2v4" />
                       <path d="M3 10h18" />
                     </svg>
-                    Yozilgan
+                    {t("crsEnrolled")}
                   </span>
                 </th>
-                <th className="px-5 py-3.5 font-semibold">Amal</th>
+                <th className="px-5 py-3.5 font-semibold">{t("crsAction")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -429,7 +430,7 @@ export function CourseStudents({
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
                         <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                       </svg>
-                      Chiqarish
+                      {t("crsRemove")}
                     </Button>
                   </td>
                 </tr>

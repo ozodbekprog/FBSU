@@ -12,6 +12,7 @@ import { Logo } from "@/components/brand/logo";
 import { MobileTabBar, NavLinks, type MobileTab, type MobileTabIcon } from "./nav-links";
 import { MobileNav } from "@/components/nav/mobile-nav";
 import { BugAssistant } from "@/components/bugs/bug-assistant";
+import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 
 export default async function AppLayout({
   children,
@@ -25,96 +26,96 @@ export default async function AppLayout({
 
   const groups = [
     {
-      label: "Asosiy",
+      label: dictionary.navGroupMain,
       links: [
-        { href: "/dashboard", label: "Dashboard" },
-        { href: "/courses", label: "Kurslar" },
-        ...(modules.catalog ? [{ href: "/catalog", label: "Katalog" }] : []),
-        { href: "/electives", label: "Tanlov fanlar" },
-        { href: "/schedule", label: "Jadval" },
-        ...(modules.calendar ? [{ href: "/calendar", label: "Kalendar" }] : []),
-        { href: "/academic-calendar", label: "O'quv kalendari" },
+        { href: "/dashboard", label: dictionary.navDashboard },
+        { href: "/courses", label: dictionary.navCourses },
+        ...(modules.catalog ? [{ href: "/catalog", label: dictionary.navCatalog }] : []),
+        { href: "/electives", label: dictionary.navElectives },
+        { href: "/schedule", label: dictionary.navSchedule },
+        ...(modules.calendar ? [{ href: "/calendar", label: dictionary.navCalendar }] : []),
+        { href: "/academic-calendar", label: dictionary.navAcademicCalendar },
       ],
     },
     {
-      label: "O'qish",
+      label: dictionary.navGroupStudy,
       links: [
-        { href: "/exams", label: "Imtihonlar" },
-        { href: "/grades", label: isStaff(user.role) ? "Baholash" : "Baholarim" },
-        { href: "/gpa", label: "GPA" },
-        { href: "/transcript", label: "Transkript" },
-        { href: "/attendance", label: "Davomat" },
-        ...(isStaff(user.role) ? [{ href: "/journal", label: "Jurnal" }] : []),
-        ...(modules.certificates ? [{ href: "/certificates", label: "Sertifikatlar" }] : []),
-        ...(isStaff(user.role) ? [{ href: "/journals", label: "Kundaliklar" }] : []),
-        ...(isStaff(user.role) ? [{ href: "/question-bank", label: "Savollar banki" }] : []),
+        { href: "/exams", label: dictionary.navExams },
+        { href: "/grades", label: isStaff(user.role) ? dictionary.navGradesStaff : dictionary.navGradesStudent },
+        { href: "/gpa", label: dictionary.navGpa },
+        { href: "/transcript", label: dictionary.navTranscript },
+        { href: "/attendance", label: dictionary.navAttendance },
+        ...(isStaff(user.role) ? [{ href: "/journal", label: dictionary.navJournal }] : []),
+        ...(modules.certificates ? [{ href: "/certificates", label: dictionary.navCertificates }] : []),
+        ...(isStaff(user.role) ? [{ href: "/journals", label: dictionary.navJournals }] : []),
+        ...(isStaff(user.role) ? [{ href: "/question-bank", label: dictionary.navQuestionBank }] : []),
       ],
     },
     {
-      label: "Muloqot",
+      label: dictionary.navGroupTalk,
       links: [
-        ...(modules.chat ? [{ href: "/messages", label: "Xabarlar", badge: <UnreadBadge /> }] : []),
-        { href: "/orders", label: "Arizalar" },
-        { href: "/bookings", label: "Xona broni" },
-        { href: "/rooms", label: "Xonalar" },
+        ...(modules.chat ? [{ href: "/messages", label: dictionary.navMessages, badge: <UnreadBadge /> }] : []),
+        { href: "/orders", label: dictionary.navOrders },
+        { href: "/bookings", label: dictionary.navBookings },
+        { href: "/rooms", label: dictionary.navRooms },
       ],
     },
     {
-      label: "Xizmatlar",
+      label: dictionary.navGroupServices,
       links: [
-        { href: "/search", label: "Qidiruv" },
-        { href: "/help", label: "Yordam" },
-        { href: "/settings", label: "Sozlamalar" },
+        { href: "/search", label: dictionary.navSearch },
+        { href: "/help", label: dictionary.navHelp },
+        { href: "/settings", label: dictionary.navSettings },
       ],
     },
     {
-      label: "Boshqaruv",
+      label: dictionary.navGroupManage,
       links: [
         ...(["ADMIN", "REKTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR"].includes(user.role)
-          ? [{ href: "/monitoring", label: "Monitoring" }]
+          ? [{ href: "/monitoring", label: dictionary.navMonitoring }]
           : []),
         ...(user.role === "ADMIN" || user.role === "REGISTRAR"
-          ? [{ href: "/approvals", label: "Tasdiqlashlar" }]
+          ? [{ href: "/approvals", label: dictionary.navApprovals }]
           : []),
         ...(isStaff(user.role) || user.role === "TYUTOR"
-          ? [{ href: "/curator", label: "Kurator paneli" }]
+          ? [{ href: "/curator", label: dictionary.navCurator }]
           : []),
-        ...(isStaff(user.role) ? [{ href: "/reports", label: "Hisobotlar" }] : []),
-        ...(isStaff(user.role) ? [{ href: "/workload", label: "Yuklama" }] : []),
-        ...(user.role === "ADMIN" ? [{ href: "/admin", label: "Admin panel" }] : []),
+        ...(isStaff(user.role) ? [{ href: "/reports", label: dictionary.navReports }] : []),
+        ...(isStaff(user.role) ? [{ href: "/workload", label: dictionary.navWorkload }] : []),
+        ...(user.role === "ADMIN" ? [{ href: "/admin", label: dictionary.navAdmin }] : []),
       ],
     },
   ].filter((group) => group.links.length > 0);
 
   const roleLabel =
     user.role === "ADMIN"
-      ? "Administrator"
+      ? dictionary.roleAdmin
       : user.role === "REKTOR"
-        ? "Rektor"
+        ? dictionary.roleRector
         : user.role === "DEKAN"
-          ? "Dekan"
+          ? dictionary.roleDean
           : user.role === "KAFEDRA_MUDIRI"
-            ? "Kafedra mudiri"
+            ? dictionary.roleHead
             : user.role === "REGISTRAR"
-              ? "O'quv bo'limi"
+              ? dictionary.roleRegistrar
               : user.role === "TYUTOR"
-                ? "Tyutor"
+                ? dictionary.roleTutor
                 : user.role === "TEACHER"
-                  ? "O'qituvchi"
-                  : user.group?.name ?? "Talaba";
+                  ? dictionary.roleTeacher
+                  : user.group?.name ?? dictionary.roleStudent;
 
   const tabs: MobileTab[] = [
-    { href: "/dashboard", label: "Dashboard", icon: "home" },
-    { href: "/courses", label: "Kurslar", icon: "book" },
+    { href: "/dashboard", label: dictionary.navDashboard, icon: "home" },
+    { href: "/courses", label: dictionary.navCourses, icon: "book" },
     ...(isStaff(user.role)
-      ? [{ href: "/journal", label: "Jurnal", icon: "list" as MobileTabIcon }]
+      ? [{ href: "/journal", label: dictionary.navJournal, icon: "list" as MobileTabIcon }]
       : []),
-    { href: "/schedule", label: "Jadval", icon: "calendar" },
-    { href: "/grades", label: isStaff(user.role) ? "Baholash" : "Baholar", icon: "chart" },
+    { href: "/schedule", label: dictionary.navSchedule, icon: "calendar" },
+    { href: "/grades", label: isStaff(user.role) ? dictionary.navGradesStaff : dictionary.navGradesStudent, icon: "chart" },
   ];
 
   if (modules.chat) {
-    tabs.push({ href: "/messages", label: "Xabarlar", icon: "chat", badge: <UnreadBadge /> });
+    tabs.push({ href: "/messages", label: dictionary.navMessages, icon: "chat", badge: <UnreadBadge /> });
   }
 
   return (
@@ -132,6 +133,9 @@ export default async function AppLayout({
         </div>
         <NavLinks groups={groups} />
         <div className="border-t border-slate-100 p-3">
+          <div className="mb-2 flex justify-center">
+            <LanguageSwitcher locale={locale} />
+          </div>
           <Link
             href="/profile"
             className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2.5 transition-colors hover:bg-brand-50"
@@ -158,7 +162,7 @@ export default async function AppLayout({
             <ThemeToggle />
             <Link
               href="/profile"
-              aria-label="Profil"
+              aria-label={dictionary.shellProfile}
               className="rounded-full transition-opacity hover:opacity-80"
             >
               <Avatar name={user.name} src={user.avatarUrl} size={30} />

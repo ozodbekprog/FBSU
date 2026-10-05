@@ -2,9 +2,12 @@ import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/ui";
 import CoursesManager from "@/components/admin/CoursesManager";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 export default async function AdminCoursesPage() {
   await requireRole(["ADMIN"]);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
   const [courses, teachers] = await Promise.all([
     prisma.course.findMany({
@@ -34,7 +37,7 @@ export default async function AdminCoursesPage() {
 
   return (
     <>
-      <PageHeader title="Kurslar" subtitle={`${data.length} ta kurs`} />
+      <PageHeader title={dictionary.admCourses} subtitle={translate(locale, "admCoursesSubtitle", { count: data.length })} />
       <CoursesManager courses={data} teachers={teachers} />
     </>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Button, ButtonLink, Card, CardBody } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export default function AppError({
   error,
@@ -10,6 +11,7 @@ export default function AppError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t } = useI18n();
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -21,15 +23,12 @@ export default function AppError({
           <span className="flex size-12 items-center justify-center rounded-full bg-rose-50 text-2xl font-semibold text-rose-600">
             !
           </span>
-          <h2 className="text-lg font-semibold text-slate-900">Nimadir xato ketdi</h2>
-          <p className="text-sm text-slate-500">
-            Sahifani yuklashda kutilmagan xatolik yuz berdi. Qayta urinib ko&apos;ring yoki
-            dashboardga qayting.
-          </p>
+          <h2 className="text-lg font-semibold text-slate-900">{t("mscErrorTitle")}</h2>
+          <p className="text-sm text-slate-500">{t("mscErrorBody")}</p>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-            <Button onClick={() => reset()}>Qayta urinish</Button>
+            <Button onClick={() => reset()}>{t("mscRetry")}</Button>
             <ButtonLink href="/dashboard" variant="secondary">
-              Dashboardga qaytish
+              {t("mscBackToDashboard")}
             </ButtonLink>
           </div>
         </CardBody>

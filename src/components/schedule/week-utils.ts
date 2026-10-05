@@ -2,20 +2,30 @@ export type WeekParity = "odd" | "even";
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
-const MONTHS_UZ = [
-  "yanvar",
-  "fevral",
-  "mart",
-  "aprel",
-  "may",
-  "iyun",
-  "iyul",
-  "avgust",
-  "sentabr",
-  "oktabr",
-  "noyabr",
-  "dekabr",
-];
+export const DAY_KEYS = [
+  "schDaySunday",
+  "schDayMonday",
+  "schDayTuesday",
+  "schDayWednesday",
+  "schDayThursday",
+  "schDayFriday",
+  "schDaySaturday",
+] as const;
+
+export const MONTH_KEYS = [
+  "schMonth1",
+  "schMonth2",
+  "schMonth3",
+  "schMonth4",
+  "schMonth5",
+  "schMonth6",
+  "schMonth7",
+  "schMonth8",
+  "schMonth9",
+  "schMonth10",
+  "schMonth11",
+  "schMonth12",
+] as const;
 
 function pad(value: number) {
   return String(value).padStart(2, "0");
@@ -67,11 +77,11 @@ export function weekParityOf(weekStartIso: string): WeekParity {
   return isoWeekNumber(weekStartIso) % 2 === 0 ? "even" : "odd";
 }
 
-export function formatWeekRange(weekStartIso: string): string {
+export function formatWeekRange(weekStartIso: string, months: readonly string[]): string {
   const start = parseIsoDate(weekStartIso) ?? mondayOf(new Date());
   const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 5);
-  const startMonth = MONTHS_UZ[start.getMonth()];
-  const endMonth = MONTHS_UZ[end.getMonth()];
+  const startMonth = months[start.getMonth()] ?? "";
+  const endMonth = months[end.getMonth()] ?? "";
   if (start.getMonth() === end.getMonth()) {
     return `${start.getDate()} – ${end.getDate()} ${startMonth} ${start.getFullYear()}`;
   }

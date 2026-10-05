@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 const RING_TONES = {
   high: { from: "#34d399", to: "#059669", glow: "bg-emerald-400/25" },
@@ -7,7 +8,7 @@ const RING_TONES = {
   none: { from: "#cbd5e1", to: "#e2e8f0", glow: "bg-slate-200/40" },
 };
 
-export function GradeRing({
+export async function GradeRing({
   percent,
   size = 168,
   id = "grade-ring-gradient",
@@ -18,6 +19,8 @@ export function GradeRing({
   id?: string;
   className?: string;
 }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const value = percent == null ? 0 : Math.max(0, Math.min(100, percent));
   const tone =
     percent == null
@@ -40,7 +43,11 @@ export function GradeRing({
         viewBox="0 0 120 120"
         className="relative size-full"
         role="img"
-        aria-label={percent != null ? `O'rtacha ${percent}%` : "Baho yo'q"}
+        aria-label={
+          percent != null
+            ? translate(locale, "grdAverageAria", { percent })
+            : dictionary.grdNoGrade
+        }
       >
         <defs>
           <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -87,7 +94,7 @@ export function GradeRing({
           {percent != null ? `${percent}%` : "—"}
         </span>
         <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600">
-          O&apos;rtacha
+          {dictionary.grdAverage}
         </span>
       </div>
     </div>

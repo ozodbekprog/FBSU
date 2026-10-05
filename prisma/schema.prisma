@@ -453,13 +453,15 @@ model BonusPoint {
 }
 
 model AttendanceSession {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   courseId    String
   date        DateTime
-  code        String   @unique
+  code        String    @unique
   expiresAt   DateTime
   createdById String
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
+  finalizedAt DateTime?
+  isException Boolean   @default(false)
 
   course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   createdBy User   @relation(fields: [createdById], references: [id], onDelete: Cascade)

@@ -4,6 +4,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Button, Card, CardBody, CardHeader, EmptyState, Input, Label, Table } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
+import type { Dictionary } from "@/i18n";
 
 export type DictionarySubject = {
   id: string;
@@ -53,10 +55,10 @@ const COLOR_PRESETS = [
   "#7c3aed",
 ] as const;
 
-const TABS: Array<{ key: SectionKey; label: string; icon: ReactNode }> = [
+const TABS: Array<{ key: SectionKey; label: keyof Dictionary; icon: ReactNode }> = [
   {
     key: "subjects",
-    label: "Fanlar",
+    label: "admDictTabSubjects",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -66,7 +68,7 @@ const TABS: Array<{ key: SectionKey; label: string; icon: ReactNode }> = [
   },
   {
     key: "timeSlots",
-    label: "Dars vaqtlari",
+    label: "admDictTabTimeSlots",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="9" />
@@ -76,7 +78,7 @@ const TABS: Array<{ key: SectionKey; label: string; icon: ReactNode }> = [
   },
   {
     key: "lessonTypes",
-    label: "Dars turlari",
+    label: "admDictTabLessonTypes",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
@@ -86,24 +88,24 @@ const TABS: Array<{ key: SectionKey; label: string; icon: ReactNode }> = [
   },
 ];
 
-const SECTION_META: Record<SectionKey, { title: string; subtitle: string; create: string; edit: string }> = {
+const SECTION_META: Record<SectionKey, { title: keyof Dictionary; subtitle: keyof Dictionary; create: keyof Dictionary; edit: keyof Dictionary }> = {
   subjects: {
-    title: "Fanlar",
-    subtitle: "O'quv fanlari ro'yxati",
-    create: "Yangi fan",
-    edit: "Fanni tahrirlash",
+    title: "admDictTabSubjects",
+    subtitle: "admDictSubjectsSubtitle",
+    create: "admDictSubjectsCreate",
+    edit: "admDictSubjectsEdit",
   },
   timeSlots: {
-    title: "Dars vaqtlari",
-    subtitle: "Kunlik dars slotlari",
-    create: "Yangi vaqt",
-    edit: "Vaqtni tahrirlash",
+    title: "admDictTabTimeSlots",
+    subtitle: "admDictTimeSlotsSubtitle",
+    create: "admDictTimeSlotsCreate",
+    edit: "admDictTimeSlotsEdit",
   },
   lessonTypes: {
-    title: "Dars turlari",
-    subtitle: "Mashg'ulot turlari va ranglari",
-    create: "Yangi tur",
-    edit: "Turni tahrirlash",
+    title: "admDictTabLessonTypes",
+    subtitle: "admDictLessonTypesSubtitle",
+    create: "admDictLessonTypesCreate",
+    edit: "admDictLessonTypesEdit",
   },
 };
 
@@ -137,6 +139,7 @@ function ColorDot({ color, size = "size-4" }: { color: string; size?: string }) 
 }
 
 function ColorField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const { t } = useI18n();
   const valid = HEX_RE.test(value);
   const current = valid ? value : FALLBACK_COLOR;
   return (
@@ -147,7 +150,7 @@ function ColorField({ value, onChange }: { value: string; onChange: (value: stri
             type="color"
             value={current}
             onChange={(event) => onChange(event.target.value)}
-            aria-label="Rang"
+            aria-label={t("admDictColorAria")}
             className="absolute inset-0 size-full cursor-pointer opacity-0"
           />
           <span className="size-full rounded-lg" style={{ backgroundColor: current }} />
@@ -166,7 +169,7 @@ function ColorField({ value, onChange }: { value: string; onChange: (value: stri
             key={preset}
             type="button"
             onClick={() => onChange(preset)}
-            aria-label={`Rang ${preset}`}
+            aria-label={t("admDictColorPresetAria", { color: preset })}
             className={cn(
               "size-6 rounded-lg shadow-[0_0_0_1px_rgba(15,23,42,0.1)] transition-transform duration-150 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40",
               value.toLowerCase() === preset ? "ring-2 ring-brand-600 ring-offset-1" : undefined,
@@ -180,9 +183,7 @@ function ColorField({ value, onChange }: { value: string; onChange: (value: stri
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="9" />
             <path d="M12 8v4M12 16h.01" />
-          </svg>
-          #RRGGBB formatida kiriting
-        </p>
+          </svg>{t("admDictColorInvalid")}</p>
       ) : null}
     </div>
   );
@@ -198,6 +199,7 @@ export default function DictionariesManager({
   lessonTypes: DictionaryLessonType[];
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [tab, setTab] = useState<SectionKey>("subjects");
   const [mode, setMode] = useState<Mode>(null);
   const [editId, setEditId] = useState<string | null>(null);
@@ -298,12 +300,12 @@ export default function DictionariesManager({
       });
       const json = (await res.json().catch(() => null)) as ApiResult | null;
       if (!res.ok || !json || !json.ok) {
-        setError(json?.error ?? "Amalni bajarib bo'lmadi");
+        setError(json?.error ?? t("admErrorGeneric"));
         return false;
       }
       return true;
     } catch {
-      setError("Tarmoqda xatolik");
+      setError(t("admNetworkError"));
       return false;
     } finally {
       setBusy(false);
@@ -322,7 +324,7 @@ export default function DictionariesManager({
           ? await send("/api/admin/subjects", "POST", payload)
           : await send(`/api/admin/subjects/${editId}`, "PATCH", payload);
       if (!ok) return;
-      setNotice(mode === "create" ? "Fan qo'shildi" : "Fan yangilandi");
+      setNotice(mode === "create" ? t("admDictSubjectAdded") : t("admDictSubjectUpdated"));
     } else if (tab === "timeSlots") {
       const payload = {
         slot: Number(slotForm.slot),
@@ -334,7 +336,7 @@ export default function DictionariesManager({
           ? await send("/api/admin/time-slots", "POST", payload)
           : await send(`/api/admin/time-slots/${editId}`, "PATCH", payload);
       if (!ok) return;
-      setNotice(mode === "create" ? "Dars vaqti qo'shildi" : "Dars vaqti yangilandi");
+      setNotice(mode === "create" ? t("admDictTimeSlotAdded") : t("admDictTimeSlotUpdated"));
     } else {
       const payload = { name: typeForm.name.trim(), color: typeForm.color };
       const ok =
@@ -342,7 +344,7 @@ export default function DictionariesManager({
           ? await send("/api/admin/lesson-types", "POST", payload)
           : await send(`/api/admin/lesson-types/${editId}`, "PATCH", payload);
       if (!ok) return;
-      setNotice(mode === "create" ? "Dars turi qo'shildi" : "Dars turi yangilandi");
+      setNotice(mode === "create" ? t("admDictLessonTypeAdded") : t("admDictLessonTypeUpdated"));
     }
     closeForm();
     router.refresh();
@@ -369,12 +371,12 @@ export default function DictionariesManager({
         | { ok: boolean; data?: TeacherUser[]; error?: string }
         | null;
       if (!res.ok || !json || !json.ok || !json.data) {
-        setError(json?.error ?? "O'qituvchilar ro'yxatini yuklab bo'lmadi");
+        setError(json?.error ?? t("admDictTeachersLoadFailed"));
         return;
       }
       setTeacherList([...json.data].sort((a, b) => a.name.localeCompare(b.name)));
     } catch {
-      setError("Tarmoqda xatolik");
+      setError(t("admNetworkError"));
     } finally {
       setTeachersLoading(false);
     }
@@ -396,7 +398,7 @@ export default function DictionariesManager({
       teacherIds,
     });
     if (!ok) return;
-    setNotice(`"${teacherSubject.name}" faniga o'qituvchilar saqlandi`);
+    setNotice(t("admDictTeachersSaved", { name: teacherSubject.name }));
     closeTeachers();
     router.refresh();
   }
@@ -431,7 +433,7 @@ export default function DictionariesManager({
               <span className={cn("transition-transform duration-200", !active && "group-hover:scale-110")}>
                 {item.icon}
               </span>
-              {item.label}
+              {t(item.label)}
               <span
                 className={cn(
                   "rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums transition-colors duration-200",
@@ -479,14 +481,12 @@ export default function DictionariesManager({
                 >
                   {activeTab?.icon}
                 </span>
-                {mode === "create" ? meta.create : meta.edit}
+                {mode === "create" ? t(meta.create) : t(meta.edit)}
               </span>
             }
-            subtitle={meta.subtitle}
+            subtitle={t(meta.subtitle)}
             action={
-              <Button variant="ghost" size="sm" onClick={closeForm}>
-                Yopish
-              </Button>
+              <Button variant="ghost" size="sm" onClick={closeForm}>{t("admClose")}</Button>
             }
           />
           <CardBody>
@@ -499,26 +499,26 @@ export default function DictionariesManager({
                 }}
               >
                 <div>
-                  <Label>Nomi</Label>
+                  <Label>{t("admName")}</Label>
                   <Input
                     value={subjectForm.name}
                     onChange={(event) => setSubjectForm((form) => ({ ...form, name: event.target.value }))}
-                    placeholder="Masalan: Fizika"
+                    placeholder={t("admDictSubjectNamePlaceholder")}
                     required
                     minLength={2}
                   />
                 </div>
                 <div>
-                  <Label>Kod</Label>
+                  <Label>{t("admCode")}</Label>
                   <Input
                     value={subjectForm.code}
                     onChange={(event) => setSubjectForm((form) => ({ ...form, code: event.target.value }))}
-                    placeholder="PHY 1"
+                    placeholder={t("admDictCodePlaceholder")}
                     maxLength={20}
                   />
                 </div>
                 <div>
-                  <Label>Rang</Label>
+                  <Label>{t("admColColor")}</Label>
                   <ColorField
                     value={subjectForm.color}
                     onChange={(color) => setSubjectForm((form) => ({ ...form, color }))}
@@ -528,7 +528,7 @@ export default function DictionariesManager({
                   <span className="flex min-w-0 items-center gap-2.5 rounded-xl border border-slate-200/70 bg-slate-50/60 px-3.5 py-2">
                     <ColorDot color={subjectValid ? subjectForm.color : FALLBACK_COLOR} />
                     <span className="truncate text-sm font-medium text-slate-700">
-                      {subjectForm.name.trim() || "Fan nomi"}
+                      {subjectForm.name.trim() || t("admDictSubjectNameDefault")}
                     </span>
                     {subjectForm.code.trim() ? (
                       <Badge tone="slate" className="font-mono">
@@ -537,11 +537,9 @@ export default function DictionariesManager({
                     ) : null}
                   </span>
                   <span className="ml-auto flex items-center gap-2">
-                    <Button variant="secondary" onClick={closeForm}>
-                      Bekor qilish
-                    </Button>
+                    <Button variant="secondary" onClick={closeForm}>{t("admCancel")}</Button>
                     <Button type="submit" disabled={busy || !subjectValid}>
-                      {busy ? "Saqlanmoqda..." : mode === "create" ? "Qo'shish" : "Saqlash"}
+                      {busy ? t("admSaving") : mode === "create" ? t("admAdd") : t("admSave")}
                     </Button>
                   </span>
                 </div>
@@ -557,19 +555,19 @@ export default function DictionariesManager({
                 }}
               >
                 <div>
-                  <Label>Slot raqami</Label>
+                  <Label>{t("admDictSlotLabel")}</Label>
                   <Input
                     type="number"
                     value={slotForm.slot}
                     onChange={(event) => setSlotForm((form) => ({ ...form, slot: event.target.value }))}
-                    placeholder="1"
+                    placeholder={t("admDictSlotPlaceholder")}
                     min={1}
                     max={20}
                     required
                   />
                 </div>
                 <div>
-                  <Label>Boshlanish</Label>
+                  <Label>{t("admStartLabel")}</Label>
                   <Input
                     type="time"
                     value={slotForm.startTime}
@@ -578,7 +576,7 @@ export default function DictionariesManager({
                   />
                 </div>
                 <div>
-                  <Label>Tugash</Label>
+                  <Label>{t("admEndLabel")}</Label>
                   <Input
                     type="time"
                     value={slotForm.endTime}
@@ -588,22 +586,20 @@ export default function DictionariesManager({
                 </div>
                 <div className="flex flex-wrap items-center gap-3 sm:col-span-3">
                   <span className="flex items-center gap-2.5 rounded-xl border border-slate-200/70 bg-slate-50/60 px-3.5 py-2">
-                    <Badge tone="blue">{slotForm.slot || "—"}-slot</Badge>
+                    <Badge tone="blue">{t("admDictSlotBadge", { slot: slotForm.slot || "—" })}</Badge>
                     <span className="text-sm font-medium tabular-nums text-slate-700">
                       {slotForm.startTime} — {slotForm.endTime}
                     </span>
                     {slotValid && minutes(slotForm.endTime) - minutes(slotForm.startTime) > 0 ? (
                       <span className="text-xs text-slate-600">
-                        {minutes(slotForm.endTime) - minutes(slotForm.startTime)} daqiqa
+                        {t("admDictMinutes", { count: minutes(slotForm.endTime) - minutes(slotForm.startTime) })}
                       </span>
                     ) : null}
                   </span>
                   <span className="ml-auto flex items-center gap-2">
-                    <Button variant="secondary" onClick={closeForm}>
-                      Bekor qilish
-                    </Button>
+                    <Button variant="secondary" onClick={closeForm}>{t("admCancel")}</Button>
                     <Button type="submit" disabled={busy || !slotValid}>
-                      {busy ? "Saqlanmoqda..." : mode === "create" ? "Qo'shish" : "Saqlash"}
+                      {busy ? t("admSaving") : mode === "create" ? t("admAdd") : t("admSave")}
                     </Button>
                   </span>
                 </div>
@@ -619,17 +615,17 @@ export default function DictionariesManager({
                 }}
               >
                 <div>
-                  <Label>Nomi</Label>
+                  <Label>{t("admName")}</Label>
                   <Input
                     value={typeForm.name}
                     onChange={(event) => setTypeForm((form) => ({ ...form, name: event.target.value }))}
-                    placeholder="Masalan: Amaliy"
+                    placeholder={t("admDictLessonTypeNamePlaceholder")}
                     required
                     minLength={2}
                   />
                 </div>
                 <div>
-                  <Label>Rang</Label>
+                  <Label>{t("admColColor")}</Label>
                   <ColorField
                     value={typeForm.color}
                     onChange={(color) => setTypeForm((form) => ({ ...form, color }))}
@@ -641,18 +637,16 @@ export default function DictionariesManager({
                       className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium text-white shadow-sm"
                       style={{ backgroundColor: typeValid ? typeForm.color : FALLBACK_COLOR }}
                     >
-                      {typeForm.name.trim() || "Dars turi"}
+                      {typeForm.name.trim() || t("admDictLessonTypeDefault")}
                     </span>
                     <span className="font-mono text-xs uppercase text-slate-600">
                       {typeValid ? typeForm.color : FALLBACK_COLOR}
                     </span>
                   </span>
                   <span className="ml-auto flex items-center gap-2">
-                    <Button variant="secondary" onClick={closeForm}>
-                      Bekor qilish
-                    </Button>
+                    <Button variant="secondary" onClick={closeForm}>{t("admCancel")}</Button>
                     <Button type="submit" disabled={busy || !typeValid}>
-                      {busy ? "Saqlanmoqda..." : mode === "create" ? "Qo'shish" : "Saqlash"}
+                      {busy ? t("admSaving") : mode === "create" ? t("admAdd") : t("admSave")}
                     </Button>
                   </span>
                 </div>
@@ -665,26 +659,24 @@ export default function DictionariesManager({
       <Card key={tab} className="animate-fade-in relative overflow-hidden">
         <span className={cn("absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r", GRADIENTS[tab])} />
         <CardHeader
-          title={meta.title}
-          subtitle={`${counts[tab]} ta yozuv`}
+          title={t(meta.title)}
+          subtitle={t("admEntriesCount", { count: counts[tab] })}
           action={
             <Button size="sm" onClick={openCreate}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              {meta.create}
+              {t(meta.create)}
             </Button>
           }
         />
         {counts[tab] === 0 ? (
           <CardBody>
             <EmptyState
-              title={`${meta.title} hozircha bo'sh`}
-              description={`Birinchi yozuvni qo'shing — "${meta.create}" tugmasi orqali.`}
+              title={t("admStructEmptyTitle", { title: t(meta.title) })}
+              description={t("admStructEmptyDesc", { create: t(meta.create) })}
               action={
-                <Button size="sm" variant="secondary" onClick={openCreate}>
-                  + {meta.create}
-                </Button>
+                <Button size="sm" variant="secondary" onClick={openCreate}>{t("admStructAddButton", { create: t(meta.create) })}</Button>
               }
             />
           </CardBody>
@@ -694,27 +686,27 @@ export default function DictionariesManager({
               <tr className="border-b border-slate-100 bg-slate-50/60 text-[11px] font-semibold uppercase tracking-wider text-slate-600">
                 {tab === "subjects" ? (
                   <>
-                    <th className="px-5 py-3 font-semibold">Fan</th>
-                    <th className="px-5 py-3 font-semibold">Kod</th>
-                    <th className="px-5 py-3 font-semibold">Rang</th>
-                    <th className="px-5 py-3 font-semibold">O&apos;qituvchilar</th>
+                    <th className="px-5 py-3 font-semibold">{t("admColSubject")}</th>
+                    <th className="px-5 py-3 font-semibold">{t("admColCode")}</th>
+                    <th className="px-5 py-3 font-semibold">{t("admColColor")}</th>
+                    <th className="px-5 py-3 font-semibold">{t("admColTeachers")}</th>
                   </>
                 ) : null}
                 {tab === "timeSlots" ? (
                   <>
-                    <th className="px-5 py-3 font-semibold">Slot</th>
-                    <th className="px-5 py-3 font-semibold">Vaqt</th>
-                    <th className="px-5 py-3 font-semibold">Davomiyligi</th>
+                    <th className="px-5 py-3 font-semibold">{t("admColSlot")}</th>
+                    <th className="px-5 py-3 font-semibold">{t("admColTime")}</th>
+                    <th className="px-5 py-3 font-semibold">{t("admColDuration")}</th>
                   </>
                 ) : null}
                 {tab === "lessonTypes" ? (
                   <>
-                    <th className="px-5 py-3 font-semibold">Turi</th>
-                    <th className="px-5 py-3 font-semibold">Rang</th>
-                    <th className="px-5 py-3 font-semibold">Ko&apos;rinishi</th>
+                    <th className="px-5 py-3 font-semibold">{t("admColType")}</th>
+                    <th className="px-5 py-3 font-semibold">{t("admColColor")}</th>
+                    <th className="px-5 py-3 font-semibold">{t("admColAppearance")}</th>
                   </>
                 ) : null}
-                <th className="px-5 py-3 text-right font-semibold">Amallar</th>
+                <th className="px-5 py-3 text-right font-semibold">{t("admActions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -754,7 +746,7 @@ export default function DictionariesManager({
                       </td>
                       <td className="px-5 py-3">
                         {subject.teachers.length === 0 ? (
-                          <span className="text-xs italic text-slate-600">Biriktirilmagan</span>
+                          <span className="text-xs italic text-slate-600">{t("admNotAssigned")}</span>
                         ) : (
                           <div className="flex max-w-72 flex-wrap items-center gap-1">
                             {subject.teachers.slice(0, 3).map((teacher) => (
@@ -783,25 +775,19 @@ export default function DictionariesManager({
                               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                               <circle cx="9" cy="7" r="4" />
                               <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-                            </svg>
-                            O&apos;qituvchilar
-                          </Button>
+                            </svg>{t("admDictTeachersButton")}</Button>
                           <Button size="sm" variant="secondary" onClick={() => openEditSubject(subject)}>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" />
-                            </svg>
-                            Tahrirlash
-                          </Button>
+                            </svg>{t("admEdit")}</Button>
                           <Button
                             size="sm"
                             variant="ghost"
                             className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
                             onClick={() =>
-                              remove(`/api/admin/subjects/${subject.id}`, `"${subject.name}" fani o'chirilsinmi?`, "Fan o'chirildi")
+                              remove(`/api/admin/subjects/${subject.id}`, t("admDictSubjectDeleteConfirm", { name: subject.name }), t("admDictSubjectDeleted"))
                             }
-                          >
-                            O&apos;chirish
-                          </Button>
+                          >{t("admDelete")}</Button>
                         </div>
                       </td>
                     </tr>
@@ -833,7 +819,7 @@ export default function DictionariesManager({
                                   style={{ width: `${Math.min(100, Math.round((duration / 180) * 100))}%` }}
                                 />
                               </div>
-                              <span className="text-xs tabular-nums text-slate-500">{duration} daqiqa</span>
+                              <span className="text-xs tabular-nums text-slate-500">{t("admDictMinutes", { count: duration })}</span>
                             </div>
                           ) : (
                             <span className="text-slate-600">—</span>
@@ -844,9 +830,7 @@ export default function DictionariesManager({
                             <Button size="sm" variant="secondary" onClick={() => openEditSlot(item)}>
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" />
-                              </svg>
-                              Tahrirlash
-                            </Button>
+                              </svg>{t("admEdit")}</Button>
                             <Button
                               size="sm"
                               variant="ghost"
@@ -854,13 +838,11 @@ export default function DictionariesManager({
                               onClick={() =>
                                 remove(
                                   `/api/admin/time-slots/${item.id}`,
-                                  `${item.slot}-slot o'chirilsinmi?`,
-                                  "Dars vaqti o'chirildi",
+                                  t("admDictSlotDeleteConfirm", { slot: item.slot }),
+                                  t("admDictTimeSlotDeleted"),
                                 )
                               }
-                            >
-                              O&apos;chirish
-                            </Button>
+                            >{t("admDelete")}</Button>
                           </div>
                         </td>
                       </tr>
@@ -906,9 +888,7 @@ export default function DictionariesManager({
                           <Button size="sm" variant="secondary" onClick={() => openEditType(item)}>
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" />
-                            </svg>
-                            Tahrirlash
-                          </Button>
+                            </svg>{t("admEdit")}</Button>
                           <Button
                             size="sm"
                             variant="ghost"
@@ -916,13 +896,11 @@ export default function DictionariesManager({
                             onClick={() =>
                               remove(
                                 `/api/admin/lesson-types/${item.id}`,
-                                `"${item.name}" turi o'chirilsinmi?`,
-                                "Dars turi o'chirildi",
+                                t("admDictLessonTypeDeleteConfirm", { name: item.name }),
+                                t("admDictLessonTypeDeleted"),
                               )
                             }
-                          >
-                            O&apos;chirish
-                          </Button>
+                          >{t("admDelete")}</Button>
                         </div>
                       </td>
                     </tr>
@@ -938,11 +916,11 @@ export default function DictionariesManager({
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
-          aria-label="O'qituvchilarni biriktirish"
+          aria-label={t("admDictAssignTeachers")}
         >
           <button
             type="button"
-            aria-label="Panelni yopish"
+            aria-label={t("admClosePanel")}
             onClick={closeTeachers}
             className="animate-fade-in absolute inset-0 cursor-default bg-slate-900/45 backdrop-blur-sm"
           />
@@ -958,7 +936,7 @@ export default function DictionariesManager({
                       <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
                     </svg>
                   </span>
-                  O&apos;qituvchilarni biriktirish
+                  {t("admDictAssignTeachers")}
                 </p>
                 <p className="mt-1 flex items-center gap-1.5 truncate text-xs text-slate-500">
                   <ColorDot
@@ -971,7 +949,7 @@ export default function DictionariesManager({
               <button
                 type="button"
                 onClick={closeTeachers}
-                aria-label="Yopish"
+                aria-label={t("admClose")}
                 className="rounded-lg p-1.5 text-slate-600 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -991,7 +969,7 @@ export default function DictionariesManager({
                 </div>
               ) : null}
               {!teachersLoading && teacherList && teacherList.length === 0 ? (
-                <p className="px-2 py-6 text-center text-sm text-slate-600">O&apos;qituvchilar topilmadi</p>
+                <p className="px-2 py-6 text-center text-sm text-slate-600">{t("admDictTeachersEmpty")}</p>
               ) : null}
               {!teachersLoading && teacherList
                 ? teacherList.map((teacher) => {
@@ -1038,14 +1016,12 @@ export default function DictionariesManager({
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/70 px-5 py-3">
               <span className="text-xs font-medium text-slate-500">
-                <Badge tone={teacherIds.length > 0 ? "blue" : "slate"}>{teacherIds.length} ta tanlandi</Badge>
+                <Badge tone={teacherIds.length > 0 ? "blue" : "slate"}>{t("admSelectedCount", { count: teacherIds.length })}</Badge>
               </span>
               <span className="flex items-center gap-2">
-                <Button variant="secondary" size="sm" onClick={closeTeachers}>
-                  Bekor qilish
-                </Button>
+                <Button variant="secondary" size="sm" onClick={closeTeachers}>{t("admCancel")}</Button>
                 <Button size="sm" onClick={saveTeachers} disabled={busy || teachersLoading}>
-                  {busy ? "Saqlanmoqda..." : "Saqlash"}
+                  {busy ? t("admSaving") : t("admSave")}
                 </Button>
               </span>
             </div>

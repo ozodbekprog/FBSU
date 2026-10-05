@@ -1,19 +1,15 @@
 import { isStaff, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ButtonLink, EmptyState } from "@/components/ui";
-import { cn, dayName } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { SLOT_TIMES } from "@/components/attendance/lesson-utils";
+import { DAY_KEYS } from "@/components/schedule/week-utils";
 import { PrintButton } from "./print-button";
 import { addDays, dayMonth, isoWeekNumber, mondayOfIso, tashkentToday, weekLabel } from "./week";
 
 const DAYS = [1, 2, 3, 4, 5, 6];
 const SLOTS = [1, 2, 3, 4, 5, 6, 7, 8];
-
-const STATUS_LABELS: Record<string, string> = {
-  CHANGED: "O'zgartirilgan",
-  MOVED: "Ko'chirilgan",
-  CANCELLED: "Bekor",
-};
 
 const STATUS_STRIPE: Record<string, string> = {
   NORMAL: "border-l-brand-300",
@@ -42,8 +38,16 @@ export default async function SchedulePrintPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const params = await searchParams;
   const staff = isStaff(user.role);
+
+  const statusLabels: Record<string, string> = {
+    CHANGED: dictionary.schStatusChanged,
+    MOVED: dictionary.schStatusMoved,
+    CANCELLED: dictionary.schStatusCancelledShort,
+  };
 
   const groups = staff
     ? await prisma.group.findMany({
@@ -62,8 +66,8 @@ export default async function SchedulePrintPage({
   if (!group) {
     return (
       <EmptyState
-        title="Guruh topilmadi"
-        description="Jadvalni chop etish uchun sizga guruh biriktirilgan bo'lishi kerak."
+        title={dictionary.schGroupNotFoundTitle}
+        description={dictionary.schGroupNotFoundDescPrint}
       />
     );
   }
@@ -74,7 +78,7 @@ export default async function SchedulePrintPage({
   });
 
   const weekNumber = isoWeekNumber(monday);
-  const parityLabel = weekNumber % 2 === 0 ? "Juft hafta" : "Toq hafta";
+  const parityLabel = weekNumber % 2 === 0 ? dictionary.schEvenWeek : dictionary.schOddWeek;
   const todayIso = tashkentToday();
 
   function entriesAt(day: number, slot: number) {
@@ -90,7 +94,7 @@ export default async function SchedulePrintPage({
           href={`/schedule?groupId=${encodeURIComponent(group.id)}`}
           variant="secondary"
         >
-          Jadval sahifasiga qaytish
+          {dictionary.schBackToSchedule}
         </ButtonLink>
       </div>
 
@@ -104,16 +108,18 @@ export default async function SchedulePrintPage({
             </span>
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-600">FBSU LMS</p>
-              <p className="text-lg font-semibold tracking-tight text-brand-950">Dars jadvali</p>
+              <p className="text-lg font-semibold tracking-tight text-brand-950">{dictionary.schScheduleTitle}</p>
               <p className="mt-0.5 text-sm text-slate-500">
-                {group.name} guruhi · {weekLabel(monday)}
+                {translate(locale, "schBuilderGroupSubtitle", { group: group.name, range: weekLabel(monday) })}
               </p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-xs text-slate-600">Chop etilgan: {todayIso}</p>
+            <p className="text-xs text-slate-600">
+              {translate(locale, "schPrintedAt", { date: todayIso })}
+            </p>
             <p className="mt-1 text-xs font-medium text-slate-500">
-              {`${weekNumber}-hafta · ${parityLabel}`}
+              {translate(locale, "schWeekParity", { week: weekNumber, parity: parityLabel })}
             </p>
           </div>
         </div>
@@ -123,7 +129,7 @@ export default async function SchedulePrintPage({
             <thead>
               <tr>
                 <th className="w-24 border border-slate-300 bg-slate-100 px-2 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                  Par
+                  {dictionary.schPar}
                 </th>
                 {DAYS.map((day) => {
                   const dayIso = addDays(monday, day - 1);
@@ -137,10 +143,10 @@ export default async function SchedulePrintPage({
                       )}
                     >
                       <span className="flex items-center gap-1.5">
-                        <span className="font-semibold text-slate-800">{dayName(day)}</span>
+                        <span className="font-semibold text-slate-800">{dictionary[DAY_KEYS[day % 7]]}</span>
                         {isToday ? (
                           <span className="rounded-full bg-amber-200/70 px-1.5 py-px text-[9px] font-semibold text-amber-800">
-                            bugun
+                            {dictionary.schToday}
                           </span>
                         ) : null}
                       </span>
@@ -156,7 +162,9 @@ export default async function SchedulePrintPage({
               {SLOTS.map((slot) => (
                 <tr key={slot} className="align-top">
                   <td className="border border-slate-300 px-2 py-1.5">
-                    <span className="block font-semibold text-slate-800">{slot}-par</span>
+                    <span className="block font-semibold text-slate-800">
+                      {translate(locale, "schSlotLabel", { slot })}
+                    </span>
                     <span className="block text-[10px] text-slate-500">{SLOT_TIMES[slot]}</span>
                   </td>
                   {DAYS.map((day) => {
@@ -170,12 +178,12 @@ export default async function SchedulePrintPage({
                         <div className="space-y-1.5">
                           {entriesAt(day, slot).map((entry) => {
                             const cancelled = entry.status === "CANCELLED";
-                            const statusLabel = STATUS_LABELS[entry.status];
+                            const statusLabel = statusLabels[entry.status];
                             const entryParity =
                               entry.parity === "odd"
-                                ? "Toq hafta"
+                                ? dictionary.schOddWeek
                                 : entry.parity === "even"
-                                  ? "Juft hafta"
+                                  ? dictionary.schEvenWeek
                                   : null;
                             return (
                               <div

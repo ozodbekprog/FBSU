@@ -5,6 +5,7 @@ import { ButtonLink, Card, CardBody, CardHeader, PageHeader, Stat } from "@/comp
 import { cn } from "@/lib/utils";
 import { CuratorStudentsTable } from "@/components/curator/students-table";
 import { ReportSendButton } from "@/components/curator/report-send";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 export default async function CuratorGroupPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireRole(["TEACHER", "ADMIN"]);
@@ -16,49 +17,55 @@ export default async function CuratorGroupPage({ params }: { params: Promise<{ i
   const group = await buildGroupDetail(id);
   if (!group) notFound();
 
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+
   const problematic = group.students.filter((student) => student.problematic);
 
   return (
     <>
       <PageHeader
         title={group.name}
-        eyebrow="Kurator paneli"
-        subtitle={`${group.studentCount} ta talaba${group.curator ? ` · Kurator: ${group.curator.name}` : ""}`}
+        eyebrow={dictionary.admCuratorTitle}
+        subtitle={translate(locale, group.curator ? "admCuratorSubtitleWithCurator" : "admCuratorStudentsSubtitle", {
+          count: group.studentCount,
+          curator: group.curator?.name ?? "",
+        })}
         action={
           <ButtonLink href="/curator" variant="secondary" size="sm">
-            Guruhlarga qaytish
+            {dictionary.admCuratorBack}
           </ButtonLink>
         }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
-          label="Talabalar"
+          label={dictionary.admStudents}
           value={group.studentCount}
-          hint={group.year ? `${group.year}-yil` : "Guruh talabalari"}
+          hint={group.year ? translate(locale, "admCuratorStatStudentsHintYear", { year: group.year }) : dictionary.admCuratorStatStudentsHint}
         />
         <Stat
-          label="O'rtacha davomat"
+          label={dictionary.admCuratorStatAttendance}
           value={group.averageAttendance !== null ? `${group.averageAttendance}%` : "—"}
-          hint="80% — imtihonga ruxsat"
+          hint={dictionary.admCuratorStatAttendanceHint}
         />
         <Stat
-          label="Ruxsatsiz"
+          label={dictionary.admCuratorStatLowAttendance}
           value={group.lowAttendanceCount}
-          hint="Davomat 80% dan past talabalar"
+          hint={dictionary.admCuratorStatLowAttendanceHint}
         />
         <Stat
-          label="O'rtacha GPA"
+          label={dictionary.admCuratorStatGpa}
           value={group.averageGpa !== null ? group.averageGpa.toFixed(2) : "—"}
-          hint="4.0 baholash tizimi"
+          hint={dictionary.admCuratorStatGpaHint}
         />
       </div>
 
       {problematic.length > 0 ? (
         <Card className="mt-6 border-amber-200/70">
           <CardHeader
-            title={`Muammoli talabalar: ${problematic.length} ta`}
-            subtitle="Davomat 80% dan past yoki GPA 2.0 dan past"
+            title={translate(locale, "admCuratorProblematic", { count: problematic.length })}
+            subtitle={dictionary.admCuratorProblematicSubtitle}
           />
           <CardBody>
             <div className="flex flex-wrap gap-2">
@@ -73,7 +80,7 @@ export default async function CuratorGroupPage({ params }: { params: Promise<{ i
                   )}
                 >
                   <span className="font-semibold">{student.name}</span>
-                  <span>davomat {student.attendance.percent}%</span>
+                  <span>{translate(locale, "admCuratorAttendanceShort", { percent: student.attendance.percent })}</span>
                   <span>
                     GPA {student.gpa !== null ? student.gpa.toFixed(2) : "—"}
                   </span>
@@ -85,7 +92,10 @@ export default async function CuratorGroupPage({ params }: { params: Promise<{ i
       ) : null}
 
       <Card className="mt-6">
-        <CardHeader title="Talabalar jadvali" subtitle={`${group.studentCount} ta talaba`} />
+        <CardHeader
+          title={dictionary.admCuratorStudentsTable}
+          subtitle={translate(locale, "admCuratorStudentsSubtitle", { count: group.studentCount })}
+        />
         <CardBody>
           <CuratorStudentsTable students={group.students} />
         </CardBody>
@@ -93,8 +103,8 @@ export default async function CuratorGroupPage({ params }: { params: Promise<{ i
 
       <Card className="mt-6">
         <CardHeader
-          title="Haftalik hisobot"
-          subtitle="Davomat xulosasi va muammoli talabalar ro'yxati kuratorga yuboriladi"
+          title={dictionary.admCuratorWeeklyReport}
+          subtitle={dictionary.admCuratorWeeklyReportSubtitle}
           action={<ReportSendButton groupId={group.id} />}
         />
       </Card>

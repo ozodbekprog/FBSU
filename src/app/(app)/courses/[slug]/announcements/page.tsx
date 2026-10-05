@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDictionary, getLocale } from "@/i18n";
 import { Avatar, ButtonLink, Card, CardBody, EmptyState, PageHeader } from "@/components/ui";
 import { fmtDateTime } from "@/lib/utils";
 import { canManageCourse } from "@/components/courses/course-access";
@@ -14,6 +15,8 @@ export default async function CourseAnnouncementsPage({
   params: Promise<{ slug: string }>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const { slug } = await params;
 
   const course = await prisma.course.findUnique({ where: { slug } });
@@ -38,11 +41,11 @@ export default async function CourseAnnouncementsPage({
   return (
     <>
       <PageHeader
-        title="E'lonlar"
+        title={dictionary.crsAnnouncements}
         subtitle={course.title}
         action={
           <ButtonLink href={`/courses/${course.slug}`} variant="secondary" size="sm">
-            Kurs sahifasi
+            {dictionary.crsCoursePage}
           </ButtonLink>
         }
       />
@@ -52,8 +55,8 @@ export default async function CourseAnnouncementsPage({
 
       {announcements.length === 0 ? (
         <EmptyState
-          title="E'lonlar yo'q"
-          description="Hozircha bu kursda e'lon chop etilmagan."
+          title={dictionary.crsNoAnnouncements}
+          description={dictionary.crsNoAnnouncementsDesc}
         />
       ) : (
         <div className="space-y-4">

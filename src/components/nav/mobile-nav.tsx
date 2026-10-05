@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import type { NavGroup } from "@/app/(app)/nav-links";
 import { Logo } from "@/components/brand/logo";
 import { LogoutForm } from "@/components/auth/logout-form";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
 
 function MenuIcon() {
@@ -47,6 +48,7 @@ function CloseIcon() {
 }
 
 export function MobileNav({ groups }: { groups: NavGroup[] }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
@@ -84,7 +86,7 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
     >
       <button
         type="button"
-        aria-label="Menyuni yopish"
+        aria-label={t("shellMenuClose")}
         onClick={() => setOpen(false)}
         className={cn(
           "absolute inset-0 bg-slate-950/45 backdrop-blur-[2px] transition-opacity duration-300",
@@ -94,7 +96,7 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Asosiy navigatsiya"
+        aria-label={t("shellMobileNav")}
         className={cn(
           "absolute inset-y-0 left-0 flex w-72 max-w-[86vw] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out",
           open ? "translate-x-0" : "-translate-x-full",
@@ -111,7 +113,7 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
           <button
             type="button"
             onClick={() => setOpen(false)}
-            aria-label="Menyuni yopish"
+            aria-label={t("shellMenuClose")}
             className="inline-flex size-9 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-brand-50 hover:text-brand-900"
           >
             <CloseIcon />
@@ -165,7 +167,7 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Menyuni ochish"
+        aria-label={t("shellMenuOpen")}
         aria-expanded={open}
         className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-brand-50 hover:text-brand-900"
       >

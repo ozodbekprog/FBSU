@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { ensureCsrfToken } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export function EnrollmentActions({ enrollmentId }: { enrollmentId: string }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,7 +30,7 @@ export function EnrollmentActions({ enrollmentId }: { enrollmentId: string }) {
     } | null;
     setBusy(false);
     if (!response.ok || !json?.ok) {
-      setError(json?.error ?? "Xatolik yuz berdi");
+      setError(json?.error ?? t("admErrorGeneric"));
       return;
     }
     router.refresh();
@@ -38,10 +40,10 @@ export function EnrollmentActions({ enrollmentId }: { enrollmentId: string }) {
     <div className="flex flex-col items-end gap-1.5">
       <div className="flex gap-2">
         <Button size="sm" disabled={busy} onClick={() => void act("approve")}>
-          Tasdiqlash
+          {t("admApprove")}
         </Button>
         <Button size="sm" variant="secondary" disabled={busy} onClick={() => void act("reject")}>
-          Rad etish
+          {t("admReject")}
         </Button>
       </div>
       {error ? <p className="max-w-56 text-xs text-rose-600">{error}</p> : null}

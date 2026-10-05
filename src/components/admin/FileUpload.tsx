@@ -4,18 +4,20 @@ import { useId, useRef, useState } from "react";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 type UploadResult = { ok: true; data: { url: string } } | { ok: false; error: string };
 
 export default function FileUpload({
   onUploaded,
-  label = "Fayl yuklash",
+  label,
   accept,
 }: {
   onUploaded?: (url: string) => void;
   label?: string;
   accept?: string;
 }) {
+  const { t } = useI18n();
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
   const [busy, setBusy] = useState(false);
@@ -37,7 +39,7 @@ export default function FileUpload({
   async function upload() {
     const file = inputRef.current?.files?.[0];
     if (!file) {
-      setError("Avval faylni tanlang");
+      setError(t("admFilePickFirst"));
       return;
     }
 
@@ -52,7 +54,7 @@ export default function FileUpload({
       const res = await apiFetch("/api/upload", { method: "POST", body });
       const json = (await res.json().catch(() => null)) as UploadResult | null;
       if (!res.ok || !json || !json.ok) {
-        setError(json && !json.ok ? json.error : "Faylni yuklab bo'lmadi");
+        setError(json && !json.ok ? json.error : t("admFileUploadFailed"));
         return;
       }
       setUrl(json.data.url);
@@ -60,7 +62,7 @@ export default function FileUpload({
       setFileName(null);
       if (inputRef.current) inputRef.current.value = "";
     } catch {
-      setError("Tarmoqda xatolik");
+      setError(t("admNetworkError"));
     } finally {
       setBusy(false);
     }
@@ -108,15 +110,15 @@ export default function FileUpload({
           </svg>
         </span>
         <span className="max-w-full truncate text-sm font-medium text-slate-700">
-          {fileName ?? "Faylni bu yerga tashlang"}
+          {fileName ?? t("admDropFileHere")}
         </span>
         <span className="text-xs text-slate-600">
-          {fileName ? "Yuklash uchun tugmani bosing" : "yoki bosib fayl tanlang"}
+          {fileName ? t("admClickToUpload") : t("admOrPickFile")}
         </span>
       </label>
       <div className="flex flex-wrap items-center gap-3">
         <Button size="sm" onClick={upload} disabled={busy}>
-          {busy ? "Yuklanmoqda..." : label}
+          {busy ? t("admUploading") : label ?? t("admFileUpload")}
         </Button>
         {url ? (
           <a
@@ -128,7 +130,7 @@ export default function FileUpload({
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 6 9 17l-5-5" />
             </svg>
-            Yuklandi: {url}
+            {t("admUploaded", { url })}
           </a>
         ) : null}
       </div>

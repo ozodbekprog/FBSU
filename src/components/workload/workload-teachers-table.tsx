@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Badge, Table } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { formatHours, type WorkloadTeacher } from "./workload-data";
+import { getDictionary, getLocale } from "@/i18n";
 
 export type WorkloadSortKey = "name" | "courses" | "students" | "hours" | "pending";
 
@@ -32,14 +33,6 @@ export function sortWorkloadTeachers(
     return (value(a) - value(b)) * factor;
   });
 }
-
-const COLUMNS: Array<{ key: WorkloadSortKey; label: string; align?: "right" }> = [
-  { key: "name", label: "O'qituvchi" },
-  { key: "courses", label: "Kurslar", align: "right" },
-  { key: "students", label: "Talabalar", align: "right" },
-  { key: "hours", label: "Haftalik soat", align: "right" },
-  { key: "pending", label: "Kutilayotgan", align: "right" },
-];
 
 function sortHref(
   key: WorkloadSortKey,
@@ -95,7 +88,7 @@ function SortArrows({ dir }: { dir: "asc" | "desc" | null }) {
   );
 }
 
-export function WorkloadTeachersTable({
+export async function WorkloadTeachersTable({
   teachers,
   sort,
   dir,
@@ -106,11 +99,19 @@ export function WorkloadTeachersTable({
   dir: "asc" | "desc";
   activeTeacherId: string | null;
 }) {
+  const dictionary = getDictionary(await getLocale());
+  const columns: Array<{ key: WorkloadSortKey; label: string; align?: "right" }> = [
+    { key: "name", label: dictionary.admColTeacher },
+    { key: "courses", label: dictionary.admCourses, align: "right" },
+    { key: "students", label: dictionary.admStudents, align: "right" },
+    { key: "hours", label: dictionary.admWorkloadColHours, align: "right" },
+    { key: "pending", label: dictionary.admWorkloadColPending, align: "right" },
+  ];
   return (
     <Table>
       <thead>
         <tr className="border-b border-slate-100 bg-slate-50/60 text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-          {COLUMNS.map((column) => {
+          {columns.map((column) => {
             const active = sort === column.key;
             return (
               <th

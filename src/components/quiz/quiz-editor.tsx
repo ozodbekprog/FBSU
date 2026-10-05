@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { Badge, Button, Card, CardBody, CardHeader, EmptyState, Input, Label, Select, Textarea } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/components/quiz/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import {
   QUESTION_TYPE_ACCENT,
   QUESTION_TYPE_ICON,
-  QUESTION_TYPE_LABEL,
+  QUESTION_TYPE_KEY,
   QUESTION_TYPE_SOFT,
   QUESTION_TYPE_TONE,
   type QuestionDraft,
@@ -47,6 +48,7 @@ function toDateTimeLocal(value: string | null | undefined): string {
 }
 
 export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: EditableQuiz }) {
+  const { t } = useI18n();
   const router = useRouter();
   const tempCounter = useRef(0);
 
@@ -81,17 +83,17 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
   }
 
   function validateMeta(): string | null {
-    if (!title.trim()) return "Test nomini kiriting";
-    if (!courseId) return "Kursni tanlang";
+    if (!title.trim()) return t("crsQuizErrTitle");
+    if (!courseId) return t("crsQuizErrCourse");
     const attempts = Number(maxAttempts);
     if (!Number.isInteger(attempts) || attempts < 1 || attempts > 50) {
-      return "Urinishlar soni 1 dan 50 gacha bo'lishi kerak";
+      return t("crsQuizErrAttempts");
     }
     const time = timeLimitMin.trim();
     if (time !== "") {
       const parsed = Number(time);
       if (!Number.isInteger(parsed) || parsed < 1 || parsed > 600) {
-        return "Vaqt chegarasi 1 dan 600 daqiqagacha bo'lishi kerak";
+        return t("crsQuizErrTimeLimit");
       }
     }
     return null;
@@ -109,13 +111,18 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
     setMessage(null);
 
     if (quiz) {
-      const result = await apiFetch(`/api/quizzes/${quiz.id}`, "PATCH", metaData());
+      const result = await apiFetch(
+        `/api/quizzes/${quiz.id}`,
+        "PATCH",
+        metaData(),
+        t("crsQuizServerError"),
+      );
       setSaving(false);
       if (!result.ok) {
         setError(result.error);
         return;
       }
-      setMessage("Saqlandi");
+      setMessage(t("crsQuizSaved"));
       router.refresh();
       return;
     }
@@ -129,7 +136,7 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
         correct: question.correct,
         points: question.points,
       })),
-    });
+    }, t("crsQuizServerError"));
     setSaving(false);
     if (!result.ok) {
       setError(result.error);
@@ -142,7 +149,7 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
     const activeId = editingId;
 
     if (quiz && activeId === NEW_QUESTION_ID) {
-      const result = await apiFetch<QuestionFull>(`/api/quizzes/${quiz.id}/questions`, "POST", draft);
+      const result = await apiFetch<QuestionFull>(`/api/quizzes/${quiz.id}/questions`, "POST", draft, t("crsQuizServerError"));
       if (!result.ok) return result.error;
       setQuestions((prev) => [...prev, result.data]);
       setEditingId(null);
@@ -150,7 +157,7 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
     }
 
     if (quiz && activeId && !activeId.startsWith("tmp-")) {
-      const result = await apiFetch<QuestionFull>(`/api/questions/${activeId}`, "PATCH", draft);
+      const result = await apiFetch<QuestionFull>(`/api/questions/${activeId}`, "PATCH", draft, t("crsQuizServerError"));
       if (!result.ok) return result.error;
       setQuestions((prev) => prev.map((question) => (question.id === activeId ? result.data : question)));
       setEditingId(null);
@@ -186,13 +193,13 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
     if (quiz) {
       const created: QuestionFull[] = [];
       for (const draft of drafts) {
-        const result = await apiFetch<QuestionFull>(`/api/quizzes/${quiz.id}/questions`, "POST", draft);
+        const result = await apiFetch<QuestionFull>(`/api/quizzes/${quiz.id}/questions`, "POST", draft, t("crsQuizServerError"));
         if (!result.ok) return result.error;
         created.push(result.data);
       }
       setQuestions((prev) => [...prev, ...created]);
       setError(null);
-      setMessage(`${created.length} ta savol bankdan qo'shildi`);
+      setMessage(t("crsQuizBankImported", { count: created.length }));
       return null;
     }
 
@@ -203,14 +210,14 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
     });
     setQuestions((prev) => [...prev, ...locals]);
     setError(null);
-    setMessage(`${locals.length} ta savol bankdan qo'shildi`);
+    setMessage(t("crsQuizBankImported", { count: locals.length }));
     return null;
   }
 
   async function deleteQuestion(question: QuestionFull) {
-    if (!window.confirm("Savolni o'chirishni tasdiqlaysizmi?")) return;
+    if (!window.confirm(t("crsQuizConfirmDeleteQuestion"))) return;
     if (quiz && !question.id.startsWith("tmp-")) {
-      const result = await apiFetch(`/api/questions/${question.id}`, "DELETE");
+      const result = await apiFetch(`/api/questions/${question.id}`, "DELETE", undefined, t("crsQuizServerError"));
       if (!result.ok) {
         setError(result.error);
         return;
@@ -221,9 +228,9 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
 
   async function deleteQuiz() {
     if (!quiz) return;
-    if (!window.confirm("Testni butunlay o'chirishni tasdiqlaysizmi?")) return;
+    if (!window.confirm(t("crsQuizConfirmDeleteQuiz"))) return;
     setSaving(true);
-    const result = await apiFetch(`/api/quizzes/${quiz.id}`, "DELETE");
+    const result = await apiFetch(`/api/quizzes/${quiz.id}`, "DELETE", undefined, t("crsQuizServerError"));
     if (!result.ok) {
       setSaving(false);
       setError(result.error);
@@ -239,36 +246,36 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
     <div className="space-y-6">
       <Card>
         <CardHeader
-          title="Test ma'lumotlari"
-          subtitle={quiz ? "Test nomi, kurs va cheklovlar" : "Test yaratish va savollar qo'shish"}
+          title={t("crsQuizMetaTitle")}
+          subtitle={quiz ? t("crsQuizMetaEditSubtitle") : t("crsQuizMetaCreateSubtitle")}
         />
         <CardBody className="space-y-4">
           <div>
-            <Label>Nom</Label>
+            <Label>{t("crsQuizName")}</Label>
             <Input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              placeholder="Masalan: Test 1: Asosiy tushunchalar"
+              placeholder={t("crsQuizNamePlaceholder")}
             />
           </div>
           <div>
-            <Label>Tavsif</Label>
+            <Label>{t("crsDescription")}</Label>
             <Textarea
               rows={2}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              placeholder="Qisqacha tavsif"
+              placeholder={t("crsQuizDescPlaceholder")}
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="sm:col-span-2">
-              <Label>Kurs</Label>
+              <Label>{t("crsQuizCourse")}</Label>
               <Select
                 value={courseId}
                 onChange={(event) => setCourseId(event.target.value)}
                 disabled={courses.length === 0}
               >
-                {courses.length === 0 ? <option value="">Kurslar yo&apos;q</option> : null}
+                {courses.length === 0 ? <option value="">{t("crsNoCourses")}</option> : null}
                 {courses.map((course) => (
                   <option key={course.id} value={course.id}>
                     {course.title}
@@ -277,7 +284,7 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
               </Select>
             </div>
             <div className="sm:col-span-2">
-              <Label>Muddat (deadline)</Label>
+              <Label>{t("crsQuizDue")}</Label>
               <Input
                 type="datetime-local"
                 value={dueAt}
@@ -285,18 +292,18 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
               />
             </div>
             <div>
-              <Label>Vaqt (daqiqa)</Label>
+              <Label>{t("crsQuizTimeLimit")}</Label>
               <Input
                 type="number"
                 min={1}
                 max={600}
                 value={timeLimitMin}
                 onChange={(event) => setTimeLimitMin(event.target.value)}
-                placeholder="Cheklovsiz"
+                placeholder={t("crsQuizUnlimited")}
               />
             </div>
             <div>
-              <Label>Urinishlar soni</Label>
+              <Label>{t("crsQuizMaxAttempts")}</Label>
               <Input
                 type="number"
                 min={1}
@@ -309,10 +316,10 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
           <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3 transition-colors duration-150 hover:border-slate-300">
             <span className="min-w-0">
               <span className="block text-sm font-medium text-slate-800">
-                Talabalarga e&apos;lon qilish
+                {t("crsQuizPublish")}
               </span>
               <span className="mt-0.5 block text-xs text-slate-500">
-                E&apos;lon qilinmagan test faqat sizga ko&apos;rinadi
+                {t("crsQuizPublishHint")}
               </span>
             </span>
             <input
@@ -328,15 +335,15 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
       <div>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2.5">
-            <h2 className="text-lg font-semibold tracking-tight text-slate-900">Savollar</h2>
+            <h2 className="text-lg font-semibold tracking-tight text-slate-900">{t("crsQuizQuestions")}</h2>
             <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-              {questions.length} ta
+              {t("crsQuizCountBadge", { count: questions.length })}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-300/25 px-3 py-1 text-xs font-semibold text-gold-800">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M12 2.5l2.9 5.9 6.5.95-4.7 4.6 1.1 6.45L12 17.35 6.2 20.4l1.1-6.45-4.7-4.6 6.5-.95L12 2.5z" />
               </svg>
-              {questionsTotal} ball
+              {t("crsQuizPoints", { points: questionsTotal })}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -349,7 +356,7 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
               </svg>
-              Bankdan qo&apos;shish
+              {t("crsQuizImportBank")}
             </Button>
             <Button
               variant="secondary"
@@ -359,7 +366,7 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              Savol qo&apos;shish
+              {t("crsQuizAddQuestion")}
             </Button>
           </div>
         </div>
@@ -367,8 +374,8 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
         <div className="space-y-3">
           {questions.length === 0 && editingId !== NEW_QUESTION_ID ? (
             <EmptyState
-              title="Savollar yo'q"
-              description="Testga kamida bitta savol qo'shing."
+              title={t("crsQuizNoQuestions")}
+              description={t("crsQuizNoQuestionsDesc")}
             />
           ) : null}
 
@@ -401,9 +408,9 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                           <path d={QUESTION_TYPE_ICON[question.type]} />
                         </svg>
-                        {QUESTION_TYPE_LABEL[question.type]}
+                        {t(QUESTION_TYPE_KEY[question.type])}
                       </Badge>
-                      <Badge tone="gold">{question.points} ball</Badge>
+                      <Badge tone="gold">{t("crsQuizPoints", { points: question.points })}</Badge>
                     </div>
                     <p className="mt-2.5 text-sm font-medium text-slate-900">{question.text}</p>
                     {question.type !== "TEXT" ? (
@@ -444,7 +451,7 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M12 8v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
                         </svg>
-                        Matnli javob qo&apos;lda baholanadi
+                        {t("crsQuizTextManual")}
                       </p>
                     )}
                   </div>
@@ -455,7 +462,7 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
                       onClick={() => setEditingId(question.id)}
                       disabled={editingId !== null}
                     >
-                      Tahrirlash
+                      {t("crsEdit")}
                     </Button>
                     <Button
                       size="sm"
@@ -464,7 +471,7 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
                       onClick={() => void deleteQuestion(question)}
                       disabled={editingId !== null}
                     >
-                      O&apos;chirish
+                      {t("crsDelete")}
                     </Button>
                   </div>
                 </CardBody>
@@ -526,25 +533,25 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
                 ) : (
                   <p className="text-slate-500">
                     {quiz
-                      ? "O'zgarishlarni saqlashni unutmang"
+                      ? t("crsQuizRememberSave")
                       : questions.length > 0
-                        ? `${questions.length} ta savol tayyor`
-                        : "Savollarni qo'shib, testni yaratishni yakunlang"}
+                        ? t("crsQuizReadyCount", { count: questions.length })
+                        : t("crsQuizFinishHint")}
                   </p>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-2">
               <span className="hidden rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500 sm:inline-flex">
-                {questions.length} savol · {questionsTotal} ball
+                {t("crsQuizSummary", { questions: questions.length, points: questionsTotal })}
               </span>
               {quiz ? (
                 <Button variant="danger" size="sm" onClick={() => void deleteQuiz()} disabled={saving}>
-                  Testni o&apos;chirish
+                  {t("crsQuizDeleteQuiz")}
                 </Button>
               ) : null}
               <Button onClick={() => void saveMeta()} disabled={saving || courses.length === 0}>
-                {saving ? "Saqlanmoqda..." : quiz ? "Saqlash" : "Testni yaratish"}
+                {saving ? t("crsSaving") : quiz ? t("crsSave") : t("crsQuizCreate")}
               </Button>
             </div>
           </div>

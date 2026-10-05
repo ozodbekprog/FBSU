@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import {
   Avatar,
   Badge,
@@ -31,6 +32,8 @@ export default async function GradesPage({
   searchParams: Promise<{ courseId?: string }>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
   if (user.role === "STUDENT") {
     const memberQuery: Promise<{ id: string; name: string; avatarUrl: string | null }[]> =
@@ -202,13 +205,16 @@ export default async function GradesPage({
 
     return (
       <>
-        <PageHeader title="Baholarim" subtitle={user.group?.name ?? "Talaba"} />
+        <PageHeader
+          title={dictionary.grdGradesTitle}
+          subtitle={user.group?.name ?? dictionary.grdStudent}
+        />
 
         {attendance.courses.length > 0 ? (
           <Card className="mb-6">
             <CardHeader
-              title="Davomat"
-              subtitle="Imtihonga ruxsat uchun har kursda kamida 80% davomat kerak"
+              title={dictionary.grdAttendance}
+              subtitle={dictionary.grdAttendanceSubtitle}
             />
             <CardBody className="grid gap-5 sm:grid-cols-2">
               {attendance.courses.map((course) => (
@@ -230,13 +236,15 @@ export default async function GradesPage({
                         {course.percent}%
                       </span>
                       <Badge tone={course.eligible ? "green" : "rose"}>
-                        {course.eligible ? "Imtihonga ruxsat" : "Ruxsat yo'q"}
+                        {course.eligible
+                          ? dictionary.grdExamAdmitted
+                          : dictionary.grdNoPermission}
                       </Badge>
                     </span>
                   </div>
                   <Progress value={course.percent} max={100} className="h-2" />
                   {course.eligible ? null : (
-                    <p className="text-xs text-slate-600">Kamida 80% kerak</p>
+                    <p className="text-xs text-slate-600">{dictionary.grdMinAttendance80}</p>
                   )}
                 </div>
               ))}
@@ -254,24 +262,30 @@ export default async function GradesPage({
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm font-semibold text-slate-600">Umumiy o&apos;rtacha</p>
-                {me ? <Badge tone="gold">Reytingda #{me.rank}</Badge> : null}
+                <p className="text-sm font-semibold text-slate-600">
+                  {dictionary.grdOverallAverage}
+                </p>
+                {me ? (
+                  <Badge tone="gold">
+                    {translate(locale, "grdInRating", { rank: me.rank })}
+                  </Badge>
+                ) : null}
               </div>
               <p className="mt-1 text-xs text-slate-600">
-                {maxSum > 0 ? "Baholangan topshiriq va testlar asosida" : "Hali baho yo'q"}
+                {maxSum > 0 ? dictionary.grdBasedOnGraded : dictionary.grdNoGradesYet}
               </p>
               <div className="mt-5">
                 <div className="mb-1.5 flex items-center justify-between text-xs font-medium text-slate-500">
-                  <span>O&apos;zlashtirish</span>
+                  <span>{dictionary.grdMastery}</span>
                   <span className="tabular-nums text-slate-700">{average ?? 0}%</span>
                 </div>
                 <Progress value={average ?? 0} max={100} className="h-2" />
               </div>
               <div className="mt-5 grid grid-cols-3 gap-3">
                 {[
-                  { label: "Baholangan", value: graded.length },
-                  { label: "Javoblar", value: submissions.length },
-                  { label: "Testlar", value: attempts.length },
+                  { label: dictionary.grdGraded, value: graded.length },
+                  { label: dictionary.grdSubmissions, value: submissions.length },
+                  { label: dictionary.grdQuizzes, value: attempts.length },
                 ].map((item) => (
                   <div
                     key={item.label}
@@ -297,8 +311,8 @@ export default async function GradesPage({
         {groups.length === 0 ? (
           <div className="mt-6">
             <EmptyState
-              title="Baholar yo'q"
-              description="Kurs topshiriqlarini topshirganingizdan so'ng baholar shu yerda ko'rinadi."
+              title={dictionary.grdNoGrades}
+              description={dictionary.grdNoGradesDesc}
             />
           </div>
         ) : (
@@ -313,14 +327,20 @@ export default async function GradesPage({
                     {group.title}
                   </span>
                 }
-                subtitle={`${group.submissions.length} ta topshiriq javobi${
-                  group.attempts.length > 0 ? ` · ${group.attempts.length} ta test` : ""
+                subtitle={`${translate(locale, "grdAssignmentResponses", {
+                  count: group.submissions.length,
+                })}${
+                  group.attempts.length > 0
+                    ? ` · ${translate(locale, "grdQuizCount", {
+                        count: group.attempts.length,
+                      })}`
+                    : ""
                 }`}
                 action={
                   groupAverage(group) != null ? (
                     <span className="flex items-center gap-2">
                       <span className="hidden text-[11px] font-medium uppercase tracking-wide text-slate-600 sm:block">
-                        Kurs o&apos;rtachasi
+                        {dictionary.grdCourseAverage}
                       </span>
                       <GradeBadge percent={groupAverage(group)} size="md" />
                     </span>
@@ -332,10 +352,14 @@ export default async function GradesPage({
                   <Table>
                     <thead>
                       <tr className="border-b border-slate-100 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-600">
-                        <th className="py-2.5 pr-3 text-left font-medium">Topshiriq</th>
-                        <th className="px-3 py-2.5 text-left font-medium">Muddat</th>
-                        <th className="px-3 py-2.5 text-left font-medium">Holat</th>
-                        <th className="px-3 py-2.5 text-right font-medium">Natija</th>
+                        <th className="py-2.5 pr-3 text-left font-medium">
+                          {dictionary.grdAssignment}
+                        </th>
+                        <th className="px-3 py-2.5 text-left font-medium">
+                          {dictionary.grdDeadline}
+                        </th>
+                        <th className="px-3 py-2.5 text-left font-medium">{dictionary.grdStatus}</th>
+                        <th className="px-3 py-2.5 text-right font-medium">{dictionary.grdResult}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -380,15 +404,15 @@ export default async function GradesPage({
                 {group.attempts.length > 0 ? (
                   <div>
                     <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">
-                      Test urinishlari
+                      {dictionary.grdQuizAttempts}
                     </p>
                     <Table>
                       <thead>
                         <tr className="border-b border-slate-100 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-600">
-                          <th className="py-2.5 pr-3 text-left font-medium">Test</th>
-                          <th className="px-3 py-2.5 text-left font-medium">Sana</th>
-                          <th className="px-3 py-2.5 text-left font-medium">Holat</th>
-                          <th className="px-3 py-2.5 text-right font-medium">Ball</th>
+                          <th className="py-2.5 pr-3 text-left font-medium">{dictionary.grdQuiz}</th>
+                          <th className="px-3 py-2.5 text-left font-medium">{dictionary.grdDate}</th>
+                          <th className="px-3 py-2.5 text-left font-medium">{dictionary.grdStatus}</th>
+                          <th className="px-3 py-2.5 text-right font-medium">{dictionary.grdScore}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -414,7 +438,9 @@ export default async function GradesPage({
                               </td>
                               <td className="px-3 py-3">
                                 <Badge tone={attempt.finishedAt ? "green" : "slate"}>
-                                  {attempt.finishedAt ? "Tugallangan" : "Tugallanmagan"}
+                                  {attempt.finishedAt
+                                    ? dictionary.grdCompleted
+                                    : dictionary.grdNotCompleted}
                                 </Badge>
                               </td>
                               <td className="px-3 py-3 text-right">
@@ -453,8 +479,11 @@ export default async function GradesPage({
   if (!selected) {
     return (
       <>
-        <PageHeader title="Baholash jurnali" subtitle="O'qituvchi paneli" />
-        <EmptyState title="Kurslar yo'q" description="Avval kurs yarating." />
+        <PageHeader title={dictionary.grdGradebookTitle} subtitle={dictionary.grdTeacherPanel} />
+        <EmptyState
+          title={dictionary.grdNoCourses}
+          description={dictionary.grdCreateCourseFirst}
+        />
       </>
     );
   }
@@ -521,7 +550,7 @@ export default async function GradesPage({
   return (
     <>
       <PageHeader
-        title="Baholash jurnali"
+        title={dictionary.grdGradebookTitle}
         subtitle={selected.title}
         action={
           <form method="get" className="flex items-end gap-2">
@@ -533,36 +562,42 @@ export default async function GradesPage({
               ))}
             </Select>
             <Button type="submit" variant="secondary">
-              Ko&apos;rsatish
+              {dictionary.grdShow}
             </Button>
           </form>
         }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Talabalar" value={enrollments.length} />
-        <Stat label="Topshiriqlar" value={assignments.length} />
+        <Stat label={dictionary.grdStudents} value={enrollments.length} />
+        <Stat label={dictionary.grdAssignments} value={assignments.length} />
         <Stat
-          label="Kutilmoqda"
+          label={dictionary.grdPending}
           value={pendingSubmissions.length}
-          hint={pendingSubmissions.length > 0 ? "Baholash navbatida" : "Navbat bo'sh"}
+          hint={
+            pendingSubmissions.length > 0
+              ? dictionary.grdInGradingQueue
+              : dictionary.grdQueueEmpty
+          }
         />
-        <Stat label="Baholangan" value={gradedSubmissions.length} />
+        <Stat label={dictionary.grdGraded} value={gradedSubmissions.length} />
       </div>
 
       <Card className="mt-6">
         <CardHeader
-          title="Baholash navbati"
+          title={dictionary.grdGradingQueue}
           subtitle={
             pendingSubmissions.length > 0
-              ? `${pendingSubmissions.length} ta javob baho kutmoqda`
-              : "Barcha topshirilgan javoblar baholangan"
+              ? translate(locale, "grdPendingCount", { count: pendingSubmissions.length })
+              : dictionary.grdAllGraded
           }
           action={
             pendingSubmissions.length > 0 ? (
-              <Badge tone="amber">{pendingSubmissions.length} ta</Badge>
+              <Badge tone="amber">
+                {translate(locale, "grdCountBadge", { count: pendingSubmissions.length })}
+              </Badge>
             ) : (
-              <Badge tone="green">Tayyor</Badge>
+              <Badge tone="green">{dictionary.grdReady}</Badge>
             )
           }
         />
@@ -583,7 +618,7 @@ export default async function GradesPage({
                   <path d="m5 12 4.5 4.5L19 7" />
                 </svg>
               </span>
-              Baholash navbatda turgan javob yo&apos;q.
+              {dictionary.grdNoPending}
             </div>
           ) : (
             <ul className="divide-y divide-slate-100">
@@ -595,7 +630,7 @@ export default async function GradesPage({
                   const assignment = assignments.find(
                     (item) => item.id === submission.assignmentId,
                   );
-                  const student = studentNames.get(submission.studentId) ?? "Talaba";
+                  const student = studentNames.get(submission.studentId) ?? dictionary.grdStudent;
                   return (
                     <li
                       key={submission.id}
@@ -606,7 +641,8 @@ export default async function GradesPage({
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-slate-800">{student}</p>
                         <p className="truncate text-xs text-slate-500">
-                          {assignment?.title ?? "Topshiriq"} · {fmtDate(submission.submittedAt)}
+                          {assignment?.title ?? dictionary.grdAssignment} ·{" "}
+                          {fmtDate(submission.submittedAt)}
                         </p>
                       </div>
                       <ButtonLink
@@ -615,7 +651,7 @@ export default async function GradesPage({
                         size="sm"
                         className="shrink-0"
                       >
-                        Baholash
+                        {dictionary.grdGradeAction}
                       </ButtonLink>
                     </li>
                   );
@@ -627,14 +663,17 @@ export default async function GradesPage({
 
       <Card className="mt-6">
         <CardHeader
-          title="Jurnal"
-          subtitle={`${enrollments.length} ta talaba × ${assignments.length} ta topshiriq`}
+          title={dictionary.grdJournal}
+          subtitle={translate(locale, "grdJournalSubtitle", {
+            students: enrollments.length,
+            assignments: assignments.length,
+          })}
         />
         <CardBody>
           {enrollments.length === 0 || assignments.length === 0 ? (
             <EmptyState
-              title="Jurnal bo'sh"
-              description="Kursda talaba yoki topshiriq mavjud emas."
+              title={dictionary.grdJournalEmpty}
+              description={dictionary.grdJournalEmptyDesc}
             />
           ) : (
             <div className="max-h-[70vh] overflow-auto overscroll-contain rounded-2xl border border-slate-200/70">
@@ -642,7 +681,7 @@ export default async function GradesPage({
                 <thead>
                   <tr className="text-xs text-slate-500">
                     <th className="sticky left-0 top-0 z-30 min-w-44 bg-slate-50 px-4 py-3 text-left font-medium shadow-[inset_0_-1px_0_#e2e8f0]">
-                      Talaba
+                      {dictionary.grdStudent}
                     </th>
                     {assignments.map((assignment) => (
                       <th
@@ -651,12 +690,12 @@ export default async function GradesPage({
                       >
                         <span className="mx-auto block max-w-32 truncate">{assignment.title}</span>
                         <span className="block font-normal text-slate-600">
-                          max {assignment.maxScore}
+                          {translate(locale, "grdMaxScore", { score: assignment.maxScore })}
                         </span>
                       </th>
                     ))}
                     <th className="sticky top-0 z-20 bg-brand-50 px-3 py-3 text-center font-semibold text-brand-800 shadow-[inset_0_-1px_0_#dbe4f4]">
-                      O&apos;rtacha
+                      {dictionary.grdAverage}
                     </th>
                   </tr>
                 </thead>
@@ -706,7 +745,7 @@ export default async function GradesPage({
                 <tfoot>
                   <tr className="text-xs text-slate-500">
                     <td className="sticky bottom-0 left-0 z-30 bg-slate-50 px-4 py-2.5 font-medium shadow-[inset_0_1px_0_#e2e8f0]">
-                      O&apos;rtacha
+                      {dictionary.grdAverage}
                     </td>
                     {assignments.map((assignment) => {
                       const average = assignmentAverage(assignment.id, assignment.maxScore);

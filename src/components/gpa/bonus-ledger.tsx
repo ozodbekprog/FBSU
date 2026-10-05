@@ -1,4 +1,5 @@
 import { Badge, Card, CardBody, CardHeader, EmptyState, Table } from "@/components/ui";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 type Row = {
   id: string;
@@ -10,29 +11,36 @@ type Row = {
   createdAt: string;
 };
 
-export function BonusLedger({ rows }: { rows: Row[] }) {
+export async function BonusLedger({ rows }: { rows: Row[] }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+
   return (
     <Card>
       <CardHeader
-        title="Berilgan bonus ballar"
-        subtitle={rows.length > 0 ? `${rows.length} ta yozuv` : "Hozircha yozuv yo'q"}
+        title={dictionary.grdGivenBonusPoints}
+        subtitle={
+          rows.length > 0
+            ? translate(locale, "grdRecordsCount", { count: rows.length })
+            : dictionary.grdNoRecordsYet
+        }
       />
       <CardBody>
         {rows.length === 0 ? (
           <EmptyState
-            title="Bonus ballar yo'q"
-            description="O'qituvchi fan tanlab, o'quvchiga ball bera boshlaganida bu yerda ro'yxat paydo bo'ladi."
+            title={dictionary.grdNoBonusPoints}
+            description={dictionary.grdNoBonusPointsDesc}
           />
         ) : (
           <div className="-mx-6 overflow-x-auto">
             <Table>
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
-                  <th className="px-6 py-2 font-medium">O&apos;quvchi</th>
-                  <th className="px-3 py-2 font-medium">Fan</th>
-                  <th className="px-3 py-2 font-medium">Ball</th>
-                  <th className="px-3 py-2 font-medium">Sabab</th>
-                  <th className="px-6 py-2 font-medium">Sana</th>
+                  <th className="px-6 py-2 font-medium">{dictionary.grdPupil}</th>
+                  <th className="px-3 py-2 font-medium">{dictionary.grdSubject}</th>
+                  <th className="px-3 py-2 font-medium">{dictionary.grdScore}</th>
+                  <th className="px-3 py-2 font-medium">{dictionary.grdReason}</th>
+                  <th className="px-6 py-2 font-medium">{dictionary.grdDate}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

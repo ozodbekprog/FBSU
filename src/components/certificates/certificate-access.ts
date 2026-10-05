@@ -19,13 +19,24 @@ export function certificateSerial(id: string) {
 
 export type CertificateGradeTone = "green" | "blue" | "amber" | "slate";
 
-export function certificateGrade(grade: number | null | undefined): {
+export type CertificateGradeLabels = {
+  none: string;
+  excellent: string;
+  good: string;
+  satisfactory: string;
+  unsatisfactory: string;
+};
+
+export function certificateGrade(
+  grade: number | null | undefined,
+  labels: CertificateGradeLabels,
+): {
   label: string;
   tone: CertificateGradeTone;
 } {
-  if (grade == null) return { label: "Baholanmagan", tone: "slate" };
-  if (grade >= 90) return { label: "A'lo", tone: "green" };
-  if (grade >= 70) return { label: "Yaxshi", tone: "blue" };
-  if (grade >= 60) return { label: "Qoniqarli", tone: "amber" };
-  return { label: "Qoniqarsiz", tone: "slate" };
+  if (grade == null) return { label: labels.none, tone: "slate" };
+  if (grade >= 90) return { label: labels.excellent, tone: "green" };
+  if (grade >= 70) return { label: labels.good, tone: "blue" };
+  if (grade >= 60) return { label: labels.satisfactory, tone: "amber" };
+  return { label: labels.unsatisfactory, tone: "slate" };
 }

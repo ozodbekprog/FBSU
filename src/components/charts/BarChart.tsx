@@ -1,3 +1,11 @@
+import { currentLocale } from "@/lib/utils";
+
+const NO_DATA: Record<string, string> = {
+  uz: "Ma'lumot yo'q",
+  ru: "Нет данных",
+  en: "No data",
+};
+
 export type BarChartDatum = { label: string; value: number };
 
 const WIDTH = 560;
@@ -14,7 +22,7 @@ function niceScale(maxValue: number) {
 
 export function BarChart({ data, height = 220 }: { data: BarChartDatum[]; height?: number }) {
   if (data.length === 0) {
-    return <p className="py-12 text-center text-sm text-slate-600">{"Ma'lumot yo'q"}</p>;
+    return <p className="py-12 text-center text-sm text-slate-600">{NO_DATA[currentLocale()] ?? NO_DATA.uz}</p>;
   }
 
   const pad = { top: 20, right: 10, bottom: 32, left: 40 };

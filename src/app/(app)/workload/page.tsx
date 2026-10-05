@@ -8,6 +8,7 @@ import {
   sortWorkloadTeachers,
 } from "@/components/workload/workload-teachers-table";
 import { WorkloadCoursesTable } from "@/components/workload/workload-courses-table";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 export default async function WorkloadPage({
   searchParams,
@@ -19,6 +20,9 @@ export default async function WorkloadPage({
   const requestedTeacherId =
     typeof params.teacherId === "string" && params.teacherId.length > 0 ? params.teacherId : null;
   const teacherId = user.role === "TEACHER" ? user.id : requestedTeacherId;
+
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
   const data = await buildWorkloadData({
     teacherId,
@@ -35,42 +39,45 @@ export default async function WorkloadPage({
   return (
     <>
       <PageHeader
-        title="Yuklama"
-        eyebrow={user.role === "ADMIN" ? "Administrator paneli" : "O'qituvchi paneli"}
+        title={dictionary.admWorkloadTitle}
+        eyebrow={user.role === "ADMIN" ? dictionary.admWorkloadAdminPanel : dictionary.admWorkloadTeacherPanel}
         subtitle={
           scopeName
-            ? `${scopeName} · ${data.summary.courseCount} ta kurs`
-            : `Barcha o'qituvchilar · ${data.summary.courseCount} ta kurs`
+            ? translate(locale, "admWorkloadSubtitle", {
+                scope: scopeName,
+                count: data.summary.courseCount,
+              })
+            : translate(locale, "admWorkloadAllTeachers", { count: data.summary.courseCount })
         }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-brand-50/70">
           <Stat
-            label="Kurslar"
+            label={dictionary.admCourses}
             value={data.summary.courseCount}
-            hint={scopeName ? "Biriktirilgan kurslar" : "Tizimdagi barcha kurslar"}
+            hint={scopeName ? dictionary.admWorkloadStatCoursesHintAssigned : dictionary.admWorkloadStatCoursesHintAll}
           />
         </div>
         <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-emerald-50/70">
           <Stat
-            label="Talabalar"
+            label={dictionary.admStudents}
             value={data.summary.studentCount}
-            hint="Kurslarga yozilgan talabalar"
+            hint={dictionary.admWorkloadStatStudentsHint}
           />
         </div>
         <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-amber-50/70">
           <Stat
-            label="Kutilayotgan baholash"
+            label={dictionary.admWorkloadStatPending}
             value={data.summary.pendingReviews}
-            hint="Topshiriq va matnli javoblar"
+            hint={dictionary.admWorkloadStatPendingHint}
           />
         </div>
         <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-purple-50/70">
           <Stat
-            label="Haftalik soatlar"
+            label={dictionary.admWorkloadStatHours}
             value={formatHours(data.summary.weeklyHours)}
-            hint="Jadval: 1 dars = 1.5 soat"
+            hint={dictionary.admWorkloadStatHoursHint}
           />
         </div>
       </div>
@@ -78,14 +85,14 @@ export default async function WorkloadPage({
       {user.role === "ADMIN" ? (
         <Card className="mt-6">
           <CardHeader
-            title="O'qituvchilar jadvali"
-            subtitle={`${data.teachers.length} ta o'qituvchi`}
+            title={dictionary.admWorkloadTeachersTitle}
+            subtitle={translate(locale, "admWorkloadTeachersSubtitle", { count: data.teachers.length })}
           />
           <CardBody>
             {data.teachers.length === 0 ? (
               <EmptyState
-                title="O'qituvchilar topilmadi"
-                description="Tizimda o'qituvchi roli foydalanuvchilari yo'q."
+                title={dictionary.admWorkloadTeachersEmptyTitle}
+                description={dictionary.admWorkloadTeachersEmptyDesc}
               />
             ) : (
               <WorkloadTeachersTable
@@ -101,15 +108,15 @@ export default async function WorkloadPage({
 
       <Card className="mt-6">
         <CardHeader
-          title="Kurslar bo'yicha yuklama"
-          subtitle={selectedTeacher ? selectedTeacher.name : "Barcha kurslar"}
+          title={dictionary.admWorkloadCoursesTitle}
+          subtitle={selectedTeacher ? selectedTeacher.name : dictionary.admWorkloadAllCourses}
           action={
             user.role === "ADMIN" && teacherId ? (
               <Link
                 href="/workload"
                 className="text-sm font-medium text-slate-500 transition-colors duration-150 hover:text-brand-800"
               >
-                Barchasi
+                {dictionary.admWorkloadAll}
               </Link>
             ) : undefined
           }
@@ -117,8 +124,8 @@ export default async function WorkloadPage({
         <CardBody>
           {data.courses.length === 0 ? (
             <EmptyState
-              title="Kurslar topilmadi"
-              description="Bu doirada yuklama hisoblanadigan kurslar mavjud emas."
+              title={dictionary.admWorkloadCoursesEmptyTitle}
+              description={dictionary.admWorkloadCoursesEmptyDesc}
             />
           ) : (
             <WorkloadCoursesTable

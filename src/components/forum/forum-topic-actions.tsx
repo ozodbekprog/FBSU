@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export function ForumTopicActions({
   topicId,
@@ -18,6 +19,7 @@ export function ForumTopicActions({
   redirectTo?: string;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [pinning, setPinning] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,20 +40,20 @@ export function ForumTopicActions({
 
     setPinning(false);
     if (!response.ok || !json?.ok) {
-      setError(json?.error ?? "Amalni bajarishda xatolik yuz berdi");
+      setError(json?.error ?? t("msgActionError"));
       return;
     }
     router.refresh();
   }
 
   async function handleDelete() {
-    if (!window.confirm("Mavzuni o'chirishni tasdiqlaysizmi?")) return;
+    if (!window.confirm(t("msgConfirmDeleteTopic"))) return;
     setDeleting(true);
     const response = await fetch(`/api/forum/${topicId}`, { method: "DELETE" });
     setDeleting(false);
     if (!response.ok) {
       const json = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(json?.error ?? "O'chirishda xatolik yuz berdi");
+      setError(json?.error ?? t("msgDeleteError"));
       return;
     }
     if (redirectTo) {
@@ -68,12 +70,12 @@ export function ForumTopicActions({
       <div className="flex gap-2">
         {canPin ? (
           <Button size="sm" variant="secondary" onClick={togglePin} disabled={pinning}>
-            {isPinned ? "Pindan olish" : "Pin qilish"}
+            {isPinned ? t("msgUnpin") : t("msgPin")}
           </Button>
         ) : null}
         {canDelete ? (
           <Button size="sm" variant="danger" onClick={handleDelete} disabled={deleting}>
-            O&apos;chirish
+            {t("msgDelete")}
           </Button>
         ) : null}
       </div>

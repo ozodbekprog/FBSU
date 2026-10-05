@@ -1,12 +1,15 @@
+"use client";
+
 import { Badge } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type SubmissionStatusValue = "SUBMITTED" | "GRADED" | "LATE";
 
-const LABELS: Record<SubmissionStatusValue, string> = {
-  SUBMITTED: "Topshirilgan",
-  GRADED: "Baholangan",
-  LATE: "Kechikkan",
+const STATUS_KEYS: Record<SubmissionStatusValue, "crsSubmitted" | "crsGraded" | "crsLate"> = {
+  SUBMITTED: "crsSubmitted",
+  GRADED: "crsGraded",
+  LATE: "crsLate",
 };
 
 const TONES: Record<SubmissionStatusValue, "blue" | "green" | "rose"> = {
@@ -23,21 +26,18 @@ const DOTS: Record<SubmissionStatusValue, string> = {
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
 
-export function submissionStatusLabel(status: SubmissionStatusValue | null | undefined) {
-  return status ? LABELS[status] : "Topshirilmagan";
-}
-
 export function SubmissionBadge({
   status,
 }: {
   status: SubmissionStatusValue | null | undefined;
 }) {
+  const { t } = useI18n();
   return (
     <Badge tone={status ? TONES[status] : "slate"}>
       <span
         className={cn("mr-1.5 size-1.5 rounded-full", status ? DOTS[status] : "bg-slate-400")}
       />
-      {submissionStatusLabel(status)}
+      {status ? t(STATUS_KEYS[status]) : t("crsNotSubmitted")}
     </Badge>
   );
 }
@@ -94,8 +94,9 @@ export function DueChip({
   className?: string;
 }) {
   const state = dueState(dueAt, completed, now);
+  const { t } = useI18n();
   const label =
-    state === "overdue" ? "Muddat o'tgan" : state === "soon" ? "Muddat yaqin" : null;
+    state === "overdue" ? t("crsDueOverdue") : state === "soon" ? t("crsDueSoon") : null;
   return (
     <span
       className={cn(
@@ -105,7 +106,7 @@ export function DueChip({
       )}
     >
       <CalendarIcon />
-      {dueAt ? fmtDate(dueAt) : "Muddat belgilanmagan"}
+      {dueAt ? fmtDate(dueAt) : t("crsNoDueDate")}
       {label ? <span className="opacity-80">· {label}</span> : null}
     </span>
   );

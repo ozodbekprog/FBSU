@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth";
 import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { CheckInForm } from "@/components/attendance/check-in-form";
 
 export default async function AttendanceCheckInPage({
@@ -8,18 +9,20 @@ export default async function AttendanceCheckInPage({
   searchParams: Promise<{ t?: string; code?: string }>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const { t, code } = await searchParams;
 
   if (user.role !== "STUDENT") {
     return (
       <>
-        <PageHeader title="QR orqali davomat" subtitle="Talabalar uchun" />
+        <PageHeader title={dictionary.schQrAttendanceTitle} subtitle={dictionary.schForStudents} />
         <EmptyState
-          title="Bu sahifa talabalar uchun"
-          description="O'qituvchi sifatida davomatni kurs sahifasidagi QR panel orqali boshqarasiz."
+          title={dictionary.schPageForStudentsTitle}
+          description={dictionary.schPageForStudentsDesc}
           action={
             <ButtonLink href="/courses" variant="secondary" size="sm" className="mt-2">
-              Kurslarga o&apos;tish
+              {dictionary.schGoToCourses}
             </ButtonLink>
           }
         />
@@ -34,8 +37,8 @@ export default async function AttendanceCheckInPage({
   return (
     <>
       <PageHeader
-        title="QR orqali davomat"
-        subtitle={`${user.name} · QR kodni skanerlang`}
+        title={dictionary.schQrAttendanceTitle}
+        subtitle={translate(locale, "schScanQrSubtitle", { name: user.name })}
       />
       <CheckInForm initialPayload={initialPayload} />
     </>

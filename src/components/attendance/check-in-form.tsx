@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button, Card, CardBody } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { cn, fmtDate } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { requestBrowserLocation, type QrScanPayload } from "./live-qr";
@@ -14,18 +15,19 @@ type CheckInResult = {
   reasons?: string[];
 };
 
-const REASON_LABELS: Record<string, string> = {
-  GEO_FAR: "Joylashuv o'qituvchi joyidan uzoq",
-  GEO_MISSING: "Qurilma joylashuvi aniqlanmadi",
-  GEO_ACCURACY_LOW: "Joylashuv aniqligi past",
-  IP_CHANGED: "IP manzil o'zgardi",
-  IP_SHARED: "Bir xil qurilmadan bir nechta belgilash aniqlandi",
-  VPN_SUSPECTED: "VPN yoki proxy aniqlandi",
-  IP_GEO_MISMATCH: "Tarmoq joylashuvi qurilma joylashuviga mos emas",
-  CODE_USED: "Dinamik QR o'rniga statik kod ishlatildi",
-};
+const REASON_KEYS = {
+  GEO_FAR: "schReasonGeoFar",
+  GEO_MISSING: "schReasonGeoMissing",
+  GEO_ACCURACY_LOW: "schReasonGeoAccuracyLow",
+  IP_CHANGED: "schReasonIpChanged",
+  IP_SHARED: "schReasonIpShared",
+  VPN_SUSPECTED: "schReasonVpnSuspected",
+  IP_GEO_MISMATCH: "schReasonIpGeoMismatch",
+  CODE_USED: "schReasonCodeUsed",
+} as const;
 
 export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload }) {
+  const { t } = useI18n();
   const [status, setStatus] = useState<"idle" | "scanning" | "loading" | "success" | "suspicious" | "error">(
     "idle",
   );
@@ -40,16 +42,16 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
     const code = (payload.code ?? "").trim().toUpperCase();
     if (!token && !code) {
       setStatus("error");
-      setMessage("QR kod o'qilmadi. Qayta urinib ko'ring.");
+      setMessage(t("schQrNotRead"));
       return;
     }
 
     setStatus("loading");
-    setMessage("QR o'qildi ✓ — joylashuv aniqlanmoqda...");
+    setMessage(t("schQrReadLocating"));
 
     const location = await requestBrowserLocation();
 
-    setMessage("Tekshirilmoqda...");
+    setMessage(t("schChecking"));
 
     const body = token
       ? location
@@ -71,7 +73,7 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
     } catch {
       window.clearTimeout(timer);
       setStatus("error");
-      setMessage("Serverdan javob kelmadi. Internetni tekshirib, qayta urinib ko'ring.");
+      setMessage(t("schNoServerResponse"));
       return;
     }
     window.clearTimeout(timer);
@@ -81,7 +83,7 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
 
     if (!response.ok || !json?.ok || !json.data) {
       setStatus("error");
-      setMessage(json?.error ?? "Belgilashda xatolik yuz berdi");
+      setMessage(json?.error ?? t("schCheckInError"));
       return;
     }
 
@@ -137,7 +139,7 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
               </svg>
             </span>
           </span>
-          <p className="mt-2 text-xl font-semibold text-emerald-800">Davomat belgilandi</p>
+          <p className="mt-2 text-xl font-semibold text-emerald-800">{t("schAttendanceMarked")}</p>
           <p className="text-sm font-medium text-slate-700">{result.course.title}</p>
           <p className="text-sm text-slate-500">{fmtDate(`${result.date}T00:00:00.000Z`)}</p>
           <Button
@@ -148,7 +150,7 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
               setResult(null);
             }}
           >
-            Yana skanerlash
+            {t("schScanAgain")}
           </Button>
         </CardBody>
       </Card>
@@ -191,17 +193,20 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
             </span>
           </span>
           <p className="mt-2 text-xl font-semibold text-amber-800">
-            Belgilandingiz, lekin tekshiruv shubhali
+            {t("schSuspiciousTitle")}
           </p>
           <p className="text-sm font-medium text-slate-700">{result.course.title}</p>
           <p className="text-sm text-slate-500">{fmtDate(`${result.date}T00:00:00.000Z`)}</p>
           {reasons.length > 0 ? (
             <ul className="mt-2 w-full space-y-1.5 rounded-2xl bg-amber-50 px-4 py-3 text-left">
-              {reasons.map((reason) => (
-                <li key={reason} className="text-sm text-amber-800">
-                  · {REASON_LABELS[reason] ?? reason}
-                </li>
-              ))}
+              {reasons.map((reason) => {
+                const reasonKey = REASON_KEYS[reason as keyof typeof REASON_KEYS];
+                return (
+                  <li key={reason} className="text-sm text-amber-800">
+                    · {reasonKey ? t(reasonKey) : reason}
+                  </li>
+                );
+              })}
             </ul>
           ) : null}
           <Button
@@ -214,7 +219,7 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
               setMessage(null);
             }}
           >
-            Yana skanerlash
+            {t("schScanAgain")}
           </Button>
         </CardBody>
       </Card>
@@ -237,10 +242,10 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
             <div className="flex flex-col items-center gap-4 py-10 text-center">
               <span className="size-10 animate-spin rounded-full border-[3px] border-brand-100 border-t-brand-600" />
               <p className="text-sm font-medium text-slate-600">
-                {message ?? "Tekshirilmoqda..."}
+                {message ?? t("schChecking")}
               </p>
               <p className="text-xs text-slate-600">
-                Joylashuv so&apos;ralsa — ruxsat bering
+                {t("schAllowLocation")}
               </p>
             </div>
           )}
@@ -271,10 +276,9 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
               <path d="M14 14h3v3h-3zM21 14v.01M14 21v.01M21 21v.01M17.5 21v.01M21 17.5v.01" />
             </svg>
           </span>
-          <p className="text-base font-semibold text-slate-900">QR davomat</p>
+          <p className="text-base font-semibold text-slate-900">{t("schQrAttendanceHeading")}</p>
           <p className="max-w-sm text-sm text-slate-500">
-            O&apos;qituvchi ekranidagi QR kodni telefon kamerasi bilan skanerlang — davomat
-            avtomatik belgilanadi.
+            {t("schQrAttendanceHint")}
           </p>
         </div>
 
@@ -297,7 +301,7 @@ export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload
             setStatus("scanning");
           }}
         >
-          QR skanerlash
+          {t("schScanQr")}
         </Button>
       </CardBody>
     </Card>

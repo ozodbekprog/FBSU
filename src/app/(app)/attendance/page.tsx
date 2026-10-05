@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ButtonLink, PageHeader } from "@/components/ui";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { attendanceCounts, getStudentAttendance } from "@/app/api/attendance/summary/data";
 import { StudentAttendanceOverview } from "@/components/attendance/overview-student";
 import { StaffAttendanceOverview } from "@/components/attendance/overview-staff";
@@ -8,6 +9,8 @@ import type { AttendanceStatus } from "@prisma/client";
 
 export default async function AttendancePage() {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
   if (user.role === "STUDENT") {
     const [summary, records] = await Promise.all([
@@ -36,9 +39,9 @@ export default async function AttendancePage() {
     return (
       <>
         <PageHeader
-          eyebrow="Davomat"
-          title="Mening davomatim"
-          subtitle={`${user.group?.name ?? "Talaba"} · ${summary.courses.length} ta kurs`}
+          eyebrow={dictionary.schAttendanceEyebrow}
+          title={dictionary.schMyAttendance}
+          subtitle={`${user.group?.name ?? dictionary.schStudentFallback} · ${translate(locale, "schCourseCount", { count: summary.courses.length })}`}
           action={
             <ButtonLink href="/attendance/check-in" size="sm">
               QR check-in
@@ -89,12 +92,12 @@ export default async function AttendancePage() {
   return (
     <>
       <PageHeader
-        eyebrow="Davomat"
-        title="Davomat nazorati"
+        eyebrow={dictionary.schAttendanceEyebrow}
+        title={dictionary.schAttendanceControl}
         subtitle={
           user.role === "ADMIN"
-            ? "Administrator paneli · barcha kurslar"
-            : "O'qituvchi paneli · sizning kurslaringiz"
+            ? dictionary.schAdminPanelAllCourses
+            : dictionary.schTeacherPanelYourCourses
         }
       />
       <StaffAttendanceOverview courses={rows} />

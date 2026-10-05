@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { requireUser, isStaff } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { EmptyState, PageHeader } from "@/components/ui";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { SessionPanel } from "@/components/attendance/SessionPanel";
 import { AttendanceJournal } from "@/components/attendance/attendance-journal";
 import { JournalCourseSelect } from "@/components/attendance/journal-course-select";
@@ -15,6 +16,9 @@ export default async function JournalPage({
   const user = await requireUser();
   if (!isStaff(user.role)) redirect("/attendance");
 
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+
   const { course: courseParam } = await searchParams;
 
   const courses = await prisma.course.findMany({
@@ -26,10 +30,14 @@ export default async function JournalPage({
   if (courses.length === 0) {
     return (
       <>
-        <PageHeader eyebrow="Davomat" title="Jurnal" subtitle="Kurslar topilmadi" />
+        <PageHeader
+          eyebrow={dictionary.schAttendanceEyebrow}
+          title={dictionary.schJournalTitle}
+          subtitle={dictionary.schCoursesNotFound}
+        />
         <EmptyState
-          title="Kurslar yo'q"
-          description="Sizga biriktirilgan kurslar hali mavjud emas."
+          title={dictionary.schNoCoursesTitle}
+          description={dictionary.schNoAssignedCourses}
         />
       </>
     );
@@ -41,9 +49,13 @@ export default async function JournalPage({
   return (
     <>
       <PageHeader
-        eyebrow="Davomat"
-        title="Jurnal"
-        subtitle={`${selected.title} · ${journal.students.length} ta talaba · ${journal.dates.length} ta dars`}
+        eyebrow={dictionary.schAttendanceEyebrow}
+        title={dictionary.schJournalTitle}
+        subtitle={translate(locale, "schJournalSubtitle", {
+          title: selected.title,
+          students: journal.students.length,
+          dates: journal.dates.length,
+        })}
       />
       <div className="space-y-6">
         {courses.length > 1 ? (

@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Card, CardBody, Progress } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import type { ModuleFlags, ModuleKey } from "@/server/settings";
 
 export type SettingsModule = {
@@ -72,6 +73,7 @@ export default function SettingsManager({
   initialFlags: ModuleFlags;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [flags, setFlags] = useState<ModuleFlags>(initialFlags);
   const [busyKey, setBusyKey] = useState<ModuleKey | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -98,15 +100,15 @@ export default function SettingsManager({
       const json = (await res.json().catch(() => null)) as ApiResult | null;
       if (!res.ok || !json?.ok || !json.data) {
         setFlags((prev) => ({ ...prev, [item.key]: !next }));
-        setError(json?.error ?? "Saqlab bo'lmadi");
+        setError(json?.error ?? t("admSettingsSaveFailed"));
         return;
       }
       setFlags(json.data.modules);
-      setNotice(`"${item.title}" ${next ? "yoqildi" : "o'chirildi"}`);
+      setNotice(next ? t("admSettingsToggledOn", { title: item.title }) : t("admSettingsToggledOff", { title: item.title }));
       router.refresh();
     } catch {
       setFlags((prev) => ({ ...prev, [item.key]: !next }));
-      setError("Tarmoqda xatolik");
+      setError(t("admNetworkError"));
     } finally {
       setBusyKey(null);
     }
@@ -120,7 +122,7 @@ export default function SettingsManager({
         <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
         <CardBody className="flex flex-wrap items-center justify-between gap-5">
           <div>
-            <p className="text-sm font-medium text-slate-500">Faol modullar</p>
+            <p className="text-sm font-medium text-slate-500">{t("admSettingsActiveModules")}</p>
             <p className="mt-1 text-3xl font-semibold tabular-nums tracking-tight text-brand-950">
               {enabledCount}
               <span className="ml-1 text-base font-medium text-slate-600">/ {modules.length}</span>
@@ -129,7 +131,7 @@ export default function SettingsManager({
           <div className="w-full max-w-xs">
             <Progress value={enabledCount} max={modules.length} />
             <p className="mt-2 text-xs text-slate-600">
-              O&apos;zgarishlar saqlanadi va darhol kuchga kiradi
+              {t("admSettingsChangesSaved")}
             </p>
           </div>
         </CardBody>
@@ -191,7 +193,7 @@ export default function SettingsManager({
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-semibold tracking-tight text-brand-950">{item.title}</p>
                       <span className="relative inline-flex items-center">
-                        <Badge tone={enabled ? "green" : "slate"}>{enabled ? "Yoqilgan" : "O'chirilgan"}</Badge>
+                        <Badge tone={enabled ? "green" : "slate"}>{enabled ? t("admEnabled") : t("admDisabled")}</Badge>
                         {enabled ? (
                           <span className="absolute -right-1 -top-1 size-2 animate-pulse rounded-full bg-emerald-500" />
                         ) : null}

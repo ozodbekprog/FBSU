@@ -2,6 +2,7 @@
 
 import type { DragEvent } from "react";
 import { Card, CardBody, CardHeader, Select } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
 import { LegoSurface } from "./lego";
 import type { BuilderTeacherRef, LegoDragPayload, PaletteBlock } from "./types";
@@ -55,6 +56,7 @@ export function LegoPalette({
   const selected = selectedBlockId ? blocks.find((block) => block.id === selectedBlockId) ?? null : null;
   const teacherChoices =
     selected && selected.teacherChoices.length > 0 ? selected.teacherChoices : teacherOptions;
+  const { t } = useI18n();
 
   return (
     <Card className={cn("overflow-hidden", disabled && "opacity-70")}>
@@ -62,7 +64,7 @@ export function LegoPalette({
       <CardBody className="space-y-3">
         {isAdmin ? (
           <div>
-            <p className="mb-1.5 text-xs font-medium text-slate-500">{"O'qituvchi (ixtiyoriy)"}</p>
+            <p className="mb-1.5 text-xs font-medium text-slate-500">{t("schTeacherOptional")}</p>
             <Select
               value={teacherValue}
               disabled={disabled}
@@ -70,7 +72,9 @@ export function LegoPalette({
               className="h-9 py-0! text-xs!"
             >
               <option value="">
-                {selected && selected.teacherChoices.length > 0 ? "Fan o'qituvchisi" : "Kurs o'qituvchisi"}
+                {selected && selected.teacherChoices.length > 0
+                  ? t("schSubjectTeacherOption")
+                  : t("schCourseTeacherOption")}
               </option>
               {teacherChoices.map((teacher) => (
                 <option key={teacher.id} value={teacher.id}>
@@ -83,7 +87,7 @@ export function LegoPalette({
 
         {blocks.length === 0 ? (
           <p className="rounded-xl border border-dashed border-slate-200 px-3 py-6 text-center text-xs text-slate-600">
-            {"Bu guruhda sizning fanlaringiz topilmadi"}
+            {t("schNoMySubjects")}
           </p>
         ) : (
           <div className="max-h-[560px] space-y-2 overflow-y-auto pr-1">
@@ -106,17 +110,17 @@ export function LegoPalette({
                   <LegoSurface seed={block.title} color={block.color} selected={selected} className="px-3 py-2.5">
                     <p className="line-clamp-2 pr-8 text-sm font-semibold leading-snug">{block.title}</p>
                     <p className="mt-0.5 truncate text-[11px] opacity-70">
-                      {resolveTeacher(block) ?? "O'qituvchisiz"}
+                      {resolveTeacher(block) ?? t("schWithoutTeacher")}
                     </p>
                     <div className="mt-1.5 flex flex-wrap items-center gap-1">
                       <span className="rounded-full bg-white/75 px-2 py-0.5 text-[10px] font-medium ring-1 ring-black/5">
                         {block.lessonType}
                       </span>
                       <span className="rounded-full bg-white/75 px-2 py-0.5 text-[10px] font-medium ring-1 ring-black/5">
-                        {block.room ?? "Xonasiz"}
+                        {block.room ?? t("schNoRoom")}
                       </span>
                       <span className="rounded-full bg-brand-900/85 px-2 py-0.5 text-[10px] font-semibold text-white">
-                        {`${block.placedCount} ta qo'yilgan`}
+                        {t("schPlacedCount", { count: block.placedCount })}
                       </span>
                     </div>
                   </LegoSurface>
@@ -127,9 +131,7 @@ export function LegoPalette({
         )}
 
         <p className="rounded-xl bg-brand-50/70 px-3 py-2 text-[11px] leading-relaxed text-brand-700">
-          {disabled
-            ? '"Guruh" rejimi va "Jadval" ko\'rinishida kataklarga qo\'yish mumkin.'
-            : "Blokni katakka sudrab tashlang yoki blokni bosib, katakni bosing — avtomatik saqlanadi."}
+          {disabled ? t("schPaletteDisabledHint") : t("schPaletteHint")}
         </p>
       </CardBody>
     </Card>

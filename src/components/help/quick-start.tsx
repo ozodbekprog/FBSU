@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card } from "@/components/ui";
+import { getDictionary, getLocale } from "@/i18n";
 import { HelpIcon } from "./icons";
 import type { HelpIconName } from "./icons";
 import { HelpSection } from "./section";
@@ -12,13 +13,15 @@ export type QuickStartStep = {
   icon: HelpIconName;
 };
 
-export function QuickStart({ steps }: { steps: QuickStartStep[] }) {
+export async function QuickStart({ steps }: { steps: QuickStartStep[] }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   return (
     <HelpSection
       id="boshlash"
       icon="sparkles"
-      title="Tez boshlash"
-      description="Platformada birinchi qadamlar — 6 ta qisqa qo'llanma."
+      title={dictionary.mscHelpQuickStartTitle}
+      description={dictionary.mscHelpQuickStartDesc}
     >
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {steps.map((step, index) => (

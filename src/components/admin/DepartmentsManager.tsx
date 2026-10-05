@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, CardBody, CardHeader, EmptyState, Input, Label, Select, Table } from "@/components/ui";
 import { ensureCsrfToken } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type DepartmentRow = {
   id: string;
@@ -38,6 +39,7 @@ export function DepartmentsManager({
   faculties: FacultyOption[];
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [editId, setEditId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
@@ -71,7 +73,7 @@ export function DepartmentsManager({
       : await request("/api/admin/departments", "POST", payload);
     setBusy(false);
     if (!json?.ok) {
-      setError(json?.error ?? "Amalni bajarib bo'lmadi");
+      setError(json?.error ?? t("admErrorGeneric"));
       return;
     }
     reset();
@@ -79,13 +81,13 @@ export function DepartmentsManager({
   }
 
   async function remove(row: DepartmentRow) {
-    if (!window.confirm(`"${row.name}" kafedrasini o'chirishni tasdiqlaysizmi?`)) return;
+    if (!window.confirm(t("admDeptDeleteConfirm", { name: row.name }))) return;
     setBusy(true);
     setError(null);
     const json = await request(`/api/admin/departments/${row.id}`, "DELETE");
     setBusy(false);
     if (!json?.ok) {
-      setError(json?.error ?? "O'chirib bo'lmadi");
+      setError(json?.error ?? t("admDeleteFailed"));
       return;
     }
     if (editId === row.id) reset();
@@ -96,28 +98,28 @@ export function DepartmentsManager({
     <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
       <Card>
         <CardHeader
-          title={editId ? "Kafedrani tahrirlash" : "Yangi kafedra"}
-          subtitle="Kafedra — fanlar va o'qituvchilar birlashmasi"
+          title={editId ? t("admDeptEditTitle") : t("admDeptNewTitle")}
+          subtitle={t("admDeptFormSubtitle")}
         />
         <CardBody>
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <Label>Nomi *</Label>
+              <Label>{t("admNameRequired")}</Label>
               <Input
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Masalan: Dasturlash kafedrasi"
+                placeholder={t("admDeptNamePlaceholder")}
                 required
               />
             </div>
             <div>
-              <Label>Kodi</Label>
+              <Label>{t("admCodeAlt")}</Label>
               <Input value={code} onChange={(event) => setCode(event.target.value)} placeholder="DK" />
             </div>
             <div>
-              <Label>Fakultet</Label>
+              <Label>{t("admFaculty")}</Label>
               <Select value={facultyId} onChange={(event) => setFacultyId(event.target.value)}>
-                <option value="">Fakultetsiz</option>
+                <option value="">{t("admNoFaculty")}</option>
                 {faculties.map((faculty) => (
                   <option key={faculty.id} value={faculty.id}>
                     {faculty.name}
@@ -130,12 +132,10 @@ export function DepartmentsManager({
             ) : null}
             <div className="flex justify-end gap-2">
               {editId ? (
-                <Button type="button" variant="secondary" onClick={reset}>
-                  Bekor qilish
-                </Button>
+                <Button type="button" variant="secondary" onClick={reset}>{t("admCancel")}</Button>
               ) : null}
               <Button type="submit" disabled={busy}>
-                {busy ? "Saqlanmoqda..." : editId ? "Saqlash" : "Qo'shish"}
+                {busy ? t("admSaving") : editId ? t("admSave") : t("admAdd")}
               </Button>
             </div>
           </form>
@@ -143,21 +143,21 @@ export function DepartmentsManager({
       </Card>
 
       <Card>
-        <CardHeader title="Kafedralar" subtitle={`${departments.length} ta`} />
+        <CardHeader title={t("admDepartments")} subtitle={t("admDeptListSubtitle", { count: departments.length })} />
         <CardBody>
           {departments.length === 0 ? (
             <EmptyState
-              title="Kafedralar yo'q"
-              description="Chapdagi forma orqali birinchi kafedrani yarating."
+              title={t("admDeptEmptyTitle")}
+              description={t("admDeptEmptyDesc")}
             />
           ) : (
             <Table>
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  <th className="rounded-l-xl py-2.5 pr-3 pl-3 text-left font-medium">Nomi</th>
-                  <th className="px-3 py-2.5 text-left font-medium">Fakultet</th>
-                  <th className="px-3 py-2.5 text-left font-medium">A&apos;zolar</th>
-                  <th className="px-3 py-2.5 text-left font-medium">Fanlar</th>
+                  <th className="rounded-l-xl py-2.5 pr-3 pl-3 text-left font-medium">{t("admName")}</th>
+                  <th className="px-3 py-2.5 text-left font-medium">{t("admFaculty")}</th>
+                  <th className="px-3 py-2.5 text-left font-medium">{t("admColMembers")}</th>
+                  <th className="px-3 py-2.5 text-left font-medium">{t("admSubjects")}</th>
                   <th className="rounded-r-xl px-3 py-2.5" />
                 </tr>
               </thead>
@@ -175,17 +175,13 @@ export function DepartmentsManager({
                     <td className="px-3 py-2.5 text-sm text-slate-600">{row.subjectsCount}</td>
                     <td className="px-3 py-2.5">
                       <div className="flex justify-end gap-2">
-                        <Button size="sm" variant="secondary" onClick={() => startEdit(row)}>
-                          Tahrirlash
-                        </Button>
+                        <Button size="sm" variant="secondary" onClick={() => startEdit(row)}>{t("admEdit")}</Button>
                         <Button
                           size="sm"
                           variant="secondary"
                           className="text-rose-600 hover:bg-rose-50"
                           onClick={() => void remove(row)}
-                        >
-                          O&apos;chirish
-                        </Button>
+                        >{t("admDelete")}</Button>
                       </div>
                     </td>
                   </tr>

@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { isStaff, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { buildTranscript } from "@/components/transcript/transcript-data";
 import { TranscriptDocument } from "@/components/transcript/transcript-document";
 import { TranscriptPrintButton } from "@/components/transcript/print-button";
@@ -35,10 +37,10 @@ const PRINT_STYLES = `
 
 type StudentOption = { id: string; name: string; group: { name: string } | null };
 
-function groupStudents(students: StudentOption[]) {
+function groupStudents(students: StudentOption[], noGroupLabel: string) {
   const grouped = new Map<string, StudentOption[]>();
   for (const student of students) {
-    const key = student.group?.name ?? "Guruhsiz";
+    const key = student.group?.name ?? noGroupLabel;
     const list = grouped.get(key);
     if (list) list.push(student);
     else grouped.set(key, [student]);
@@ -46,19 +48,21 @@ function groupStudents(students: StudentOption[]) {
   return [...grouped.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 }
 
-function StudentPicker({
+async function StudentPicker({
   students,
   selectedId,
 }: {
   students: StudentOption[];
   selectedId?: string;
 }) {
-  const groups = groupStudents(students);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const groups = groupStudents(students, dictionary.grdNoGroup);
 
   return (
     <form method="get" className="flex flex-wrap items-end gap-3">
       <div className="w-full sm:w-96">
-        <Label>Talaba</Label>
+        <Label>{dictionary.grdStudent}</Label>
         <Select
           key={selectedId ?? "none"}
           name="studentId"
@@ -66,10 +70,16 @@ function StudentPicker({
           required
         >
           <option value="" disabled>
-            Talabani tanlang
+            {dictionary.grdSelectStudent}
           </option>
           {groups.map(([groupName, list]) => (
-            <optgroup key={groupName} label={`${groupName} · ${list.length} ta`}>
+            <optgroup
+              key={groupName}
+              label={translate(locale, "grdGroupOption", {
+                group: groupName,
+                count: list.length,
+              })}
+            >
               {list.map((student) => (
                 <option key={student.id} value={student.id}>
                   {student.name}
@@ -80,13 +90,17 @@ function StudentPicker({
         </Select>
       </div>
       <Button type="submit" variant="secondary" className="w-full sm:w-auto">
-        Ko&apos;rsatish
+        {dictionary.grdShow}
       </Button>
     </form>
   );
 }
 
-export const metadata = { title: "Akademik Transkript" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  return { title: dictionary.grdTranscriptTitle };
+}
 
 export default async function TranscriptPage({
   searchParams,
@@ -95,6 +109,8 @@ export default async function TranscriptPage({
 }) {
   const user = await requireUser();
   const staff = isStaff(user.role);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const { studentId } = await searchParams;
 
   if (!staff && studentId && studentId !== user.id) notFound();
@@ -117,24 +133,24 @@ export default async function TranscriptPage({
     return (
       <>
         <PageHeader
-          title="Akademik Transkript"
-          subtitle="Talabani tanlang"
-          eyebrow="Rasmiy hujjat"
+          title={dictionary.grdTranscriptTitle}
+          subtitle={dictionary.grdSelectStudent}
+          eyebrow={dictionary.grdOfficialDocument}
         />
         <Card>
           <CardHeader
-            title="Talabani tanlash"
-            subtitle={`${students.length} ta faol talaba`}
+            title={dictionary.grdSelectStudentTitle}
+            subtitle={translate(locale, "grdActiveStudents", { count: students.length })}
           />
           <CardBody>
             <StudentPicker students={students} selectedId={studentId} />
             {studentId ? (
               <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                Talaba topilmadi
+                {dictionary.grdStudentNotFound}
               </p>
             ) : (
               <p className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-                Transkriptni ko&apos;rish uchun talabani tanlang.
+                {dictionary.grdSelectStudentHint}
               </p>
             )}
           </CardBody>
@@ -149,17 +165,22 @@ export default async function TranscriptPage({
 
       <div className="print:hidden">
         <PageHeader
-          title="Akademik Transkript"
-          subtitle={`${data.student.name}${data.student.group ? ` · ${data.student.group}` : ""}`}
-          eyebrow="Rasmiy hujjat"
+          title={dictionary.grdTranscriptTitle}
+          subtitle={`${data.student.name}${
+            data.student.group ? ` · ${data.student.group}` : ""
+          }`}
+          eyebrow={dictionary.grdOfficialDocument}
           action={<TranscriptPrintButton />}
         />
 
         {staff ? (
           <Card className="mb-6">
             <CardHeader
-              title="Talabani tanlash"
-              subtitle={`${students.length} ta faol talaba · Hozir: ${data.student.name}`}
+              title={dictionary.grdSelectStudentTitle}
+              subtitle={translate(locale, "grdActiveStudentsNow", {
+                count: students.length,
+                name: data.student.name,
+              })}
             />
             <CardBody>
               <StudentPicker students={students} selectedId={data.student.id} />

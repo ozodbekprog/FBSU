@@ -29,8 +29,6 @@ export type JournalWeekData = {
 
 const TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1000;
 
-const DAY_SHORT = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
-
 function pad(value: number) {
   return String(value).padStart(2, "0");
 }
@@ -75,10 +73,6 @@ export function mondayOfIso(value: string | null) {
   const weekday = date.getUTCDay() === 0 ? 7 : date.getUTCDay();
   date.setUTCDate(date.getUTCDate() - (weekday - 1));
   return isoFromDate(date);
-}
-
-export function shortDayName(dayOfWeek: number) {
-  return DAY_SHORT[dayOfWeek - 1] ?? "";
 }
 
 export function dayMonth(iso: string) {

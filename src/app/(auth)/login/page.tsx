@@ -13,7 +13,7 @@ import { apiFetch } from "@/lib/api";
 const DEMO_ACCOUNTS = [
   {
     roleKey: "authRoleStudent" as const,
-    email: "ozodbek@ttpu.uz",
+    email: "ai1s01@ttpu.uz",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -31,7 +31,7 @@ const DEMO_ACCOUNTS = [
   },
   {
     roleKey: "authRoleTeacher" as const,
-    email: "n.mahamatov@ttpu.uz",
+    email: "fizika@ttpu.uz",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -112,7 +112,12 @@ export default function LoginPage() {
         setError(json?.error ?? t("authLoginError"));
         return;
       }
-      router.push("/dashboard");
+      const nextParam = new URLSearchParams(window.location.search).get("next");
+      const target =
+        nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
+          ? nextParam
+          : "/dashboard";
+      router.push(target);
       router.refresh();
     } catch {
       setError(t("commonNetworkError"));

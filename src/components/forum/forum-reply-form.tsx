@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, CardBody, CardHeader, Textarea } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export function ForumReplyForm({ topicId }: { topicId: string }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -27,7 +29,7 @@ export function ForumReplyForm({ topicId }: { topicId: string }) {
 
     setSaving(false);
     if (!response.ok || !json?.ok) {
-      setError(json?.error ?? "Yuborishda xatolik yuz berdi");
+      setError(json?.error ?? t("msgSubmitError"));
       return;
     }
 
@@ -37,7 +39,7 @@ export function ForumReplyForm({ topicId }: { topicId: string }) {
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader title="Javob yozish" subtitle="Fikringizni ulashing" />
+      <CardHeader title={t("msgWriteReply")} subtitle={t("msgShareOpinion")} />
       <CardBody>
         <form onSubmit={handleSubmit}>
           <Textarea
@@ -46,12 +48,12 @@ export function ForumReplyForm({ topicId }: { topicId: string }) {
             rows={3}
             maxLength={10000}
             required
-            placeholder="Javobingizni yozing..."
+            placeholder={t("msgReplyPlaceholder")}
           />
           {error ? <p className="mt-3 text-sm text-rose-600">{error}</p> : null}
           <div className="mt-4 flex justify-end">
             <Button type="submit" disabled={saving}>
-              {saving ? "Yuborilmoqda..." : "Javob yuborish"}
+              {saving ? t("msgSubmitting") : t("msgSendReply")}
             </Button>
           </div>
         </form>

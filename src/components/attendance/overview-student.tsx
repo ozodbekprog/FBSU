@@ -8,10 +8,12 @@ import {
   EmptyState,
   Progress,
 } from "@/components/ui";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { AttendanceRing } from "@/components/attendance/overview-ring";
 import {
-  JOURNAL_STATUS_META,
+  JOURNAL_STATUS_LABEL_KEYS,
   JOURNAL_STATUS_ORDER,
+  JOURNAL_STATUS_STYLE,
 } from "@/components/attendance/journal-utils";
 import type { JournalStatus } from "@/components/attendance/journal-utils";
 import type { StudentAttendanceSummary } from "@/app/api/attendance/summary/data";
@@ -107,15 +109,24 @@ function countForStatus(status: JournalStatus, summary: StudentAttendanceSummary
   return summary.overall.excused;
 }
 
-export function StudentAttendanceOverview({
+export async function StudentAttendanceOverview({
   summary,
   history,
 }: {
   summary: StudentAttendanceSummary;
   history: AttendanceHistoryRow[];
 }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const { overall, courses } = summary;
   const attended = overall.present + overall.late + overall.excused;
+
+  function statusMeta(status: JournalStatus) {
+    return {
+      ...JOURNAL_STATUS_STYLE[status],
+      label: dictionary[JOURNAL_STATUS_LABEL_KEYS[status]],
+    };
+  }
 
   return (
     <>
@@ -125,7 +136,11 @@ export function StudentAttendanceOverview({
         <span className="pointer-events-none absolute -bottom-28 -left-16 size-64 rounded-full bg-brand-300/20 blur-3xl" />
         <CardBody className="relative grid gap-8 py-8 lg:grid-cols-[auto_1fr] lg:items-center">
           <div className="flex justify-center">
-            <AttendanceRing percent={overall.percent} />
+            <AttendanceRing
+              percent={overall.percent}
+              caption={dictionary.schRingCaption}
+              ariaLabel={dictionary.schAttendanceEyebrow}
+            />
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-3">
@@ -160,23 +175,25 @@ export function StudentAttendanceOverview({
                     </>
                   )}
                 </svg>
-                {overall.eligible ? "Imtihonga ruxsat" : "Ruxsat yo'q"}
+                {overall.eligible ? dictionary.schExamEligible : dictionary.schNotEligible}
               </span>
               <span className="text-sm text-slate-500">
                 {overall.eligible
-                  ? "80% mezondan muvaffaqiyatli o'tdingiz"
-                  : "Imtihonga ruxsat uchun kamida 80% davomat kerak"}
+                  ? dictionary.schEligibleReason
+                  : dictionary.schNotEligibleReason}
               </span>
             </div>
 
             <p className="mt-5 text-sm text-slate-500">
               <span className="text-3xl font-semibold tabular-nums text-brand-950">{attended}</span>
-              <span className="text-slate-600"> / {overall.total} darsda qatnashdingiz</span>
+              <span className="text-slate-600">
+                {translate(locale, "schAttendedOfSuffix", { total: overall.total })}
+              </span>
             </p>
 
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {JOURNAL_STATUS_ORDER.map((status) => {
-                const meta = JOURNAL_STATUS_META[status];
+                const meta = statusMeta(status);
                 const count = countForStatus(status, summary);
                 return (
                   <div
@@ -212,17 +229,17 @@ export function StudentAttendanceOverview({
 
       <Card className="animate-fade-up mt-6">
         <CardHeader
-          title="Kurslar bo'yicha"
-          subtitle={`${courses.length} ta kurs · har birida kamida 80% kerak`}
+          title={dictionary.schByCourses}
+          subtitle={translate(locale, "schByCoursesSubtitle", { count: courses.length })}
         />
         {courses.length === 0 ? (
           <CardBody>
             <EmptyState
-              title="Kurslar yo'q"
-              description="Siz hali biror kursga yozilmagansiz."
+              title={dictionary.schNoCoursesTitle}
+              description={dictionary.schNoCoursesDesc}
               action={
                 <ButtonLink href="/courses" variant="secondary" size="sm">
-                  Kurslarni ko&apos;rish
+                  {dictionary.schViewCourses}
                 </ButtonLink>
               }
             />
@@ -261,8 +278,10 @@ export function StudentAttendanceOverview({
                           {course.courseTitle}
                         </span>
                         <span className="mt-0.5 block text-xs text-slate-600">
-                          Keldi: <span className="font-semibold text-slate-600">{courseAttended}</span>{" "}
-                          / {course.total} dars
+                          {translate(locale, "schAttendedCourse", {
+                            attended: courseAttended,
+                            total: course.total,
+                          })}
                         </span>
                       </span>
                     </Link>
@@ -276,7 +295,7 @@ export function StudentAttendanceOverview({
                         {course.percent}%
                       </span>
                       <Badge tone={course.eligible ? "green" : "rose"} className="px-2.5 py-1">
-                        {course.eligible ? "Ruxsat" : "Ruxsat yo'q"}
+                        {course.eligible ? dictionary.schEligible : dictionary.schNotEligible}
                       </Badge>
                     </div>
                   </div>
@@ -287,7 +306,7 @@ export function StudentAttendanceOverview({
                       variant="ghost"
                       size="sm"
                     >
-                      Jurnal
+                      {dictionary.schJournalTitle}
                     </ButtonLink>
                   </div>
                 </div>
@@ -299,8 +318,8 @@ export function StudentAttendanceOverview({
 
       <Card className="animate-fade-up mt-6">
         <CardHeader
-          title="Oxirgi yozuvlar"
-          subtitle="So'nggi 10 ta davomat yozuvi"
+          title={dictionary.schRecentRecords}
+          subtitle={dictionary.schRecentRecordsSubtitle}
           action={
             <ButtonLink href="/attendance/check-in" variant="secondary" size="sm">
               QR check-in
@@ -310,15 +329,15 @@ export function StudentAttendanceOverview({
         {history.length === 0 ? (
           <CardBody>
             <EmptyState
-              title="Yozuvlar yo'q"
-              description="Davomat belgilanmagan. Darsda QR kod orqali belgilashingiz mumkin."
+              title={dictionary.schNoRecordsTitle}
+              description={dictionary.schNoRecordsDesc}
             />
           </CardBody>
         ) : (
           <CardBody>
             <ol className="relative space-y-1 before:absolute before:bottom-4 before:left-6 before:top-4 before:w-px before:bg-gradient-to-b before:from-brand-200 before:via-slate-200 before:to-transparent">
               {history.map((row) => {
-                const meta = JOURNAL_STATUS_META[row.status];
+                const meta = statusMeta(row.status);
                 return (
                   <li
                     key={row.id}

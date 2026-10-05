@@ -4,6 +4,8 @@ import { useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Badge, Button, Card, CardBody, CardHeader, EmptyState, Table } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
+import type { Dictionary } from "@/i18n";
 
 type ImportType = "students" | "groups" | "subjects";
 
@@ -27,11 +29,11 @@ type ImportResponse = { ok: true; data: ImportData } | { ok: false; error: strin
 
 const MAX_SIZE = 5 * 1024 * 1024;
 
-const TYPES: { id: ImportType; title: string; description: string; format: string; icon: ReactNode }[] = [
+const TYPES: { id: ImportType; titleKey: keyof Dictionary; descriptionKey: keyof Dictionary; format: string; icon: ReactNode }[] = [
   {
     id: "students",
-    title: "Talabalar",
-    description: "Har bir qator uchun STUDENT roli bilan foydalanuvchi yaratiladi, guruh avtomatik topiladi yoki ochiladi.",
+    titleKey: "admImportStudents",
+    descriptionKey: "admImportStudentsDesc",
     format: "ism,email,guruh,subGroup,telefon",
     icon: (
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
@@ -44,8 +46,8 @@ const TYPES: { id: ImportType; title: string; description: string; format: strin
   },
   {
     id: "groups",
-    title: "Guruhlar",
-    description: "Guruhlar nomi bo'yicha yaratiladi, fakultet mavjud bo'lmasa avtomatik ochiladi.",
+    titleKey: "admImportGroups",
+    descriptionKey: "admImportGroupsDesc",
     format: "nomi,yil,fakultet",
     icon: (
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
@@ -57,8 +59,8 @@ const TYPES: { id: ImportType; title: string; description: string; format: strin
   },
   {
     id: "subjects",
-    title: "Fanlar",
-    description: "Fanlar kodi va rangi bilan yaratiladi, mavjud fanlar o'tkazib yuboriladi.",
+    titleKey: "admImportSubjects",
+    descriptionKey: "admImportSubjectsDesc",
     format: "nomi,kod,rang",
     icon: (
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
@@ -70,6 +72,7 @@ const TYPES: { id: ImportType; title: string; description: string; format: strin
 ];
 
 export default function ImportManager() {
+  const { t } = useI18n();
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
   const [type, setType] = useState<ImportType>("students");
@@ -106,11 +109,11 @@ export default function ImportManager() {
   async function upload() {
     const file = inputRef.current?.files?.[0];
     if (!file) {
-      setError("Avval CSV faylni tanlang");
+      setError(t("admImportPickFirst"));
       return;
     }
     if (file.size > MAX_SIZE) {
-      setError("Fayl hajmi 5MB dan oshmasligi kerak");
+      setError(t("admImportTooLarge"));
       return;
     }
 
@@ -127,14 +130,14 @@ export default function ImportManager() {
       const res = await fetch("/api/admin/import", { method: "POST", body });
       const json = (await res.json().catch(() => null)) as ImportResponse | null;
       if (!res.ok || !json || !json.ok) {
-        setError(json && !json.ok ? json.error : "Importni bajarib bo'lmadi");
+        setError(json && !json.ok ? json.error : t("admImportFailed"));
         return;
       }
       setResult(json.data);
       setFileName(null);
       if (inputRef.current) inputRef.current.value = "";
     } catch {
-      setError("Tarmoqda xatolik");
+      setError(t("admNetworkError"));
     } finally {
       setBusy(false);
     }
@@ -149,7 +152,7 @@ export default function ImportManager() {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2500);
     } catch {
-      setError("Nusxalash imkoni bo'lmadi");
+      setError(t("admImportCopyFailed"));
     }
   }
 
@@ -182,8 +185,8 @@ export default function ImportManager() {
               >
                 {item.icon}
               </span>
-              <span className="mt-3 block font-semibold text-slate-900">{item.title}</span>
-              <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">{item.description}</span>
+              <span className="mt-3 block font-semibold text-slate-900">{t(item.titleKey)}</span>
+              <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">{t(item.descriptionKey)}</span>
               <span className="mt-3 block truncate rounded-lg bg-slate-50 px-2 py-1 font-mono text-[11px] text-slate-500">
                 {item.format}
               </span>
@@ -201,8 +204,8 @@ export default function ImportManager() {
 
       <Card>
         <CardHeader
-          title={`${selected.title} importi`}
-          subtitle={`CSV ustunlari: ${selected.format}`}
+          title={t("admImportTitle", { title: t(selected.titleKey) })}
+          subtitle={t("admImportColumns", { format: selected.format })}
           action={
             <a
               href={`/api/admin/import/template?type=${type}`}
@@ -212,9 +215,7 @@ export default function ImportManager() {
                 <path d="M12 3v12" />
                 <path d="m7 10 5 5 5-5" />
                 <path d="M4 21h16" />
-              </svg>
-              Namuna CSV
-            </a>
+              </svg>{t("admImportSample")}</a>
           }
         />
         <CardBody>
@@ -261,18 +262,18 @@ export default function ImportManager() {
               </svg>
             </span>
             <span className="max-w-full truncate text-sm font-medium text-slate-700">
-              {fileName ?? "CSV faylni bu yerga tashlang"}
+              {fileName ?? t("admImportDropCsv")}
             </span>
             <span className="text-xs text-slate-600">
-              {fileName ? "Import qilish uchun tugmani bosing" : "yoki bosib fayl tanlang · maks 5MB"}
+              {fileName ? t("admImportClickToRun") : t("admImportOrPick")}
             </span>
           </label>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Button onClick={upload} disabled={busy || !fileName}>
-              {busy ? "Import qilinmoqda..." : "Import qilish"}
+              {busy ? t("admImportRunning") : t("admImportRun")}
             </Button>
             <span className="text-xs text-slate-600">
-              {busy ? "Qatorlar tekshirilmoqda, biroz kuting" : "Takroriy yozuvlar o'tkazib yuboriladi"}
+              {busy ? t("admImportChecking") : t("admImportDuplicates")}
             </span>
           </div>
           {error ? (
@@ -286,12 +287,12 @@ export default function ImportManager() {
       {result ? (
         <Card className="animate-fade-up border-brand-200/70">
           <CardHeader
-            title="Import natijasi"
-            subtitle={`${selected.title} · ${result.created + result.skipped + result.errors.length} qator qayta ishlandi`}
+            title={t("admImportResultTitle")}
+            subtitle={t("admImportResultSubtitle", { title: t(selected.titleKey), count: result.created + result.skipped + result.errors.length })}
             action={
               createdWithPassword.length > 0 ? (
                 <Button variant={copied ? "secondary" : "primary"} size="sm" onClick={copyPasswords}>
-                  {copied ? "Nusxalandi" : `Parollarni nusxalash (${createdWithPassword.length})`}
+                  {copied ? t("admImportCopied") : t("admImportCopyPasswords", { count: createdWithPassword.length })}
                 </Button>
               ) : null
             }
@@ -302,19 +303,19 @@ export default function ImportManager() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
-                Yaratildi: <span className="tabular-nums font-semibold">{result.created}</span>
+                {t("admImportCreated")} <span className="tabular-nums font-semibold">{result.created}</span>
               </span>
               <span className="inline-flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14" />
                 </svg>
-                O&apos;tkazib yuborildi: <span className="tabular-nums font-semibold">{result.skipped}</span>
+                {t("admImportSkippedLabel")} <span className="tabular-nums font-semibold">{result.skipped}</span>
               </span>
               <span className="inline-flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6 6 18M6 6l12 12" />
                 </svg>
-                Xatolar: <span className="tabular-nums font-semibold">{result.errors.length}</span>
+                {t("admImportErrorsLabel")} <span className="tabular-nums font-semibold">{result.errors.length}</span>
               </span>
             </div>
 
@@ -322,10 +323,10 @@ export default function ImportManager() {
               <Table className="mt-4 max-h-[60vh] overflow-y-auto rounded-xl border border-slate-100">
                 <thead>
                   <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-                    <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-4 py-3 font-semibold backdrop-blur">Qator</th>
-                    <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-4 py-3 font-semibold backdrop-blur">Holat</th>
-                    <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-4 py-3 font-semibold backdrop-blur">Ma&apos;lumot</th>
-                    <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-4 py-3 font-semibold backdrop-blur">Parol</th>
+                    <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-4 py-3 font-semibold backdrop-blur">{t("admColRow")}</th>
+                    <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-4 py-3 font-semibold backdrop-blur">{t("admStatus")}</th>
+                    <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-4 py-3 font-semibold backdrop-blur">{t("admColData")}</th>
+                    <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-4 py-3 font-semibold backdrop-blur">{t("admColPassword")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -337,7 +338,7 @@ export default function ImportManager() {
                       <td className="px-4 py-3 tabular-nums text-slate-500">{item.row}</td>
                       <td className="px-4 py-3">
                         <Badge tone={item.status === "created" ? "green" : "amber"}>
-                          {item.status === "created" ? "Yaratildi" : "O'tkazildi"}
+                          {item.status === "created" ? t("admImportStatusCreated") : t("admImportStatusSkipped")}
                         </Badge>
                       </td>
                       <td className="px-4 py-3">
@@ -361,13 +362,11 @@ export default function ImportManager() {
 
             {result.errors.length > 0 ? (
               <div className="animate-fade-up mt-4 overflow-hidden rounded-xl border border-rose-100 bg-rose-50/50">
-                <p className="border-b border-rose-100 px-4 py-2.5 text-sm font-semibold text-rose-700">Xato qatorlar</p>
+                <p className="border-b border-rose-100 px-4 py-2.5 text-sm font-semibold text-rose-700">{t("admImportErrorRows")}</p>
                 <ul className="divide-y divide-rose-100/70">
                   {result.errors.map((item) => (
                     <li key={`${item.row}-${item.message}`} className="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm">
-                      <span className="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-700">
-                        Qator {item.row}
-                      </span>
+                      <span className="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-700">{t("admImportRow", { row: item.row })}                      </span>
                       <span className="text-rose-700">{item.message}</span>
                     </li>
                   ))}
@@ -377,7 +376,7 @@ export default function ImportManager() {
 
             {result.items.length === 0 && result.errors.length === 0 ? (
               <div className="mt-4">
-                <EmptyState title="Faylda ma'lumot topilmadi" description="CSV fayl bo'sh yoki ustunlar tanilmadi." />
+                <EmptyState title={t("admImportEmptyTitle")} description={t("admImportEmptyDesc")} />
               </div>
             ) : null}
           </CardBody>

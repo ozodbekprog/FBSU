@@ -3,18 +3,19 @@ import type { ReactNode } from "react";
 import type { MaterialType, Role } from "@prisma/client";
 import { Avatar, Badge, ButtonLink, Card, CardHeader } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
+import { getDictionary, getLocale, t as translate, type Dictionary } from "@/i18n";
 import { SearchEmpty } from "./search-empty";
 import type { SearchResults } from "./search-data";
 
-const ROLE_LABELS: Record<Role, string> = {
-  ADMIN: "Administrator",
-  REKTOR: "Rektor",
-  DEKAN: "Dekan",
-  KAFEDRA_MUDIRI: "Kafedra mudiri",
-  REGISTRAR: "O'quv bo'limi",
-  TYUTOR: "Tyutor",
-  TEACHER: "O'qituvchi",
-  STUDENT: "Talaba",
+const ROLE_KEY: Record<Role, keyof Dictionary> = {
+  ADMIN: "mscSrchRoleAdmin",
+  REKTOR: "mscSrchRoleRector",
+  DEKAN: "mscSrchRoleDean",
+  KAFEDRA_MUDIRI: "mscSrchRoleDeptHead",
+  REGISTRAR: "mscSrchRoleRegistrar",
+  TYUTOR: "mscSrchRoleTutor",
+  TEACHER: "mscSrchRoleTeacher",
+  STUDENT: "mscSrchRoleStudent",
 };
 
 const ROLE_TONES: Record<Role, string> = {
@@ -28,11 +29,11 @@ const ROLE_TONES: Record<Role, string> = {
   STUDENT: "slate",
 };
 
-const MATERIAL_TYPE_LABELS: Record<MaterialType, string> = {
-  TEXT: "Matn",
-  FILE: "Fayl",
-  VIDEO: "Video",
-  LINK: "Havola",
+const MATERIAL_TYPE_KEY: Record<MaterialType, keyof Dictionary> = {
+  TEXT: "mscSrchMaterialText",
+  FILE: "mscSrchMaterialFile",
+  VIDEO: "mscSrchMaterialVideo",
+  LINK: "mscSrchMaterialLink",
 };
 
 const COURSE_ICON = (
@@ -146,6 +147,7 @@ function ResultRow({
 function SectionCard({
   title,
   count,
+  countLabel,
   icon,
   tone,
   badgeTone,
@@ -154,6 +156,7 @@ function SectionCard({
 }: {
   title: string;
   count: number;
+  countLabel: string;
   icon: ReactNode;
   tone: keyof typeof SECTION_TONES;
   badgeTone: string;
@@ -178,7 +181,7 @@ function SectionCard({
                 <span className="block truncate text-base font-semibold tracking-tight text-slate-900">
                   {title}
                 </span>
-                <span className="mt-0.5 block text-xs font-normal text-slate-500">{count} ta natija</span>
+                <span className="mt-0.5 block text-xs font-normal text-slate-500">{countLabel}</span>
               </span>
             </span>
           }
@@ -190,7 +193,9 @@ function SectionCard({
   );
 }
 
-export function SearchResultsView({ query, data }: { query: string; data: SearchResults }) {
+export async function SearchResultsView({ query, data }: { query: string; data: SearchResults }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const total =
     data.courses.length +
     data.materials.length +
@@ -201,11 +206,11 @@ export function SearchResultsView({ query, data }: { query: string; data: Search
   if (total === 0) {
     return (
       <SearchEmpty
-        title="Hech narsa topilmadi"
-        description={`"${query}" bo'yicha natija topilmadi. Boshqa kalit so'z bilan urinib ko'ring.`}
+        title={dictionary.mscSrchEmptyTitle}
+        description={translate(locale, "mscSrchEmptyBody", { query })}
         action={
           <ButtonLink href="/search" variant="secondary">
-            Qidiruvni tozalash
+            {dictionary.mscSrchClear}
           </ButtonLink>
         }
       />
@@ -217,26 +222,26 @@ export function SearchResultsView({ query, data }: { query: string; data: Search
       <p className="flex items-center gap-2 text-sm text-slate-500">
         <span className="inline-flex size-1.5 rounded-full bg-brand-500" />
         <span>
-          <span className="font-medium text-slate-700">{total}</span> ta natija topildi
+          <span className="font-medium text-slate-700">{total}</span> {dictionary.mscSrchFoundSuffix}
         </span>
       </p>
 
       {data.courses.length > 0 ? (
-        <SectionCard title="Kurslar" count={data.courses.length} icon={COURSE_ICON} tone="brand" badgeTone="brand" delay={0}>
+        <SectionCard title={dictionary.mscSrchCatCourses} count={data.courses.length} countLabel={translate(locale, "mscSrchResultCount", { count: data.courses.length })} icon={COURSE_ICON} tone="brand" badgeTone="brand" delay={0}>
           {data.courses.map((course) => (
             <ResultRow
               key={course.id}
               href={`/courses/${course.slug}`}
               icon={<IconTile className="bg-brand-50 text-brand-700 ring-1 ring-brand-100">{COURSE_ICON}</IconTile>}
               title={course.title}
-              subtitle={course.description ? truncate(plainText(course.description)) : "Kurs"}
+              subtitle={course.description ? truncate(plainText(course.description)) : dictionary.mscSrchCourseFallback}
             />
           ))}
         </SectionCard>
       ) : null}
 
       {data.materials.length > 0 ? (
-        <SectionCard title="Materiallar" count={data.materials.length} icon={MATERIAL_ICON} tone="amber" badgeTone="amber" delay={60}>
+        <SectionCard title={dictionary.mscSrchCatMaterials} count={data.materials.length} countLabel={translate(locale, "mscSrchResultCount", { count: data.materials.length })} icon={MATERIAL_ICON} tone="amber" badgeTone="amber" delay={60}>
           {data.materials.map((material) => (
             <ResultRow
               key={material.id}
@@ -244,14 +249,14 @@ export function SearchResultsView({ query, data }: { query: string; data: Search
               icon={<IconTile className="bg-amber-50 text-amber-700 ring-1 ring-amber-100">{MATERIAL_ICON}</IconTile>}
               title={material.title}
               subtitle={material.content ? `${material.course.title} · ${truncate(plainText(material.content))}` : material.course.title}
-              badge={<Badge tone="amber">{MATERIAL_TYPE_LABELS[material.type]}</Badge>}
+              badge={<Badge tone="amber">{dictionary[MATERIAL_TYPE_KEY[material.type]]}</Badge>}
             />
           ))}
         </SectionCard>
       ) : null}
 
       {data.assignments.length > 0 ? (
-        <SectionCard title="Topshiriqlar" count={data.assignments.length} icon={ASSIGNMENT_ICON} tone="emerald" badgeTone="green" delay={120}>
+        <SectionCard title={dictionary.mscSrchCatAssignments} count={data.assignments.length} countLabel={translate(locale, "mscSrchResultCount", { count: data.assignments.length })} icon={ASSIGNMENT_ICON} tone="emerald" badgeTone="green" delay={120}>
           {data.assignments.map((assignment) => (
             <ResultRow
               key={assignment.id}
@@ -259,14 +264,14 @@ export function SearchResultsView({ query, data }: { query: string; data: Search
               icon={<IconTile className="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">{ASSIGNMENT_ICON}</IconTile>}
               title={assignment.title}
               subtitle={assignment.course.title}
-              meta={assignment.dueAt ? `Muddat: ${fmtDate(assignment.dueAt)}` : null}
+              meta={assignment.dueAt ? translate(locale, "mscSrchDue", { date: fmtDate(assignment.dueAt) }) : null}
             />
           ))}
         </SectionCard>
       ) : null}
 
       {data.quizzes.length > 0 ? (
-        <SectionCard title="Testlar" count={data.quizzes.length} icon={QUIZ_ICON} tone="purple" badgeTone="purple" delay={180}>
+        <SectionCard title={dictionary.mscSrchCatQuizzes} count={data.quizzes.length} countLabel={translate(locale, "mscSrchResultCount", { count: data.quizzes.length })} icon={QUIZ_ICON} tone="purple" badgeTone="purple" delay={180}>
           {data.quizzes.map((quiz) => (
             <ResultRow
               key={quiz.id}
@@ -274,14 +279,14 @@ export function SearchResultsView({ query, data }: { query: string; data: Search
               icon={<IconTile className="bg-purple-50 text-purple-700 ring-1 ring-purple-100">{QUIZ_ICON}</IconTile>}
               title={quiz.title}
               subtitle={quiz.course.title}
-              meta={quiz.dueAt ? `Muddat: ${fmtDate(quiz.dueAt)}` : null}
+              meta={quiz.dueAt ? translate(locale, "mscSrchDue", { date: fmtDate(quiz.dueAt) }) : null}
             />
           ))}
         </SectionCard>
       ) : null}
 
       {data.users.length > 0 ? (
-        <SectionCard title="Foydalanuvchilar" count={data.users.length} icon={USERS_ICON} tone="blue" badgeTone="blue" delay={240}>
+        <SectionCard title={dictionary.mscSrchCatUsers} count={data.users.length} countLabel={translate(locale, "mscSrchResultCount", { count: data.users.length })} icon={USERS_ICON} tone="blue" badgeTone="blue" delay={240}>
           {data.users.map((person) => (
             <ResultRow
               key={person.id}
@@ -289,7 +294,7 @@ export function SearchResultsView({ query, data }: { query: string; data: Search
               avatar={<Avatar name={person.name} src={person.avatarUrl} />}
               title={person.name}
               subtitle={person.email}
-              badge={<Badge tone={ROLE_TONES[person.role]}>{ROLE_LABELS[person.role]}</Badge>}
+              badge={<Badge tone={ROLE_TONES[person.role]}>{dictionary[ROLE_KEY[person.role]]}</Badge>}
             />
           ))}
         </SectionCard>

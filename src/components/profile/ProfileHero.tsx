@@ -2,17 +2,37 @@ import type { ReactNode } from "react";
 import type { Role } from "@prisma/client";
 import { Avatar, Badge, Card } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
+import { getDictionary, getLocale } from "@/i18n";
+import type { Dictionary } from "@/i18n";
 
-export const ROLE_META: Record<Role, { label: string; tone: "brand" | "purple" | "slate" | "gold" | "green" | "blue" }> = {
-  ADMIN: { label: "Administrator", tone: "brand" },
-  REKTOR: { label: "Rektor", tone: "gold" },
-  DEKAN: { label: "Dekan", tone: "purple" },
-  KAFEDRA_MUDIRI: { label: "Kafedra mudiri", tone: "blue" },
-  REGISTRAR: { label: "O'quv bo'limi", tone: "brand" },
-  TYUTOR: { label: "Tyutor", tone: "green" },
-  TEACHER: { label: "O'qituvchi", tone: "purple" },
-  STUDENT: { label: "Talaba", tone: "slate" },
+export const ROLE_TONE: Record<
+  Role,
+  "brand" | "purple" | "slate" | "gold" | "green" | "blue"
+> = {
+  ADMIN: "brand",
+  REKTOR: "gold",
+  DEKAN: "purple",
+  KAFEDRA_MUDIRI: "blue",
+  REGISTRAR: "brand",
+  TYUTOR: "green",
+  TEACHER: "purple",
+  STUDENT: "slate",
 };
+
+export const ROLE_LABEL_KEY: Record<Role, keyof Dictionary> = {
+  ADMIN: "mscRoleAdmin",
+  REKTOR: "mscRoleRector",
+  DEKAN: "mscRoleDean",
+  KAFEDRA_MUDIRI: "mscRoleHead",
+  REGISTRAR: "mscRoleRegistrar",
+  TYUTOR: "mscRoleTutor",
+  TEACHER: "mscRoleTeacher",
+  STUDENT: "mscRoleStudent",
+};
+
+export function roleLabel(dictionary: Dictionary, role: Role): string {
+  return dictionary[ROLE_LABEL_KEY[role]];
+}
 
 const COVER_PATTERN = {
   backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.16) 1px, transparent 0)",
@@ -45,7 +65,7 @@ function MetaChip({ children }: { children: ReactNode }) {
   );
 }
 
-export function ProfileHero({
+export async function ProfileHero({
   name,
   email,
   role,
@@ -68,7 +88,9 @@ export function ProfileHero({
   avatar?: ReactNode;
   action?: ReactNode;
 }) {
-  const meta = ROLE_META[role];
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const tone = ROLE_TONE[role];
 
   return (
     <Card className="group/hero overflow-hidden">
@@ -118,14 +140,14 @@ export function ProfileHero({
         ) : null}
 
         <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2">
-          <Badge tone={meta.tone}>{meta.label}</Badge>
+          <Badge tone={tone}>{roleLabel(dictionary, role)}</Badge>
           {groupName ? <Badge tone="gold">{groupName}</Badge> : null}
           <MetaChip>
             <Icon className="text-slate-600">
               <rect x="3" y="5" width="18" height="16" rx="2" />
               <path d="M16 3v4M8 3v4M3 11h18" />
             </Icon>
-            Ro&apos;yxatdan o&apos;tgan: {fmtDate(createdAt)}
+            {dictionary.mscProfileRegisteredAt.replace("{date}", fmtDate(createdAt))}
           </MetaChip>
         </div>
 
@@ -137,7 +159,7 @@ export function ProfileHero({
               : "bg-slate-50/50 italic text-slate-600 ring-slate-200/50",
           )}
         >
-          <p className="whitespace-pre-wrap">{bio ?? "Bio hali qo'shilmagan"}</p>
+          <p className="whitespace-pre-wrap">{bio ?? dictionary.mscProfileNoBio}</p>
         </div>
 
         {action ? <div className="mt-5">{action}</div> : null}

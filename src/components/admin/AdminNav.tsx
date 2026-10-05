@@ -4,11 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
+import type { Dictionary } from "@/i18n";
 
-const LINKS: { href: string; label: string; icon: ReactNode }[] = [
+const LINKS: { href: string; label: keyof Dictionary; icon: ReactNode }[] = [
   {
     href: "/admin",
-    label: "Umumiy",
+    label: "admNavOverview",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="9" rx="1.5" />
@@ -20,7 +22,7 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
   },
   {
     href: "/admin/users",
-    label: "Foydalanuvchilar",
+    label: "admNavUsers",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -32,7 +34,7 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
   },
   {
     href: "/admin/groups",
-    label: "Guruhlar",
+    label: "admNavGroups",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="m12 2 9 5-9 5-9-5 9-5" />
@@ -43,7 +45,7 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
   },
   {
     href: "/admin/courses",
-    label: "Kurslar",
+    label: "admNavCourses",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -53,7 +55,7 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
   },
   {
     href: "/admin/dictionaries",
-    label: "Lug'atlar",
+    label: "admNavDictionaries",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="M2 4h6.5A2.5 2.5 0 0 1 11 6.5V21a2 2 0 0 0-2-2H2z" />
@@ -63,7 +65,7 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
   },
   {
     href: "/admin/generator",
-    label: "Generator",
+    label: "admNavGenerator",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 3v3M18.4 5.6l-2.1 2.1M21 12h-3M18.4 18.4l-2.1-2.1M12 18v3M7.8 16.3l-2.2 2.1M3 12h3M7.8 7.7 5.6 5.6" />
@@ -73,7 +75,7 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
   },
   {
     href: "/admin/structure",
-    label: "Struktura",
+    label: "admNavStructure",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7" rx="1.5" />
@@ -85,7 +87,7 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
   },
   {
     href: "/admin/departments",
-    label: "Kafedralar",
+    label: "admNavDepartments",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 21h18" />
@@ -96,7 +98,7 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
   },
   {
     href: "/admin/import",
-    label: "Import",
+    label: "admNavImport",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 3v12" />
@@ -107,7 +109,7 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
   },
   {
     href: "/admin/audit",
-    label: "Audit",
+    label: "admNavAudit",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -118,7 +120,7 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
   },
   {
     href: "/admin/settings",
-    label: "Sozlamalar",
+    label: "admNavSettings",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
@@ -128,7 +130,7 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
   },
   {
     href: "/admin/bugs",
-    label: "Xatoliklar",
+    label: "admNavBugs",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 8v4" />
@@ -139,7 +141,7 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
   },
   {
     href: "/admin/bounty",
-    label: "Bug bounty",
+    label: "admNavBounty",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="9" r="5" />
@@ -149,7 +151,7 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
   },
   {
     href: "/admin/updates",
-    label: "Yangilanishlar",
+    label: "admNavUpdates",
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 12a9 9 0 1 0 2.6-6.4" />
@@ -161,6 +163,7 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
 ];
 
 export default function AdminNav() {
+  const { t } = useI18n();
   const pathname = usePathname();
 
   return (
@@ -187,7 +190,7 @@ export default function AdminNav() {
             >
               {link.icon}
             </span>
-            {link.label}
+            {t(link.label)}
             <span
               className={cn(
                 "pointer-events-none absolute inset-x-3 bottom-0.5 h-0.5 rounded-full bg-gradient-to-r from-transparent via-gold-400 to-transparent transition-opacity duration-200",

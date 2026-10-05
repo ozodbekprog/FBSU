@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui";
+import { getDictionary, getLocale } from "@/i18n";
 import { HelpIcon } from "./icons";
 import type { HelpIconName } from "./icons";
 import { HelpSection } from "./section";
@@ -12,37 +13,40 @@ type ContactChannel = {
   tone: string;
 };
 
-const CONTACTS: ContactChannel[] = [
-  {
-    icon: "mail",
-    title: "O'quv bo'limi",
-    value: "academic.department@polito.uz",
-    href: "mailto:academic.department@polito.uz",
-    hint: "Parol, sertifikat, transkript va o'quv jarayoni bo'yicha murojaatlar",
-    tone: "bg-brand-50 text-brand-700 ring-brand-100",
-  },
-  {
-    icon: "mapPin",
-    title: "Tyutor",
-    value: "103-xona",
-    hint: "Davomat, jadval va kundalik masalalar bo'yicha jonli yordam",
-    tone: "bg-emerald-50 text-emerald-700 ring-emerald-100",
-  },
-];
+export async function ContactCards() {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
-const CHECKLIST = [
-  "Guruh va fan nomini tayyorlang",
-  "Muammoni 1-2 gapda ta'riflang",
-  "Xatolik skrinshotini qo'shing",
-];
+  const CONTACTS: ContactChannel[] = [
+    {
+      icon: "mail",
+      title: dictionary.mscHelpContactAcademicTitle,
+      value: "academic.department@polito.uz",
+      href: "mailto:academic.department@polito.uz",
+      hint: dictionary.mscHelpContactAcademicHint,
+      tone: "bg-brand-50 text-brand-700 ring-brand-100",
+    },
+    {
+      icon: "mapPin",
+      title: dictionary.mscHelpContactTutorTitle,
+      value: dictionary.mscHelpContactTutorValue,
+      hint: dictionary.mscHelpContactTutorHint,
+      tone: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+    },
+  ];
 
-export function ContactCards() {
+  const CHECKLIST = [
+    dictionary.mscHelpContactCheck1,
+    dictionary.mscHelpContactCheck2,
+    dictionary.mscHelpContactCheck3,
+  ];
+
   return (
     <HelpSection
       id="aloqa"
       icon="mail"
-      title="Aloqa"
-      description="Javob topilmadimi? Biz bilan bog'laning."
+      title={dictionary.mscHelpContactTitle}
+      description={dictionary.mscHelpContactDesc}
     >
       <div className="grid gap-4 md:grid-cols-3">
         {CONTACTS.map((channel) => (
@@ -82,9 +86,9 @@ export function ContactCards() {
               <HelpIcon name="shield" size={19} />
             </span>
             <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-brand-200">
-              Murojaatdan oldin
+              {dictionary.mscHelpContactBeforeTitle}
             </p>
-            <p className="mt-1 font-semibold tracking-tight">Tezkor yechim uchun</p>
+            <p className="mt-1 font-semibold tracking-tight">{dictionary.mscHelpContactBeforeDesc}</p>
             <ul className="mt-3 space-y-2">
               {CHECKLIST.map((item) => (
                 <li key={item} className="flex items-start gap-2 text-sm text-brand-100">

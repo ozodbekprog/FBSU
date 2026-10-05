@@ -3,11 +3,21 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/uz";
+import { setDateLocale } from "@/lib/utils";
+
+type I18nParams = Record<string, string | number>;
 
 type I18nValue = {
   locale: Locale;
-  t: (key: keyof Dictionary) => string;
+  t: (key: keyof Dictionary, params?: I18nParams) => string;
 };
+
+export function formatMessage(template: string, params?: I18nParams): string {
+  if (!params) return template;
+  return template.replace(/\{(\w+)\}/g, (match, name) =>
+    name in params ? String(params[name]) : match,
+  );
+}
 
 const I18nContext = createContext<I18nValue | null>(null);
 
@@ -20,8 +30,9 @@ export function LocaleProvider({
   dictionary: Dictionary;
   children: ReactNode;
 }) {
+  setDateLocale(locale);
   const value = useMemo<I18nValue>(
-    () => ({ locale, t: (key) => dictionary[key] }),
+    () => ({ locale, t: (key, params) => formatMessage(dictionary[key], params) }),
     [locale, dictionary],
   );
 

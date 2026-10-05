@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { Badge, ButtonLink, Card, Progress } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
+import { getDictionary, getLocale, t as translate, type Locale } from "@/i18n";
+import { MONTH_KEYS } from "@/components/schedule/week-utils";
 import { examBucket, EXAM_MIN_PERCENT, type ExamBucket, type StaffExamItem, type StudentExamItem } from "./data";
 
-const MONTHS_SHORT = ["Yanv", "Fev", "Mar", "Apr", "May", "Iyn", "Iyl", "Avg", "Sen", "Okt", "Noy", "Dek"];
-
-const BUCKET_BADGES: Record<ExamBucket, { label: string; tone: "blue" | "amber" | "slate" }> = {
-  upcoming: { label: "Kelayotgan", tone: "blue" },
-  today: { label: "Bugun", tone: "amber" },
-  past: { label: "O'tgan", tone: "slate" },
+const BUCKET_BADGES: Record<ExamBucket, { key: "grdGroupUpcoming" | "grdGroupToday" | "grdGroupPast"; tone: "blue" | "amber" | "slate" }> = {
+  upcoming: { key: "grdGroupUpcoming", tone: "blue" },
+  today: { key: "grdGroupToday", tone: "amber" },
+  past: { key: "grdGroupPast", tone: "slate" },
 };
 
 const DATE_TONES: Record<ExamBucket, string> = {
@@ -29,7 +29,7 @@ function fmtTime(value: Date) {
   return `${hours}:${minutes}`;
 }
 
-function DateTile({ date, bucket }: { date: Date; bucket: ExamBucket }) {
+function DateTile({ date, bucket, month }: { date: Date; bucket: ExamBucket; month: string }) {
   return (
     <div
       title={fmtDate(date)}
@@ -40,7 +40,7 @@ function DateTile({ date, bucket }: { date: Date; bucket: ExamBucket }) {
     >
       <span className="text-lg font-bold leading-none">{date.getDate()}</span>
       <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider">
-        {MONTHS_SHORT[date.getMonth()]}
+        {month}
       </span>
     </div>
   );
@@ -55,7 +55,7 @@ function ClockIcon() {
   );
 }
 
-function ExamMeta({ exam }: { exam: { dueAt: Date; timeLimitMin: number | null } }) {
+function ExamMeta({ exam, locale }: { exam: { dueAt: Date; timeLimitMin: number | null }; locale: Locale }) {
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs">
       <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1.5 font-medium text-slate-600">
@@ -63,7 +63,7 @@ function ExamMeta({ exam }: { exam: { dueAt: Date; timeLimitMin: number | null }
         {fmtTime(exam.dueAt)}
       </span>
       <span className="rounded-lg bg-slate-100 px-2.5 py-1.5 font-medium text-slate-600">
-        {exam.timeLimitMin ? `${exam.timeLimitMin} daqiqa` : "Vaqt cheklanmagan"}
+        {exam.timeLimitMin ? translate(locale, "grdExMinutes", { count: exam.timeLimitMin }) : translate(locale, "grdExNoTimeLimit")}
       </span>
     </div>
   );
@@ -78,20 +78,22 @@ function MiniStat({ label, value, tone }: { label: string; value: number; tone: 
   );
 }
 
-function StudentState({ exam }: { exam: StudentExamItem }) {
+function StudentState({ exam, locale }: { exam: StudentExamItem; locale: Locale }) {
   const bucket = examBucket(exam.dueAt);
-  if (exam.attempts.active) return <Badge tone="amber">Davom etmoqda</Badge>;
+  if (exam.attempts.active) return <Badge tone="amber">{translate(locale, "grdExInProgress")}</Badge>;
   if (exam.attempts.finished > 0) {
     return (
       <Badge tone="green">
-        {exam.attempts.lastScore != null ? `Topshirilgan: ${exam.attempts.lastScore}` : "Topshirilgan"}
+        {exam.attempts.lastScore != null
+          ? translate(locale, "grdExSubmittedScore", { score: exam.attempts.lastScore })
+          : translate(locale, "grdSubmitted")}
       </Badge>
     );
   }
-  return <Badge tone={bucket === "past" ? "rose" : "slate"}>Topshirilmagan</Badge>;
+  return <Badge tone={bucket === "past" ? "rose" : "slate"}>{translate(locale, "grdExNotSubmitted")}</Badge>;
 }
 
-function EligibilityBanner({ exam }: { exam: StudentExamItem }) {
+function EligibilityBanner({ exam, locale }: { exam: StudentExamItem; locale: Locale }) {
   const eligible = exam.attendance.eligible;
   return (
     <div
@@ -118,41 +120,43 @@ function EligibilityBanner({ exam }: { exam: StudentExamItem }) {
       </span>
       <div className="min-w-0">
         <p className={cn("text-sm font-bold", eligible ? "text-emerald-700" : "text-rose-700")}>
-          {eligible ? "Imtihonga ruxsat" : "Ruxsat yo'q"}
+          {translate(locale, eligible ? "grdExamAdmitted" : "grdNoPermission")}
         </p>
         <p className={cn("mt-0.5 text-xs", eligible ? "text-emerald-600/80" : "text-rose-600/80")}>
           {eligible
-            ? `Davomat ${exam.attendance.percent}% — talab bajarilgan`
-            : `Davomat ${exam.attendance.percent}% — kamida ${EXAM_MIN_PERCENT}% kerak`}
+            ? translate(locale, "grdExAttendanceMet", { percent: exam.attendance.percent })
+            : translate(locale, "grdExAttendanceRequired", { percent: exam.attendance.percent, min: EXAM_MIN_PERCENT })}
         </p>
       </div>
     </div>
   );
 }
 
-export function StudentExamCard({ exam }: { exam: StudentExamItem }) {
+export async function StudentExamCard({ exam }: { exam: StudentExamItem }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const bucket = examBucket(exam.dueAt);
   return (
     <Link href={`/quizzes/${exam.id}`} className="block h-full">
       <Card className="group flex h-full flex-col p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift">
         <div className="flex items-start gap-3">
-          <DateTile date={exam.dueAt} bucket={bucket} />
+          <DateTile date={exam.dueAt} bucket={bucket} month={dictionary[MONTH_KEYS[exam.dueAt.getMonth()]].slice(0, 3)} />
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold tracking-tight text-slate-900">{exam.title}</p>
             <p className="mt-0.5 truncate text-sm text-slate-500">{exam.course.title}</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <Badge tone={BUCKET_BADGES[bucket].tone}>{BUCKET_BADGES[bucket].label}</Badge>
-              <StudentState exam={exam} />
+              <Badge tone={BUCKET_BADGES[bucket].tone}>{translate(locale, BUCKET_BADGES[bucket].key)}</Badge>
+              <StudentState exam={exam} locale={locale} />
             </div>
           </div>
         </div>
         <div className="mt-4">
-          <ExamMeta exam={exam} />
+          <ExamMeta exam={exam} locale={locale} />
         </div>
-        <EligibilityBanner exam={exam} />
+        <EligibilityBanner exam={exam} locale={locale} />
         <div className="mb-4 mt-4 space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500">Urinishlar</span>
+            <span className="text-slate-500">{dictionary.grdExAttempts}</span>
             <span className="font-semibold text-slate-700">
               {exam.attempts.finished}/{exam.maxAttempts}
             </span>
@@ -162,11 +166,11 @@ export function StudentExamCard({ exam }: { exam: StudentExamItem }) {
         <div className="mt-auto flex items-center justify-between gap-2 border-t border-slate-100 pt-4">
           <span className="text-xs text-slate-500">
             {exam.attempts.lastScore != null
-              ? `Oxirgi natija: ${exam.attempts.lastScore}`
-              : `Maks. ${exam.maxAttempts} urinish`}
+              ? translate(locale, "grdExLastResult", { score: exam.attempts.lastScore })
+              : translate(locale, "grdExMaxAttempts", { count: exam.maxAttempts })}
           </span>
           <span className="shrink-0 text-xs font-semibold text-brand-700 transition-colors group-hover:text-brand-900">
-            Testni ochish &rarr;
+            {dictionary.grdExOpenTest} &rarr;
           </span>
         </div>
       </Card>
@@ -174,38 +178,40 @@ export function StudentExamCard({ exam }: { exam: StudentExamItem }) {
   );
 }
 
-export function StaffExamCard({ exam }: { exam: StaffExamItem }) {
+export async function StaffExamCard({ exam }: { exam: StaffExamItem }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const bucket = examBucket(exam.dueAt);
   const submitRate = exam.attemptCount > 0 ? Math.round((exam.submittedCount / exam.attemptCount) * 100) : 0;
   return (
     <Card className="relative flex h-full flex-col p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
       <Link href={`/quizzes/${exam.id}`} aria-label={exam.title} className="absolute inset-0 rounded-2xl" />
       <div className="flex items-start gap-3">
-        <DateTile date={exam.dueAt} bucket={bucket} />
+        <DateTile date={exam.dueAt} bucket={bucket} month={dictionary[MONTH_KEYS[exam.dueAt.getMonth()]].slice(0, 3)} />
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold tracking-tight text-slate-900">{exam.title}</p>
           <p className="mt-0.5 truncate text-sm text-slate-500">
             {exam.course.title} · {exam.course.teacherName}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <Badge tone={BUCKET_BADGES[bucket].tone}>{BUCKET_BADGES[bucket].label}</Badge>
+            <Badge tone={BUCKET_BADGES[bucket].tone}>{translate(locale, BUCKET_BADGES[bucket].key)}</Badge>
             <Badge tone={exam.isPublished ? "green" : "slate"}>
-              {exam.isPublished ? "E'lon qilingan" : "Qoralama"}
+              {exam.isPublished ? dictionary.grdExPublished : dictionary.grdExDraft}
             </Badge>
           </div>
         </div>
       </div>
       <div className="mt-4">
-        <ExamMeta exam={exam} />
+        <ExamMeta exam={exam} locale={locale} />
       </div>
       <div className="mt-4 grid grid-cols-3 gap-2">
-        <MiniStat label="Savollar" value={exam.questionCount} tone="brand" />
-        <MiniStat label="Topshirgan" value={exam.submittedCount} tone="emerald" />
-        <MiniStat label="Urinish" value={exam.attemptCount} tone="amber" />
+        <MiniStat label={dictionary.grdExQuestions} value={exam.questionCount} tone="brand" />
+        <MiniStat label={dictionary.grdExSubmitters} value={exam.submittedCount} tone="emerald" />
+        <MiniStat label={dictionary.grdExAttemptsShort} value={exam.attemptCount} tone="amber" />
       </div>
       <div className="mb-4 mt-4 space-y-2">
         <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-500">Topshirish darajasi</span>
+          <span className="text-slate-500">{dictionary.grdExSubmitRate}</span>
           <span className="font-semibold text-slate-700">{submitRate}%</span>
         </div>
         <Progress value={exam.submittedCount} max={Math.max(1, exam.attemptCount)} />
@@ -217,7 +223,7 @@ export function StaffExamCard({ exam }: { exam: StaffExamItem }) {
           size="sm"
           className="relative z-10"
         >
-          Natijalar
+          {dictionary.grdExResults}
         </ButtonLink>
         <ButtonLink
           href={`/quizzes/${exam.id}/edit`}
@@ -225,9 +231,9 @@ export function StaffExamCard({ exam }: { exam: StaffExamItem }) {
           size="sm"
           className="relative z-10"
         >
-          Tahrirlash
+          {dictionary.grdExEdit}
         </ButtonLink>
-        <span className="ml-auto text-xs text-slate-600">Maks: {exam.maxAttempts}</span>
+        <span className="ml-auto text-xs text-slate-600">{translate(locale, "grdExMax", { count: exam.maxAttempts })}</span>
       </div>
     </Card>
   );

@@ -2,24 +2,27 @@ import Link from "next/link";
 import { Badge, Table } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { formatHours, type WorkloadCourse } from "./workload-data";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
-export function WorkloadCoursesTable({
+export async function WorkloadCoursesTable({
   courses,
   showTeacher,
 }: {
   courses: WorkloadCourse[];
   showTeacher: boolean;
 }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   return (
     <Table>
       <thead>
         <tr className="border-b border-slate-100 bg-slate-50/60 text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-          <th className="px-5 py-3 font-semibold">Kurs</th>
-          {showTeacher ? <th className="px-5 py-3 font-semibold">O&apos;qituvchi</th> : null}
-          <th className="px-5 py-3 text-right font-semibold">Talabalar</th>
-          <th className="px-5 py-3 font-semibold">Topshiriqlar</th>
-          <th className="px-5 py-3 font-semibold">Testlar</th>
-          <th className="px-5 py-3 text-right font-semibold">Haftalik soat</th>
+          <th className="px-5 py-3 font-semibold">{dictionary.admColCourse}</th>
+          {showTeacher ? <th className="px-5 py-3 font-semibold">{dictionary.admColTeacher}</th> : null}
+          <th className="px-5 py-3 text-right font-semibold">{dictionary.admStudents}</th>
+          <th className="px-5 py-3 font-semibold">{dictionary.admStatSubmissions}</th>
+          <th className="px-5 py-3 font-semibold">{dictionary.admQuizzes}</th>
+          <th className="px-5 py-3 text-right font-semibold">{dictionary.admWorkloadColHours}</th>
         </tr>
       </thead>
       <tbody>
@@ -56,7 +59,7 @@ export function WorkloadCoursesTable({
                 </span>
                 {course.pendingSubmissions > 0 ? (
                   <Badge tone="amber" className="shadow-sm ring-1 ring-inset ring-amber-200/80">
-                    {course.pendingSubmissions} baholanmagan
+                    {translate(locale, "admWorkloadUngraded", { count: course.pendingSubmissions })}
                   </Badge>
                 ) : null}
               </div>
@@ -75,7 +78,7 @@ export function WorkloadCoursesTable({
                 </span>
                 {course.pendingTextAnswers > 0 ? (
                   <Badge tone="amber" className="shadow-sm ring-1 ring-inset ring-amber-200/80">
-                    {course.pendingTextAnswers} matnli javob
+                    {translate(locale, "admWorkloadTextPending", { count: course.pendingTextAnswers })}
                   </Badge>
                 ) : null}
               </div>

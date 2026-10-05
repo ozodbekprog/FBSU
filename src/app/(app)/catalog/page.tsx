@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { Button, ButtonLink, EmptyState, Input, PageHeader } from "@/components/ui";
 import { type CatalogCourse } from "@/components/catalog/catalog-course-card";
 import { CourseBrowser } from "@/components/catalog/course-browser";
@@ -12,6 +13,8 @@ export default async function CatalogPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const params = await searchParams;
   const query = typeof params.q === "string" ? params.q.trim() : "";
 
@@ -71,8 +74,8 @@ export default async function CatalogPage({
         <Input
           name="q"
           defaultValue={query}
-          placeholder="Kurs yoki o'qituvchi nomi bo'yicha qidirish"
-          aria-label="Kurslarni qidirish"
+          placeholder={dictionary.crsSearchPlaceholder}
+          aria-label={dictionary.crsSearchCoursesLabel}
           className="pl-9"
         />
       </div>
@@ -90,14 +93,14 @@ export default async function CatalogPage({
           <circle cx="11" cy="11" r="7" />
           <path d="m20 20-3.5-3.5" />
         </svg>
-        Qidirish
+        {dictionary.crsSearch}
       </Button>
       {query ? (
         <Link
           href="/catalog"
           className="text-sm font-medium text-slate-500 transition-colors duration-150 hover:text-brand-800"
         >
-          Tozalash
+          {dictionary.crsClear}
         </Link>
       ) : null}
     </form>
@@ -105,20 +108,20 @@ export default async function CatalogPage({
 
   const empty = (
     <EmptyState
-      title={query ? "Hech narsa topilmadi" : "Kurslar yo'q"}
+      title={query ? dictionary.crsNothingFound : dictionary.crsNoCourses}
       description={
         query
-          ? `"${query}" bo'yicha e'lon qilingan kurs topilmadi. Boshqa kalit so'z bilan urinib ko'ring.`
-          : "Hozircha katalogda e'lon qilingan kurslar yo'q. Tez orada yangi kurslar qo'shiladi."
+          ? translate(locale, "crsNoSearchResults", { query })
+          : dictionary.crsCatalogEmpty
       }
       action={
         query ? (
           <ButtonLink href="/catalog" variant="secondary" size="sm">
-            Barcha kurslar
+            {dictionary.crsAllCourses}
           </ButtonLink>
         ) : staff ? (
           <ButtonLink href="/courses/new" size="sm">
-            Kurs yaratish
+            {dictionary.crsCreateCourse}
           </ButtonLink>
         ) : undefined
       }
@@ -128,12 +131,12 @@ export default async function CatalogPage({
   return (
     <>
       <PageHeader
-        eyebrow="Kurslar"
-        title="Katalog"
+        eyebrow={dictionary.crsCourses}
+        title={dictionary.crsCatalog}
         subtitle={
           staff
-            ? `E'lon qilingan kurslar — ${items.length} ta`
-            : `Ochiq kurslar — ${items.length} ta`
+            ? translate(locale, "crsPublishedCoursesCount", { count: items.length })
+            : translate(locale, "crsOpenCoursesCount", { count: items.length })
         }
       />
 

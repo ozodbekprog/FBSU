@@ -4,9 +4,10 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Badge, Button, ButtonLink, Card, CardBody, CardHeader, EmptyState, Input, Label, PageHeader, Select } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
+import { getDictionary, getLocale } from "@/i18n";
 import { RoomCard, type RoomItem } from "@/components/rooms/room-card";
 import RoomsManager from "@/components/rooms/RoomsManager";
-import { ROOM_TYPE_LABELS, ROOM_TYPES, isRoomType, matchesRoomType } from "@/components/rooms/room-type";
+import { ROOM_TYPE_LABEL_KEY, ROOM_TYPES, isRoomType, matchesRoomType } from "@/components/rooms/room-type";
 import { findAvailableRooms, roomWeekIsoForDate } from "@/components/rooms/room-data";
 import { parseIsoDate } from "@/components/rooms/room-week";
 import { SLOT_TIMES } from "@/components/attendance/lesson-utils";
@@ -36,6 +37,8 @@ export default async function RoomsPage({
   searchParams: Promise<{ q?: string; type?: string; date?: string; slot?: string }>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const params = await searchParams;
 
   const q = typeof params.q === "string" ? params.q.trim() : "";
@@ -77,7 +80,11 @@ export default async function RoomsPage({
 
   return (
     <>
-      <PageHeader eyebrow="Kampus" title="Xonalar" subtitle={`${items.length} ta xona`} />
+      <PageHeader
+        eyebrow={dictionary.mscCampusEyebrow}
+        title={dictionary.mscRoomsTitle}
+        subtitle={dictionary.mscRoomsCount.replace("{count}", String(items.length))}
+      />
 
       <Card className="mb-6">
         <CardBody className="space-y-4 py-4">
@@ -97,36 +104,36 @@ export default async function RoomsPage({
               <Input
                 name="q"
                 defaultValue={q}
-                placeholder="Xona, bino yoki jihoz bo'yicha qidirish"
+                placeholder={dictionary.mscRoomsSearchPlaceholder}
                 className="pl-9"
               />
             </div>
             <Button type="submit" variant="secondary" className="sm:w-auto">
-              Qidirish
+              {dictionary.mscRoomsSearch}
             </Button>
             {q || type ? (
               <Link
                 href="/rooms"
                 className="text-center text-sm font-medium text-slate-500 transition-colors duration-150 hover:text-brand-800"
               >
-                Tozalash
+                {dictionary.mscRoomsClear}
               </Link>
             ) : null}
           </form>
 
           <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
             <span className="mr-1 text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-              Turi
+              {dictionary.mscRoomsFilterType}
             </span>
             <Link href={buildHref(q, "")} className={segmentClass(type === "")}>
-              Barchasi
+              {dictionary.mscRoomsAll}
               <span className="rounded-full bg-white/70 px-1.5 text-[11px] text-slate-500 ring-1 ring-slate-200/70">
                 {rooms.length}
               </span>
             </Link>
             {typeCounts.map(({ value, count }) => (
               <Link key={value} href={buildHref(q, value)} className={segmentClass(type === value)}>
-                {ROOM_TYPE_LABELS[value]}
+                {dictionary[ROOM_TYPE_LABEL_KEY[value]]}
                 <span
                   className={cn(
                     "rounded-full px-1.5 text-[11px] ring-1",
@@ -145,8 +152,8 @@ export default async function RoomsPage({
 
       <Card className="mb-6">
         <CardHeader
-          title="Bo'sh xona topish"
-          subtitle="Sana va parni tanlang — dars ham, bron ham bo'lmagan xonalar ko'rsatiladi"
+          title={dictionary.mscRoomsFindTitle}
+          subtitle={dictionary.mscRoomsFindSubtitle}
         />
         <CardBody className="space-y-4 py-4">
           <form
@@ -157,21 +164,23 @@ export default async function RoomsPage({
             <input type="hidden" name="q" value={q} />
             <input type="hidden" name="type" value={type} />
             <div>
-              <Label>Sana</Label>
+              <Label>{dictionary.mscRoomsDate}</Label>
               <Input type="date" name="date" defaultValue={findDate} required />
             </div>
             <div>
-              <Label>Par</Label>
+              <Label>{dictionary.mscRoomsSlot}</Label>
               <Select name="slot" defaultValue={findSlot === null ? "1" : String(findSlot)}>
                 {SLOTS.map((value) => (
                   <option key={value} value={value}>
-                    {value}-par · {SLOT_TIMES[value]}
+                    {dictionary.mscRoomsSlotOption
+                      .replace("{slot}", String(value))
+                      .replace("{time}", SLOT_TIMES[value])}
                   </option>
                 ))}
               </Select>
             </div>
             <Button type="submit" variant="secondary" className="sm:w-auto">
-              Topish
+              {dictionary.mscRoomsFind}
             </Button>
           </form>
 
@@ -179,13 +188,13 @@ export default async function RoomsPage({
             <div className="border-t border-slate-100 pt-4">
               <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                 <span className="font-medium">{fmtDate(findDate)}</span>
-                <Badge tone="blue">{findSlot}-par</Badge>
-                <Badge tone="green">{availableRooms.length} ta bo&apos;sh xona</Badge>
+                <Badge tone="blue">{dictionary.mscRoomsSlot.replace("{slot}", String(findSlot))}</Badge>
+                <Badge tone="green">
+                  {dictionary.mscRoomsAvailableCount.replace("{count}", String(availableRooms.length))}
+                </Badge>
               </div>
               {availableRooms.length === 0 ? (
-                <p className="text-sm text-slate-500">
-                  Bu vaqtda bo&apos;sh xona yo&apos;q. Boshqa par yoki sanani tanlab ko&apos;ring.
-                </p>
+                <p className="text-sm text-slate-500">{dictionary.mscRoomsNoAvailable}</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {availableRooms.map((room) => (
@@ -210,10 +219,12 @@ export default async function RoomsPage({
 
       {q || type ? (
         <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-          <span className="font-medium">Natija:</span>
-          <Badge tone="blue">{items.length} ta xona</Badge>
+          <span className="font-medium">{dictionary.mscRoomsResult}</span>
+          <Badge tone="blue">
+            {dictionary.mscRoomsRoomCount.replace("{count}", String(items.length))}
+          </Badge>
           {q ? <Badge>„{q}“</Badge> : null}
-          {type ? <Badge>{ROOM_TYPE_LABELS[type]}</Badge> : null}
+          {type ? <Badge>{dictionary[ROOM_TYPE_LABEL_KEY[type]]}</Badge> : null}
         </div>
       ) : null}
 
@@ -221,16 +232,14 @@ export default async function RoomsPage({
         <RoomsManager rooms={items} />
       ) : items.length === 0 ? (
         <EmptyState
-          title={q || type ? "Hech narsa topilmadi" : "Xonalar yo'q"}
+          title={q || type ? dictionary.mscRoomsEmptySearchTitle : dictionary.mscRoomsEmptyTitle}
           description={
-            q || type
-              ? "Qidiruv shartlariga mos xona topilmadi. So'zni yoki turni o'zgartirib ko'ring."
-              : "Hozircha katalogda xonalar yo'q."
+            q || type ? dictionary.mscRoomsEmptySearchBody : dictionary.mscRoomsEmptyBody
           }
           action={
             q || type ? (
               <ButtonLink href="/rooms" variant="secondary" size="sm">
-                Barcha xonalar
+                {dictionary.mscRoomsAllRooms}
               </ButtonLink>
             ) : undefined
           }

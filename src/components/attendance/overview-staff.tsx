@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Badge, ButtonLink, Card, CardBody, EmptyState, Progress } from "@/components/ui";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { AttendanceRing } from "@/components/attendance/overview-ring";
 import { cn } from "@/lib/utils";
 
@@ -17,14 +18,18 @@ export type StaffCourseAttendanceRow = {
   percent: number;
 };
 
-const TILES = [
-  { key: "courses", label: "Kurslar", tone: "bg-brand-50 text-brand-700 ring-brand-100" },
-  { key: "students", label: "Talabalar", tone: "bg-purple-50 text-purple-600 ring-purple-100" },
-  { key: "marks", label: "Belgilar", tone: "bg-emerald-50 text-emerald-600 ring-emerald-100" },
-  { key: "risk", label: "80% dan past", tone: "bg-rose-50 text-rose-600 ring-rose-100" },
-] as const;
+const TILE_KEYS = ["courses", "students", "marks", "risk"] as const;
 
-function TileIcon({ tile }: { tile: (typeof TILES)[number]["key"] }) {
+type TileKey = (typeof TILE_KEYS)[number];
+
+const TILE_TONES: Record<TileKey, string> = {
+  courses: "bg-brand-50 text-brand-700 ring-brand-100",
+  students: "bg-purple-50 text-purple-600 ring-purple-100",
+  marks: "bg-emerald-50 text-emerald-600 ring-emerald-100",
+  risk: "bg-rose-50 text-rose-600 ring-rose-100",
+};
+
+function TileIcon({ tile }: { tile: TileKey }) {
   const stroke = {
     width: 17,
     height: 17,
@@ -68,7 +73,15 @@ function TileIcon({ tile }: { tile: (typeof TILES)[number]["key"] }) {
   );
 }
 
-export function StaffAttendanceOverview({ courses }: { courses: StaffCourseAttendanceRow[] }) {
+export async function StaffAttendanceOverview({ courses }: { courses: StaffCourseAttendanceRow[] }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const tileLabels: Record<TileKey, string> = {
+    courses: dictionary.schCourses,
+    students: dictionary.schStudentsLabel,
+    marks: dictionary.schMarks,
+    risk: dictionary.schBelow80,
+  };
   const totals = courses.reduce(
     (accumulator, course) => ({
       students: accumulator.students + course.students,
@@ -80,7 +93,7 @@ export function StaffAttendanceOverview({ courses }: { courses: StaffCourseAtten
   const overallPercent =
     totals.total > 0 ? Math.round((totals.attended / totals.total) * 100) : 0;
   const atRisk = courses.filter((course) => course.total > 0 && course.percent < 80).length;
-  const tileValues: Record<(typeof TILES)[number]["key"], number> = {
+  const tileValues: Record<TileKey, number> = {
     courses: courses.length,
     students: totals.students,
     marks: totals.total,
@@ -90,11 +103,11 @@ export function StaffAttendanceOverview({ courses }: { courses: StaffCourseAtten
   if (courses.length === 0) {
     return (
       <EmptyState
-        title="Kurslar yo'q"
-        description="Davomat statistikasi kurslar mavjud bo'lganda ko'rinadi."
+        title={dictionary.schNoCoursesTitle}
+        description={dictionary.schStaffNoCoursesDesc}
         action={
           <ButtonLink href="/courses" variant="secondary" size="sm">
-            Kurslarga o&apos;tish
+            {dictionary.schGoToCourses}
           </ButtonLink>
         }
       />
@@ -109,7 +122,11 @@ export function StaffAttendanceOverview({ courses }: { courses: StaffCourseAtten
         <span className="pointer-events-none absolute -bottom-28 -left-16 size-64 rounded-full bg-brand-300/20 blur-3xl" />
         <CardBody className="relative grid gap-8 py-8 lg:grid-cols-[auto_1fr] lg:items-center">
           <div className="flex justify-center">
-            <AttendanceRing percent={overallPercent} caption="umumiy davomat" />
+            <AttendanceRing
+              percent={overallPercent}
+              caption={dictionary.schRingCaptionOverall}
+              ariaLabel={dictionary.schAttendanceEyebrow}
+            />
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-3">
@@ -140,26 +157,31 @@ export function StaffAttendanceOverview({ courses }: { courses: StaffCourseAtten
                     </>
                   )}
                 </svg>
-                {atRisk === 0 ? "Barcha kurslar barqaror" : `${atRisk} kurs e'tibor talab qiladi`}
+                {atRisk === 0
+                  ? dictionary.schAllStable
+                  : translate(locale, "schCoursesNeedAttention", { count: atRisk })}
               </span>
               <span className="text-sm text-slate-500">
-                {courses.length} ta kurs · {totals.students} ta talaba
+                {translate(locale, "schCoursesStudentsSummary", {
+                  courses: courses.length,
+                  students: totals.students,
+                })}
               </span>
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {TILES.map((tile) => (
+              {TILE_KEYS.map((tile) => (
                 <div
-                  key={tile.key}
+                  key={tile}
                   className="rounded-2xl border border-slate-100 bg-white/80 p-3 shadow-[0_1px_2px_rgba(16,24,40,0.03)] transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-lift"
                 >
-                  <span className={cn("inline-flex size-8 items-center justify-center rounded-xl ring-1", tile.tone)}>
-                    <TileIcon tile={tile.key} />
+                  <span className={cn("inline-flex size-8 items-center justify-center rounded-xl ring-1", TILE_TONES[tile])}>
+                    <TileIcon tile={tile} />
                   </span>
                   <p className="mt-2.5 text-xl font-semibold tabular-nums text-brand-950">
-                    {tile.key === "marks" && totals.total === 0 ? "—" : tileValues[tile.key]}
+                    {tile === "marks" && totals.total === 0 ? "—" : tileValues[tile]}
                   </p>
-                  <p className="text-xs text-slate-600">{tile.label}</p>
+                  <p className="text-xs text-slate-600">{tileLabels[tile]}</p>
                 </div>
               ))}
             </div>
@@ -191,7 +213,10 @@ export function StaffAttendanceOverview({ courses }: { courses: StaffCourseAtten
                     {course.title}
                   </Link>
                   <p className="mt-1 text-xs text-slate-600">
-                    {course.students} ta talaba · {course.total} ta belgi
+                    {translate(locale, "schCourseStudentsMarks", {
+                      students: course.students,
+                      marks: course.total,
+                    })}
                   </p>
                 </div>
                 <span
@@ -215,19 +240,19 @@ export function StaffAttendanceOverview({ courses }: { courses: StaffCourseAtten
               <div className="flex flex-wrap gap-1.5">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
                   <span className="size-1.5 rounded-full bg-emerald-500" />
-                  {course.present} keldi
+                  {translate(locale, "schPresentCount", { count: course.present })}
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
                   <span className="size-1.5 rounded-full bg-amber-500" />
-                  {course.late} kech
+                  {translate(locale, "schLateCount", { count: course.late })}
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
                   <span className="size-1.5 rounded-full bg-slate-400" />
-                  {course.excused} sababli
+                  {translate(locale, "schExcusedCount", { count: course.excused })}
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-700">
                   <span className="size-1.5 rounded-full bg-rose-500" />
-                  {course.absent} kelmadi
+                  {translate(locale, "schAbsentCount", { count: course.absent })}
                 </span>
               </div>
 
@@ -237,12 +262,12 @@ export function StaffAttendanceOverview({ courses }: { courses: StaffCourseAtten
                   variant="secondary"
                   size="sm"
                 >
-                  Jurnal
+                  {dictionary.schJournalTitle}
                 </ButtonLink>
                 <ButtonLink href={`/courses/${course.slug}/attendance`} variant="ghost" size="sm">
                   QR check-in
                 </ButtonLink>
-                {course.isPublished ? null : <Badge tone="amber">Qoralama</Badge>}
+                {course.isPublished ? null : <Badge tone="amber">{dictionary.schDraft}</Badge>}
               </div>
             </CardBody>
           </Card>

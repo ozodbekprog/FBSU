@@ -4,14 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { apiFetch } from "@/components/quiz/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export function StartAttemptButton({
   quizId,
-  label = "Boshlash",
+  label,
 }: {
   quizId: string;
   label?: string;
 }) {
+  const { t } = useI18n();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +24,8 @@ export function StartAttemptButton({
     const result = await apiFetch<{ attempt: { id: string } }>(
       `/api/quizzes/${quizId}/attempts`,
       "POST",
+      undefined,
+      t("crsQuizServerError"),
     );
     if (!result.ok) {
       setError(result.error);
@@ -34,7 +38,7 @@ export function StartAttemptButton({
   return (
     <div>
       <Button onClick={start} disabled={loading}>
-        {loading ? "Boshlanmoqda..." : label}
+        {loading ? t("crsQuizStarting") : label ?? t("crsQuizStart")}
       </Button>
       {error ? <p className="mt-2 text-sm text-rose-600">{error}</p> : null}
     </div>

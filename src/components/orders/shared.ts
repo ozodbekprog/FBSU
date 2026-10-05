@@ -1,3 +1,5 @@
+import type { Dictionary } from "@/i18n";
+
 export const ORDER_TYPES = ["TRANSCRIPT", "CERTIFICATE", "RETAKE", "OTHER"] as const;
 
 export type OrderType = (typeof ORDER_TYPES)[number];
@@ -7,13 +9,6 @@ export const ORDER_STATUSES = ["NEW", "IN_PROGRESS", "DONE", "REJECTED"] as cons
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export type OrderStatusTone = "blue" | "amber" | "green" | "rose";
-
-export const ORDER_TYPE_LABEL: Record<OrderType, string> = {
-  TRANSCRIPT: "Transkript",
-  CERTIFICATE: "Ma'lumotnoma",
-  RETAKE: "Qayta topshirish",
-  OTHER: "Boshqa",
-};
 
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   NEW: "Yangi",
@@ -36,22 +31,47 @@ export const ORDER_STATUS_DOT: Record<OrderStatus, string> = {
   REJECTED: "bg-rose-400",
 };
 
-export const ORDER_STATUS_HINT: Record<OrderStatus, string> = {
-  NEW: "Ko'rib chiqilishi kutilmoqda",
-  IN_PROGRESS: "Ko'rib chiqilmoqda",
-  DONE: "Yakunlangan",
-  REJECTED: "Rad etilgan",
-};
-
-export const ORDER_TYPE_HINT: Record<OrderType, string> = {
-  TRANSCRIPT: "Rasmiy baholar jadvali",
-  CERTIFICATE: "O'qish haqida ma'lumotnoma",
-  RETAKE: "Fan yoki testni qayta topshirish",
-  OTHER: "Boshqa turdagi murojaat",
-};
-
 export function isOrderType(value: string): value is OrderType {
   return (ORDER_TYPES as readonly string[]).includes(value);
+}
+
+export type TranslateFn = (
+  key: keyof Dictionary,
+  params?: Record<string, string | number>,
+) => string;
+
+export function orderLabels(t: TranslateFn): {
+  type: Record<OrderType, string>;
+  typeHint: Record<OrderType, string>;
+  status: Record<OrderStatus, string>;
+  statusHint: Record<OrderStatus, string>;
+} {
+  return {
+    type: {
+      TRANSCRIPT: t("mscOrderTypeTranscript"),
+      CERTIFICATE: t("mscOrderTypeCertificate"),
+      RETAKE: t("mscOrderTypeRetake"),
+      OTHER: t("mscOrderTypeOther"),
+    },
+    typeHint: {
+      TRANSCRIPT: t("mscOrderTypeHintTranscript"),
+      CERTIFICATE: t("mscOrderTypeHintCertificate"),
+      RETAKE: t("mscOrderTypeHintRetake"),
+      OTHER: t("mscOrderTypeHintOther"),
+    },
+    status: {
+      NEW: t("mscOrderStatusNew"),
+      IN_PROGRESS: t("mscOrderStatusInProgress"),
+      DONE: t("mscOrderStatusDone"),
+      REJECTED: t("mscOrderStatusRejected"),
+    },
+    statusHint: {
+      NEW: t("mscOrderStatusHintNew"),
+      IN_PROGRESS: t("mscOrderStatusHintInProgress"),
+      DONE: t("mscOrderStatusHintDone"),
+      REJECTED: t("mscOrderStatusHintRejected"),
+    },
+  };
 }
 
 export function isOrderStatus(value: string): value is OrderStatus {

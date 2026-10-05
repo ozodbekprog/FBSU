@@ -1,4 +1,12 @@
 import type { Dictionary } from "./uz";
+import { shell } from "./dict/ru/shell";
+import { dash } from "./dict/ru/dash";
+import { crs } from "./dict/ru/crs";
+import { sch } from "./dict/ru/sch";
+import { grd } from "./dict/ru/grd";
+import { msg } from "./dict/ru/msg";
+import { adm } from "./dict/ru/adm";
+import { msc } from "./dict/ru/msc";
 
 export const ru: Dictionary = {
   commonSave: "Сохранить",
@@ -114,4 +122,12 @@ export const ru: Dictionary = {
   settingsEyebrow: "Аккаунт",
   settingsTitle: "Настройки",
   settingsSubtitle: "Уведомления, интерфейс и связь",
+  ...shell,
+  ...dash,
+  ...crs,
+  ...sch,
+  ...grd,
+  ...msg,
+  ...adm,
+  ...msc,
 };

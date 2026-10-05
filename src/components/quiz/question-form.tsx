@@ -3,18 +3,20 @@
 import { useState } from "react";
 import { Button, Card, CardBody, CardHeader, Input, Label, Textarea } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import type { Dictionary } from "@/i18n/uz";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import {
   QUESTION_TYPE_ICON,
-  QUESTION_TYPE_LABEL,
+  QUESTION_TYPE_KEY,
   type QuestionDraft,
   type QuestionFull,
   type QuestionType,
 } from "@/components/quiz/shared";
 
-const TYPE_SHORT: Record<QuestionType, string> = {
-  SINGLE: "Bitta javob",
-  MULTIPLE: "Bir nechta",
-  TEXT: "Matnli",
+const TYPE_SHORT_KEY: Record<QuestionType, keyof Dictionary> = {
+  SINGLE: "crsQuizTypeSingleShort",
+  MULTIPLE: "crsQuizTypeMultipleShort",
+  TEXT: "crsQuizTypeTextShort",
 };
 
 const TYPE_ACTIVE: Record<QuestionType, string> = {
@@ -36,6 +38,7 @@ export function QuestionForm({
   onSubmit: (draft: QuestionDraft) => Promise<string | null>;
   onCancel: () => void;
 }) {
+  const { t } = useI18n();
   const [text, setText] = useState(initial?.text ?? "");
   const [type, setType] = useState<QuestionType>(initial?.type ?? "SINGLE");
   const [points, setPoints] = useState(String(initial?.points ?? 1));
@@ -48,19 +51,19 @@ export function QuestionForm({
 
   function buildDraft(): QuestionDraft | string {
     const trimmedText = text.trim();
-    if (!trimmedText) return "Savol matnini kiriting";
+    if (!trimmedText) return t("crsQuizErrQuestionText");
     const pointsValue = Number(points);
     if (!Number.isInteger(pointsValue) || pointsValue < 1 || pointsValue > 100) {
-      return "Ball 1 dan 100 gacha butun son bo'lishi kerak";
+      return t("crsQuizErrPoints");
     }
     if (type === "TEXT") {
       return { text: trimmedText, type, options: [], correct: [], points: pointsValue };
     }
     const cleaned = options.map((option) => option.trim());
-    if (cleaned.length < 2) return "Kamida 2 ta variant kiriting";
-    if (cleaned.some((option) => option.length === 0)) return "Barcha variantlarni to'ldiring";
-    if (type === "SINGLE" && correct.length !== 1) return "Bitta to'g'ri variantni belgilang";
-    if (type === "MULTIPLE" && correct.length < 1) return "Kamida bitta to'g'ri variantni belgilang";
+    if (cleaned.length < 2) return t("crsQuizErrMinOptions");
+    if (cleaned.some((option) => option.length === 0)) return t("crsQuizErrFillOptions");
+    if (type === "SINGLE" && correct.length !== 1) return t("crsQuizErrSingleCorrect");
+    if (type === "MULTIPLE" && correct.length < 1) return t("crsQuizErrMultipleCorrect");
     return {
       text: trimmedText,
       type,
@@ -115,25 +118,25 @@ export function QuestionForm({
   return (
     <Card className="border-brand-200">
       <CardHeader
-        title={initial ? "Savolni tahrirlash" : "Yangi savol"}
-        subtitle="Savol matni, turi, variantlari va balli"
+        title={initial ? t("crsQuizEditQuestion") : t("crsQuizNewQuestion")}
+        subtitle={t("crsQuizQuestionSubtitle")}
       />
       <CardBody className="space-y-4">
         <div>
-          <Label>Savol matni</Label>
+          <Label>{t("crsQuizQuestionText")}</Label>
           <Textarea
             rows={3}
             value={text}
             onChange={(event) => setText(event.target.value)}
-            placeholder="Savolni kiriting..."
+            placeholder={t("crsQuizQuestionTextPlaceholder")}
           />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-[1.6fr_1fr]">
           <div>
-            <Label>Savol turi</Label>
+            <Label>{t("crsQuizQuestionType")}</Label>
             <div className="grid grid-cols-3 gap-2">
-              {(Object.keys(QUESTION_TYPE_LABEL) as QuestionType[]).map((value) => {
+              {(Object.keys(QUESTION_TYPE_KEY) as QuestionType[]).map((value) => {
                 const active = type === value;
                 return (
                   <button
@@ -157,14 +160,14 @@ export function QuestionForm({
                         <path d={QUESTION_TYPE_ICON[value]} />
                       </svg>
                     </span>
-                    {TYPE_SHORT[value]}
+                    {t(TYPE_SHORT_KEY[value])}
                   </button>
                 );
               })}
             </div>
           </div>
           <div>
-            <Label>Ball</Label>
+            <Label>{t("crsScore")}</Label>
             <Input
               type="number"
               min={1}
@@ -177,14 +180,14 @@ export function QuestionForm({
 
         {type === "TEXT" ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-            Matnli savol avtomatik baholanmaydi — o&apos;qituvchi qo&apos;lda ball qo&apos;yadi.
+            {t("crsQuizTextAutoNote")}
           </p>
         ) : (
           <div className="space-y-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-sm font-medium text-slate-700">Variantlar</span>
+              <span className="text-sm font-medium text-slate-700">{t("crsQuizOptions")}</span>
               <span className="text-xs text-slate-600">
-                {type === "SINGLE" ? "Bitta to'g'ri javobni belgilang" : "Bir nechta to'g'ri javobni belgilang"}
+                {type === "SINGLE" ? t("crsQuizMarkSingle") : t("crsQuizMarkMultiple")}
               </span>
             </div>
             {options.map((option, index) => {
@@ -223,7 +226,7 @@ export function QuestionForm({
                   <Input
                     value={option}
                     onChange={(event) => changeOption(index, event.target.value)}
-                    placeholder={`${index + 1}-variant`}
+                    placeholder={t("crsQuizOptionPlaceholder", { number: index + 1 })}
                     className="border-transparent! bg-transparent! px-0! shadow-none! focus:border-transparent! focus:ring-0!"
                   />
                   <Button
@@ -236,7 +239,7 @@ export function QuestionForm({
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
                     </svg>
-                    <span className="sr-only">Variantni o&apos;chirish</span>
+                    <span className="sr-only">{t("crsQuizRemoveOption")}</span>
                   </Button>
                 </div>
               );
@@ -245,7 +248,7 @@ export function QuestionForm({
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              Variant qo&apos;shish
+              {t("crsQuizAddOption")}
             </Button>
           </div>
         )}
@@ -254,10 +257,10 @@ export function QuestionForm({
 
         <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
           <Button variant="secondary" onClick={onCancel} disabled={saving}>
-            Bekor qilish
+            {t("commonCancel")}
           </Button>
           <Button onClick={() => void save()} disabled={saving}>
-            {saving ? "Saqlanmoqda..." : "Saqlash"}
+            {saving ? t("crsSaving") : t("crsSave")}
           </Button>
         </div>
       </CardBody>

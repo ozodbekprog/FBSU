@@ -9,7 +9,35 @@ interface BeforeInstallPromptEvent extends Event {
 
 const DISMISS_KEY = "ttpu-pwa-install-dismissed";
 
+const PWA_TEXT: Record<string, { title: string; subtitle: string; install: string; close: string }> = {
+  uz: {
+    title: "Ilovani o'rnatish",
+    subtitle: "FBSU LMS ni ilova sifatida ochish",
+    install: "O'rnatish",
+    close: "Yopish",
+  },
+  ru: {
+    title: "Установить приложение",
+    subtitle: "Открыть FBSU LMS как приложение",
+    install: "Установить",
+    close: "Закрыть",
+  },
+  en: {
+    title: "Install app",
+    subtitle: "Open FBSU LMS as an app",
+    install: "Install",
+    close: "Close",
+  },
+};
+
+function currentLocale(): string {
+  if (typeof document === "undefined") return "uz";
+  const lang = document.documentElement.lang;
+  return lang === "ru" || lang === "en" ? lang : "uz";
+}
+
 export function PwaRegister() {
+  const text = PWA_TEXT[currentLocale()] ?? PWA_TEXT.uz;
   const [promptEvent, setPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
 
@@ -58,20 +86,20 @@ export function PwaRegister() {
     <div className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-brand-100 bg-white p-3 shadow-xl">
       <img src="/logo.svg" alt="" width={40} height={40} className="shrink-0 rounded-full" />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-slate-800">Ilovani o&apos;rnatish</p>
-        <p className="text-xs text-slate-500">FBSU LMS ni ilova sifatida ochish</p>
+        <p className="text-sm font-semibold text-slate-800">{text.title}</p>
+        <p className="text-xs text-slate-500">{text.subtitle}</p>
       </div>
       <button
         type="button"
         onClick={install}
         className="shrink-0 rounded-lg bg-brand-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-brand-800"
       >
-        O&apos;rnatish
+        {text.install}
       </button>
       <button
         type="button"
         onClick={dismiss}
-        aria-label="Yopish"
+        aria-label={text.close}
         className="shrink-0 rounded-lg p-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-600"
       >
         <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">

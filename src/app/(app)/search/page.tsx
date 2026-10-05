@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth";
 import { PageHeader } from "@/components/ui";
+import { getDictionary, getLocale } from "@/i18n";
 import { SearchForm } from "@/components/search/search-form";
 import { SearchResultsView } from "@/components/search/search-results";
 import { SearchEmpty } from "@/components/search/search-empty";
@@ -11,6 +12,8 @@ export default async function SearchPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const params = await searchParams;
   const query = typeof params.q === "string" ? params.q.trim() : "";
   const active = query.length >= SEARCH_MIN_LENGTH;
@@ -19,20 +22,22 @@ export default async function SearchPage({
   return (
     <>
       <PageHeader
-        eyebrow="Qidiruv"
-        title="Global qidiruv"
-        subtitle="Kurslar, materiallar, topshiriqlar, testlar va foydalanuvchilar bo'yicha"
+        eyebrow={dictionary.mscSearchEyebrow}
+        title={dictionary.mscSearchTitle}
+        subtitle={dictionary.mscSearchSubtitle}
       />
       <SearchForm defaultValue={query} />
       {active ? (
         <SearchResultsView query={query} data={data} />
       ) : (
         <SearchEmpty
-          title={query ? "So'rov juda qisqa" : "Nimani qidiramiz?"}
+          title={query ? dictionary.mscSearchTooShort : dictionary.mscSearchPrompt}
           description={
             query
-              ? `"${query}" bo'yicha qidirish uchun kamida ${SEARCH_MIN_LENGTH} ta belgi kiriting.`
-              : `Kamida ${SEARCH_MIN_LENGTH} ta belgi kiriting — natijalar kurslar, materiallar, topshiriqlar, testlar va foydalanuvchilarga bo'linadi.`
+              ? dictionary.mscSearchMinBodyQuery
+                  .replace("{query}", query)
+                  .replace("{min}", String(SEARCH_MIN_LENGTH))
+              : dictionary.mscSearchMinBodyDefault.replace("{min}", String(SEARCH_MIN_LENGTH))
           }
         />
       )}

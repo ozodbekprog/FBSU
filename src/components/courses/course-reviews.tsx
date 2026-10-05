@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Avatar, Badge, Button, Card, CardBody, CardHeader, Label, Textarea } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 type ReviewItem = {
   id: string;
@@ -58,6 +59,7 @@ function StarInput({
   onChange: (rating: number) => void;
   disabled: boolean;
 }) {
+  const { t } = useI18n();
   return (
     <span className="inline-flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((star) => (
@@ -66,7 +68,7 @@ function StarInput({
           type="button"
           disabled={disabled}
           onClick={() => onChange(star)}
-          aria-label={`${star} yulduz`}
+          aria-label={t("crsStarsLabel", { count: star })}
           className="rounded-md p-0.5 transition-transform duration-150 hover:scale-110 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <svg
@@ -96,6 +98,7 @@ export function CourseReviews({
   isEnrolled: boolean;
   canManage: boolean;
 }) {
+  const { t } = useI18n();
   const [data, setData] = useState<ReviewsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -110,7 +113,7 @@ export function CourseReviews({
       const res = await apiFetch(`/api/courses/${courseId}/reviews`, { cache: "no-store" });
       const json = (await res.json().catch(() => null)) as ReviewsResponse | null;
       if (!res.ok || !json?.ok || !json.data) {
-        setError(json?.error ?? "Sharhlarni yuklab bo'lmadi");
+        setError(json?.error ?? t("crsReviewsLoadError"));
         return;
       }
       const mineReview = json.data.reviews.find((review) => review.mine);
@@ -121,11 +124,11 @@ export function CourseReviews({
       setData(json.data);
       setError(null);
     } catch {
-      setError("Tarmoq xatosi. Qayta urinib ko'ring.");
+      setError(t("crsNetworkError"));
     } finally {
       setLoading(false);
     }
-  }, [courseId]);
+  }, [courseId, t]);
 
   useEffect(() => {
     void Promise.resolve().then(load);
@@ -146,35 +149,35 @@ export function CourseReviews({
       });
       const json = (await res.json().catch(() => null)) as ReviewsResponse | null;
       if (!res.ok || !json?.ok) {
-        setError(json?.error ?? "Sharhni saqlab bo'lmadi");
+        setError(json?.error ?? t("crsReviewSaveError"));
         return;
       }
       setSaved(true);
       window.setTimeout(() => setSaved(false), 2500);
       await load();
     } catch {
-      setError("Tarmoq xatosi. Qayta urinib ko'ring.");
+      setError(t("crsNetworkError"));
     } finally {
       setBusy(false);
     }
   }
 
   async function remove() {
-    if (busy || !window.confirm("Sharhingiz o'chirilsinmi?")) return;
+    if (busy || !window.confirm(t("crsDeleteReviewConfirm"))) return;
     setBusy(true);
     setError(null);
     try {
       const res = await fetch(`/api/courses/${courseId}/reviews`, { method: "DELETE" });
       const json = (await res.json().catch(() => null)) as ReviewsResponse | null;
       if (!res.ok || !json?.ok) {
-        setError(json?.error ?? "Sharhni o'chirib bo'lmadi");
+        setError(json?.error ?? t("crsReviewDeleteError"));
         return;
       }
       setRating(0);
       setComment("");
       await load();
     } catch {
-      setError("Tarmoq xatosi. Qayta urinib ko'ring.");
+      setError(t("crsNetworkError"));
     } finally {
       setBusy(false);
     }
@@ -183,11 +186,11 @@ export function CourseReviews({
   return (
     <Card>
       <CardHeader
-        title="Sharhlar"
+        title={t("crsReviews")}
         subtitle={
           data && data.count > 0
-            ? `${data.count} ta sharh · o'rtacha ${data.average}`
-            : "Kurs haqida talabalar fikri"
+            ? t("crsReviewsSubtitle", { count: data.count, average: data.average ?? 0 })
+            : t("crsReviewsHint")
         }
       />
       <CardBody className="space-y-5">
@@ -210,9 +213,9 @@ export function CourseReviews({
                   <path d={STAR_PATH} />
                 </svg>
               </span>
-              <p className="text-sm font-medium text-slate-600">Hozircha sharhlar yo&apos;q</p>
+              <p className="text-sm font-medium text-slate-600">{t("crsNoReviews")}</p>
               <p className="text-xs text-slate-600">
-                Birinchi bo&apos;lib fikringizni qoldiring.
+                {t("crsBeFirstReview")}
               </p>
             </div>
           ) : (
@@ -241,7 +244,7 @@ export function CourseReviews({
                 </div>
                 <div>
                   <Stars value={Math.round(data.average ?? 0)} size={18} />
-                  <p className="mt-1.5 text-sm font-medium text-slate-700">{data.count} ta sharh</p>
+                  <p className="mt-1.5 text-sm font-medium text-slate-700">{t("crsReviewsCount", { count: data.count })}</p>
                 </div>
               </div>
               {canManage ? (
@@ -276,9 +279,9 @@ export function CourseReviews({
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-semibold text-slate-800">
-                {mine ? "Sharhingizni tahrirlash" : "Sharh qoldiring"}
+                {mine ? t("crsEditYourReview") : t("crsLeaveReview")}
               </p>
-              {mine ? <Badge tone="gold">Sizning sharhingiz</Badge> : null}
+              {mine ? <Badge tone="gold">{t("crsYourReview")}</Badge> : null}
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <StarInput value={rating} onChange={setRating} disabled={busy} />
@@ -290,17 +293,17 @@ export function CourseReviews({
                     : "bg-white/70 text-slate-600 ring-slate-200",
                 )}
               >
-                {rating > 0 ? `${rating} / 5` : "Yulduz tanlang"}
+                {rating > 0 ? t("crsRatingOutOf", { rating }) : t("crsChooseStars")}
               </span>
             </div>
             <div>
-              <Label>Izoh (ixtiyoriy)</Label>
+              <Label>{t("crsCommentOptional")}</Label>
               <Textarea
                 value={comment}
                 onChange={(event) => setComment(event.target.value)}
                 rows={3}
                 maxLength={500}
-                placeholder="Kurs haqida fikringiz..."
+                placeholder={t("crsReviewPlaceholder")}
               />
               <p className="mt-1 text-right text-xs text-slate-600">{comment.length}/500</p>
             </div>
@@ -318,7 +321,7 @@ export function CourseReviews({
                 >
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
-                Sharh saqlandi.
+                {t("crsReviewSaved")}
               </p>
             ) : null}
             <div className="flex justify-end gap-2">
@@ -329,11 +332,11 @@ export function CourseReviews({
                   disabled={busy}
                   onClick={remove}
                 >
-                  {"O'chirish"}
+                  {t("crsDelete")}
                 </Button>
               ) : null}
               <Button type="submit" disabled={busy || rating < 1}>
-                {mine ? "Saqlash" : "Yuborish"}
+                {mine ? t("crsSave") : t("crsSubmitReview")}
               </Button>
             </div>
           </form>
@@ -350,7 +353,7 @@ export function CourseReviews({
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="text-sm font-semibold text-slate-900">{review.user.name}</span>
-                    {review.mine ? <Badge tone="gold">Siz</Badge> : null}
+                    {review.mine ? <Badge tone="gold">{t("crsYou")}</Badge> : null}
                     <Stars value={review.rating} />
                     <span className="ml-auto text-xs text-slate-600">{fmtDate(review.createdAt)}</span>
                   </div>

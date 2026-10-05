@@ -1,15 +1,19 @@
 import { Badge, Card, CardBody } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import type { StudentGpa } from "@/app/api/gpa/data";
 import { GpaRing } from "./gpa-ring";
 
 type StatusTone = "green" | "blue" | "amber" | "rose";
 
-function gpaStatus(gpa: number): { label: string; tone: StatusTone } {
-  if (gpa >= 3.5) return { label: "A'lo natija", tone: "green" };
-  if (gpa >= 3.0) return { label: "Yaxshi natija", tone: "blue" };
-  if (gpa >= 2.0) return { label: "Qoniqarli", tone: "amber" };
-  return { label: "Qoniqarsiz", tone: "rose" };
+function gpaStatus(
+  gpa: number,
+  labels: { excellent: string; good: string; satisfactory: string; unsatisfactory: string },
+): { label: string; tone: StatusTone } {
+  if (gpa >= 3.5) return { label: labels.excellent, tone: "green" };
+  if (gpa >= 3.0) return { label: labels.good, tone: "blue" };
+  if (gpa >= 2.0) return { label: labels.satisfactory, tone: "amber" };
+  return { label: labels.unsatisfactory, tone: "rose" };
 }
 
 function percentAccent(percent: number | null) {
@@ -39,9 +43,16 @@ function HeroStat({
   );
 }
 
-export function GpaHero({ data, delay = 0 }: { data: StudentGpa; delay?: number }) {
+export async function GpaHero({ data, delay = 0 }: { data: StudentGpa; delay?: number }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   if (data.gpa == null) return null;
-  const status = gpaStatus(data.gpa);
+  const status = gpaStatus(data.gpa, {
+    excellent: dictionary.grdGpaStatusExcellent,
+    good: dictionary.grdGpaStatusGood,
+    satisfactory: dictionary.grdGpaStatusSatisfactory,
+    unsatisfactory: dictionary.grdGpaStatusUnsatisfactory,
+  });
   const scalePercent = Math.round((data.gpa / 4) * 100);
 
   return (
@@ -58,7 +69,7 @@ export function GpaHero({ data, delay = 0 }: { data: StudentGpa; delay?: number 
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-300">
-                Umumiy GPA
+                {dictionary.grdOverallGpa}
               </p>
               <Badge tone={status.tone}>{status.label}</Badge>
             </div>
@@ -69,13 +80,12 @@ export function GpaHero({ data, delay = 0 }: { data: StudentGpa; delay?: number 
               <span className="pb-1 text-sm font-medium text-brand-300">/ 4.0</span>
             </div>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-brand-200">
-              Har kurs o&apos;rtacha foizidan 4.0 tizim bo&apos;yicha hisoblanadi. Baholangan
-              topshiriq va testlar asosida, davomat hisobga olinmaydi.
+              {dictionary.grdGpaHeroDesc}
             </p>
             <div className="mt-5">
               <div className="flex items-center justify-between text-[11px] font-medium uppercase tracking-[0.14em] text-brand-300">
                 <span>0.0</span>
-                <span>{scalePercent}% shkala</span>
+                <span>{translate(locale, "grdScalePercent", { percent: scalePercent })}</span>
                 <span>4.0</span>
               </div>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
@@ -86,14 +96,18 @@ export function GpaHero({ data, delay = 0 }: { data: StudentGpa; delay?: number 
               </div>
             </div>
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <HeroStat label="Kurslar" value={data.courses.length} accent="bg-brand-400" />
-              <HeroStat label="Kreditlar" value={data.totalCredits} accent="bg-gold-400" />
+              <HeroStat label={dictionary.grdCourses} value={data.courses.length} accent="bg-brand-400" />
+              <HeroStat label={dictionary.grdCredits} value={data.totalCredits} accent="bg-gold-400" />
               <HeroStat
-                label="O'rtacha"
+                label={dictionary.grdAverage}
                 value={data.overallPercent != null ? `${data.overallPercent}%` : "—"}
                 accent={percentAccent(data.overallPercent)}
               />
-              <HeroStat label="Baholangan" value={data.gradedCount} accent="bg-emerald-400" />
+              <HeroStat
+                label={dictionary.grdGraded}
+                value={data.gradedCount}
+                accent="bg-emerald-400"
+              />
             </div>
           </div>
         </CardBody>

@@ -16,14 +16,12 @@ import {
 } from "@/components/ui";
 import { cn, fmtDateTime } from "@/lib/utils";
 import { ensureCsrfToken } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import {
   ORDER_STATUS_DOT,
-  ORDER_STATUS_HINT,
-  ORDER_STATUS_LABEL,
   ORDER_STATUS_TONE,
-  ORDER_TYPE_HINT,
-  ORDER_TYPE_LABEL,
   ORDER_TYPES,
+  orderLabels,
   toOrderStatus,
   toOrderType,
   type OrderType,
@@ -52,11 +50,6 @@ export type RetakeItem = {
 };
 
 type ApiResult = { ok: boolean; error?: string };
-
-const RETAKE_KIND_LABEL: Record<RetakeItem["kind"], string> = {
-  QUIZ: "Test",
-  ASSIGNMENT: "Topshiriq",
-};
 
 const TYPE_ICONS: Record<OrderType, ReactNode> = {
   TRANSCRIPT: (
@@ -97,6 +90,8 @@ function TimelineRow({ label, date, dot }: { label: string; date: string; dot: s
 }
 
 function OrderTimelineItem({ order }: { order: OrderItem }) {
+  const { t } = useI18n();
+  const labels = orderLabels(t);
   const status = toOrderStatus(order.status);
   const type = toOrderType(order.type);
   return (
@@ -105,10 +100,10 @@ function OrderTimelineItem({ order }: { order: OrderItem }) {
       <div className="min-w-0 flex-1 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.03)]">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="font-medium text-slate-900">{order.subject ?? ORDER_TYPE_LABEL[type]}</p>
+            <p className="font-medium text-slate-900">{order.subject ?? labels.type[type]}</p>
             <div className="mt-1.5 flex flex-wrap items-center gap-2">
-              <Badge tone="slate">{ORDER_TYPE_LABEL[type]}</Badge>
-              <Badge tone={ORDER_STATUS_TONE[status]}>{ORDER_STATUS_LABEL[status]}</Badge>
+              <Badge tone="slate">{labels.type[type]}</Badge>
+              <Badge tone={ORDER_STATUS_TONE[status]}>{labels.status[status]}</Badge>
             </div>
           </div>
           <span className="text-xs text-slate-600">{fmtDateTime(order.createdAt)}</span>
@@ -117,16 +112,18 @@ function OrderTimelineItem({ order }: { order: OrderItem }) {
           <p className="mt-2.5 text-xs leading-relaxed text-slate-500">{order.note}</p>
         ) : null}
         <div className="mt-3 space-y-1.5 border-t border-slate-100 pt-3">
-          <TimelineRow label="Yuborildi" date={fmtDateTime(order.createdAt)} dot="bg-brand-300" />
+          <TimelineRow label={t("mscOrderSent")} date={fmtDateTime(order.createdAt)} dot="bg-brand-300" />
           <TimelineRow
-            label={ORDER_STATUS_HINT[status]}
+            label={labels.statusHint[status]}
             date={fmtDateTime(order.updatedAt)}
             dot={ORDER_STATUS_DOT[status]}
           />
         </div>
         {order.adminComment ? (
           <div className="mt-3 rounded-xl bg-brand-50/70 px-3.5 py-2.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-600">Admin izohi</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-600">
+              {t("mscOrderAdminComment")}
+            </p>
             <p className="mt-1 text-xs leading-relaxed text-slate-600">{order.adminComment}</p>
           </div>
         ) : null}
@@ -142,6 +139,12 @@ export default function OrdersManager({
   orders: OrderItem[];
   retakes: RetakeItem[];
 }) {
+  const { t } = useI18n();
+  const labels = orderLabels(t);
+  const retakeKindLabel: Record<RetakeItem["kind"], string> = {
+    QUIZ: t("mscOrderRetakeKindQuiz"),
+    ASSIGNMENT: t("mscOrderRetakeKindAssignment"),
+  };
   const router = useRouter();
   const [type, setType] = useState<OrderType>("TRANSCRIPT");
   const [subject, setSubject] = useState("");
@@ -165,12 +168,12 @@ export default function OrdersManager({
       });
       const json = (await res.json().catch(() => null)) as ApiResult | null;
       if (!res.ok || !json || !json.ok) {
-        setError(json?.error ?? "Amalni bajarib bo'lmadi");
+        setError(json?.error ?? t("mscOrderActionError"));
         return null;
       }
       return json;
     } catch {
-      setError("Tarmoqda xatolik");
+      setError(t("mscOrderNetworkError"));
       return null;
     }
   }
@@ -188,7 +191,7 @@ export default function OrdersManager({
     setType("TRANSCRIPT");
     setSubject("");
     setNote("");
-    setNotice("Ariza yuborildi");
+    setNotice(t("mscOrderSubmitted"));
     router.refresh();
   }
 
@@ -196,12 +199,17 @@ export default function OrdersManager({
     setBusyRetake(item.id);
     const json = await send("/api/orders", "POST", {
       type: "RETAKE",
-      subject: `Qayta topshirish: ${item.title}`.slice(0, 200),
-      note: `${item.course ? `${item.course} · ` : ""}${RETAKE_KIND_LABEL[item.kind]} natijasi: ${item.score}/${item.max} (${item.percent}%)`,
+      subject: t("mscOrderRetakeSubject", { title: item.title }).slice(0, 200),
+      note: `${item.course ? `${item.course} · ` : ""}${t("mscOrderRetakeNote", {
+        kind: retakeKindLabel[item.kind],
+        score: item.score,
+        max: item.max,
+        percent: item.percent,
+      })}`,
     });
     setBusyRetake(null);
     if (!json) return;
-    setNotice("Qayta topshirish arizasi yuborildi");
+    setNotice(t("mscOrderRetakeSubmitted"));
     router.refresh();
   }
 
@@ -223,19 +231,19 @@ export default function OrdersManager({
 
       <Card>
         <CardHeader
-          title="Yangi ariza"
-          subtitle="Avval ariza turini tanlang, so'ng mavzuni kiriting"
+          title={t("mscOrderNewTitle")}
+          subtitle={t("mscOrderNewSubtitle")}
           action={
             <Badge tone="blue">
               <span className={cn("mr-1.5 size-1.5 rounded-full", ORDER_STATUS_DOT.NEW)} />
-              {ORDER_TYPE_LABEL[type]}
+              {labels.type[type]}
             </Badge>
           }
         />
         <CardBody>
           <form className="grid gap-5 sm:grid-cols-2" onSubmit={submit}>
             <div className="sm:col-span-2">
-              <Label>Ariza turi</Label>
+              <Label>{t("mscOrderTypeLabel")}</Label>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {ORDER_TYPES.map((value) => {
                   const active = type === value;
@@ -262,10 +270,10 @@ export default function OrdersManager({
                       </span>
                       <span className="min-w-0">
                         <span className={cn("block text-sm font-semibold", active ? "text-brand-800" : "text-slate-800")}>
-                          {ORDER_TYPE_LABEL[value]}
+                          {labels.type[value]}
                         </span>
                         <span className="mt-0.5 block text-xs leading-snug text-slate-500">
-                          {ORDER_TYPE_HINT[value]}
+                          {labels.typeHint[value]}
                         </span>
                       </span>
                     </button>
@@ -274,29 +282,29 @@ export default function OrdersManager({
               </div>
             </div>
             <div className="sm:col-span-2">
-              <Label>Mavzu</Label>
+              <Label>{t("mscOrderSubject")}</Label>
               <Input
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                placeholder="Masalan: 4-semestr transkripti"
+                placeholder={t("mscOrderSubjectPlaceholder")}
                 minLength={2}
                 maxLength={200}
                 required
               />
             </div>
             <div className="sm:col-span-2">
-              <Label>Izoh</Label>
+              <Label>{t("mscOrderNote")}</Label>
               <Textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Qo'shimcha ma'lumot (ixtiyoriy)"
+                placeholder={t("mscOrderNotePlaceholder")}
                 rows={3}
                 maxLength={2000}
               />
             </div>
             <div className="sm:col-span-2">
               <Button type="submit" disabled={busy || subject.trim().length < 2}>
-                {busy ? "Yuborilmoqda..." : "Ariza yuborish"}
+                {busy ? t("mscOrderSubmitting") : t("mscOrderSubmit")}
               </Button>
             </div>
           </form>
@@ -304,12 +312,15 @@ export default function OrdersManager({
       </Card>
 
       <Card>
-        <CardHeader title="Mening arizalarim" subtitle={`${orders.length} ta so'rov`} />
+        <CardHeader
+          title={t("mscOrderMineTitle")}
+          subtitle={t("mscOrderCount", { count: orders.length })}
+        />
         {orders.length === 0 ? (
           <CardBody>
             <EmptyState
-              title="Arizalar yo'q"
-              description="Yangi ariza yuboring — holati shu yerda vaqt chizig'i ko'rinishida chiqadi."
+              title={t("mscOrderEmptyTitle")}
+              description={t("mscOrderEmptyBody")}
             />
           </CardBody>
         ) : (
@@ -334,17 +345,17 @@ export default function OrdersManager({
               </svg>
             </span>
             <div>
-              <h3 className="font-semibold tracking-tight text-slate-900">Qayta topshirish</h3>
-              <p className="mt-0.5 text-sm text-amber-700/80">{"60% dan past natijalar bo'yicha so'rov yuborish"}</p>
+              <h3 className="font-semibold tracking-tight text-slate-900">{t("mscOrderRetakesTitle")}</h3>
+              <p className="mt-0.5 text-sm text-amber-700/80">{t("mscOrderRetakesSubtitle")}</p>
             </div>
           </div>
-          <Badge tone="amber">{retakes.length} ta fan</Badge>
+          <Badge tone="amber">{t("mscOrderRetakeCount", { count: retakes.length })}</Badge>
         </div>
         {retakes.length === 0 ? (
           <CardBody>
             <EmptyState
-              title="Muvaffaqiyatsiz natijalar yo'q"
-              description="Barcha test va topshiriqlar 60% dan yuqori baholangan."
+              title={t("mscOrderRetakesEmptyTitle")}
+              description={t("mscOrderRetakesEmptyBody")}
             />
           </CardBody>
         ) : (
@@ -358,12 +369,16 @@ export default function OrdersManager({
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium text-slate-900">{item.title}</span>
-                      <Badge tone="slate">{RETAKE_KIND_LABEL[item.kind]}</Badge>
+                      <Badge tone="slate">{retakeKindLabel[item.kind]}</Badge>
                     </div>
                     <p className="mt-0.5 text-xs text-slate-500">
-                      {item.course ? `${item.course} · ` : ""}Natija:{" "}
+                      {item.course ? `${item.course} · ` : ""}
                       <span className="font-semibold text-rose-600">
-                        {item.score}/{item.max} ({item.percent}%)
+                        {t("mscOrderResultInline", {
+                          score: item.score,
+                          max: item.max,
+                          percent: item.percent,
+                        })}
                       </span>
                     </p>
                     <Progress value={item.percent} className="mt-2.5 max-w-xs" />
@@ -374,7 +389,7 @@ export default function OrdersManager({
                     disabled={busyRetake === item.id}
                     onClick={() => requestRetake(item)}
                   >
-                    {busyRetake === item.id ? "Yuborilmoqda..." : "Qayta topshirish so'rovi"}
+                    {busyRetake === item.id ? t("mscOrderSubmitting") : t("mscOrderRetakeRequest")}
                   </Button>
                 </div>
               </div>

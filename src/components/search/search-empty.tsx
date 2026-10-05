@@ -1,15 +1,8 @@
 import type { ReactNode } from "react";
+import { getDictionary, getLocale } from "@/i18n";
 import { Badge } from "@/components/ui";
 
-const CATEGORIES: { label: string; tone: string }[] = [
-  { label: "Kurslar", tone: "brand" },
-  { label: "Materiallar", tone: "amber" },
-  { label: "Topshiriqlar", tone: "green" },
-  { label: "Testlar", tone: "purple" },
-  { label: "Foydalanuvchilar", tone: "blue" },
-];
-
-export function SearchEmpty({
+export async function SearchEmpty({
   title,
   description,
   action,
@@ -18,6 +11,15 @@ export function SearchEmpty({
   description: string;
   action?: ReactNode;
 }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const categories: { label: string; tone: string }[] = [
+    { label: dictionary.mscSrchCatCourses, tone: "brand" },
+    { label: dictionary.mscSrchCatMaterials, tone: "amber" },
+    { label: dictionary.mscSrchCatAssignments, tone: "green" },
+    { label: dictionary.mscSrchCatQuizzes, tone: "purple" },
+    { label: dictionary.mscSrchCatUsers, tone: "blue" },
+  ];
   return (
     <div className="animate-fade-up flex flex-col items-center rounded-3xl border border-dashed border-slate-300 bg-white/70 px-6 py-14 text-center">
       <span className="relative inline-flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-900 to-brand-600 text-white shadow-lift">
@@ -32,7 +34,7 @@ export function SearchEmpty({
       <p className="mt-5 text-lg font-semibold tracking-tight text-slate-900">{title}</p>
       <p className="mt-1.5 max-w-md text-sm leading-relaxed text-slate-500">{description}</p>
       <div className="mt-5 flex flex-wrap justify-center gap-2">
-        {CATEGORIES.map((item) => (
+        {categories.map((item) => (
           <Badge key={item.label} tone={item.tone}>
             {item.label}
           </Badge>

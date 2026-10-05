@@ -1,4 +1,5 @@
 import type { Question } from "@prisma/client";
+import type { Dictionary } from "@/i18n/uz";
 
 export type QuestionType = "SINGLE" | "MULTIPLE" | "TEXT";
 
@@ -29,6 +30,12 @@ export const QUESTION_TYPE_LABEL: Record<QuestionType, string> = {
   SINGLE: "Bitta to'g'ri javob",
   MULTIPLE: "Bir nechta to'g'ri javob",
   TEXT: "Matnli javob (qo'lda)",
+};
+
+export const QUESTION_TYPE_KEY: Record<QuestionType, keyof Dictionary> = {
+  SINGLE: "crsQuizTypeSingle",
+  MULTIPLE: "crsQuizTypeMultiple",
+  TEXT: "crsQuizTypeText",
 };
 
 export const QUESTION_TYPE_TONE: Record<QuestionType, "brand" | "purple" | "amber"> = {

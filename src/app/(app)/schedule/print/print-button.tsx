@@ -1,8 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export function PrintButton() {
+  const { t } = useI18n();
   return (
     <Button onClick={() => window.print()}>
       <svg
@@ -21,7 +23,7 @@ export function PrintButton() {
         <rect x="4" y="9" width="16" height="8" rx="2" />
         <path d="M6 14h12v7H6z" />
       </svg>
-      Chop etish
+      {t("schPrint")}
     </Button>
   );
 }

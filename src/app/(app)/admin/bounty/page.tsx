@@ -13,32 +13,33 @@ import {
   readSeverity,
 } from "@/lib/bug-bounty";
 import { cn, fmtDateTime } from "@/lib/utils";
+import { getDictionary, getLocale, t as translate, type Dictionary } from "@/i18n";
 
-const STATUS_META: Record<string, { label: string; tone: string }> = {
-  NEW: { label: "Yangi", tone: "amber" },
-  IN_REVIEW: { label: "Ko'rib chiqilmoqda", tone: "blue" },
-  FIXED: { label: "Tuzatildi", tone: "green" },
-  REJECTED: { label: "Rad etildi", tone: "slate" },
+const STATUS_META: Record<string, { label: keyof Dictionary; tone: string }> = {
+  NEW: { label: "admStatusNew", tone: "amber" },
+  IN_REVIEW: { label: "admStatusInReview", tone: "blue" },
+  FIXED: { label: "admStatusFixed", tone: "green" },
+  REJECTED: { label: "admStatusRejected", tone: "slate" },
 };
 
-const SEVERITY_META: Record<string, { label: string; tone: string }> = {
-  high: { label: "Yuqori", tone: "rose" },
-  medium: { label: "O'rta", tone: "amber" },
-  low: { label: "Past", tone: "slate" },
+const SEVERITY_META: Record<string, { label: keyof Dictionary; tone: string }> = {
+  high: { label: "admSeverityHigh", tone: "rose" },
+  medium: { label: "admSeverityMedium", tone: "amber" },
+  low: { label: "admSeverityLow", tone: "slate" },
 };
 
-const ROLE_LABELS: Record<string, string> = {
-  ADMIN: "Administrator",
-  TEACHER: "O'qituvchi",
-  STUDENT: "Talaba",
+const ROLE_LABELS: Record<string, keyof Dictionary> = {
+  ADMIN: "admRoleAdmin",
+  TEACHER: "admRoleTeacher",
+  STUDENT: "admRoleStudent",
 };
 
-const FILTERS = [
-  { key: "all", label: "Hammasi" },
-  { key: "open", label: "Ochiq" },
-  { key: "fixed", label: "Tuzatilgan" },
-  { key: "rejected", label: "Rad etilgan" },
-] as const;
+const FILTERS: { key: string; label: keyof Dictionary }[] = [
+  { key: "all", label: "admFilterAll" },
+  { key: "open", label: "admFilterOpen" },
+  { key: "fixed", label: "admFilterFixed" },
+  { key: "rejected", label: "admFilterRejected" },
+];
 
 type FilterKey = (typeof FILTERS)[number]["key"];
 
@@ -48,6 +49,8 @@ export default async function AdminBountyPage({
   searchParams: Promise<{ holat?: string }>;
 }) {
   await requireRole(["ADMIN"]);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const params = await searchParams;
   const filter: FilterKey = FILTERS.some((item) => item.key === params.holat)
     ? (params.holat as FilterKey)
@@ -101,38 +104,38 @@ export default async function AdminBountyPage({
   return (
     <>
       <PageHeader
-        eyebrow="Admin"
-        title="Bug bounty"
-        subtitle={`${items.length} ta xabar · ${fixed} ta tuzatilgan · ${points} ball`}
+        eyebrow={dictionary.admEyebrowAdmin}
+        title={dictionary.admBountyTitle}
+        subtitle={translate(locale, "admBountySubtitle", { messages: items.length, fixed, points })}
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Jami xabarlar" value={items.length} hint={`Ochiq: ${open}`} />
-        <Stat label="Tuzatilgan" value={fixed} hint={`Rad etilgan: ${rejected}`} />
-        <Stat label="Faol testchilar" value={leaders.length} hint="Ball to'plagan ishtirokchilar" />
+        <Stat label={dictionary.admBountyStatMessages} value={items.length} hint={translate(locale, "admBountyStatMessagesHint", { open })} />
+        <Stat label={dictionary.admBountyStatFixed} value={fixed} hint={translate(locale, "admBountyStatFixedHint", { rejected })} />
+        <Stat label={dictionary.admBountyStatTesters} value={leaders.length} hint={dictionary.admBountyStatTestersHint} />
         <Stat
-          label="To'plangan ball"
+          label={dictionary.admBountyStatPoints}
           value={points}
-          hint={`high=${BOUNTY_POINTS.high} · medium=${BOUNTY_POINTS.medium} · low=${BOUNTY_POINTS.low} · boshqa=${BOUNTY_POINTS_DEFAULT}`}
+          hint={translate(locale, "admBountyStatPointsHint", { high: BOUNTY_POINTS.high, medium: BOUNTY_POINTS.medium, low: BOUNTY_POINTS.low, other: BOUNTY_POINTS_DEFAULT })}
         />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Top xatolik topuvchilar" subtitle="Faqat tuzatilgan xatolar ball beradi" />
+          <CardHeader title={dictionary.admBountyLeadersTitle} subtitle={dictionary.admBountyLeadersSubtitle} />
           <CardBody className="pt-2">
             {leaders.length === 0 ? (
-              <p className="py-4 text-sm text-slate-500">Hozircha ball to'planmagan.</p>
+              <p className="py-4 text-sm text-slate-500">{dictionary.admBountyLeadersEmpty}</p>
             ) : (
               <Table>
                 <thead>
                   <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
-                    <th className="py-2 pr-3 font-medium">#</th>
-                    <th className="py-2 pr-3 font-medium">Ism</th>
-                    <th className="py-2 pr-3 font-medium">Rol</th>
-                    <th className="py-2 pr-3 text-right font-medium">Tuzatilgan</th>
-                    <th className="py-2 pr-3 text-right font-medium">Jami</th>
-                    <th className="py-2 text-right font-medium">Ball</th>
+                    <th className="py-2 pr-3 font-medium">{dictionary.admColIndex}</th>
+                    <th className="py-2 pr-3 font-medium">{dictionary.admColName}</th>
+                    <th className="py-2 pr-3 font-medium">{dictionary.admColRole}</th>
+                    <th className="py-2 pr-3 text-right font-medium">{dictionary.admColFixed}</th>
+                    <th className="py-2 pr-3 text-right font-medium">{dictionary.admTotal}</th>
+                    <th className="py-2 text-right font-medium">{dictionary.admPoints}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -142,7 +145,7 @@ export default async function AdminBountyPage({
                       <td className="py-2.5 pr-3 text-sm font-medium text-slate-800">{leader.name}</td>
                       <td className="py-2.5 pr-3">
                         {leader.role ? (
-                          <Badge tone="slate">{ROLE_LABELS[leader.role] ?? leader.role}</Badge>
+                          <Badge tone="slate">{ROLE_LABELS[leader.role] ? dictionary[ROLE_LABELS[leader.role]] : leader.role}</Badge>
                         ) : (
                           <span className="text-slate-400">—</span>
                         )}
@@ -161,10 +164,10 @@ export default async function AdminBountyPage({
         </Card>
 
         <Card>
-          <CardHeader title="Tuzatuvchi node'lar" subtitle="Fleet ishchi kompyuterlari tuzatgan xatolar" />
+          <CardHeader title={dictionary.admBountyFixersTitle} subtitle={dictionary.admBountyFixersSubtitle} />
           <CardBody className="pt-2">
             {fixers.length === 0 ? (
-              <p className="py-4 text-sm text-slate-500">Hozircha node hisobi yo'q.</p>
+              <p className="py-4 text-sm text-slate-500">{dictionary.admBountyFixersEmpty}</p>
             ) : (
               <div className="space-y-2">
                 {fixers.map((fixer) => (
@@ -173,7 +176,7 @@ export default async function AdminBountyPage({
                     className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-2.5"
                   >
                     <span className="font-mono text-sm text-slate-700">{fixer.node}</span>
-                    <Badge tone="green">{fixer.count} ta tuzatilgan</Badge>
+                    <Badge tone="green">{translate(locale, "admBountyFixersBadge", { count: fixer.count })}</Badge>
                   </div>
                 ))}
               </div>
@@ -184,8 +187,8 @@ export default async function AdminBountyPage({
 
       <Card className="mt-6">
         <CardHeader
-          title="Xatoliklar va ballar"
-          subtitle={`${filtered.length} ta yozuv ko'rsatilmoqda`}
+          title={dictionary.admBountyReportsTitle}
+          subtitle={translate(locale, "admBountyReportsSubtitle", { count: filtered.length })}
           action={
             <div className="flex flex-wrap gap-1.5">
               {FILTERS.map((option) => (
@@ -199,7 +202,7 @@ export default async function AdminBountyPage({
                       : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
                   )}
                 >
-                  {option.label}
+                  {dictionary[option.label]}
                 </Link>
               ))}
             </div>
@@ -207,23 +210,23 @@ export default async function AdminBountyPage({
         />
         <CardBody className="pt-2">
           {filtered.length === 0 ? (
-            <EmptyState title="Yozuvlar topilmadi" description="Boshqa filtrni tanlab ko'ring." />
+            <EmptyState title={dictionary.admBountyEmptyTitle} description={dictionary.admBountyEmptyDesc} />
           ) : (
             <Table>
               <thead>
                 <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
-                  <th className="py-2 pr-3 font-medium">Sana</th>
-                  <th className="py-2 pr-3 font-medium">Xabar</th>
-                  <th className="py-2 pr-3 font-medium">Kim</th>
-                  <th className="py-2 pr-3 font-medium">Holat</th>
-                  <th className="py-2 pr-3 font-medium">Jiddiylik</th>
-                  <th className="py-2 pr-3 text-right font-medium">Ball</th>
-                  <th className="py-2 font-medium">Tuzatgan</th>
+                  <th className="py-2 pr-3 font-medium">{dictionary.admBountyColDate}</th>
+                  <th className="py-2 pr-3 font-medium">{dictionary.admBountyColMessage}</th>
+                  <th className="py-2 pr-3 font-medium">{dictionary.admBountyColWho}</th>
+                  <th className="py-2 pr-3 font-medium">{dictionary.admBountyColStatus}</th>
+                  <th className="py-2 pr-3 font-medium">{dictionary.admBountyColSeverity}</th>
+                  <th className="py-2 pr-3 text-right font-medium">{dictionary.admPoints}</th>
+                  <th className="py-2 font-medium">{dictionary.admBountyColFixer}</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.slice(0, 100).map((item) => {
-                  const status = STATUS_META[item.status] ?? { label: item.status, tone: "slate" };
+                  const status = STATUS_META[item.status] ?? { label: null, tone: "slate" };
                   const severity = item.severity ? SEVERITY_META[item.severity] : null;
                   return (
                     <tr key={item.id} className="border-b border-slate-100 align-top last:border-0">
@@ -234,14 +237,14 @@ export default async function AdminBountyPage({
                         <p className="line-clamp-2 max-w-md text-sm text-slate-700">{item.message}</p>
                       </td>
                       <td className="whitespace-nowrap py-2.5 pr-3 text-sm text-slate-600">
-                        {item.reporterName ?? "Anonim"}
+                        {item.reporterName ?? dictionary.admAnonymous}
                       </td>
                       <td className="py-2.5 pr-3">
-                        <Badge tone={status.tone}>{status.label}</Badge>
+                        <Badge tone={status.tone}>{status.label ? dictionary[status.label] : item.status}</Badge>
                       </td>
                       <td className="py-2.5 pr-3">
                         {severity ? (
-                          <Badge tone={severity.tone}>{severity.label}</Badge>
+                          <Badge tone={severity.tone}>{dictionary[severity.label]}</Badge>
                         ) : (
                           <span className="text-slate-400">—</span>
                         )}

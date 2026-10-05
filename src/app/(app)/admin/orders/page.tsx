@@ -14,6 +14,7 @@ import {
   type OrderStatus,
 } from "@/components/orders/shared";
 import type { ReactNode } from "react";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 const STAT_TONES = {
   brand: "bg-brand-50 text-brand-700 ring-brand-100",
@@ -135,6 +136,8 @@ export default async function AdminOrdersPage({
   searchParams: Promise<{ status?: string }>;
 }) {
   await requireRole(["ADMIN"]);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const params = await searchParams;
   const status =
     typeof params.status === "string" && isOrderStatus(params.status) ? params.status : "";
@@ -179,24 +182,24 @@ export default async function AdminOrdersPage({
   return (
     <>
       <PageHeader
-        eyebrow="Boshqaruv"
-        title="Arizalar"
-        subtitle="Talabalar va xodimlar so'rovlarini ko'rib chiqish"
+        eyebrow={dictionary.admEyebrowManage}
+        title={dictionary.admOrdersTitle}
+        subtitle={dictionary.admOrdersSubtitle}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <StatusCard label="Jami arizalar" value={total} total={total} tone="slate" icon="total" />
-        <StatusCard label="Yangi" value={counts.NEW ?? 0} total={total} tone="blue" icon="new" />
+        <StatusCard label={dictionary.admOrdersStatTotal} value={total} total={total} tone="slate" icon="total" />
+        <StatusCard label={dictionary.admStatusNew} value={counts.NEW ?? 0} total={total} tone="blue" icon="new" />
         <StatusCard
-          label="Jarayonda"
+          label={dictionary.admStatusInProgress}
           value={counts.IN_PROGRESS ?? 0}
           total={total}
           tone="amber"
           icon="progress"
         />
-        <StatusCard label="Bajarildi" value={counts.DONE ?? 0} total={total} tone="emerald" icon="done" />
+        <StatusCard label={dictionary.admStatusDone} value={counts.DONE ?? 0} total={total} tone="emerald" icon="done" />
         <StatusCard
-          label="Rad etildi"
+          label={dictionary.admStatusRejected}
           value={counts.REJECTED ?? 0}
           total={total}
           tone="rose"
@@ -208,10 +211,10 @@ export default async function AdminOrdersPage({
         <div className="flex flex-wrap items-center gap-2">
           <span className="ml-1 mr-1 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-600">
             {STAT_ICONS.filter}
-            Filtr
+            {dictionary.admFilter}
           </span>
           <FilterLink href="/admin/orders" active={!status} count={total}>
-            Barchasi
+            {dictionary.admWorkloadAll}
           </FilterLink>
           {ORDER_STATUSES.map((value) => (
             <FilterLink
@@ -225,7 +228,7 @@ export default async function AdminOrdersPage({
             </FilterLink>
           ))}
           <span className="ml-auto hidden items-center gap-2 pr-2 text-xs text-slate-600 sm:inline-flex">
-            <Badge tone="slate">{orders.length} ta natija</Badge>
+            <Badge tone="slate">{translate(locale, "admUsersResults", { count: orders.length })}</Badge>
           </span>
         </div>
       </Card>

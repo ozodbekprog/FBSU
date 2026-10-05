@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { isStaff, isRegistrar, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { ScheduleBuilder } from "@/components/schedule/builder/schedule-builder";
 import type {
   BuilderCourse,
@@ -10,9 +11,15 @@ import type {
   BuilderSubject,
   BuilderTeacherRef,
 } from "@/components/schedule/builder/types";
-import { formatWeekRange, isoWeekNumber, resolveWeekStart, weekParityOf } from "@/components/schedule/week-utils";
+import {
+  MONTH_KEYS,
+  formatWeekRange,
+  isoWeekNumber,
+  resolveWeekStart,
+  weekParityOf,
+} from "@/components/schedule/week-utils";
 
-const STANDARD_ROOMS = ["203", "205", "304", "LAB 403", "Green Hall", "Yellow Hall", "Conference Hall", "Onlayn"];
+const STANDARD_ROOMS = ["203", "205", "304", "LAB 403", "Green Hall", "Yellow Hall", "Conference Hall"];
 
 export default async function ScheduleBuilderPage({
   searchParams,
@@ -22,6 +29,9 @@ export default async function ScheduleBuilderPage({
   const user = await requireUser();
   if (!isStaff(user.role) && !isRegistrar(user.role)) redirect("/schedule");
 
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const months = MONTH_KEYS.map((key) => dictionary[key]);
   const params = await searchParams;
   const groups: BuilderGroup[] = await prisma.group.findMany({
     orderBy: { name: "asc" },
@@ -35,10 +45,10 @@ export default async function ScheduleBuilderPage({
   if (!selectedGroup) {
     return (
       <>
-        <PageHeader title="Jadval konstruktori" subtitle="LEGO uslubida vizual jadval" />
+        <PageHeader title={dictionary.schBuilderTitle} subtitle={dictionary.schBuilderSubtitle} />
         <EmptyState
-          title="Guruhlar topilmadi"
-          description="Konstruktor ishlashi uchun avval guruh yarating."
+          title={dictionary.schBuilderGroupsEmptyTitle}
+          description={dictionary.schBuilderGroupsEmptyDesc}
         />
       </>
     );
@@ -95,7 +105,7 @@ export default async function ScheduleBuilderPage({
     myGroupIds = groups.filter((group) => taught.has(group.id)).map((group) => group.id);
   }
 
-  const roomSet = new Set<string>(STANDARD_ROOMS);
+  const roomSet = new Set<string>([...STANDARD_ROOMS, dictionary.schOnlineRoom]);
   const existingRooms = await prisma.scheduleEntry.findMany({
     where: { room: { not: null } },
     select: { room: true },
@@ -156,12 +166,15 @@ export default async function ScheduleBuilderPage({
   return (
     <>
       <PageHeader
-        eyebrow="Jadval 2.0"
-        title="Jadval konstruktori"
-        subtitle={`${selectedGroup.name} guruhi — ${formatWeekRange(weekStart)}`}
+        eyebrow={dictionary.schBuilderEyebrow}
+        title={dictionary.schBuilderTitle}
+        subtitle={translate(locale, "schBuilderGroupSubtitle", {
+          group: selectedGroup.name,
+          range: formatWeekRange(weekStart, months),
+        })}
         action={
           <ButtonLink href={backHref} variant="secondary">
-            Jadvalga qaytish
+            {dictionary.schBackToScheduleShort}
           </ButtonLink>
         }
       />

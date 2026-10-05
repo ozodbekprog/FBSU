@@ -1,4 +1,5 @@
 import { isStaff, requireUser } from "@/lib/auth";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import {
   getSessionFormOptions,
   getStaffSessions,
@@ -11,6 +12,8 @@ import { EmptyState, PageHeader } from "@/components/ui";
 
 export default async function ExamSessionsPage() {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
   if (isStaff(user.role)) {
     const [sessions, options] = await Promise.all([
@@ -21,18 +24,18 @@ export default async function ExamSessionsPage() {
     return (
       <>
         <PageHeader
-          title="Imtihon sessiyalari"
-          subtitle={`${sessions.length} ta sessiya · ${options.courses.length} ta kurs`}
+          title={dictionary.grdExamSessions}
+          subtitle={translate(locale, "grdSessionsCoursesSubtitle", {
+            sessions: sessions.length,
+            courses: options.courses.length,
+          })}
         />
         <SessionCreateForm courses={options.courses} terms={options.terms} />
-        <SectionHeading
-          title="Sessiyalar"
-          subtitle="Tur, sana va ro'yxat holati bo'yicha"
-        />
+        <SectionHeading title={dictionary.grdSessions} subtitle={dictionary.grdSessionsSubtitle} />
         {sessions.length === 0 ? (
           <EmptyState
-            title="Sessiyalar yo'q"
-            description="Yangi imtihon sessiyasi yaratib, talabalar ro'yxatini shakllantiring."
+            title={dictionary.grdNoSessions}
+            description={dictionary.grdNoSessionsDesc}
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -50,13 +53,16 @@ export default async function ExamSessionsPage() {
   return (
     <>
       <PageHeader
-        title="Mening imtihonlarim"
-        subtitle={`${user.group?.name ?? "Talaba"} · ${sessions.length} ta imtihon sessiyasi`}
+        title={dictionary.grdMyExams}
+        subtitle={translate(locale, "grdMyExamSessionsSubtitle", {
+          group: user.group?.name ?? dictionary.grdStudent,
+          count: sessions.length,
+        })}
       />
       {sessions.length === 0 ? (
         <EmptyState
-          title="Imtihon sessiyalari yo'q"
-          description="Kurslaringiz bo'yicha imtihon sessiyalari hali e'lon qilinmagan."
+          title={dictionary.grdNoExamSessions}
+          description={dictionary.grdNoExamSessionsStudentDesc}
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

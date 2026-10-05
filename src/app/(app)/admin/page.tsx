@@ -7,12 +7,13 @@ import { BarChart, DonutChart, LineChart } from "@/components/charts";
 import { getAdminCharts } from "@/app/api/admin/charts/data";
 import { cn } from "@/lib/utils";
 import FileUpload from "@/components/admin/FileUpload";
+import { getDictionary, getLocale, t as translate, type Dictionary } from "@/i18n";
 
-const QUICK_LINKS = [
+const QUICK_LINKS: { href: string; title: keyof Dictionary; description: keyof Dictionary; icon: ReactNode }[] = [
   {
     href: "/admin/users",
-    title: "Foydalanuvchilar",
-    description: "Yaratish, tahrirlash, parol tiklash",
+    title: "admQuickUsersTitle",
+    description: "admQuickUsersDesc",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -24,8 +25,8 @@ const QUICK_LINKS = [
   },
   {
     href: "/admin/groups",
-    title: "Guruhlar",
-    description: "Guruhlarni qo'shish va tahrirlash",
+    title: "admQuickGroupsTitle",
+    description: "admQuickGroupsDesc",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="m12 2 9 5-9 5-9-5 9-5" />
@@ -36,8 +37,8 @@ const QUICK_LINKS = [
   },
   {
     href: "/admin/courses",
-    title: "Kurslar",
-    description: "E'lon qilish, o'qituvchi biriktirish",
+    title: "admQuickCoursesTitle",
+    description: "admQuickCoursesDesc",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -47,8 +48,8 @@ const QUICK_LINKS = [
   },
   {
     href: "/admin/generator",
-    title: "Baza generatori",
-    description: "MVP uchun demo ma'lumotlar yaratish",
+    title: "admQuickGeneratorTitle",
+    description: "admQuickGeneratorDesc",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 3v3M18.4 5.6l-2.1 2.1M21 12h-3M18.4 18.4l-2.1-2.1M12 18v3M7.8 16.3l-2.2 2.1M3 12h3M7.8 7.7 5.6 5.6" />
@@ -58,8 +59,8 @@ const QUICK_LINKS = [
   },
   {
     href: "/admin/dictionaries",
-    title: "Lug'atlar",
-    description: "Fanlar, dars vaqtlari va turlari",
+    title: "admDictionaries",
+    description: "admQuickDictionariesDesc",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -70,8 +71,8 @@ const QUICK_LINKS = [
   },
   {
     href: "/admin/settings",
-    title: "Sozlamalar",
-    description: "Modullarni yoqish yoki o'chirish",
+    title: "admSettings",
+    description: "admQuickSettingsDesc",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
@@ -182,6 +183,8 @@ function StatTile({
 
 export default async function AdminPage() {
   await requireRole(["ADMIN"]);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
   const [users, courses, groups, submissions, quizzes, teachers, students, charts] =
     await Promise.all([
@@ -212,31 +215,31 @@ export default async function AdminPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Boshqaruv" title="Admin panel" subtitle="Tizim statistikasi va boshqaruv" />
+      <PageHeader eyebrow={dictionary.admEyebrowManage} title={dictionary.admTitle} subtitle={dictionary.admSubtitle} />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatTile
           meta="users"
-          label="Foydalanuvchilar"
+          label={dictionary.admStatUsers}
           value={users}
-          hint={`${teachers} o'qituvchi, ${students} talaba`}
+          hint={translate(locale, "admStatUsersHint", { teachers, students })}
           delay={0}
         />
-        <StatTile meta="courses" label="Kurslar" value={courses} hint="Barcha kurslar" delay={60} />
-        <StatTile meta="groups" label="Guruhlar" value={groups} hint="Tizimdagi guruhlar" delay={120} />
+        <StatTile meta="courses" label={dictionary.admCourses} value={courses} hint={dictionary.admStatCoursesHint} delay={60} />
+        <StatTile meta="groups" label={dictionary.admGroups} value={groups} hint={dictionary.admStatGroupsHint} delay={120} />
         <StatTile
           meta="submissions"
-          label="Topshiriqlar"
+          label={dictionary.admStatSubmissions}
           value={submissions}
-          hint="Yuborilgan ishlar"
+          hint={dictionary.admStatSubmissionsHint}
           delay={180}
         />
-        <StatTile meta="quizzes" label="Testlar" value={quizzes} hint="Yaratilgan testlar" delay={240} />
+        <StatTile meta="quizzes" label={dictionary.admQuizzes} value={quizzes} hint={dictionary.admStatQuizzesHint} delay={240} />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <Card className="animate-fade-up transition-shadow duration-200 hover:shadow-lift lg:col-span-2">
-          <CardHeader title="Tezkor havolalar" subtitle="Ko'p ishlatiladigan bo'limlar" />
+          <CardHeader title={dictionary.admQuickLinksTitle} subtitle={dictionary.admQuickLinksSubtitle} />
           <CardBody className="grid gap-3 sm:grid-cols-2">
             {QUICK_LINKS.map((link) => {
               const count = quickCounts[link.href];
@@ -251,7 +254,7 @@ export default async function AdminPage() {
                   </span>
                   <span className="min-w-0">
                     <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
-                      {link.title}
+                      {dictionary[link.title]}
                       {typeof count === "number" ? <Badge tone="slate">{count}</Badge> : null}
                       <svg
                         width="14"
@@ -267,7 +270,7 @@ export default async function AdminPage() {
                         <path d="m9 18 6-6-6-6" />
                       </svg>
                     </span>
-                    <span className="mt-1 block text-xs leading-relaxed text-slate-500">{link.description}</span>
+                    <span className="mt-1 block text-xs leading-relaxed text-slate-500">{dictionary[link.description]}</span>
                   </span>
                 </Link>
               );
@@ -276,7 +279,7 @@ export default async function AdminPage() {
         </Card>
 
         <Card className="animate-fade-up transition-shadow duration-200 hover:shadow-lift">
-          <CardHeader title="Fayl yuklash" subtitle="png, jpg, webp, pdf, zip, docx, pptx, txt — 20MB gacha" />
+          <CardHeader title={dictionary.admFileUploadTitle} subtitle={dictionary.admFileUploadHint} />
           <CardBody>
             <FileUpload />
           </CardBody>
@@ -286,21 +289,21 @@ export default async function AdminPage() {
       <section className="mt-8">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
           <div>
-            <h2 className="text-lg font-semibold tracking-tight text-brand-950">Tahlillar</h2>
+            <h2 className="text-lg font-semibold tracking-tight text-brand-950">{dictionary.admAnalyticsTitle}</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Tizim ko&apos;rsatkichlari va so&apos;nggi 14 kunlik dinamika
+              {dictionary.admAnalyticsSubtitle}
             </p>
           </div>
-          <Badge tone="blue">So&apos;nggi 14 kun</Badge>
+          <Badge tone="blue">{dictionary.admLast14}</Badge>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="animate-fade-up" style={{ animationDelay: "60ms" }}>
             <Card className="h-full transition-shadow duration-200 hover:shadow-lift">
               <CardHeader
-                title="Foydalanuvchilar rollari"
-                subtitle="Talabalar, o'qituvchilar va adminlar nisbati"
-                action={<Badge tone="blue">{roleTotal} ta</Badge>}
+                title={dictionary.admChartRolesTitle}
+                subtitle={dictionary.admChartRolesSubtitle}
+                action={<Badge tone="blue">{translate(locale, "admCount", { count: roleTotal })}</Badge>}
               />
               <CardBody>
                 <DonutChart data={charts.usersByRole} />
@@ -311,9 +314,9 @@ export default async function AdminPage() {
           <div className="animate-fade-up" style={{ animationDelay: "120ms" }}>
             <Card className="h-full transition-shadow duration-200 hover:shadow-lift">
               <CardHeader
-                title="Topshiriqlar dinamikasi"
-                subtitle="So'nggi 14 kunda yuborilgan ishlar soni"
-                action={<Badge tone="green">{submissionTotal} ta</Badge>}
+                title={dictionary.admChartSubmissionsTitle}
+                subtitle={dictionary.admChartSubmissionsSubtitle}
+                action={<Badge tone="green">{translate(locale, "admCount", { count: submissionTotal })}</Badge>}
               />
               <CardBody>
                 <BarChart data={charts.submissionsByDay} />
@@ -324,8 +327,8 @@ export default async function AdminPage() {
           <div className="animate-fade-up" style={{ animationDelay: "180ms" }}>
             <Card className="h-full transition-shadow duration-200 hover:shadow-lift">
               <CardHeader
-                title="Davomat ko'rsatkichi"
-                subtitle="So'nggi 14 kun: tashrif va sababli holatlar foizi"
+                title={dictionary.admChartAttendanceTitle}
+                subtitle={dictionary.admChartAttendanceSubtitle}
                 action={<Badge tone={attendanceAvg >= 80 ? "green" : attendanceAvg >= 60 ? "amber" : "rose"}>{attendanceAvg}%</Badge>}
               />
               <CardBody>
@@ -337,8 +340,8 @@ export default async function AdminPage() {
           <div className="animate-fade-up" style={{ animationDelay: "240ms" }}>
             <Card className="h-full transition-shadow duration-200 hover:shadow-lift">
               <CardHeader
-                title="Eng faol kurslar"
-                subtitle="Ro'yxatdan o'tganlar soni bo'yicha top 5 kurs"
+                title={dictionary.admChartTopCoursesTitle}
+                subtitle={dictionary.admChartTopCoursesSubtitle}
                 action={topCourse ? <Badge tone="purple">{topCourse.label}</Badge> : null}
               />
               <CardBody>
@@ -350,9 +353,9 @@ export default async function AdminPage() {
           <div className="animate-fade-up lg:col-span-2" style={{ animationDelay: "300ms" }}>
             <Card className="h-full transition-shadow duration-200 hover:shadow-lift">
               <CardHeader
-                title="Testlar o'rtacha natijasi"
-                subtitle="Eng ko'p topshirilgan testlar bo'yicha o'rtacha foiz"
-                action={<Badge tone="gold">{charts.quizAverages.length} ta test</Badge>}
+                title={dictionary.admChartQuizTitle}
+                subtitle={dictionary.admChartQuizSubtitle}
+                action={<Badge tone="gold">{translate(locale, "admQuizCountBadge", { count: charts.quizAverages.length })}</Badge>}
               />
               <CardBody>
                 <BarChart data={charts.quizAverages} />

@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, CardBody, CardHeader, Input, Label, Textarea } from "@/components/ui";
 import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export function AssignmentsCreate({ courseId }: { courseId: string }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -36,7 +38,7 @@ export function AssignmentsCreate({ courseId }: { courseId: string }) {
 
     setSaving(false);
     if (!response.ok || !json?.ok) {
-      setError(json?.error ?? "Saqlashda xatolik yuz berdi");
+      setError(json?.error ?? t("crsSaveError"));
       return;
     }
 
@@ -64,7 +66,7 @@ export function AssignmentsCreate({ courseId }: { courseId: string }) {
           >
             <path d="M12 5v14M5 12h14" />
           </svg>
-          Yangi topshiriq
+          {t("crsNewAssignment")}
         </Button>
       </div>
     );
@@ -73,14 +75,14 @@ export function AssignmentsCreate({ courseId }: { courseId: string }) {
   return (
     <Card className="animate-fade-up mb-6">
       <CardHeader
-        title="Yangi topshiriq"
-        subtitle="Shartlarni to'ldirib e'lon qiling"
+        title={t("crsNewAssignment")}
+        subtitle={t("crsNewAssignmentSubtitle")}
         action={
           <button
             type="button"
             onClick={() => setOpen(false)}
             className="rounded-lg p-1.5 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-700"
-            aria-label="Yopish"
+            aria-label={t("crsClose")}
           >
             <svg
               width="16"
@@ -101,27 +103,27 @@ export function AssignmentsCreate({ courseId }: { courseId: string }) {
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <Label>Sarlavha</Label>
+              <Label>{t("crsTitle")}</Label>
               <Input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 maxLength={200}
                 required
-                placeholder="Masalan: Amaliy topshiriq 2"
+                placeholder={t("crsAssignmentTitlePlaceholder")}
               />
             </div>
             <div className="sm:col-span-2">
-              <Label>Tavsif</Label>
+              <Label>{t("crsDescription")}</Label>
               <Textarea
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
                 rows={3}
-                placeholder="Topshiriq sharti..."
+                placeholder={t("crsAssignmentDescPlaceholder")}
                 className="resize-y"
               />
             </div>
             <div>
-              <Label>Muddat</Label>
+              <Label>{t("crsDueDate")}</Label>
               <Input
                 type="datetime-local"
                 value={dueAt}
@@ -129,7 +131,7 @@ export function AssignmentsCreate({ courseId }: { courseId: string }) {
               />
             </div>
             <div>
-              <Label>Maksimal ball</Label>
+              <Label>{t("crsMaxScore")}</Label>
               <Input
                 type="number"
                 min={1}
@@ -145,10 +147,10 @@ export function AssignmentsCreate({ courseId }: { courseId: string }) {
           ) : null}
           <div className="mt-5 flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setOpen(false)}>
-              Bekor qilish
+              {t("crsCancel")}
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? "Saqlanmoqda..." : "Saqlash"}
+              {saving ? t("crsSaving") : t("crsSave")}
             </Button>
           </div>
         </form>

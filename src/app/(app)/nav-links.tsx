@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { useMediaQuery, useWebGLSupport } from "@/components/nav/nav-3d-env";
 import { useNavCollapsed } from "@/components/nav/nav-collapsed";
 import dynamic from "next/dynamic";
@@ -64,10 +65,11 @@ const TAB_ICONS: Record<MobileTabIcon, ReactNode> = {
 
 export function MobileTabBar({ tabs }: { tabs: MobileTab[] }) {
   const pathname = usePathname();
+  const { t } = useI18n();
 
   return (
     <nav
-      aria-label="Mobil navigatsiya"
+      aria-label={t("shellMobileNav")}
       className="fixed bottom-0 left-0 z-30 w-full border-t border-slate-200/70 bg-white/90 pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_-18px_rgba(29,52,96,0.45)] backdrop-blur md:hidden"
     >
       <div className="mx-auto flex max-w-md items-stretch px-1.5">
@@ -144,6 +146,7 @@ function BurgerIcon() {
 
 export function NavLinks({ groups }: { groups: NavGroup[] }) {
   const pathname = usePathname();
+  const { t } = useI18n();
   const shellRef = useRef<HTMLDivElement>(null);
   const webgl = useWebGLSupport();
   const desktop = useMediaQuery("(min-width: 768px)");
@@ -174,8 +177,8 @@ export function NavLinks({ groups }: { groups: NavGroup[] }) {
         onClick={toggle}
         aria-expanded={!collapsed}
         aria-controls="sidebar-nav"
-        aria-label="Menyuni yopish"
-        title="Menyuni yopish"
+        aria-label={t("shellMenuClose")}
+        title={t("shellMenuClose")}
         className="nav-burger-top absolute -top-12 right-25 z-30 hidden size-8 items-center justify-center rounded-xl text-slate-500 hover:bg-brand-50 hover:text-brand-900 md:inline-flex"
       >
         <BurgerIcon />
@@ -186,8 +189,8 @@ export function NavLinks({ groups }: { groups: NavGroup[] }) {
           onClick={toggle}
           aria-expanded={false}
           aria-controls="sidebar-nav"
-          aria-label="Menyuni ochish"
-          title="Menyuni ochish"
+          aria-label={t("shellMenuOpen")}
+          title={t("shellMenuOpen")}
           className="nav-burger-rail z-30 mx-auto my-1.5 hidden size-9 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-colors duration-150 hover:bg-brand-50 hover:text-brand-900 md:inline-flex"
         >
           <BurgerIcon />

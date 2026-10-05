@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import {
   Button,
   Card,
@@ -24,6 +25,8 @@ export default async function ReportsPage({
   searchParams: Promise<{ courseId?: string }>;
 }) {
   const user = await requireRole(["TEACHER", "ADMIN"]);
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
   const courses = await prisma.course.findMany({
     where: user.role === "ADMIN" ? {} : { teacherId: user.id },
@@ -37,8 +40,11 @@ export default async function ReportsPage({
   if (!selected) {
     return (
       <>
-        <PageHeader title="Hisobotlar" subtitle="O'qituvchi paneli" />
-        <EmptyState title="Kurslar yo'q" description="Avval kurs yarating." />
+        <PageHeader title={dictionary.grdReports} subtitle={dictionary.grdTeacherPanel} />
+        <EmptyState
+          title={dictionary.grdNoCourses}
+          description={dictionary.grdCreateCourseFirst}
+        />
       </>
     );
   }
@@ -49,8 +55,10 @@ export default async function ReportsPage({
   return (
     <>
       <PageHeader
-        title="Hisobotlar"
-        subtitle={`${selected.title} · ${stats.studentCount} ta talaba`}
+        title={dictionary.grdReports}
+        subtitle={`${selected.title} · ${translate(locale, "grdNStudents", {
+          count: stats.studentCount,
+        })}`}
         action={
           <form
             method="get"
@@ -72,7 +80,7 @@ export default async function ReportsPage({
                 <path d="M6 12h12" />
                 <path d="M10 19h4" />
               </svg>
-              Kurs
+              {dictionary.grdCourse}
             </span>
             <Select name="courseId" defaultValue={selected.id} className="w-64!">
               {courses.map((course) => (
@@ -81,7 +89,7 @@ export default async function ReportsPage({
                 </option>
               ))}
             </Select>
-            <Button type="submit">Ko&apos;rsatish</Button>
+            <Button type="submit">{dictionary.grdShow}</Button>
           </form>
         }
       />
@@ -89,50 +97,59 @@ export default async function ReportsPage({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-brand-50/70">
           <Stat
-            label="Talabalar"
+            label={dictionary.grdStudents}
             value={stats.studentCount}
-            hint={`${stats.assignmentCount} topshiriq, ${stats.quizCount} test`}
+            hint={translate(locale, "grdAssignmentsQuizzesHint", {
+              assignments: stats.assignmentCount,
+              quizzes: stats.quizCount,
+            })}
           />
         </div>
         <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-emerald-50/70">
           <Stat
-            label="Topshiriqlar o'rtachasi"
+            label={dictionary.grdAssignmentAverage}
             value={percent(stats.assignmentAverage)}
-            hint={`${stats.gradedCount}/${stats.submissionCount} baholangan`}
+            hint={translate(locale, "grdGradedOfHint", {
+              graded: stats.gradedCount,
+              total: stats.submissionCount,
+            })}
           />
         </div>
         <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-sky-50/70">
           <Stat
-            label="Topshirish foizi"
+            label={dictionary.grdSubmissionRate}
             value={percent(stats.submissionRate)}
-            hint={`${stats.submissionCount} ta javob`}
+            hint={translate(locale, "grdSubmissionsCount", { count: stats.submissionCount })}
           />
         </div>
         <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-amber-50/70">
           <Stat
-            label="Davomat foizi"
+            label={dictionary.grdAttendanceRate}
             value={percent(stats.attendanceRate)}
-            hint={`${stats.attendanceCount} ta yozuv`}
+            hint={translate(locale, "grdRecordsCount", { count: stats.attendanceCount })}
           />
         </div>
         <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-purple-50/70">
           <Stat
-            label="Test o'rtachasi"
+            label={dictionary.grdQuizAverage}
             value={percent(stats.quizAverage)}
-            hint={`${stats.quizCount} ta test`}
+            hint={translate(locale, "grdQuizCount", { count: stats.quizCount })}
           />
         </div>
       </div>
 
       <Card className="mt-6">
-        <CardHeader title="Eksport" subtitle="Excel uchun CSV (UTF-8, BOM)" />
+        <CardHeader title={dictionary.grdExport} subtitle={dictionary.grdExportSubtitle} />
         <CardBody>
           <ExportButtons courseId={selected.id} />
         </CardBody>
       </Card>
 
       <Card className="mt-6">
-        <CardHeader title="Talabalar jadvali" subtitle={`${stats.studentCount} ta talaba`} />
+        <CardHeader
+          title={dictionary.grdStudentTable}
+          subtitle={translate(locale, "grdNStudents", { count: stats.studentCount })}
+        />
         <CardBody>
           <ReportStudentsTable report={report} />
         </CardBody>

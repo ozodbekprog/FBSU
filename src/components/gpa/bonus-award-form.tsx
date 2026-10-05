@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { Button, Card, CardBody, CardHeader, Input, Select } from "@/components/ui";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type BonusCourse = { id: string; title: string };
 export type BonusStudent = { id: string; name: string; groupName: string | null };
@@ -16,6 +17,7 @@ const TENTHS_MIN = 6;
 const TENTHS_MAX = 40;
 
 export function BonusAwardForm({ courses, students }: Props) {
+  const { t } = useI18n();
   const [courseId, setCourseId] = useState(courses[0]?.id ?? "");
   const [studentId, setStudentId] = useState(students[0]?.id ?? "");
   const [tenths, setTenths] = useState(6);
@@ -42,28 +44,32 @@ export function BonusAwardForm({ courses, students }: Props) {
       const payload = (await response.json()) as { ok: boolean; error?: string; data?: unknown };
 
       if (!payload.ok) {
-        setMessage({ tone: "error", text: payload.error ?? "Xatolik yuz berdi" });
+        setMessage({ tone: "error", text: payload.error ?? t("grdErrorOccurred") });
         return;
       }
 
       setMessage({
         tone: "ok",
-        text: `${selectedStudent?.name ?? "O'quvchi"} uchun +${(tenths / 10).toFixed(1)} ball berildi`,
+        text: t("grdBonusAwarded", {
+          name: selectedStudent?.name ?? t("grdPupil"),
+          points: (tenths / 10).toFixed(1),
+        }),
       });
       setReason("");
     } catch {
-      setMessage({ tone: "error", text: "Serverga ulanib bo'lmadi" });
+      setMessage({ tone: "error", text: t("grdServerError") });
     }
   }
 
   if (courses.length === 0) {
     return (
       <Card>
-        <CardHeader title="Bonus ball berish" subtitle="Sizga birorta fan biriktirilmagan" />
+        <CardHeader
+          title={t("grdGiveBonus")}
+          subtitle={t("grdNoSubjectAssigned")}
+        />
         <CardBody>
-          <p className="text-sm text-slate-400">
-            Bonus ball berish uchun avval sizga fan biriktirilishi kerak.
-          </p>
+          <p className="text-sm text-slate-400">{t("grdNoSubjectAssignedDesc")}</p>
         </CardBody>
       </Card>
     );
@@ -72,13 +78,13 @@ export function BonusAwardForm({ courses, students }: Props) {
   return (
     <Card>
       <CardHeader
-        title="Bonus ball berish"
-        subtitle={`${(tenths / 10).toFixed(1)} ball · faqat o&apos;z fangizdan`}
+        title={t("grdGiveBonus")}
+        subtitle={t("grdBonusSubtitle", { points: (tenths / 10).toFixed(1) })}
       />
       <CardBody>
         <div className="grid gap-4">
           <label className="grid gap-1.5">
-            <span className="text-sm font-medium text-slate-700">Fan</span>
+            <span className="text-sm font-medium text-slate-700">{t("grdSubject")}</span>
             <Select value={courseId} onChange={(e) => setCourseId(e.target.value)}>
               {courses.map((course) => (
                 <option key={course.id} value={course.id}>
@@ -89,7 +95,7 @@ export function BonusAwardForm({ courses, students }: Props) {
           </label>
 
           <label className="grid gap-1.5">
-            <span className="text-sm font-medium text-slate-700">O&apos;quvchi</span>
+            <span className="text-sm font-medium text-slate-700">{t("grdPupil")}</span>
             <Select value={studentId} onChange={(e) => setStudentId(e.target.value)}>
               {students.map((student) => (
                 <option key={student.id} value={student.id}>
@@ -102,7 +108,8 @@ export function BonusAwardForm({ courses, students }: Props) {
 
           <label className="grid gap-1.5">
             <span className="text-sm font-medium text-slate-700">
-              Ball: <span className="text-brand-700">+{(tenths / 10).toFixed(1)}</span>
+              {t("grdScoreLabelColon")}{" "}
+              <span className="text-brand-700">+{(tenths / 10).toFixed(1)}</span>
             </span>
             <input
               type="range"
@@ -112,23 +119,23 @@ export function BonusAwardForm({ courses, students }: Props) {
               value={tenths}
               onChange={(e) => setTenths(Number(e.target.value))}
               className="w-full accent-blue-500"
-              aria-label="Bonus ball 0.6 dan 4.0 gacha"
+              aria-label={t("grdBonusRangeAria")}
             />
-            <span className="text-xs text-slate-600">0.6 dan 4.0 gacha</span>
+            <span className="text-xs text-slate-600">{t("grdBonusRange")}</span>
           </label>
 
           <label className="grid gap-1.5">
-            <span className="text-sm font-medium text-slate-700">Sabab</span>
+            <span className="text-sm font-medium text-slate-700">{t("grdReason")}</span>
             <Input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Masalan: dasturiy topshiriqni ajoyib bajarildi"
+              placeholder={t("grdReasonPlaceholder")}
               maxLength={300}
             />
           </label>
 
           <Button disabled={disabled} onClick={() => startTransition(submit)}>
-            Bonus berish
+            {t("grdGiveBonusAction")}
           </Button>
 
           {message ? (

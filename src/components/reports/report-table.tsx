@@ -1,5 +1,6 @@
 import { Table } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { getDictionary, getLocale } from "@/i18n";
 import type { CourseReport } from "@/components/reports/report-data";
 
 function percentTone(value: number | null) {
@@ -33,9 +34,11 @@ function PercentCell({ value, emphasis = false }: { value: number | null; emphas
   );
 }
 
-export function ReportStudentsTable({ report }: { report: CourseReport }) {
+export async function ReportStudentsTable({ report }: { report: CourseReport }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   if (report.students.length === 0) {
-    return <p className="text-sm text-slate-500">Kursda talaba yo&apos;q.</p>;
+    return <p className="text-sm text-slate-500">{dictionary.grdNoStudentsInCourse}</p>;
   }
 
   return (
@@ -43,19 +46,19 @@ export function ReportStudentsTable({ report }: { report: CourseReport }) {
       <thead>
         <tr className="text-xs uppercase tracking-wide text-slate-600">
           <th className="sticky top-0 z-10 border-b border-slate-100 bg-white/95 py-2.5 pr-4 text-left font-medium backdrop-blur">
-            Talaba
+            {dictionary.grdStudent}
           </th>
           <th className="sticky top-0 z-10 border-b border-slate-100 bg-white/95 px-3 py-2.5 text-right font-medium backdrop-blur">
-            Topshiriqlar
+            {dictionary.grdAssignments}
           </th>
           <th className="sticky top-0 z-10 border-b border-slate-100 bg-white/95 px-3 py-2.5 text-right font-medium backdrop-blur">
-            Testlar
+            {dictionary.grdQuizzes}
           </th>
           <th className="sticky top-0 z-10 border-b border-slate-100 bg-white/95 px-3 py-2.5 text-right font-medium backdrop-blur">
-            Davomat
+            {dictionary.grdAttendance}
           </th>
           <th className="sticky top-0 z-10 rounded-r-xl border-b border-slate-100 bg-brand-50 px-3 py-2.5 text-right font-semibold text-brand-800">
-            Umumiy
+            {dictionary.grdOverall}
           </th>
         </tr>
       </thead>

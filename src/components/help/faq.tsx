@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { getDictionary, getLocale } from "@/i18n";
 import { HelpIcon } from "./icons";
 import { HelpSection } from "./section";
 
@@ -8,13 +9,15 @@ export type FaqItem = {
   answer: ReactNode;
 };
 
-export function FaqList({ items }: { items: FaqItem[] }) {
+export async function FaqList({ items }: { items: FaqItem[] }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   return (
     <HelpSection
       id="faq"
       icon="help"
-      title="Ko'p so'raladigan savollar"
-      description="Eng ko'p uchraydigan savollarga qisqa javoblar."
+      title={dictionary.mscHelpFaqTitle}
+      description={dictionary.mscHelpFaqDesc}
     >
       <div className="space-y-3">
         {items.map((item, index) => (

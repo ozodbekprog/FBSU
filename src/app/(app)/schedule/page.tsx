@@ -1,6 +1,7 @@
 import { requireUser, isStaff, isRegistrar } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ButtonLink, PageHeader } from "@/components/ui";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { ScheduleBoard } from "@/components/schedule/schedule-board";
 import type { BoardEntry, PaletteBlock } from "@/components/schedule/builder/types";
 import { isoWeekday, resolveWeekStart } from "@/components/schedule/week-utils";
@@ -32,6 +33,8 @@ export default async function SchedulePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const params = await searchParams;
   const staff = isStaff(user.role) || isRegistrar(user.role);
 
@@ -214,7 +217,7 @@ export default async function SchedulePage({
         teacherId: source.teacherId,
         teacherChoices: source.teacherChoices,
         placedCount: matched.length,
-        lessonType: sorted.find((row) => row.lessonType)?.lessonType ?? "Ma'ruza",
+        lessonType: sorted.find((row) => row.lessonType)?.lessonType ?? dictionary.schLessonLecture,
         room: sorted.find((row) => row.room)?.room ?? null,
       };
     });
@@ -247,20 +250,24 @@ export default async function SchedulePage({
     <>
       <PageHeader
         eyebrow="FBSU LMS"
-        title="Dars jadvali"
-        subtitle={selectedGroup ? `${selectedGroup.name} guruhi — haftalik jadval` : undefined}
+        title={dictionary.schScheduleTitle}
+        subtitle={
+          selectedGroup
+            ? translate(locale, "schScheduleSubtitle", { group: selectedGroup.name })
+            : undefined
+        }
       />
       {pendingCount > 0 ? (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
           <p className="text-sm font-medium text-amber-900">
-            ⏳ {pendingCount} ta jadval yozuvi tasdiq kutmoqda
+            ⏳ {translate(locale, "schPendingEntries", { count: pendingCount })}
           </p>
           <ButtonLink
             href={`/schedule/builder?groupId=${encodeURIComponent(selectedGroup?.id ?? "")}&week=${weekStart}`}
             variant="secondary"
             size="sm"
           >
-            Konstruktorda ko&apos;rish
+            {dictionary.schViewInBuilder}
           </ButtonLink>
         </div>
       ) : null}

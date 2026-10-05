@@ -1,11 +1,13 @@
+import type { Dictionary } from "@/i18n";
+
 export const ROOM_TYPES = ["AUDITORIUM", "LAB", "HALL"] as const;
 
 export type RoomType = (typeof ROOM_TYPES)[number];
 
-export const ROOM_TYPE_LABELS: Record<RoomType, string> = {
-  AUDITORIUM: "Auditoriya",
-  LAB: "Laboratoriya",
-  HALL: "Zal",
+export const ROOM_TYPE_LABEL_KEY: Record<RoomType, keyof Dictionary> = {
+  AUDITORIUM: "mscRoomTypeAuditorium",
+  LAB: "mscRoomTypeLab",
+  HALL: "mscRoomTypeHall",
 };
 
 export const ROOM_TYPE_TONES: Record<RoomType, "slate" | "blue" | "purple"> = {

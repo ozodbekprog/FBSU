@@ -1,32 +1,30 @@
 import { Avatar, Card, CardBody, CardHeader, EmptyState } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { GradeBadge } from "@/components/grades/grade-badge";
 import type { RankedRating } from "@/components/grades/rating";
 
 const PODIUM_META: Record<
   number,
-  { bar: string; num: string; height: string; delay: string; label: string }
+  { bar: string; num: string; height: string; delay: string }
 > = {
   1: {
     bar: "bg-gradient-to-t from-gold-600 via-gold-400 to-gold-300",
     num: "bg-white/70 text-brand-950",
     height: "h-24 sm:h-36",
     delay: "140ms",
-    label: "Chempion",
   },
   2: {
     bar: "bg-gradient-to-t from-slate-500 via-slate-300 to-slate-200",
     num: "bg-white/50 text-slate-700",
     height: "h-16 sm:h-24",
     delay: "40ms",
-    label: "Kumush",
   },
   3: {
     bar: "bg-gradient-to-t from-amber-800 via-amber-600 to-amber-400",
     num: "bg-white/25 text-white",
     height: "h-12 sm:h-20",
     delay: "240ms",
-    label: "Bronza",
   },
 };
 
@@ -64,7 +62,15 @@ function TrophyIcon() {
   );
 }
 
-function RatingRow({ row, delay }: { row: RankedRating; delay: number }) {
+function RatingRow({
+  row,
+  delay,
+  youLabel,
+}: {
+  row: RankedRating;
+  delay: number;
+  youLabel: string;
+}) {
   return (
     <li
       className={cn(
@@ -91,7 +97,7 @@ function RatingRow({ row, delay }: { row: RankedRating; delay: number }) {
         {row.name}
         {row.isMe ? (
           <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide text-brand-600">
-            siz
+            {youLabel}
           </span>
         ) : null}
       </span>
@@ -100,7 +106,15 @@ function RatingRow({ row, delay }: { row: RankedRating; delay: number }) {
   );
 }
 
-function Podium({ rows }: { rows: RankedRating[] }) {
+function Podium({
+  rows,
+  labels,
+  youLabel,
+}: {
+  rows: RankedRating[];
+  labels: Record<number, string>;
+  youLabel: string;
+}) {
   return (
     <ol className="flex items-end gap-2 px-3 pt-6 pb-2 sm:gap-5 sm:px-6 sm:pt-8">
       {rows.map((row, index) => {
@@ -146,11 +160,11 @@ function Podium({ rows }: { rows: RankedRating[] }) {
               </p>
               {row.isMe ? (
                 <span className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-brand-600">
-                  siz
+                  {youLabel}
                 </span>
               ) : (
                 <span className="mt-1 hidden text-[10px] uppercase tracking-wide text-slate-500 sm:block">
-                  {meta.label}
+                  {labels[place]}
                 </span>
               )}
             </div>
@@ -178,13 +192,20 @@ function Podium({ rows }: { rows: RankedRating[] }) {
   );
 }
 
-export function RatingPanel({
+export async function RatingPanel({
   rows,
   groupName,
 }: {
   rows: RankedRating[];
   groupName: string | null;
 }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+  const placeLabels: Record<number, string> = {
+    1: dictionary.grdChampion,
+    2: dictionary.grdSilver,
+    3: dictionary.grdBronze,
+  };
   const podium = rows.slice(0, 3);
   const rest = rows.slice(3, 13);
   const hidden = rows.length - 3 - rest.length;
@@ -198,29 +219,34 @@ export function RatingPanel({
             <span className="inline-flex size-7 items-center justify-center rounded-lg bg-gold-300/25 text-gold-800">
               <TrophyIcon />
             </span>
-            Reyting
+            {dictionary.grdRating}
           </span>
         }
         subtitle={
           groupName
-            ? `${groupName} guruhi · ${rows.length} talaba · baholangan ishlar bo'yicha`
-            : "Guruh bo'yicha o'rtacha ko'rsatkich"
+            ? translate(locale, "grdRatingSubtitle", { group: groupName, count: rows.length })
+            : dictionary.grdRatingSubtitleNoGroup
         }
       />
       {rows.length === 0 ? (
         <CardBody>
           <EmptyState
-            title="Reyting uchun ma'lumot yetarli emas"
-            description="Baholangan topshiriq yoki test urinishlari paydo bo'lgach reyting shu yerda ko'rinadi."
+            title={dictionary.grdNotEnoughRatingData}
+            description={dictionary.grdNotEnoughRatingDataDesc}
           />
         </CardBody>
       ) : (
         <CardBody className="p-0">
-          <Podium rows={podium} />
+          <Podium rows={podium} labels={placeLabels} youLabel={dictionary.grdYou} />
           {rest.length > 0 ? (
             <ol className="divide-y divide-slate-100 border-t border-slate-100">
               {rest.map((row, index) => (
-                <RatingRow key={row.studentId} row={row} delay={index * 35} />
+                <RatingRow
+                  key={row.studentId}
+                  row={row}
+                  delay={index * 35}
+                  youLabel={dictionary.grdYou}
+                />
               ))}
               {hidden > 0 ? (
                 <li className="py-2 text-center text-xs font-semibold tracking-widest text-slate-500">
@@ -237,10 +263,11 @@ export function RatingPanel({
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-brand-950">
-                    Siz: #{me.rank}, {me.percent}%
+                    {translate(locale, "grdYouRank", { rank: me.rank, percent: me.percent })}
                   </p>
                   <p className="truncate text-xs text-slate-500">
-                    {rows.length} talaba ichida{groupName ? ` · ${groupName}` : ""}
+                    {translate(locale, "grdAmongStudents", { count: rows.length })}
+                    {groupName ? ` · ${groupName}` : ""}
                   </p>
                 </div>
                 <GradeBadge percent={me.percent} size="md" />

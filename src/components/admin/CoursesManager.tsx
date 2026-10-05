@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, Badge, Button, Card, CardBody, CardHeader, EmptyState, Input, Select, Table } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type AdminCourse = {
   id: string;
@@ -78,6 +79,7 @@ export default function CoursesManager({
   teachers: TeacherOption[];
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -106,12 +108,12 @@ export default function CoursesManager({
       });
       const json = (await res.json().catch(() => null)) as ApiResult | null;
       if (!res.ok || !json || !json.ok) {
-        setError(json?.error ?? "Amalni bajarib bo'lmadi");
+        setError(json?.error ?? t("admErrorGeneric"));
         return null;
       }
       return json;
     } catch {
-      setError("Tarmoqda xatolik");
+      setError(t("admNetworkError"));
       return null;
     } finally {
       setBusyId(null);
@@ -125,7 +127,7 @@ export default function CoursesManager({
   async function togglePublish(course: AdminCourse) {
     const json = await send(course.id, { isPublished: !course.isPublished });
     if (!json) return;
-    setNotice(course.isPublished ? "Kurs yashirildi" : "Kurs e'lon qilindi");
+    setNotice(course.isPublished ? t("admCourseHidden") : t("admCoursePublishedNotice"));
     router.refresh();
   }
 
@@ -134,7 +136,7 @@ export default function CoursesManager({
     const json = await send(course.id, { isElective: next });
     if (!json) return;
     setElectiveOverrides((prev) => ({ ...prev, [course.id]: next }));
-    setNotice(next ? "Kurs tanlov fan sifatida belgilandi" : "Kurs tanlov fanlardan chiqarildi");
+    setNotice(next ? t("admCourseElectiveOn") : t("admCourseElectiveOff"));
     router.refresh();
   }
 
@@ -142,15 +144,15 @@ export default function CoursesManager({
     if (teacherId === course.teacher.id) return;
     const json = await send(course.id, { teacherId });
     if (!json) return;
-    setNotice("O'qituvchi biriktirildi");
+    setNotice(t("admCourseTeacherAssigned"));
     router.refresh();
   }
 
   async function remove(course: AdminCourse) {
-    if (!window.confirm(`"${course.title}" kursi o'chirilsinmi? Bu amalni qaytarib bo'lmaydi.`)) return;
+    if (!window.confirm(t("admCourseDeleteConfirm", { title: course.title }))) return;
     const json = await send(course.id, undefined, "DELETE");
     if (!json) return;
-    setNotice("Kurs o'chirildi");
+    setNotice(t("admCourseDeleted"));
     router.refresh();
   }
 
@@ -167,7 +169,7 @@ export default function CoursesManager({
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Kurs yoki o'qituvchi qidirish..."
+            placeholder={t("admCourseSearchPlaceholder")}
             className="pl-9"
           />
         </div>
@@ -189,20 +191,18 @@ export default function CoursesManager({
       </div>
 
       <Card>
-        <CardHeader title="Kurslar" subtitle={`${filtered.length} ta`} />
+        <CardHeader title={t("admCourses")} subtitle={t("admCourseListSubtitle", { count: filtered.length })} />
         {courses.length === 0 ? (
           <CardBody>
-            <EmptyState title="Kurslar yo'q" description="Kurslar Komp 2 moduli orqali yaratiladi." />
+            <EmptyState title={t("admCourseEmptyTitle")} description={t("admCourseEmptyDesc")} />
           </CardBody>
         ) : filtered.length === 0 ? (
           <CardBody>
             <EmptyState
-              title="Hech narsa topilmadi"
-              description={`"${query.trim()}" bo'yicha kurs topilmadi.`}
+              title={t("admNothingFound")}
+              description={t("admCourseNotFound", { query: query.trim() })}
               action={
-                <Button variant="secondary" size="sm" onClick={() => setQuery("")}>
-                  Tozalash
-                </Button>
+                <Button variant="secondary" size="sm" onClick={() => setQuery("")}>{t("admClear")}</Button>
               }
             />
           </CardBody>
@@ -210,12 +210,12 @@ export default function CoursesManager({
           <Table className="max-h-[68vh] overflow-y-auto">
             <thead>
               <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">Kurs</th>
-                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">O&apos;qituvchi</th>
-                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">Talabalar</th>
-                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">Holat</th>
-                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">Yaratilgan</th>
-                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 text-right font-semibold backdrop-blur">Amallar</th>
+                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admColCourse")}</th>
+                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admColTeacher")}</th>
+                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admStudentsCol")}</th>
+                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admStatus")}</th>
+                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 font-semibold backdrop-blur">{t("admColCreated")}</th>
+                <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 text-right font-semibold backdrop-blur">{t("admActions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -268,7 +268,7 @@ export default function CoursesManager({
                           <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
                           <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                         </svg>
-                        {course.studentCount} ta
+                        {t("admCount", { count: course.studentCount })}
                       </Badge>
                     </td>
                     <td className="px-5 py-3">
@@ -277,14 +277,14 @@ export default function CoursesManager({
                           checked={course.isPublished}
                           disabled={busyId === course.id}
                           onToggle={() => togglePublish(course)}
-                          label={course.isPublished ? "E'lon qilingan" : "Qoralama"}
+                          label={course.isPublished ? t("admCoursePublished") : t("admCourseDraft")}
                           tone="emerald"
                         />
                         <ToggleSwitch
                           checked={isElective(course)}
                           disabled={busyId === course.id}
                           onToggle={() => toggleElective(course)}
-                          label="Tanlov fan"
+                          label={t("admCourseElective")}
                           tone="amber"
                         />
                       </div>
@@ -304,9 +304,7 @@ export default function CoursesManager({
                             <path d="M8 6V4h8v2" />
                             <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
                             <path d="M10 11v6M14 11v6" />
-                          </svg>
-                          O&apos;chirish
-                        </Button>
+                          </svg>{t("admDelete")}</Button>
                       </div>
                     </td>
                   </tr>

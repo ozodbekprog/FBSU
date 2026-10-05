@@ -1,6 +1,9 @@
 import { Logo } from "@/components/brand/logo";
+import { getDictionary, getLocale } from "@/i18n";
 
-export default function Loading() {
+export default async function Loading() {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-surface">
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-brand-50 via-surface to-white" />
@@ -32,7 +35,9 @@ export default function Loading() {
         <h1 className="mt-7 animate-shimmer text-xl font-bold tracking-tight text-brand-950">
           FBSU LMS
         </h1>
-        <p className="mt-1 animate-shimmer text-sm font-medium text-slate-500">Yuklanmoqda...</p>
+        <p className="mt-1 animate-shimmer text-sm font-medium text-slate-500">
+          {dictionary.commonLoading}
+        </p>
 
         <div className="mt-8 h-1 w-56 overflow-hidden rounded-full bg-slate-200/70">
           <div className="h-full w-full animate-shimmer rounded-full bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />

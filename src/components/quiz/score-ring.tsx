@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { getDictionary, getLocale } from "@/i18n";
 
 export type RingTone = "green" | "amber" | "rose" | "slate";
 
@@ -41,7 +42,7 @@ export function percentOf(score: number | null | undefined, max: number): number
   return Math.round((score / max) * 100);
 }
 
-export function ScoreRing({
+export async function ScoreRing({
   score,
   max,
   size = 92,
@@ -58,6 +59,8 @@ export function ScoreRing({
   hint?: string;
   className?: string;
 }) {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const percent = percentOf(score, max);
   const tone = RING_STYLES[ringTone(percent)];
   const radius = (size - strokeWidth) / 2;
@@ -100,7 +103,7 @@ export function ScoreRing({
             {percent != null ? `${percent}%` : "—"}
           </span>
           <span className={cn("font-medium text-slate-600", scoreClass)}>
-            {score != null ? `${score}/${max}` : "ball yo'q"}
+            {score != null ? `${score}/${max}` : dictionary.crsQuizNoScore}
           </span>
         </div>
       </div>

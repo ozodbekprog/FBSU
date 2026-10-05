@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { Card, CardBody, EmptyState, PageHeader } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
 import { canManageCourse } from "@/components/courses/course-access";
@@ -93,6 +94,8 @@ export default async function CourseAssignmentsPage({
   params: Promise<{ slug: string }>;
 }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const { slug } = await params;
 
   const course = await prisma.course.findUnique({ where: { slug } });
@@ -110,14 +113,14 @@ export default async function CourseAssignmentsPage({
 
   const header = (
     <PageHeader
-      title="Topshiriqlar"
+      title={dictionary.crsAssignments}
       subtitle={course.title}
       action={
         <Link
           href={`/courses/${course.slug}/attendance`}
           className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-50"
         >
-          Davomat
+          {dictionary.crsAttendance}
         </Link>
       }
     />
@@ -143,15 +146,15 @@ export default async function CourseAssignmentsPage({
         {header}
         {assignments.length === 0 ? (
           <EmptyState
-            title="Topshiriqlar yo'q"
-            description="Hozircha bu kursda topshiriq e'lon qilinmagan. Yangi topshiriq chiqsa shu sahifada ko'rinadi."
+            title={dictionary.crsNoAssignments}
+            description={dictionary.crsNoAssignmentsDescStudent}
           />
         ) : (
           <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-3">
-              <SummaryChip label="Jami topshiriq" value={assignments.length} tone="brand" delay={0} />
-              <SummaryChip label="Topshirilgan" value={submittedCount} tone="amber" delay={60} />
-              <SummaryChip label="Baholangan" value={gradedCount} tone="green" delay={120} />
+              <SummaryChip label={dictionary.crsTotalAssignments} value={assignments.length} tone="brand" delay={0} />
+              <SummaryChip label={dictionary.crsSubmitted} value={submittedCount} tone="amber" delay={60} />
+              <SummaryChip label={dictionary.crsGraded} value={gradedCount} tone="green" delay={120} />
             </div>
             <div className="space-y-3">
               {assignments.map((assignment, index) => {
@@ -186,7 +189,7 @@ export default async function CourseAssignmentsPage({
                           />
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700">
                             <ClockIcon />
-                            Maksimal ball: {assignment.maxScore}
+                            {translate(locale, "crsMaxScoreLabel", { score: assignment.maxScore })}
                           </span>
                         </div>
                       </div>
@@ -230,16 +233,16 @@ export default async function CourseAssignmentsPage({
       <AssignmentsCreate courseId={course.id} />
       {assignments.length === 0 ? (
         <EmptyState
-          title="Topshiriqlar yo'q"
-          description="Birinchi topshiriqni qo'shing — talabalar uni darhol ko'radi."
+          title={dictionary.crsNoAssignments}
+          description={dictionary.crsNoAssignmentsDescStaff}
         />
       ) : (
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
-            <SummaryChip label="Jami topshiriq" value={assignments.length} tone="brand" delay={0} />
-            <SummaryChip label="Topshirilgan ishlar" value={totalSubmissions} tone="green" delay={60} />
+            <SummaryChip label={dictionary.crsTotalAssignments} value={assignments.length} tone="brand" delay={0} />
+            <SummaryChip label={dictionary.crsSubmissions} value={totalSubmissions} tone="green" delay={60} />
             <SummaryChip
-              label="Muddati o'tgan"
+              label={dictionary.crsOverdue}
               value={assignments.filter((assignment) => assignment.dueAt && assignment.dueAt < now).length}
               tone="amber"
               delay={120}
@@ -283,7 +286,7 @@ export default async function CourseAssignmentsPage({
                           <DueChip dueAt={assignment.dueAt} now={now} />
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700">
                             <ClockIcon />
-                            Maksimal ball: {assignment.maxScore}
+                            {translate(locale, "crsMaxScoreLabel", { score: assignment.maxScore })}
                           </span>
                         </div>
                       </div>
@@ -304,10 +307,10 @@ export default async function CourseAssignmentsPage({
                           <circle cx="9" cy="7" r="4" />
                           <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
                         </svg>
-                        {assignment._count.submissions} ta topshirilgan
+                        {translate(locale, "crsSubmissionsCount", { count: assignment._count.submissions })}
                       </span>
                       <span className="text-xs text-slate-600">
-                        Yaratilgan: {fmtDate(assignment.createdAt)}
+                        {translate(locale, "crsCreatedAt", { date: fmtDate(assignment.createdAt) })}
                       </span>
                     </div>
                   </div>

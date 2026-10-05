@@ -4,21 +4,9 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, Button, Card, CardBody, CardHeader, Input, Label } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type AttendanceStatusValue = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED" | "SUSPICIOUS";
-
-const OPTIONS: {
-  value: AttendanceStatusValue;
-  short: string;
-  label: string;
-  active: string;
-}[] = [
-  { value: "PRESENT", short: "P", label: "Bor", active: "bg-emerald-500 text-white shadow-sm" },
-  { value: "ABSENT", short: "A", label: "Yo'q", active: "bg-rose-500 text-white shadow-sm" },
-  { value: "LATE", short: "L", label: "Kechikkan", active: "bg-amber-500 text-white shadow-sm" },
-  { value: "EXCUSED", short: "E", label: "Sababli", active: "bg-brand-600 text-white shadow-sm" },
-  { value: "SUSPICIOUS", short: "Sh", label: "Shubhali", active: "bg-violet-500 text-white shadow-sm" },
-];
 
 function todayIso() {
   const date = new Date();
@@ -36,6 +24,19 @@ export function AttendanceBulk({
   entries: { studentId: string; date: string; status: AttendanceStatusValue }[];
 }) {
   const router = useRouter();
+  const { t } = useI18n();
+  const options: {
+    value: AttendanceStatusValue;
+    short: string;
+    label: string;
+    active: string;
+  }[] = [
+    { value: "PRESENT", short: "P", label: t("crsPresent"), active: "bg-emerald-500 text-white shadow-sm" },
+    { value: "ABSENT", short: "A", label: t("crsAbsent"), active: "bg-rose-500 text-white shadow-sm" },
+    { value: "LATE", short: "L", label: t("crsLate"), active: "bg-amber-500 text-white shadow-sm" },
+    { value: "EXCUSED", short: "E", label: t("crsExcused"), active: "bg-brand-600 text-white shadow-sm" },
+    { value: "SUSPICIOUS", short: "Sh", label: t("crsSuspicious"), active: "bg-violet-500 text-white shadow-sm" },
+  ];
   const [date, setDate] = useState(todayIso());
   const [draft, setDraft] = useState<Record<string, AttendanceStatusValue>>({});
   const [saving, setSaving] = useState(false);
@@ -79,25 +80,25 @@ export function AttendanceBulk({
 
     setSaving(false);
     if (!response.ok || !json?.ok) {
-      setError(json?.error ?? "Saqlashda xatolik yuz berdi");
+      setError(json?.error ?? t("crsSaveError"));
       return;
     }
 
     setDraft({});
-    setMessage("Davomat saqlandi");
+    setMessage(t("crsAttendanceSaved"));
     router.refresh();
   }
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader title="Davomat belgilash" subtitle={`${students.length} ta talaba`} />
+      <CardHeader title={t("crsMarkAttendance")} subtitle={t("crsStudentsCount", { count: students.length })} />
       <CardBody>
         {students.length === 0 ? (
-          <p className="text-sm text-slate-500">Kursda talaba yo&apos;q.</p>
+          <p className="text-sm text-slate-500">{t("crsNoStudentsInCourse")}</p>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="max-w-xs">
-              <Label>Sana</Label>
+              <Label>{t("crsDate")}</Label>
               <Input
                 type="date"
                 value={date}
@@ -109,7 +110,7 @@ export function AttendanceBulk({
                 required
               />
               <p className="mt-1.5 text-xs text-slate-600 sm:hidden">
-                P — Bor, A — Yo&apos;q, L — Kechikkan, E — Sababli
+                {t("crsAttendanceLegend")}
               </p>
             </div>
 
@@ -128,7 +129,7 @@ export function AttendanceBulk({
                       </span>
                     </div>
                     <div className="inline-flex shrink-0 items-center gap-0.5 rounded-xl border border-slate-200 bg-slate-50 p-0.5">
-                      {OPTIONS.map((option) => (
+                      {options.map((option) => (
                         <button
                           key={option.value}
                           type="button"
@@ -164,7 +165,7 @@ export function AttendanceBulk({
 
             <div className="flex justify-end">
               <Button type="submit" disabled={saving}>
-                {saving ? "Saqlanmoqda..." : "Saqlash"}
+                {saving ? t("crsSaving") : t("crsSave")}
               </Button>
             </div>
           </form>

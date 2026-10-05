@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input, Label, Textarea } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type AssignmentData = {
   id: string;
@@ -60,6 +61,7 @@ function TrashIcon() {
 
 export function AssignmentsActions({ assignment }: { assignment: AssignmentData }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(assignment.title);
   const [description, setDescription] = useState(assignment.description ?? "");
@@ -91,7 +93,7 @@ export function AssignmentsActions({ assignment }: { assignment: AssignmentData 
 
     setSaving(false);
     if (!response.ok || !json?.ok) {
-      setError(json?.error ?? "Saqlashda xatolik yuz berdi");
+      setError(json?.error ?? t("crsSaveError"));
       return;
     }
 
@@ -100,7 +102,7 @@ export function AssignmentsActions({ assignment }: { assignment: AssignmentData 
   }
 
   async function handleDelete() {
-    if (!window.confirm("Topshiriqni o'chirishni tasdiqlaysizmi?")) return;
+    if (!window.confirm(t("crsDeleteAssignmentConfirm"))) return;
     setDeleting(true);
     await fetch(`/api/assignments/${assignment.id}`, { method: "DELETE" });
     setDeleting(false);
@@ -121,20 +123,20 @@ export function AssignmentsActions({ assignment }: { assignment: AssignmentData 
           size="sm"
           variant="secondary"
           onClick={() => setEditing((value) => !value)}
-          aria-label="Tahrirlash"
+          aria-label={t("crsEdit")}
         >
           <PencilIcon />
-          Tahrirlash
+          {t("crsEdit")}
         </Button>
         <button
           type="button"
           onClick={handleDelete}
           disabled={deleting}
-          aria-label="O'chirish"
+          aria-label={t("crsDelete")}
           className="inline-flex items-center justify-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-500 transition-colors duration-150 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <TrashIcon />
-          O&apos;chirish
+          {t("crsDelete")}
         </button>
       </div>
       {editing ? (
@@ -146,11 +148,11 @@ export function AssignmentsActions({ assignment }: { assignment: AssignmentData 
             <span className="inline-flex size-6 items-center justify-center rounded-lg bg-white text-brand-700 ring-1 ring-brand-100">
               <PencilIcon />
             </span>
-            Topshiriqni tahrirlash
+            {t("crsEditAssignment")}
           </p>
           <div className="grid gap-4">
             <div>
-              <Label>Sarlavha</Label>
+              <Label>{t("crsTitle")}</Label>
               <Input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
@@ -160,7 +162,7 @@ export function AssignmentsActions({ assignment }: { assignment: AssignmentData 
               />
             </div>
             <div>
-              <Label>Tavsif</Label>
+              <Label>{t("crsDescription")}</Label>
               <Textarea
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
@@ -170,7 +172,7 @@ export function AssignmentsActions({ assignment }: { assignment: AssignmentData 
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label>Muddat</Label>
+                <Label>{t("crsDueDate")}</Label>
                 <Input
                   type="datetime-local"
                   value={dueAt}
@@ -179,7 +181,7 @@ export function AssignmentsActions({ assignment }: { assignment: AssignmentData 
                 />
               </div>
               <div>
-                <Label>Maksimal ball</Label>
+                <Label>{t("crsMaxScore")}</Label>
                 <Input
                   type="number"
                   min={1}
@@ -195,10 +197,10 @@ export function AssignmentsActions({ assignment }: { assignment: AssignmentData 
           {error ? <p className="mt-3 text-sm text-rose-600">{error}</p> : null}
           <div className="mt-4 flex justify-end gap-2">
             <Button size="sm" variant="secondary" onClick={() => setEditing(false)}>
-              Bekor qilish
+              {t("crsCancel")}
             </Button>
             <Button size="sm" type="submit" disabled={saving}>
-              {saving ? "Saqlanmoqda..." : "Saqlash"}
+              {saving ? t("crsSaving") : t("crsSave")}
             </Button>
           </div>
         </form>

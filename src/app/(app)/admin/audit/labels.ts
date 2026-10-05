@@ -1,3 +1,5 @@
+import type { Dictionary } from "@/i18n";
+
 export type AuditBadgeTone =
   | "slate"
   | "brand"
@@ -8,17 +10,20 @@ export type AuditBadgeTone =
   | "purple"
   | "gold";
 
-const ACTION_META: Record<string, { label: string; tone: AuditBadgeTone }> = {
-  "schedule.status": { label: "Jadval holati", tone: "amber" },
-  "submission.grade": { label: "Baholash", tone: "green" },
-  "admin.user.update": { label: "Foydalanuvchi", tone: "brand" },
-  "admin.settings.update": { label: "Sozlamalar", tone: "purple" },
-  "certificate.issue": { label: "Sertifikat", tone: "gold" },
-  "order.update": { label: "Ariza", tone: "blue" },
+type Translate = (key: keyof Dictionary, params?: Record<string, string | number>) => string;
+
+const ACTION_META: Record<string, { label: keyof Dictionary; tone: AuditBadgeTone }> = {
+  "schedule.status": { label: "admAuditActionScheduleStatus", tone: "amber" },
+  "submission.grade": { label: "admAuditActionSubmissionGrade", tone: "green" },
+  "admin.user.update": { label: "admAuditActionUserUpdate", tone: "brand" },
+  "admin.settings.update": { label: "admAuditActionSettingsUpdate", tone: "purple" },
+  "certificate.issue": { label: "admAuditActionCertificateIssue", tone: "gold" },
+  "order.update": { label: "admAuditActionOrderUpdate", tone: "blue" },
 };
 
-export function auditActionLabel(action: string) {
-  return ACTION_META[action]?.label ?? action;
+export function auditActionLabel(action: string, t: Translate) {
+  const key = ACTION_META[action]?.label;
+  return key ? t(key) : action;
 }
 
 export function auditActionTone(action: string): AuditBadgeTone {
