@@ -14,6 +14,7 @@ import {
   Table,
 } from "@/components/ui";
 import { atRiskStudents, attendancePercent } from "@/modules/monitoring/attendance-kpi";
+import { canViewMonitoring } from "@/modules/roles/access";
 
 function toneFor(percent: number): "green" | "amber" | "rose" {
   if (percent >= 80) return "green";
@@ -27,13 +28,40 @@ export default async function MonitoringPage({
   searchParams: Promise<{ facultyId?: string; groupId?: string }>;
 }) {
   const user = await requireUser();
-  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") redirect("/dashboard");
+  if (!canViewMonitoring(user.role)) redirect("/dashboard");
 
   const params = await searchParams;
-  const facultyId =
+  const rawFacultyId =
     typeof params.facultyId === "string" && params.facultyId.length > 0 ? params.facultyId : null;
   const groupId =
     typeof params.groupId === "string" && params.groupId.length > 0 ? params.groupId : null;
+
+  const isDean = user.role === "DEKAN";
+  const isDeptHead = user.role === "KAFEDRA_MUDIRI";
+  const facultyId = isDean ? user.facultyId : rawFacultyId;
+
+  let deptGroupIds: string[] | null = null;
+  if (isDeptHead) {
+    if (!user.departmentId) {
+      deptGroupIds = [];
+    } else {
+      const deptRows = await prisma.enrollment.findMany({
+        where: {
+          status: "ACTIVE",
+          course: { teacher: { departmentId: user.departmentId } },
+        },
+        select: { user: { select: { groupId: true } } },
+      });
+      deptGroupIds = Array.from(
+        new Set(
+          deptRows
+            .map((row) => row.user.groupId)
+            .filter((id): id is string => Boolean(id)),
+        ),
+      );
+    }
+  }
+  const scopeBlocked = (isDean && !user.facultyId) || (isDeptHead && !user.departmentId);
 
   const [faculties, allGroups] = await Promise.all([
     prisma.faculty.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
@@ -43,12 +71,22 @@ export default async function MonitoringPage({
     }),
   ]);
 
-  const scopeGroups = allGroups.filter(
-    (group) =>
-      (!facultyId || group.facultyId === facultyId) && (!groupId || group.id === groupId),
-  );
+  const scopeGroups = allGroups.filter((group) => {
+    if (scopeBlocked) return false;
+    if (isDeptHead) {
+      if (!deptGroupIds?.includes(group.id)) return false;
+    } else if (facultyId && group.facultyId !== facultyId) {
+      return false;
+    }
+    if (groupId && group.id !== groupId) return false;
+    return true;
+  });
   const scopeGroupIds = scopeGroups.map((group) => group.id);
-  const groupOptions = allGroups.filter((group) => !facultyId || group.facultyId === facultyId);
+  const groupOptions = allGroups.filter((group) => {
+    if (isDeptHead) return deptGroupIds?.includes(group.id) ?? false;
+    if (facultyId) return group.facultyId === facultyId;
+    return true;
+  });
 
   const [students, teachersCount, coursesCount, attendanceRows, submissionsTotal, submissionsGraded, pendingSchedule] =
     await Promise.all([
@@ -111,17 +149,19 @@ export default async function MonitoringPage({
       <form method="get" className="mb-5">
         <Card>
           <CardBody className="flex flex-wrap items-end gap-3">
-            <div className="w-full sm:w-64">
-              <label className="mb-1.5 block text-xs font-medium text-slate-600">Fakultet</label>
-              <Select name="facultyId" defaultValue={facultyId ?? ""}>
-                <option value="">Barcha fakultetlar</option>
-                {faculties.map((faculty) => (
-                  <option key={faculty.id} value={faculty.id}>
-                    {faculty.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
+            {!isDean && !isDeptHead ? (
+              <div className="w-full sm:w-64">
+                <label className="mb-1.5 block text-xs font-medium text-slate-600">Fakultet</label>
+                <Select name="facultyId" defaultValue={facultyId ?? ""}>
+                  <option value="">Barcha fakultetlar</option>
+                  {faculties.map((faculty) => (
+                    <option key={faculty.id} value={faculty.id}>
+                      {faculty.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            ) : null}
             <div className="w-full sm:w-56">
               <label className="mb-1.5 block text-xs font-medium text-slate-600">Guruh</label>
               <Select name="groupId" defaultValue={groupId ?? ""}>
@@ -136,6 +176,21 @@ export default async function MonitoringPage({
             <Button type="submit" variant="secondary">
               Ko&apos;rish
             </Button>
+            {isDean ? (
+              <p className="text-xs font-medium text-slate-500">
+                Doira: {user.faculty?.name ?? "Fakultet biriktirilmagan"}
+              </p>
+            ) : null}
+            {isDeptHead ? (
+              <p className="text-xs font-medium text-slate-500">
+                Doira: {user.department?.name ?? "Kafedra biriktirilmagan"}
+              </p>
+            ) : null}
+            {scopeBlocked ? (
+              <p className="text-xs font-medium text-rose-600">
+                {isDean ? "Sizga fakultet biriktirilmagan" : "Sizga kafedra biriktirilmagan"}
+              </p>
+            ) : null}
             {facultyId || groupId ? (
               <a
                 href="/monitoring"

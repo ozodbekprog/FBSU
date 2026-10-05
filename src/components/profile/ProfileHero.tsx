@@ -3,9 +3,13 @@ import type { Role } from "@prisma/client";
 import { Avatar, Badge, Card } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
 
-export const ROLE_META: Record<Role, { label: string; tone: "brand" | "purple" | "slate" }> = {
+export const ROLE_META: Record<Role, { label: string; tone: "brand" | "purple" | "slate" | "gold" | "green" | "blue" }> = {
   ADMIN: { label: "Administrator", tone: "brand" },
+  REKTOR: { label: "Rektor", tone: "gold" },
+  DEKAN: { label: "Dekan", tone: "purple" },
+  KAFEDRA_MUDIRI: { label: "Kafedra mudiri", tone: "blue" },
   REGISTRAR: { label: "O'quv bo'limi", tone: "brand" },
+  TYUTOR: { label: "Tyutor", tone: "green" },
   TEACHER: { label: "O'qituvchi", tone: "purple" },
   STUDENT: { label: "Talaba", tone: "slate" },
 };

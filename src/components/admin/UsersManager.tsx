@@ -59,10 +59,14 @@ const EMPTY_FORM: FormState = {
 
 const ROLE_META: Record<
   Role,
-  { label: string; tone: "brand" | "purple" | "slate"; dot: string; ring: string }
+  { label: string; tone: "brand" | "purple" | "slate" | "blue" | "green" | "gold"; dot: string; ring: string }
 > = {
   ADMIN: { label: "Administrator", tone: "brand", dot: "bg-brand-500", ring: "ring-brand-200/80" },
+  REKTOR: { label: "Rektor", tone: "gold", dot: "bg-gold-500", ring: "ring-gold-300/60" },
+  DEKAN: { label: "Dekan", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
+  KAFEDRA_MUDIRI: { label: "Kafedra mudiri", tone: "blue", dot: "bg-sky-500", ring: "ring-sky-200/80" },
   REGISTRAR: { label: "O'quv bo'limi", tone: "brand", dot: "bg-sky-500", ring: "ring-sky-200/80" },
+  TYUTOR: { label: "Tyutor", tone: "green", dot: "bg-emerald-500", ring: "ring-emerald-200/80" },
   TEACHER: { label: "O'qituvchi", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
   STUDENT: { label: "Talaba", tone: "slate", dot: "bg-slate-400", ring: "ring-slate-200" },
 };
@@ -323,6 +327,10 @@ export default function UsersManager({
                   >
                     <option value="STUDENT">Talaba</option>
                     <option value="TEACHER">O&apos;qituvchi</option>
+                    <option value="TYUTOR">Tyutor</option>
+                    <option value="KAFEDRA_MUDIRI">Kafedra mudiri</option>
+                    <option value="DEKAN">Dekan</option>
+                    <option value="REKTOR">Rektor</option>
                     <option value="REGISTRAR">O&apos;quv bo&apos;limi</option>
                     <option value="ADMIN">Administrator</option>
                   </Select>

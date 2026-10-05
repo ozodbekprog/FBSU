@@ -70,13 +70,15 @@ export default async function AppLayout({
     {
       label: "Boshqaruv",
       links: [
-        ...(user.role === "ADMIN" || user.role === "REGISTRAR"
-          ? [
-              { href: "/monitoring", label: "Monitoring" },
-              { href: "/approvals", label: "Tasdiqlashlar" },
-            ]
+        ...(["ADMIN", "REKTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR"].includes(user.role)
+          ? [{ href: "/monitoring", label: "Monitoring" }]
           : []),
-        ...(isStaff(user.role) ? [{ href: "/curator", label: "Kurator paneli" }] : []),
+        ...(user.role === "ADMIN" || user.role === "REGISTRAR"
+          ? [{ href: "/approvals", label: "Tasdiqlashlar" }]
+          : []),
+        ...(isStaff(user.role) || user.role === "TYUTOR"
+          ? [{ href: "/curator", label: "Kurator paneli" }]
+          : []),
         ...(isStaff(user.role) ? [{ href: "/reports", label: "Hisobotlar" }] : []),
         ...(isStaff(user.role) ? [{ href: "/workload", label: "Yuklama" }] : []),
         ...(user.role === "ADMIN" ? [{ href: "/admin", label: "Admin panel" }] : []),
@@ -87,11 +89,19 @@ export default async function AppLayout({
   const roleLabel =
     user.role === "ADMIN"
       ? "Administrator"
-      : user.role === "REGISTRAR"
-        ? "O'quv bo'limi"
-        : user.role === "TEACHER"
-          ? "O'qituvchi"
-          : user.group?.name ?? "Talaba";
+      : user.role === "REKTOR"
+        ? "Rektor"
+        : user.role === "DEKAN"
+          ? "Dekan"
+          : user.role === "KAFEDRA_MUDIRI"
+            ? "Kafedra mudiri"
+            : user.role === "REGISTRAR"
+              ? "O'quv bo'limi"
+              : user.role === "TYUTOR"
+                ? "Tyutor"
+                : user.role === "TEACHER"
+                  ? "O'qituvchi"
+                  : user.group?.name ?? "Talaba";
 
   const tabs: MobileTab[] = [
     { href: "/dashboard", label: "Dashboard", icon: "home" },

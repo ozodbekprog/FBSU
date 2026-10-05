@@ -8,14 +8,22 @@ import type { SearchResults } from "./search-data";
 
 const ROLE_LABELS: Record<Role, string> = {
   ADMIN: "Administrator",
+  REKTOR: "Rektor",
+  DEKAN: "Dekan",
+  KAFEDRA_MUDIRI: "Kafedra mudiri",
   REGISTRAR: "O'quv bo'limi",
+  TYUTOR: "Tyutor",
   TEACHER: "O'qituvchi",
   STUDENT: "Talaba",
 };
 
 const ROLE_TONES: Record<Role, string> = {
   ADMIN: "rose",
+  REKTOR: "gold",
+  DEKAN: "purple",
+  KAFEDRA_MUDIRI: "blue",
   REGISTRAR: "brand",
+  TYUTOR: "green",
   TEACHER: "blue",
   STUDENT: "slate",
 };

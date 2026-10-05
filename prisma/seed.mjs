@@ -83,7 +83,11 @@ async function main() {
 
   const users = [
     { email: "admin@ttpu.uz", name: "Administrator", role: "ADMIN", groupId: null },
+    { email: "rektor@ttpu.uz", name: "Rektor", role: "REKTOR", groupId: null },
+    { email: "dekan@ttpu.uz", name: "Dekan", role: "DEKAN", groupId: null },
+    { email: "kafedra@ttpu.uz", name: "Kafedra mudiri", role: "KAFEDRA_MUDIRI", groupId: null },
     { email: "registrar@ttpu.uz", name: "O'quv bo'limi", role: "REGISTRAR", groupId: null },
+    { email: "tyutor@ttpu.uz", name: "Tyutor", role: "TYUTOR", groupId: null },
     { email: "n.mahamatov@ttpu.uz", name: "N. Mahamatov", role: "TEACHER", groupId: null },
     { email: "a.mamanazarov@ttpu.uz", name: "A. Mamanazarov", role: "TEACHER", groupId: null },
     { email: "o.ismoilova@ttpu.uz", name: "O. Ismoilova", role: "TEACHER", groupId: null },
@@ -123,6 +127,26 @@ async function main() {
   await prisma.user.updateMany({
     where: { email: { in: ["a.mamanazarov@ttpu.uz", "o.ismoilova@ttpu.uz"] } },
     data: { departmentId: scienceDept.id },
+  });
+
+  const faculty = await prisma.faculty.upsert({
+    where: { name: "Kompyuter injiniringi" },
+    update: {},
+    create: { name: "Kompyuter injiniringi", code: "KI" },
+  });
+  await prisma.department.updateMany({ data: { facultyId: faculty.id } });
+  await prisma.group.updateMany({ data: { facultyId: faculty.id } });
+  await prisma.user.update({
+    where: { email: "dekan@ttpu.uz" },
+    data: { facultyId: faculty.id },
+  });
+  await prisma.user.update({
+    where: { email: "kafedra@ttpu.uz" },
+    data: { departmentId: programmingDept.id },
+  });
+  await prisma.group.updateMany({
+    where: { name: { in: ["AI2-26", "AI2-25"] } },
+    data: { curatorId: created["tyutor@ttpu.uz"].id },
   });
 
   const courses = [
@@ -637,7 +661,8 @@ async function main() {
   }
 
   console.log("Seed tayyor. Demo loginlar (parol: ttpu1234):");
-  console.log("  admin@ttpu.uz | registrar@ttpu.uz | n.mahamatov@ttpu.uz | ozodbek@ttpu.uz");
+  console.log("  admin@ttpu.uz | rektor@ttpu.uz | dekan@ttpu.uz | kafedra@ttpu.uz");
+  console.log("  registrar@ttpu.uz | tyutor@ttpu.uz | n.mahamatov@ttpu.uz | ozodbek@ttpu.uz");
 }
 
 main()

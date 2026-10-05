@@ -4,7 +4,7 @@ import { EmptyState, PageHeader } from "@/components/ui";
 import { CuratorGroupCards } from "@/components/curator/group-cards";
 
 export default async function CuratorPage() {
-  const user = await requireRole(["TEACHER", "ADMIN"]);
+  const user = await requireRole(["TEACHER", "ADMIN", "TYUTOR"]);
   const groups = await getCuratorGroups(user);
   const summaries = await buildGroupSummaries(groups);
 

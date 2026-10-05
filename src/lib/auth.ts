@@ -88,9 +88,11 @@ export async function getCurrentUser() {
       groupId: true,
       subGroupId: true,
       facultyId: true,
+      departmentId: true,
       group: true,
       subGroup: true,
       faculty: true,
+      department: true,
     },
   });
   if (!user || !user.isActive) return null;

@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Button, Card, CardBody, Input, PageHeader, Select } from "@/components/ui";
 import UsersManager from "@/components/admin/UsersManager";
 
-const ROLES = ["ADMIN", "REGISTRAR", "TEACHER", "STUDENT"] as const;
+const ROLES = ["ADMIN", "REKTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER", "STUDENT"] as const;
 
 export default async function AdminUsersPage({
   searchParams,
@@ -75,6 +75,10 @@ export default async function AdminUsersPage({
               <option value="">Barcha rollar</option>
               <option value="STUDENT">Talaba</option>
               <option value="TEACHER">O&apos;qituvchi</option>
+              <option value="TYUTOR">Tyutor</option>
+              <option value="KAFEDRA_MUDIRI">Kafedra mudiri</option>
+              <option value="DEKAN">Dekan</option>
+              <option value="REKTOR">Rektor</option>
               <option value="REGISTRAR">O&apos;quv bo&apos;limi</option>
               <option value="ADMIN">Administrator</option>
             </Select>

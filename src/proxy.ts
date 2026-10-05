@@ -133,7 +133,7 @@ function looksLikeSessionCookie(value: string | undefined): boolean {
  */
 const ROLE_GATED: Record<string, string[]> = {
   "/approvals": ["ADMIN", "REGISTRAR"],
-  "/monitoring": ["ADMIN", "REGISTRAR"],
+  "/monitoring": ["ADMIN", "REKTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR"],
 };
 
 function sessionSecret(): Uint8Array {

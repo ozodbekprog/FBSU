@@ -9,7 +9,11 @@ datasource db {
 
 enum Role {
   ADMIN
+  REKTOR
+  DEKAN
+  KAFEDRA_MUDIRI
   REGISTRAR
+  TYUTOR
   TEACHER
   STUDENT
 }

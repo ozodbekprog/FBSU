@@ -11,7 +11,9 @@ const patchSchema = z.object({
   name: z.string().trim().min(2).max(100).optional(),
   email: z.string().trim().email().optional(),
   password: z.string().min(12).max(100).optional(),
-  role: z.enum(["ADMIN", "REGISTRAR", "TEACHER", "STUDENT"]).optional(),
+  role: z
+    .enum(["ADMIN", "REKTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER", "STUDENT"])
+    .optional(),
   groupId: z.string().trim().min(1).nullable().optional(),
   subGroupId: z.string().trim().min(1).nullable().optional(),
   departmentId: z.string().trim().min(1).nullable().optional(),
