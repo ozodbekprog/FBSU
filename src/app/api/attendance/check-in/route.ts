@@ -109,7 +109,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const tokenLocation = payload ? lookupQrLocation(payload.jti) : undefined;
+  const tokenLocation = payload ? (payload.loc ?? lookupQrLocation(payload.jti)) : undefined;
   const studentLocation =
     typeof parsed.data.lat === "number" && typeof parsed.data.lng === "number"
       ? {
@@ -125,6 +125,7 @@ export async function POST(request: Request) {
     tokenLocation,
     studentLocation,
     ip,
+    usedCode: !payload,
   });
   const status = risk.suspicious ? "SUSPICIOUS" : "PRESENT";
   const note = risk.suspicious ? `Shubhali: ${risk.reasons.join(", ")}` : "QR orqali";

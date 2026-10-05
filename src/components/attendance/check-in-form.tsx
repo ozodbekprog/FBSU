@@ -22,6 +22,7 @@ const REASON_LABELS: Record<string, string> = {
   IP_SHARED: "Bir xil qurilmadan bir nechta belgilash aniqlandi",
   VPN_SUSPECTED: "VPN yoki proxy aniqlandi",
   IP_GEO_MISMATCH: "Tarmoq joylashuvi qurilma joylashuviga mos emas",
+  CODE_USED: "Dinamik QR o'rniga statik kod ishlatildi",
 };
 
 export function CheckInForm({ initialPayload }: { initialPayload?: QrScanPayload }) {

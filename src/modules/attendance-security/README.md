@@ -11,10 +11,13 @@ boshqa telefon bilan masofadan belgilanishi mumkin.
 
 1. **Dinamik QR** — token har `QR_TOKEN_TTL_SECONDS` (10s) da yangilanadi.
    QR ichida token (imzolangan, `exp` bilan). Eski token grace bilan qabul qilinadi.
-2. **Joylashuv** — token o'qituvchi joylashuvini olib yuradi; talaba skanerda
-   mobil joylashuvini yuboradi; masofa `QR_GEO_RADIUS_M` dan katta bo'lsa — shubhali.
+2. **Joylashuv** — token o'qituvchi joylashuvini imzolangan payloadda (`loc`) olib
+   yuradi (serverless instance'lar orasida ham ishonchli); talaba skanerda mobil
+   joylashuvini yuboradi; masofa `QR_GEO_RADIUS_M` dan katta bo'lsa — shubhali.
 3. **IP nazorati** — IP o'zgargan / bir IP bir nechta talabada / IP-geo mobil-geo
    bilan mos emas / VPN-proxy belgisi — shubhali.
+4. **Statik kod nazorati** — dinamik token o'rniga eski statik kod bilan belgilansa
+   `CODE_USED` — shubhali (statik kodda masofa bog'lanishi yo'q).
 
 Shubhali belgilanish `Attendance.status = SUSPICIOUS` (yangi enum) va
 `AuditLog` yozuvi (`action: "attendance.check-in"`, `meta` ichida sabablar).

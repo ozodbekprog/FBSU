@@ -154,6 +154,21 @@ describe("evaluateCheckInRisk", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("statik kod ishlatilsa CODE_USED qaytaradi", async () => {
+    const result = await evaluateCheckInRisk({
+      studentId: "student-7",
+      sessionId: "session-7",
+      courseId: "course-7",
+      tokenLocation,
+      studentLocation: { ...tokenLocation, accuracy: 20 },
+      usedCode: true,
+    });
+
+    expect(result.suspicious).toBe(true);
+    expect(result.reasons).toEqual(["CODE_USED"]);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("proxy yoki hosting belgisi VPN_SUSPECTED qaytaradi", async () => {
     vi.mocked(fetch).mockResolvedValue(
       ipResponse({

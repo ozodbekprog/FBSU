@@ -159,6 +159,7 @@ function startOfToday(): Date {
 
 export async function evaluateCheckInRisk(input: CheckInRiskInput): Promise<RiskResult> {
   const reasons: RiskReason[] = [];
+  if (input.usedCode) addReason(reasons, "CODE_USED");
   const ip = input.ip?.trim() || null;
   let distanceM: number | undefined;
   let ipGeo: IpGeo | null = null;

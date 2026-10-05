@@ -10,6 +10,7 @@ export type QrTokenPayload = {
   jti: string;
   iat: number;
   exp: number;
+  loc?: GeoPoint;
 };
 
 export type RiskReason =
@@ -19,7 +20,8 @@ export type RiskReason =
   | "IP_CHANGED"
   | "IP_SHARED"
   | "IP_GEO_MISMATCH"
-  | "VPN_SUSPECTED";
+  | "VPN_SUSPECTED"
+  | "CODE_USED";
 
 export type RiskResult = {
   suspicious: boolean;
@@ -46,4 +48,5 @@ export type CheckInRiskInput = {
   tokenLocation?: GeoPoint;
   studentLocation?: GeoPoint;
   ip?: string | null;
+  usedCode?: boolean;
 };
