@@ -48,23 +48,36 @@ export function dayName(dayOfWeek: number, locale?: DateLocale) {
   return DAYS[resolveDateLocale(locale)][dayOfWeek % 7];
 }
 
+const TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1000;
+
+function tashkentParts(value: Date | string) {
+  const shifted = new Date(new Date(value).getTime() + TASHKENT_OFFSET_MS);
+  return {
+    day: shifted.getUTCDate(),
+    month: shifted.getUTCMonth(),
+    year: shifted.getUTCFullYear(),
+    hours: shifted.getUTCHours(),
+    minutes: shifted.getUTCMinutes(),
+  };
+}
+
 export function fmtDate(value: Date | string | null | undefined, locale?: DateLocale) {
   if (!value) return "—";
-  const d = new Date(value);
+  const { day, month, year } = tashkentParts(value);
   const resolved = resolveDateLocale(locale);
   const months = MONTHS[resolved];
   if (resolved === "en") {
-    return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+    return `${months[month]} ${day}, ${year}`;
   }
-  return `${d.getDate()}-${months[d.getMonth()]}, ${d.getFullYear()}`;
+  return `${day}-${months[month]}, ${year}`;
 }
 
 export function fmtDateTime(value: Date | string | null | undefined, locale?: DateLocale) {
   if (!value) return "—";
-  const d = new Date(value);
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  return `${fmtDate(d, locale)} ${hh}:${mm}`;
+  const { hours, minutes } = tashkentParts(value);
+  const hh = String(hours).padStart(2, "0");
+  const mm = String(minutes).padStart(2, "0");
+  return `${fmtDate(value, locale)} ${hh}:${mm}`;
 }
 
 export function initials(name: string) {
