@@ -75,6 +75,12 @@ const nextConfig: NextConfig = {
         source: "/api/csrf",
         headers: [{ key: "Vary", value: "Cookie" }],
       },
+      {
+        // Yuz modellari hech qachon o'zgarmaydi — brauzer 1 yil keshlasin.
+        // Bu Face ID'ning takroriy ishga tushishini sezilarli tezlashtiradi.
+        source: "/models/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
     ];
   },
 };

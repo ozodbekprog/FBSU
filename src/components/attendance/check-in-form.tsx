@@ -8,7 +8,7 @@ import { cn, fmtDate } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { requestBrowserLocation, type QrScanPayload } from "./live-qr";
 import { QrScanner } from "./qr-scanner";
-import { FaceScan } from "@/components/face/face-scan";
+import { FaceScan, ensureFaceModels } from "@/components/face/face-scan";
 
 type CheckInResult = {
   course: { id: string; title: string; slug: string };
@@ -153,6 +153,11 @@ export function CheckInForm({
 
     await send(body);
   }
+
+  useEffect(() => {
+    if (!faceEnrolled) return;
+    void ensureFaceModels().catch(() => void 0);
+  }, [faceEnrolled]);
 
   useEffect(() => {
     if (tokenSubmitted.current) return;

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Button, Card, CardBody } from "@/components/ui";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { apiFetch } from "@/lib/api";
 import { fmtDateTime } from "@/lib/utils";
-import { FaceScan } from "@/components/face/face-scan";
+import { FaceScan, ensureFaceModels } from "@/components/face/face-scan";
 
 export function FaceEnroll({
   enrolled,
@@ -21,6 +21,10 @@ export function FaceEnroll({
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void ensureFaceModels().catch(() => void 0);
+  }, []);
 
   async function save(descriptor: number[]) {
     setBusy(true);

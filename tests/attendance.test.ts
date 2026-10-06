@@ -13,6 +13,7 @@ describe("attendanceCounts", () => {
       present: 0,
       absent: 0,
       late: 0,
+      leftEarly: 0,
       excused: 0,
       suspicious: 0,
       total: 0,
