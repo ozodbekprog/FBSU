@@ -402,4 +402,13 @@ export const sch = {
   schReasonFaceMissing: "Yuz tasdiqlanmadi",
   schReasonFaceMismatch: "Yuz mos kelmadi",
   schFaceRetryHint: "Yuz tasdiqlanmadi — yuzingizni qayta skanerlang",
+  schStatusLeftEarly: "Vaqtli tark etdi",
+  schJournalLeftEarly: "Vaqtli tark etdi",
+  schShortLeftEarly: "VT",
+  schStartCheckout: "Chiqish QR ochish",
+  schKindCheckIn: "Kirish QR",
+  schKindCheckOut: "Chiqish QR",
+  schCheckoutSuccess: "Chiqish belgilandi — darsda qatnashdingiz ✓",
+  schCheckoutHint:
+    "Dars oxirida «Chiqish QR»ni oching. Skanerlamaganlar avtomatik «vaqtli tark etdi» bo'ladi.",
 };

@@ -401,4 +401,13 @@ export const sch = {
   schReasonFaceMissing: "Face not verified",
   schReasonFaceMismatch: "Face mismatch",
   schFaceRetryHint: "Face not verified — scan your face again",
+  schStatusLeftEarly: "Left early",
+  schJournalLeftEarly: "Left early",
+  schShortLeftEarly: "LE",
+  schStartCheckout: "Open check-out QR",
+  schKindCheckIn: "Check-in QR",
+  schKindCheckOut: "Check-out QR",
+  schCheckoutSuccess: "Check-out recorded — you attended the lesson ✓",
+  schCheckoutHint:
+    "At the end of the lesson open the “Check-out QR”. Those who don't scan are automatically marked “left early”.",
 };

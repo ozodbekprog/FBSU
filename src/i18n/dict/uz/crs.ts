@@ -372,4 +372,5 @@ export const crs = {
   crsQuizDeleteQuiz: "Testni o'chirish",
   crsQuizCreate: "Testni yaratish",
   crsQuizServerError: "Server javob bermadi",
+  crsLeftEarly: "Vaqtli tark etdi",
 };

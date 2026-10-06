@@ -13,6 +13,7 @@ const createSchema = z.object({
   courseId: z.string().min(1),
   minutes: z.number().int().min(1).max(180).optional(),
   exception: z.boolean().optional(),
+  kind: z.enum(["CHECK_IN", "CHECK_OUT"]).optional(),
 });
 
 function generateCode() {
@@ -84,6 +85,7 @@ export async function POST(request: Request) {
         expiresAt,
         createdById: user.id,
         isException: parsed.data.exception === true,
+        kind: parsed.data.kind === "CHECK_OUT" ? "CHECK_OUT" : "CHECK_IN",
       },
     });
   });
@@ -162,6 +164,7 @@ export async function GET(request: Request) {
     createdAt: session.createdAt,
     finalizedAt: session.finalizedAt,
     isException: session.isException,
+    kind: session.kind,
     active: session.expiresAt.getTime() > now,
     marked: (byDate.get(session.date.getTime()) ?? []).map((mark) => ({
       studentId: mark.studentId,

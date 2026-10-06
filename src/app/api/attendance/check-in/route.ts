@@ -95,6 +95,72 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: "Siz bu kursga yozilmagansiz" }, { status: 403 });
   }
 
+  const faceRow = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { faceDescriptor: true },
+  });
+  const faceCheck = checkFace(faceRow?.faceDescriptor ?? null, parsed.data.faceDescriptor ?? null);
+
+  if (session.kind === "CHECK_OUT") {
+    const row = await prisma.attendance.findUnique({
+      where: {
+        courseId_studentId_date: {
+          courseId: session.courseId,
+          studentId: user.id,
+          date: session.date,
+        },
+      },
+    });
+    if (!row) {
+      return Response.json(
+        { ok: false, error: "Avval kirish QR'ini skanerlang" },
+        { status: 400 },
+      );
+    }
+    if (row.checkOutAt) {
+      return Response.json({ ok: false, error: "Chiqish allaqachon belgilangan" }, { status: 409 });
+    }
+    const faceSuspicious = faceCheck === "missing" || faceCheck === "mismatch";
+    const reasons = faceSuspicious
+      ? [faceCheck === "missing" ? "FACE_MISSING" : "FACE_MISMATCH"]
+      : [];
+    const nextStatus = faceSuspicious
+      ? "SUSPICIOUS"
+      : row.status === "SUSPICIOUS"
+        ? "PRESENT"
+        : row.status;
+    const nextNote = faceSuspicious
+      ? `Chiqish shubhali: ${reasons.join(", ")}`
+      : row.note?.includes("chiqish")
+        ? row.note
+        : `${row.note ?? "QR orqali"} · chiqish ✓`;
+    const updated = await prisma.attendance.update({
+      where: { id: row.id },
+      data: { checkOutAt: new Date(), status: nextStatus, note: nextNote },
+    });
+    await prisma.auditLog.create({
+      data: {
+        actorId: user.id,
+        action: "attendance.check-out",
+        entity: "Attendance",
+        entityId: updated.id,
+        meta: { sessionId: session.id, courseId: session.courseId, ip, faceCheck, reasons },
+      },
+    });
+    return Response.json({
+      ok: true,
+      data: {
+        course: session.course,
+        date: session.date.toISOString().slice(0, 10),
+        status: updated.status,
+        suspicious: faceSuspicious,
+        reasons,
+        faceCheck,
+        checkout: true,
+      },
+    });
+  }
+
   const existing = await prisma.attendance.findUnique({
     where: {
       courseId_studentId_date: {
@@ -123,11 +189,6 @@ export async function POST(request: Request) {
           accuracy: parsed.data.accuracy,
         }
       : undefined;
-  const faceRow = await prisma.user.findUnique({
-    where: { id: user.id },
-    select: { faceDescriptor: true },
-  });
-  const faceCheck = checkFace(faceRow?.faceDescriptor ?? null, parsed.data.faceDescriptor ?? null);
 
   const risk = await evaluateCheckInRisk({
     studentId: user.id,

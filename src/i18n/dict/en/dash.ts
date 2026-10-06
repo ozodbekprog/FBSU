@@ -201,4 +201,5 @@ export const dash = {
   dashCalDayFri: "Fri",
   dashCalDaySat: "Sat",
   dashCalDaySun: "Sun",
+  dashAttendanceLeftEarly: "Left early",
 };

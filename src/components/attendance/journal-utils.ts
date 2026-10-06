@@ -1,4 +1,4 @@
-export type JournalStatus = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED" | "SUSPICIOUS";
+export type JournalStatus = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED" | "SUSPICIOUS" | "LEFT_EARLY";
 
 export type JournalStudent = {
   id: string;
@@ -41,7 +41,7 @@ export function shortName(name: string): string {
   return `${parts.slice(0, -1).join(" ")} ${last.charAt(0).toUpperCase()}.`;
 }
 
-export const JOURNAL_STATUS_ORDER: JournalStatus[] = ["PRESENT", "SUSPICIOUS", "LATE", "EXCUSED", "ABSENT"];
+export const JOURNAL_STATUS_ORDER: JournalStatus[] = ["PRESENT", "SUSPICIOUS", "LATE", "LEFT_EARLY", "EXCUSED", "ABSENT"];
 
 export const JOURNAL_STATUS_STYLE: Record<JournalStatus, { chip: string; badge: string }> = {
   PRESENT: {
@@ -64,6 +64,10 @@ export const JOURNAL_STATUS_STYLE: Record<JournalStatus, { chip: string; badge: 
     chip: "bg-violet-50 text-violet-700 ring-1 ring-violet-200/80",
     badge: "bg-violet-500 text-white shadow-sm shadow-violet-500/30",
   },
+  LEFT_EARLY: {
+    chip: "bg-orange-50 text-orange-700 ring-1 ring-orange-200/80",
+    badge: "bg-orange-500 text-white shadow-sm shadow-orange-500/30",
+  },
 };
 
 export const JOURNAL_STATUS_LABEL_KEYS = {
@@ -72,6 +76,7 @@ export const JOURNAL_STATUS_LABEL_KEYS = {
   LATE: "schJournalLate",
   EXCUSED: "schJournalExcused",
   SUSPICIOUS: "schJournalSuspicious",
+  LEFT_EARLY: "schJournalLeftEarly",
 } as const;
 
 export const JOURNAL_STATUS_SHORT_KEYS = {
@@ -80,6 +85,7 @@ export const JOURNAL_STATUS_SHORT_KEYS = {
   LATE: "schShortLate",
   EXCUSED: "schShortExcused",
   SUSPICIOUS: "schShortSuspicious",
+  LEFT_EARLY: "schShortLeftEarly",
 } as const;
 
 export function journalDateParts(iso: string, weekdays: readonly string[]) {

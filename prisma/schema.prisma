@@ -37,6 +37,12 @@ enum AttendanceStatus {
   LATE
   EXCUSED
   SUSPICIOUS
+  LEFT_EARLY
+}
+
+enum AttendanceSessionKind {
+  CHECK_IN
+  CHECK_OUT
 }
 
 enum BugStatus {
@@ -253,12 +259,13 @@ model GradeChangeRequest {
 }
 
 model Attendance {
-  id        String           @id @default(cuid())
-  courseId  String
-  studentId String
-  date      DateTime
-  status    AttendanceStatus @default(PRESENT)
-  note      String?
+  id         String           @id @default(cuid())
+  courseId   String
+  studentId  String
+  date       DateTime
+  status     AttendanceStatus @default(PRESENT)
+  note       String?
+  checkOutAt DateTime?
 
   course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   student User   @relation(fields: [studentId], references: [id], onDelete: Cascade)
@@ -464,6 +471,7 @@ model AttendanceSession {
   createdAt   DateTime  @default(now())
   finalizedAt DateTime?
   isException Boolean   @default(false)
+  kind        AttendanceSessionKind @default(CHECK_IN)
 
   course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   createdBy User   @relation(fields: [createdById], references: [id], onDelete: Cascade)

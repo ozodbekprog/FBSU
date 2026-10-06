@@ -7,7 +7,7 @@ import { useI18n } from "@/components/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
 import type { CourseOption } from "@/components/attendance/lesson-utils";
 
-export type LessonStatus = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED" | "SUSPICIOUS";
+export type LessonStatus = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED" | "SUSPICIOUS" | "LEFT_EARLY";
 
 export type LessonStudent = {
   id: string;
@@ -53,6 +53,12 @@ const OPTION_STYLES: {
     idle: "text-violet-700 hover:bg-violet-50",
     dot: "bg-violet-500",
   },
+  {
+    value: "LEFT_EARLY",
+    active: "bg-orange-500 text-white shadow-md shadow-orange-500/30 ring-1 ring-orange-400/60",
+    idle: "text-orange-700 hover:bg-orange-50",
+    dot: "bg-orange-500",
+  },
 ];
 
 const OPTION_SHORT_KEYS = {
@@ -61,6 +67,7 @@ const OPTION_SHORT_KEYS = {
   LATE: "schShortLate",
   EXCUSED: "schShortExcused",
   SUSPICIOUS: "schShortSuspicious",
+  LEFT_EARLY: "schShortLeftEarly",
 } as const;
 
 const OPTION_LABEL_KEYS = {
@@ -69,6 +76,7 @@ const OPTION_LABEL_KEYS = {
   LATE: "schStatusLate",
   EXCUSED: "schStatusExcused",
   SUSPICIOUS: "schStatusSuspicious",
+  LEFT_EARLY: "schStatusLeftEarly",
 } as const;
 
 function StatusGlyph({ status, size = 13 }: { status: LessonStatus; size?: number }) {
@@ -165,6 +173,7 @@ export function LessonAttendance({
       LATE: 0,
       EXCUSED: 0,
       SUSPICIOUS: 0,
+      LEFT_EARLY: 0,
     };
     for (const student of visibleStudents) {
       summary[statuses[student.id] ?? "PRESENT"] += 1;
