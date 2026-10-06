@@ -61,7 +61,7 @@ export default async function JournalPage({
         {courses.length > 1 ? (
           <JournalCourseSelect courses={courses} value={selected.slug} />
         ) : null}
-        <SessionPanel courseId={selected.id} studentCount={journal.students.length} />
+        <SessionPanel courseId={selected.id} courseTitle={selected.title} studentCount={journal.students.length} />
         <AttendanceJournal
           courseId={selected.id}
           attendanceHref={`/courses/${selected.slug}/attendance`}

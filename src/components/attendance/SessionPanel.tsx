@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import QRCode from "qrcode";
 import { Badge, Button, Card, CardBody, CardHeader, Label, Select, Table } from "@/components/ui";
 import { useI18n } from "@/components/i18n/LocaleProvider";
@@ -11,6 +12,7 @@ import {
   requestBrowserLocation,
   type BrowserLocation,
 } from "./live-qr";
+import { SessionPresent } from "./session-present";
 
 type AttendanceStatusValue = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED" | "SUSPICIOUS" | "LEFT_EARLY";
 
@@ -65,10 +67,12 @@ function formatRemaining(ms: number) {
 
 export function SessionPanel({
   courseId,
+  courseTitle,
   studentCount,
   autoStart = false,
 }: {
   courseId: string;
+  courseTitle?: string;
   studentCount: number;
   autoStart?: boolean;
 }) {
@@ -79,6 +83,13 @@ export function SessionPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [presentOpen, setPresentOpen] = useState(false);
+  const [demoMode, setDemoMode] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [qr, setQr] = useState<{ code: string; url: string } | null>(null);
   const [teacherLocation, setTeacherLocation] = useState<BrowserLocation | null>(null);
   const [dynamicQr, setDynamicQr] = useState<{
@@ -369,6 +380,25 @@ export function SessionPanel({
               {t("schClose")}
             </Button>
           ) : null}
+          {latestActive ? (
+            <Button
+              onClick={() => {
+                void document.documentElement.requestFullscreen?.().catch(() => void 0);
+                setPresentOpen(true);
+              }}
+            >
+              {t("schPresentOpen")}
+            </Button>
+          ) : null}
+          <label className="flex items-center gap-2 text-sm font-medium text-slate-600">
+            <input
+              type="checkbox"
+              checked={demoMode}
+              onChange={(event) => setDemoMode(event.target.checked)}
+              className="size-4 accent-amber-500"
+            />
+            {t("schDemoMode")}
+          </label>
         </div>
 
         {error ? (
@@ -585,6 +615,21 @@ export function SessionPanel({
           </div>
         ) : null}
       </CardBody>
+      {mounted && presentOpen && latest && latestActive
+        ? createPortal(
+            <SessionPresent
+              courseId={courseId}
+              courseTitle={courseTitle ?? t("schQrSessionTitle")}
+              sessionId={latest.id}
+              sessionKind={latest.kind ?? "CHECK_IN"}
+              expiresAt={latest.expiresAt}
+              studentCount={studentCount}
+              demoMode={demoMode}
+              onClose={() => setPresentOpen(false)}
+            />,
+            document.body,
+          )
+        : null}
     </Card>
   );
 }

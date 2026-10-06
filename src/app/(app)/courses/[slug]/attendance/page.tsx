@@ -180,7 +180,7 @@ export default async function CourseAttendancePage({
           </>
         }
       />
-      <SessionPanel courseId={course.id} studentCount={students.length} autoStart={start === "1"} />
+      <SessionPanel courseId={course.id} courseTitle={course.title} studentCount={students.length} autoStart={start === "1"} />
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[1.2fr_1fr]">
         <AttendanceBulk
           courseId={course.id}
