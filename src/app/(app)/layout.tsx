@@ -31,6 +31,7 @@ export default async function AppLayout({
         { href: "/dashboard", label: dictionary.navDashboard },
         { href: "/courses", label: dictionary.navCourses },
         { href: "/board", label: dictionary.brdTitle },
+        { href: "/labs", label: dictionary.labTitle },
         ...(modules.catalog ? [{ href: "/catalog", label: dictionary.navCatalog }] : []),
         { href: "/electives", label: dictionary.navElectives },
         { href: "/schedule", label: dictionary.navSchedule },

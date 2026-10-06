@@ -47,6 +47,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  transpilePackages: ["@excalidraw/excalidraw"],
   async headers() {
     return [
       {

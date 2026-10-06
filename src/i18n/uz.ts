@@ -7,6 +7,7 @@ import { msg } from "./dict/uz/msg";
 import { adm } from "./dict/uz/adm";
 import { msc } from "./dict/uz/msc";
 import { brd } from "./dict/uz/brd";
+import { lab } from "./dict/uz/lab";
 
 export const uz = {
   commonSave: "Saqlash",
@@ -131,6 +132,7 @@ export const uz = {
   ...adm,
   ...msc,
   ...brd,
+  ...lab,
 };
 
 export type Dictionary = typeof uz;

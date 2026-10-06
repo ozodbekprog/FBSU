@@ -1,8 +1,8 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getDictionary, getLocale } from "@/i18n";
-import { PageHeader } from "@/components/ui";
-import { BoardWorkspace } from "@/components/board/board-workspace";
+import { Card, CardBody, PageHeader } from "@/components/ui";
+import { BoardLoader } from "@/components/board/board-loader";
 
 export default async function BoardPage({
   searchParams,
@@ -24,11 +24,20 @@ export default async function BoardPage({
   return (
     <>
       <PageHeader title={dictionary.brdTitle} subtitle={dictionary.brdSubtitle} />
-      <BoardWorkspace
-        assignmentId={assignment?.id ?? null}
-        assignmentTitle={assignment?.title ?? null}
-        assignmentDescription={assignment?.description ?? null}
-      />
+      {assignment ? (
+        <Card className="mb-4">
+          <CardBody className="space-y-1">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              {dictionary.brdAssignment}
+            </p>
+            <p className="text-sm font-semibold text-slate-800">{assignment.title}</p>
+            {assignment.description ? (
+              <p className="text-sm whitespace-pre-wrap text-slate-600">{assignment.description}</p>
+            ) : null}
+          </CardBody>
+        </Card>
+      ) : null}
+      <BoardLoader assignmentId={assignment?.id ?? null} />
     </>
   );
 }
