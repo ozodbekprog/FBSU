@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import { finalStatusWithoutCheckout } from "@/modules/attendance/participation";
 
 export const AUTO_ABSENT_NOTE = "Avtomatik: QR davomatda belgilanmagan";
+export const AUTO_LEFT_EARLY_NOTE = "Avtomatik: chiqish QR belgilanmagan";
 
 export async function finalizeExpiredAttendanceSessions(courseId?: string): Promise<number> {
   const now = new Date();
@@ -46,6 +48,34 @@ export async function finalizeExpiredAttendanceSessions(courseId?: string): Prom
           })),
           skipDuplicates: true,
         });
+      }
+    }
+
+    const checkoutSessions = await prisma.attendanceSession.count({
+      where: {
+        courseId: session.courseId,
+        date: session.date,
+        kind: "CHECK_OUT",
+      },
+    });
+    if (checkoutSessions > 0) {
+      const unchecked = await prisma.attendance.findMany({
+        where: {
+          courseId: session.courseId,
+          date: session.date,
+          checkOutAt: null,
+          status: { in: ["PRESENT", "LATE"] },
+        },
+        select: { id: true, status: true },
+      });
+      for (const row of unchecked) {
+        const next = finalStatusWithoutCheckout(row.status);
+        if (next !== row.status) {
+          await prisma.attendance.update({
+            where: { id: row.id },
+            data: { status: "LEFT_EARLY", note: AUTO_LEFT_EARLY_NOTE },
+          });
+        }
       }
     }
 

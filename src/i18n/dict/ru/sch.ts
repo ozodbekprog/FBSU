@@ -402,4 +402,13 @@ export const sch = {
   schReasonFaceMissing: "Лицо не подтверждено",
   schReasonFaceMismatch: "Лицо не совпало",
   schFaceRetryHint: "Лицо не подтверждено — отсканируйте лицо ещё раз",
+  schStatusLeftEarly: "Ушёл раньше",
+  schJournalLeftEarly: "Ушёл раньше",
+  schShortLeftEarly: "УР",
+  schStartCheckout: "Открыть QR выхода",
+  schKindCheckIn: "QR входа",
+  schKindCheckOut: "QR выхода",
+  schCheckoutSuccess: "Выход отмечен — вы участвовали в занятии ✓",
+  schCheckoutHint:
+    "В конце занятия откройте «QR выхода». Кто не отметится — автоматически получит «ушёл раньше».",
 };

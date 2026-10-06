@@ -24,6 +24,7 @@ const STATUS_TONES: Record<string, "green" | "rose" | "amber" | "blue" | "purple
   LATE: "amber",
   EXCUSED: "blue",
   SUSPICIOUS: "purple",
+  LEFT_EARLY: "amber",
 };
 
 function dateKey(value: Date) {
@@ -47,6 +48,7 @@ export default async function CourseAttendancePage({
     LATE: dictionary.crsLate,
     EXCUSED: dictionary.crsExcused,
     SUSPICIOUS: dictionary.crsSuspicious,
+    LEFT_EARLY: dictionary.crsLeftEarly,
   };
   const { slug } = await params;
 

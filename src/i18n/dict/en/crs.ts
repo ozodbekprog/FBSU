@@ -372,4 +372,5 @@ export const crs = {
   crsQuizDeleteQuiz: "Delete quiz",
   crsQuizCreate: "Create quiz",
   crsQuizServerError: "Server did not respond",
+  crsLeftEarly: "Left early",
 };

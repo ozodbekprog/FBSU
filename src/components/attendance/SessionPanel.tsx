@@ -12,7 +12,7 @@ import {
   type BrowserLocation,
 } from "./live-qr";
 
-type AttendanceStatusValue = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED" | "SUSPICIOUS";
+type AttendanceStatusValue = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED" | "SUSPICIOUS" | "LEFT_EARLY";
 
 type SessionMark = {
   studentId: string;
@@ -29,6 +29,7 @@ type SessionRow = {
   active: boolean;
   finalizedAt?: string | null;
   isException?: boolean;
+  kind?: "CHECK_IN" | "CHECK_OUT";
   marked: SessionMark[];
 };
 
@@ -38,6 +39,7 @@ const STATUS_TONES: Record<AttendanceStatusValue, "green" | "rose" | "amber" | "
   LATE: "amber",
   EXCUSED: "blue",
   SUSPICIOUS: "amber",
+  LEFT_EARLY: "amber",
 };
 
 const STATUS_LABEL_KEYS = {
@@ -46,6 +48,7 @@ const STATUS_LABEL_KEYS = {
   LATE: "schStatusLate",
   EXCUSED: "schStatusExcused",
   SUSPICIOUS: "schStatusSuspicious",
+  LEFT_EARLY: "schStatusLeftEarly",
 } as const;
 
 const MINUTE_OPTIONS = [5, 10, 15, 30, 60];
@@ -240,12 +243,12 @@ export function SessionPanel({
     return Math.max(0, Math.min(1, remainingMs / total));
   }, [latest, remainingMs]);
 
-  async function startSession() {
+  async function startSession(kind: "CHECK_IN" | "CHECK_OUT" = "CHECK_IN") {
     setBusy(true);
     setError(null);
     const response = await apiFetch("/api/attendance/sessions", {
       method: "POST",
-      body: JSON.stringify({ courseId, minutes }),
+      body: JSON.stringify({ courseId, minutes, kind }),
     });
     const json = (await response.json().catch(() => null)) as
       | { ok?: boolean; error?: string }
@@ -340,11 +343,20 @@ export function SessionPanel({
           </div>
           <Button
             onClick={() => {
-              void startSession();
+              void startSession("CHECK_IN");
             }}
             disabled={busy}
           >
             {hasActive ? t("schNewSession") : t("schStartSession")}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              void startSession("CHECK_OUT");
+            }}
+            disabled={busy}
+          >
+            {t("schStartCheckout")}
           </Button>
           {latestActive ? (
             <Button
@@ -401,6 +413,11 @@ export function SessionPanel({
 
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
+                {latest.kind === "CHECK_OUT" ? (
+                  <Badge tone="amber">{t("schKindCheckOut")}</Badge>
+                ) : (
+                  <Badge tone="blue">{t("schKindCheckIn")}</Badge>
+                )}
                 {latestActive ? (
                   <Badge tone="green" className="shadow-sm shadow-emerald-500/20">
                     {t("schActive")}

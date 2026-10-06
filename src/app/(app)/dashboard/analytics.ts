@@ -32,6 +32,7 @@ const ATTENDANCE_COLORS: Record<AttendanceStatus, string> = {
   EXCUSED: "#64748b",
   ABSENT: "#f43f5e",
   SUSPICIOUS: "#a855f7",
+  LEFT_EARLY: "#f97316",
 };
 
 const ATTENDANCE_LABELS: Record<AttendanceStatus, keyof Dictionary> = {
@@ -40,6 +41,7 @@ const ATTENDANCE_LABELS: Record<AttendanceStatus, keyof Dictionary> = {
   EXCUSED: "dashAttendanceExcused",
   ABSENT: "dashAttendanceAbsent",
   SUSPICIOUS: "dashAttendanceSuspicious",
+  LEFT_EARLY: "dashAttendanceLeftEarly",
 };
 
 const SUBMISSION_COLORS: Record<SubmissionStatus, string> = {
@@ -161,6 +163,7 @@ export async function getStudentAnalytics(
     EXCUSED: 0,
     ABSENT: 0,
     SUSPICIOUS: 0,
+    LEFT_EARLY: 0,
   };
   const byCourse = new Map<string, AttendanceStatus[]>();
   for (const record of records) {

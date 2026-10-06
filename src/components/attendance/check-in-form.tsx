@@ -15,6 +15,7 @@ type CheckInResult = {
   date: string;
   status?: string;
   reasons?: string[];
+  checkout?: boolean;
 };
 
 const REASON_KEYS = {
@@ -220,7 +221,9 @@ export function CheckInForm({
               </svg>
             </span>
           </span>
-          <p className="mt-2 text-xl font-semibold text-emerald-800">{t("schAttendanceMarked")}</p>
+          <p className="mt-2 text-xl font-semibold text-emerald-800">
+            {result.checkout ? t("schCheckoutSuccess") : t("schAttendanceMarked")}
+          </p>
           <p className="text-sm font-medium text-slate-700">{result.course.title}</p>
           <p className="text-sm text-slate-500">{fmtDate(`${result.date}T00:00:00.000Z`)}</p>
           <Button

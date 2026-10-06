@@ -47,6 +47,7 @@ export const ATTENDANCE_CODES: Record<AttendanceStatus, string> = {
   LATE: "L",
   EXCUSED: "E",
   SUSPICIOUS: "S",
+  LEFT_EARLY: "V",
 };
 
 export function dateKey(date: Date) {

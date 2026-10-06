@@ -6,7 +6,7 @@ import { Avatar, Button, Card, CardBody, CardHeader, Input, Label } from "@/comp
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 
-export type AttendanceStatusValue = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED" | "SUSPICIOUS";
+export type AttendanceStatusValue = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED" | "SUSPICIOUS" | "LEFT_EARLY";
 
 function todayIso() {
   const date = new Date();
@@ -36,6 +36,7 @@ export function AttendanceBulk({
     { value: "LATE", short: "L", label: t("crsLate"), active: "bg-amber-500 text-white shadow-sm" },
     { value: "EXCUSED", short: "E", label: t("crsExcused"), active: "bg-brand-600 text-white shadow-sm" },
     { value: "SUSPICIOUS", short: "Sh", label: t("crsSuspicious"), active: "bg-violet-500 text-white shadow-sm" },
+    { value: "LEFT_EARLY", short: "VT", label: t("crsLeftEarly"), active: "bg-orange-500 text-white shadow-sm" },
   ];
   const [date, setDate] = useState(todayIso());
   const [draft, setDraft] = useState<Record<string, AttendanceStatusValue>>({});

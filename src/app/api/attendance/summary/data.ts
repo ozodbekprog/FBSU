@@ -10,6 +10,7 @@ export type AttendanceCounts = {
   late: number;
   excused: number;
   suspicious: number;
+  leftEarly: number;
   total: number;
   percent: number;
   eligible: boolean;
@@ -34,6 +35,7 @@ export function attendanceCounts(statuses: AttendanceStatus[]): AttendanceCounts
     LATE: 0,
     EXCUSED: 0,
     SUSPICIOUS: 0,
+    LEFT_EARLY: 0,
   };
   for (const status of statuses) totals[status] += 1;
   const total = statuses.length;
@@ -48,6 +50,7 @@ export function attendanceCounts(statuses: AttendanceStatus[]): AttendanceCounts
     late: totals.LATE,
     excused: totals.EXCUSED,
     suspicious: totals.SUSPICIOUS,
+    leftEarly: totals.LEFT_EARLY,
     total,
     percent,
     eligible: percent >= EXAM_MIN_PERCENT,
