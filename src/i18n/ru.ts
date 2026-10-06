@@ -7,6 +7,7 @@ import { grd } from "./dict/ru/grd";
 import { msg } from "./dict/ru/msg";
 import { adm } from "./dict/ru/adm";
 import { msc } from "./dict/ru/msc";
+import { brd } from "./dict/ru/brd";
 
 export const ru: Dictionary = {
   commonSave: "Сохранить",
@@ -130,4 +131,5 @@ export const ru: Dictionary = {
   ...msg,
   ...adm,
   ...msc,
+  ...brd,
 };
