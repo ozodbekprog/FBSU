@@ -9,6 +9,13 @@ import { apiFetch } from "@/lib/api";
 
 type Mark = { studentId: string; name: string; status: string };
 
+const DOT_TONES: Record<string, string> = {
+  PRESENT: "bg-emerald-400",
+  LEFT_EARLY: "bg-emerald-400",
+  LATE: "bg-amber-400",
+  SUSPICIOUS: "bg-rose-400",
+};
+
 type SessionsResponse = {
   ok?: boolean;
   data?: { sessions: { id: string; marked: Mark[] }[] };
@@ -104,7 +111,9 @@ export function SessionPresent({
     if (!response.ok || !json?.ok || !json.data) return;
     const session = json.data.sessions.find((row) => row.id === sessionId);
     if (!session) return;
-    const next = session.marked ?? [];
+    const next = (session.marked ?? []).filter(
+      (mark) => mark.status !== "ABSENT" && mark.status !== "EXCUSED",
+    );
     const seen = seenRef.current;
     if (!initializedRef.current) {
       for (const mark of next) seen.add(mark.studentId);
@@ -145,12 +154,19 @@ export function SessionPresent({
       body: JSON.stringify({}),
     });
     const json = (await response.json().catch(() => null)) as
-      | { ok?: boolean; error?: string }
+      | { ok?: boolean; error?: string; data?: { studentId: string; name: string } }
       | null;
     setSimulating(false);
     if (!response.ok || !json?.ok) {
       setDemoError(json?.error ?? t("schDemoEmpty"));
       return;
+    }
+    const data = json.data;
+    if (data?.studentId && data.name) {
+      seenRef.current.add(data.studentId);
+      setToast(t("schPresentArrived", { name: data.name }));
+      window.clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = window.setTimeout(() => setToast(null), 3200);
     }
     await loadMarks();
   }
@@ -228,7 +244,7 @@ export function SessionPresent({
                   {marks.map((mark) => (
                     <li key={mark.studentId} className="animate-pop-in">
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-sm ring-1 ring-white/10">
-                        <span className="size-1.5 rounded-full bg-emerald-400" />
+                        <span className={`size-1.5 rounded-full ${DOT_TONES[mark.status] ?? "bg-emerald-400"}`} />
                         {mark.name}
                       </span>
                     </li>

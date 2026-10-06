@@ -70,39 +70,84 @@ export async function POST(
   const students = enrolled.filter((row) => row.user.role === "STUDENT");
   const marked = await prisma.attendance.findMany({
     where: { courseId: session.courseId, date: session.date },
-    select: { studentId: true },
+    select: { studentId: true, status: true },
   });
   const markedIds = new Set(marked.map((row) => row.studentId));
   const remaining = students.filter((row) => !markedIds.has(row.user.id));
-  if (remaining.length === 0) {
+
+  if (remaining.length > 0) {
+    const pick = remaining[Math.floor(Math.random() * remaining.length)];
+    const attendance = await prisma.attendance.create({
+      data: {
+        courseId: session.courseId,
+        studentId: pick.user.id,
+        date: session.date,
+        status: "PRESENT",
+        note: "Demo simulyatsiya",
+      },
+    });
+    await prisma.auditLog.create({
+      data: {
+        actorId: user.id,
+        action: "attendance.demo-simulate",
+        entity: "Attendance",
+        entityId: attendance.id,
+        meta: { sessionId: session.id, courseId: session.courseId, studentId: pick.user.id },
+      },
+    });
+    return Response.json({
+      ok: true,
+      data: { studentId: pick.user.id, name: pick.user.name, status: "PRESENT", demo: true },
+    });
+  }
+
+  const studentIds = new Set(students.map((row) => row.user.id));
+  const fallback = marked.filter((row) => studentIds.has(row.studentId) && row.status !== "PRESENT");
+  if (fallback.length === 0) {
     return Response.json(
-      { ok: false, error: "Barcha talabalar allaqachon belgilangan" },
+      { ok: false, error: "Simulyatsiya uchun talaba qolmadi" },
       { status: 400 },
     );
   }
-
-  const pick = remaining[Math.floor(Math.random() * remaining.length)];
-  const attendance = await prisma.attendance.create({
-    data: {
-      courseId: session.courseId,
-      studentId: pick.user.id,
-      date: session.date,
-      status: "PRESENT",
-      note: "Demo simulyatsiya",
+  const pick = fallback[Math.floor(Math.random() * fallback.length)];
+  const existing = await prisma.attendance.findUnique({
+    where: {
+      courseId_studentId_date: {
+        courseId: session.courseId,
+        studentId: pick.studentId,
+        date: session.date,
+      },
     },
+    include: { student: { select: { id: true, name: true } } },
+  });
+  if (!existing) {
+    return Response.json(
+      { ok: false, error: "Simulyatsiya uchun talaba qolmadi" },
+      { status: 400 },
+    );
+  }
+  const updated = await prisma.attendance.update({
+    where: { id: existing.id },
+    data: { status: "PRESENT", note: "Demo simulyatsiya" },
   });
   await prisma.auditLog.create({
     data: {
       actorId: user.id,
       action: "attendance.demo-simulate",
       entity: "Attendance",
-      entityId: attendance.id,
-      meta: { sessionId: session.id, courseId: session.courseId, studentId: pick.user.id },
+      entityId: updated.id,
+      meta: {
+        sessionId: session.id,
+        courseId: session.courseId,
+        studentId: pick.studentId,
+        previousStatus: existing.status,
+        previousNote: existing.note,
+      },
     },
   });
 
   return Response.json({
     ok: true,
-    data: { studentId: pick.user.id, name: pick.user.name, status: "PRESENT", demo: true },
+    data: { studentId: pick.studentId, name: existing.student.name, status: "PRESENT", demo: true },
   });
 }
