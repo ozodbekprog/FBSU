@@ -8,15 +8,17 @@ type LandmarkPoint = { x: number; y: number };
 type LandmarksLike = {
   getLeftEye: () => LandmarkPoint[];
   getRightEye: () => LandmarkPoint[];
+  getNose: () => LandmarkPoint[];
+  getMouth: () => LandmarkPoint[];
 };
 type FaceApi = typeof import("@vladmandic/face-api");
 type ModelProgress = { loaded: number; total: number; ready: boolean };
 
-const EAR_CLOSED = 0.21;
-const EAR_OPEN = 0.24;
-const BLINK_TIMEOUT_MS = 12_000;
+const LIVENESS_TIMEOUT_MS = 20_000;
 const NO_FACE_TIMEOUT_MS = 20_000;
-const DETECT_INTERVAL_MS = 130;
+const DETECT_INTERVAL_MS = 100;
+const SLOW_FRAME_MS = 200;
+const SLOW_FRAME_AFTER = 15;
 
 let modelsPromise: Promise<FaceApi> | null = null;
 let modelProgress: ModelProgress = { loaded: 0, total: 3, ready: false };
@@ -72,6 +74,16 @@ function distance(a: LandmarkPoint, b: LandmarkPoint): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
+function center(points: LandmarkPoint[]): LandmarkPoint {
+  let sumX = 0;
+  let sumY = 0;
+  for (const point of points) {
+    sumX += point.x;
+    sumY += point.y;
+  }
+  return { x: sumX / points.length, y: sumY / points.length };
+}
+
 function eyeAspectRatio(landmarks: LandmarksLike): number {
   const measure = (eye: LandmarkPoint[]) => {
     if (eye.length < 6) return 0.3;
@@ -80,6 +92,30 @@ function eyeAspectRatio(landmarks: LandmarksLike): number {
     return horizontal === 0 ? 0.3 : vertical / horizontal;
   };
   return (measure(landmarks.getLeftEye()) + measure(landmarks.getRightEye())) / 2;
+}
+
+function faceScale(landmarks: LandmarksLike): number {
+  const leftEye = center(landmarks.getLeftEye());
+  const rightEye = center(landmarks.getRightEye());
+  return distance(leftEye, rightEye);
+}
+
+function mouthRatio(landmarks: LandmarksLike): number {
+  const scale = faceScale(landmarks);
+  const mouth = landmarks.getMouth();
+  if (scale === 0 || mouth.length < 7) return 1;
+  return distance(mouth[0], mouth[6]) / scale;
+}
+
+function yawOffset(landmarks: LandmarksLike): number {
+  const scale = faceScale(landmarks);
+  const nose = landmarks.getNose();
+  if (scale === 0 || nose.length === 0) return 0;
+  const leftEye = center(landmarks.getLeftEye());
+  const rightEye = center(landmarks.getRightEye());
+  const eyeCenterX = (leftEye.x + rightEye.x) / 2;
+  const tip = nose[Math.floor(nose.length / 2)];
+  return (tip.x - eyeCenterX) / scale;
 }
 
 export function FaceScan({
@@ -107,10 +143,15 @@ export function FaceScan({
     let stream: MediaStream | null = null;
     let stopped = false;
     let timer = 0;
+    let blinkDone = false;
     let closedSeen = false;
-    let blinked = false;
-    let blinkDeadline = 0;
+    let smileFrames = 0;
+    let turnFrames = 0;
+    let livenessDeadline = 0;
     let noFaceSince = 0;
+    let earBaseline = 0;
+    let mouthBaseline = 1;
+    let yawBaseline = 0;
     const unsubscribe = subscribeProgress(setProgress);
 
     function stop() {
@@ -127,10 +168,15 @@ export function FaceScan({
     async function start() {
       setStatus("loading");
       setCameraOn(false);
+      blinkDone = false;
       closedSeen = false;
-      blinked = false;
-      blinkDeadline = 0;
+      smileFrames = 0;
+      turnFrames = 0;
+      livenessDeadline = 0;
       noFaceSince = 0;
+      earBaseline = 0;
+      mouthBaseline = 1;
+      yawBaseline = 0;
       try {
         if (!navigator.mediaDevices?.getUserMedia) {
           setStatus("error");
@@ -156,7 +202,7 @@ export function FaceScan({
         const faceapi = await models;
         if (stopped) return;
 
-        const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.4 });
+        let options = new faceapi.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.4 });
         try {
           await faceapi.detectSingleFace(video, options).withFaceLandmarks().withFaceDescriptor();
         } catch {
@@ -164,6 +210,9 @@ export function FaceScan({
         }
         if (stopped) return;
         setStatus("searching");
+
+        let frameAvg = 0;
+        let frameCount = 0;
 
         async function tick() {
           if (stopped) return;
@@ -173,10 +222,17 @@ export function FaceScan({
             return;
           }
           try {
+            const frameStart = performance.now();
             const result = await faceapi.detectSingleFace(videoEl, options).withFaceLandmarks();
+            const frameTime = performance.now() - frameStart;
+            frameAvg = frameAvg === 0 ? frameTime : frameAvg * 0.75 + frameTime * 0.25;
+            frameCount += 1;
+            if (frameCount === SLOW_FRAME_AFTER && frameAvg > SLOW_FRAME_MS) {
+              options = new faceapi.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.4 });
+            }
             if (stopped) return;
             if (!result?.landmarks) {
-              if (blinkDeadline > 0 && Date.now() > blinkDeadline) {
+              if (livenessDeadline > 0 && Date.now() > livenessDeadline) {
                 setStatus("noblink");
                 return;
               }
@@ -189,17 +245,40 @@ export function FaceScan({
               return;
             }
             noFaceSince = 0;
-            if (blinkDeadline === 0) {
-              blinkDeadline = Date.now() + BLINK_TIMEOUT_MS;
+            if (livenessDeadline === 0) {
+              livenessDeadline = Date.now() + LIVENESS_TIMEOUT_MS;
               setStatus("blink");
             }
-            const ear = eyeAspectRatio(result.landmarks);
-            if (ear < EAR_CLOSED) {
-              closedSeen = true;
-            } else if (closedSeen && ear > EAR_OPEN) {
-              blinked = true;
+            const landmarks = result.landmarks;
+            const ear = eyeAspectRatio(landmarks);
+            const ratio = mouthRatio(landmarks);
+            const yaw = yawOffset(landmarks);
+            let livenessPassed = false;
+            if (earBaseline === 0) {
+              if (ear > 0.18) {
+                earBaseline = ear;
+                mouthBaseline = ratio;
+                yawBaseline = yaw;
+              }
+            } else {
+              const blinkThreshold = Math.min(0.2, earBaseline * 0.72);
+              if (ear < blinkThreshold) {
+                closedSeen = true;
+              } else if (closedSeen && ear > earBaseline * 0.85) {
+                blinkDone = true;
+              }
+              if (ratio > mouthBaseline * 1.14) smileFrames += 1;
+              else smileFrames = 0;
+              if (Math.abs(yaw - yawBaseline) > 0.25) turnFrames += 1;
+              else turnFrames = 0;
+              livenessPassed = blinkDone || smileFrames >= 2 || turnFrames >= 2;
+              if (!livenessPassed) {
+                earBaseline += (ear - earBaseline) * 0.03;
+                mouthBaseline += (ratio - mouthBaseline) * 0.03;
+                yawBaseline += (yaw - yawBaseline) * 0.03;
+              }
             }
-            if (blinked) {
+            if (livenessPassed) {
               setStatus("found");
               try {
                 navigator.vibrate?.(80);
@@ -218,10 +297,10 @@ export function FaceScan({
               const descriptor = Array.from(full.descriptor);
               window.setTimeout(() => {
                 if (!stopped) descriptorRef.current(descriptor);
-              }, 420);
+              }, 260);
               return;
             }
-            if (Date.now() > blinkDeadline) {
+            if (Date.now() > livenessDeadline) {
               setStatus("noblink");
               return;
             }
@@ -284,7 +363,7 @@ export function FaceScan({
         />
 
         {status === "loading" ? (
-          <div className="absolute inset-0 grid place-items-center bg-slate-950/65 backdrop-blur-[2px] animate-fade-in">
+          <div className="absolute inset-0 grid animate-fade-in place-items-center bg-slate-950/65 backdrop-blur-[2px]">
             <div className="flex w-60 flex-col items-center gap-4">
               <span className="relative flex size-20 items-center justify-center">
                 <span className="absolute inset-0 animate-pulse-ring rounded-full bg-brand-400/40" />
@@ -343,13 +422,18 @@ export function FaceScan({
         ) : null}
 
         {status === "blink" ? (
-          <span className="pointer-events-none absolute inset-x-0 bottom-4 flex animate-fade-in items-center justify-center gap-1.5 text-center text-xs font-semibold text-amber-300">
-            <svg className="animate-pulse" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-            {t("schFaceBlinkHint")}
-          </span>
+          <>
+            <span className="pointer-events-none absolute inset-x-0 bottom-4 flex animate-fade-in items-center justify-center gap-1.5 text-center text-xs font-semibold text-amber-300">
+              <svg className="animate-pulse" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              {t("schFaceBlinkHint")}
+            </span>
+            <span className="pointer-events-none absolute inset-x-8 bottom-1.5 h-0.5 overflow-hidden rounded-full bg-white/15">
+              <span className="block h-full w-full animate-countdown rounded-full bg-amber-300/90" />
+            </span>
+          </>
         ) : null}
 
         {status === "found" ? (

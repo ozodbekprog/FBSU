@@ -39,6 +39,7 @@
   --animate-pulse-ring: pulse-ring 2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
   --animate-scanline: scanline 2.6s ease-in-out infinite;
   --animate-pop-in: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  --animate-countdown: countdown 20s linear both;
 
   @keyframes fade-up {
     from {
@@ -135,6 +136,15 @@
     100% {
       transform: scale(1);
       opacity: 1;
+    }
+  }
+
+  @keyframes countdown {
+    from {
+      width: 100%;
+    }
+    to {
+      width: 0%;
     }
   }
 }
