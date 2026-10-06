@@ -398,6 +398,7 @@ export const sch = {
   schFaceBlink: "Iltimos, sekin miltillang",
   schFaceBlinkHint: "Jonli ekaningizni tasdiqlash uchun miltillang",
   schFaceNoBlink: "Miltillash aniqlanmadi. Yaxshi yorug'likda qayta urinib ko'ring.",
+  schFaceNoFace: "Yuz aniqlanmadi — kameraga to'g'ri qarab, qayta urinib ko'ring",
   schFaceRetry: "Qayta urinish",
   schFaceCancel: "Bekor qilish",
   schFaceStep: "Joylashuv aniqlandi — endi yuzingizni tasdiqlang",

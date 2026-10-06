@@ -397,6 +397,7 @@ export const sch = {
   schFaceBlink: "Please blink slowly",
   schFaceBlinkHint: "Blink to confirm you are a live person",
   schFaceNoBlink: "No blink detected. Try again in good lighting.",
+  schFaceNoFace: "No face detected — look straight into the camera and try again",
   schFaceRetry: "Retry",
   schFaceCancel: "Cancel",
   schFaceStep: "Location confirmed — now verify your face",

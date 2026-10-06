@@ -15,6 +15,7 @@ type ModelProgress = { loaded: number; total: number; ready: boolean };
 const EAR_CLOSED = 0.21;
 const EAR_OPEN = 0.24;
 const BLINK_TIMEOUT_MS = 12_000;
+const NO_FACE_TIMEOUT_MS = 20_000;
 const DETECT_INTERVAL_MS = 130;
 
 let modelsPromise: Promise<FaceApi> | null = null;
@@ -91,7 +92,7 @@ export function FaceScan({
   const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const descriptorRef = useRef(onDescriptor);
-  const [status, setStatus] = useState<"loading" | "searching" | "blink" | "found" | "noblink" | "error">(
+  const [status, setStatus] = useState<"loading" | "searching" | "blink" | "found" | "noblink" | "noface" | "error">(
     "loading",
   );
   const [cameraOn, setCameraOn] = useState(false);
@@ -109,6 +110,7 @@ export function FaceScan({
     let closedSeen = false;
     let blinked = false;
     let blinkDeadline = 0;
+    let noFaceSince = 0;
     const unsubscribe = subscribeProgress(setProgress);
 
     function stop() {
@@ -128,6 +130,7 @@ export function FaceScan({
       closedSeen = false;
       blinked = false;
       blinkDeadline = 0;
+      noFaceSince = 0;
       try {
         if (!navigator.mediaDevices?.getUserMedia) {
           setStatus("error");
@@ -177,9 +180,15 @@ export function FaceScan({
                 setStatus("noblink");
                 return;
               }
+              if (noFaceSince === 0) noFaceSince = Date.now();
+              if (Date.now() - noFaceSince > NO_FACE_TIMEOUT_MS) {
+                setStatus("noface");
+                return;
+              }
               timer = window.setTimeout(tick, DETECT_INTERVAL_MS);
               return;
             }
+            noFaceSince = 0;
             if (blinkDeadline === 0) {
               blinkDeadline = Date.now() + BLINK_TIMEOUT_MS;
               setStatus("blink");
@@ -243,9 +252,11 @@ export function FaceScan({
             ? t("schFaceFound")
             : status === "noblink"
               ? t("schFaceNoBlink")
-              : t("schFacePermission");
+              : status === "noface"
+                ? t("schFaceNoFace")
+                : t("schFacePermission");
 
-  const isError = status === "error" || status === "noblink";
+  const isError = status === "error" || status === "noblink" || status === "noface";
   const steps = [
     { label: t("schFaceStepCamera"), done: cameraOn },
     { label: t("schFaceStepModels"), done: progress.ready },
