@@ -503,6 +503,87 @@ function Admin() {
   );
 }
 
+/** Onlayn daftar — doska + chizilgan chiziq + kalit. */
+function Board() {
+  return (
+    <group>
+      <Tile a={[1.98, 1.44, 0.22]} m="brandDeep" p={[0, 0, -0.1]} radius={0.12} />
+      <Tile a={[1.76, 1.22, 0.1]} m="paper" p={[0, 0, 0.04]} radius={0.05} />
+      {/* doska ustidagi chizilgan chiziqlar */}
+      <Cube a={[0.86, 0.09, 0.06]} m="brand" p={[-0.24, 0.3, 0.11]} r={[0, 0, 0.16]} />
+      <Cube a={[0.62, 0.08, 0.06]} m="brandLight" p={[-0.36, 0.02, 0.11]} r={[0, 0, -0.1]} />
+      <Cube a={[0.34, 0.07, 0.06]} m="gold" p={[0.52, 0.26, 0.11]} r={[0, 0, 0.5]} />
+      {/* chizilgan doira */}
+      <Ring rad={0.19} tube={0.045} m="gold" p={[0.42, -0.22, 0.11]} />
+      {/* yozuv kaliti — burchakka qiyiq */}
+      <Cyl rt={0.075} h={0.72} m="gold" p={[0.76, 0.52, 0.3]} r={[0, 0, PI / 5]} />
+      <Cyl rt={0.075} rb={0.015} h={0.2} m="paper" p={[0.98, 0.36, 0.3]} r={[0, 0, PI / 5]} />
+    </group>
+  );
+}
+
+/** Laboratoriya — shisha stakan, suyuq va ko'tarilayotgan pufakchalar. */
+function Labs() {
+  return (
+    <group>
+      {/* stakan tanasi va bo'yin */}
+      <Cyl rt={0.66} rb={0.5} h={0.82} seg={26} m="brand" p={[0, -0.32, 0]} />
+      <Cyl rt={0.28} rb={0.36} h={0.6} seg={22} m="brand" p={[0, 0.34, 0]} />
+      <Ring rad={0.3} tube={0.075} m="brandLight" p={[0, 0.62, 0]} r={[PI / 2, 0, 0]} />
+      {/* oltin suyuq */}
+      <Cyl rt={0.55} h={0.3} seg={24} m="gold" p={[0, -0.5, 0]} />
+      <Cyl rt={0.58} h={0.06} seg={24} m="goldLight" p={[0, -0.35, 0]} />
+      {/* pufakchalar */}
+      <Ball rad={0.14} m="goldLight" p={[-0.2, 0.02, 0.16]} />
+      <Ball rad={0.1} m="paper" p={[0.18, 0.24, 0.1]} />
+      {/* asos */}
+      <Cyl rt={0.58} rb={0.62} h={0.14} seg={24} m="brandDeep" p={[0, -0.78, 0]} />
+      {/* o'lchov chizig'i */}
+      <Cube a={[0.5, 0.05, 0.05]} m="paper" p={[0.74, -0.2, 0.42]} />
+      <Cube a={[0.34, 0.05, 0.05]} m="paper" p={[0.8, -0.44, 0.42]} />
+    </group>
+  );
+}
+
+/** Tasdiqlash — hujjat va oltin muhr. */
+function Approvals() {
+  return (
+    <group>
+      <Tile a={[1.36, 1.72, 0.2]} m="paper" p={[-0.12, 0, 0]} radius={0.08} />
+      {[0.5, 0.2, -0.1].map((y, i) => (
+        <Cube key={y} a={[i === 2 ? 0.56 : 0.88, 0.08, 0.07]} m="brandDeep" p={[-0.18, y, 0.12]} />
+      ))}
+      {/* oltin muhr */}
+      <Cyl rt={0.46} rb={0.46} h={0.16} seg={26} m="gold" p={[0.5, -0.62, 0.3]} />
+      <Cyl rt={0.34} rb={0.34} h={0.06} seg={26} m="goldLight" p={[0.5, -0.54, 0.3]} />
+      {/* muhr ustidagi tekshiruv belgisi */}
+      <Cube a={[0.5, 0.11, 0.08]} m="brandDeep" p={[0.46, -0.62, 0.4]} r={[0, 0, 0.78]} />
+      <Cube a={[0.26, 0.1, 0.08]} m="brandDeep" p={[0.62, -0.74, 0.4]} r={[0, 0, -0.78]} />
+      {/* qalam */}
+      <Cyl rt={0.07} h={0.6} m="brandLight" p={[-0.78, 0.66, 0.2]} r={[0, 0, PI / 3.4]} />
+      <Cyl rt={0.07} rb={0.01} h={0.16} m="gold" p={[-0.46, 1.02, 0.2]} r={[0, 0, PI / 3.4]} />
+    </group>
+  );
+}
+
+/** Monitoring — signal pulsatsiyasi va o'lchash nuqtalari. */
+function Monitoring() {
+  return (
+    <group>
+      <Cyl rt={0.86} rb={0.86} h={0.3} seg={30} m="brandDeep" r={[PI / 2, 0, 0]} />
+      <Ring rad={0.86} tube={0.1} m="gold" />
+      {/* pulsatsiya egri chizig'i */}
+      <Ring rad={0.56} tube={0.075} arc={PI * 0.62} m="goldLight" p={[0, 0, 0.18]} r={[0, 0, PI * 0.82]} />
+      <Cube a={[0.12, 0.42, 0.09]} m="brand" p={[0.16, 0.2, 0.2]} r={[0, 0, 0.34]} />
+      <Cube a={[0.12, 0.3, 0.09]} m="brand" p={[-0.12, 0.12, 0.2]} r={[0, 0, -0.34]} />
+      {/* markaziy nuqta */}
+      <Ball rad={0.17} m="gold" p={[0, 0, 0.24]} />
+      {/* o'lchash chapquni */}
+      <Cyl rt={0.09} h={0.5} m="brandLight" p={[0, 0, -0.3]} r={[PI / 2, 0, 0]} />
+    </group>
+  );
+}
+
 export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/dashboard": Gauge,
   "/courses": Courses,
@@ -531,6 +612,10 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/reports": Reports,
   "/workload": Workload,
   "/admin": Admin,
+  "/board": Board,
+  "/labs": Labs,
+  "/approvals": Approvals,
+  "/monitoring": Monitoring,
 };
 
 export const NAV3D_SPINNING = new Set([
