@@ -93,6 +93,8 @@ model User {
   bonusPointsAwarded   BonusPoint[]       @relation("BonusPointAwardedBy")
   gradeChangeRequests  GradeChangeRequest[] @relation("GradeChangeRequester")
   gradeChangeReviews   GradeChangeRequest[] @relation("GradeChangeReviewer")
+  oralDefenses         OralDefense[]        @relation("OralDefenseStudent")
+  oralDefenseRequests  OralDefense[]        @relation("OralDefenseRequester")
   departmentId         String?
   department           Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   attendanceSessions   AttendanceSession[]
@@ -214,8 +216,43 @@ model Assignment {
   maxScore    Int       @default(100)
   createdAt   DateTime  @default(now())
 
-  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  submissions Submission[]
+  course       Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  submissions  Submission[]
+  oralDefenses OralDefense[]
+}
+
+enum OralDefenseStatus {
+  REQUESTED
+  ACCEPTED
+  DECLINED
+  DONE
+  CANCELLED
+}
+
+enum OralDefenseResult {
+  PASSED
+  FAILED
+}
+
+model OralDefense {
+  id            String             @id @default(cuid())
+  assignmentId  String
+  studentId     String
+  requestedById String
+  status        OralDefenseStatus  @default(REQUESTED)
+  note          String?
+  scheduledAt   DateTime?
+  result        OralDefenseResult?
+  resultNote    String?
+  createdAt     DateTime           @default(now())
+  decidedAt     DateTime?
+
+  assignment  Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student     User       @relation("OralDefenseStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  requestedBy User       @relation("OralDefenseRequester", fields: [requestedById], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, studentId])
+  @@index([studentId])
 }
 
 model Submission {
