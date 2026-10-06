@@ -15,6 +15,8 @@ import { cn, fmtDate, fmtDateTime, gradeColor, scorePercent } from "@/lib/utils"
 import { canManageCourse } from "@/components/courses/course-access";
 import { AssignmentsGrade } from "@/components/courses/assignments-grade";
 import { AssignmentsSubmit } from "@/components/courses/assignments-submit";
+import { OralDefenseCard } from "@/components/courses/oral-defense-card";
+import { OralDefensePanel } from "@/components/courses/oral-defense-panel";
 import { DueChip, SubmissionBadge } from "@/components/courses/assignments-status";
 
 function DownloadIcon() {
@@ -170,6 +172,7 @@ export default async function AssignmentDetailPage({
         <PageHeader title={assignment.title} subtitle={course.title} action={back} />
         <div className="space-y-6">
           {infoCard}
+          <OralDefensePanel assignmentId={id} courseId={course.id} />
           <AssignmentsGrade
             maxScore={assignment.maxScore}
             canDirectGrade={user.role !== "TEACHER"}
@@ -324,6 +327,7 @@ export default async function AssignmentDetailPage({
             )}
           </CardBody>
         </Card>
+        <OralDefenseCard assignmentId={id} />
       </div>
     </>
   );
