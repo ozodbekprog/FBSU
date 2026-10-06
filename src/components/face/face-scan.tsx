@@ -127,11 +127,17 @@ export function FaceScan({
 }) {
   const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const meshRef = useRef<HTMLCanvasElement | null>(null);
+  const meshTargetRef = useRef<{ x: number; y: number }[] | null>(null);
+  const meshRenderedRef = useRef<{ x: number; y: number }[] | null>(null);
+  const meshAlphaRef = useRef(0);
+  const greenRef = useRef(false);
   const descriptorRef = useRef(onDescriptor);
   const [status, setStatus] = useState<"loading" | "searching" | "blink" | "found" | "noblink" | "noface" | "error">(
     "loading",
   );
   const [cameraOn, setCameraOn] = useState(false);
+  const [cueHint, setCueHint] = useState<"none" | "blink" | "smile" | "turn">("none");
   const [progress, setProgress] = useState<ModelProgress>({ loaded: 0, total: 3, ready: false });
   const [attempt, setAttempt] = useState(0);
 
@@ -152,17 +158,75 @@ export function FaceScan({
     let earBaseline = 0;
     let mouthBaseline = 1;
     let yawBaseline = 0;
+    let rafMesh = 0;
+    let lastCue: "none" | "blink" | "smile" | "turn" = "none";
     const unsubscribe = subscribeProgress(setProgress);
 
     function stop() {
       stopped = true;
       window.clearTimeout(timer);
+      window.cancelAnimationFrame(rafMesh);
       unsubscribe();
       if (stream) {
         for (const track of stream.getTracks()) {
           track.stop();
         }
       }
+    }
+
+    function drawMesh() {
+      if (stopped) return;
+      const canvas = meshRef.current;
+      const video = videoRef.current;
+      if (canvas && video) {
+        const dpr = window.devicePixelRatio || 1;
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
+          canvas.width = Math.round(width * dpr);
+          canvas.height = Math.round(height * dpr);
+        }
+        const context = canvas.getContext("2d");
+        if (context) {
+          const target = meshTargetRef.current;
+          meshAlphaRef.current += ((target ? 1 : 0) - meshAlphaRef.current) * 0.15;
+          if (target) {
+            let rendered = meshRenderedRef.current;
+            if (!rendered || rendered.length !== target.length) {
+              rendered = target.map((point) => ({ x: point.x, y: point.y }));
+              meshRenderedRef.current = rendered;
+            } else {
+              for (let index = 0; index < rendered.length; index += 1) {
+                rendered[index].x += (target[index].x - rendered[index].x) * 0.35;
+                rendered[index].y += (target[index].y - rendered[index].y) * 0.35;
+              }
+            }
+          }
+          context.setTransform(dpr, 0, 0, dpr, 0, 0);
+          context.clearRect(0, 0, width, height);
+          const rendered = meshRenderedRef.current;
+          const alpha = meshAlphaRef.current;
+          if (rendered && alpha > 0.03 && video.videoWidth > 0) {
+            const scale = Math.max(width / video.videoWidth, height / video.videoHeight);
+            const offsetX = (width - video.videoWidth * scale) / 2;
+            const offsetY = (height - video.videoHeight * scale) / 2;
+            const color = greenRef.current ? "52,211,153" : "34,211,238";
+            for (const point of rendered) {
+              const x = width - (offsetX + point.x * scale);
+              const y = offsetY + point.y * scale;
+              context.beginPath();
+              context.arc(x, y, 4.4, 0, Math.PI * 2);
+              context.fillStyle = `rgba(${color},${0.14 * alpha})`;
+              context.fill();
+              context.beginPath();
+              context.arc(x, y, 1.8, 0, Math.PI * 2);
+              context.fillStyle = `rgba(${color},${0.92 * alpha})`;
+              context.fill();
+            }
+          }
+        }
+      }
+      rafMesh = window.requestAnimationFrame(drawMesh);
     }
 
     async function start() {
@@ -177,6 +241,12 @@ export function FaceScan({
       earBaseline = 0;
       mouthBaseline = 1;
       yawBaseline = 0;
+      meshTargetRef.current = null;
+      meshRenderedRef.current = null;
+      meshAlphaRef.current = 0;
+      greenRef.current = false;
+      lastCue = "none";
+      setCueHint("none");
       try {
         if (!navigator.mediaDevices?.getUserMedia) {
           setStatus("error");
@@ -232,6 +302,7 @@ export function FaceScan({
             }
             if (stopped) return;
             if (!result?.landmarks) {
+              meshTargetRef.current = null;
               if (livenessDeadline > 0 && Date.now() > livenessDeadline) {
                 setStatus("noblink");
                 return;
@@ -245,6 +316,7 @@ export function FaceScan({
               return;
             }
             noFaceSince = 0;
+            meshTargetRef.current = result.landmarks.positions as { x: number; y: number }[];
             if (livenessDeadline === 0) {
               livenessDeadline = Date.now() + LIVENESS_TIMEOUT_MS;
               setStatus("blink");
@@ -278,7 +350,14 @@ export function FaceScan({
                 yawBaseline += (yaw - yawBaseline) * 0.03;
               }
             }
+            const cue =
+              smileFrames > 0 ? "smile" : turnFrames > 0 ? "turn" : closedSeen && !blinkDone ? "blink" : "none";
+            if (cue !== lastCue) {
+              lastCue = cue;
+              setCueHint(cue);
+            }
             if (livenessPassed) {
+              greenRef.current = true;
               setStatus("found");
               try {
                 navigator.vibrate?.(80);
@@ -316,6 +395,7 @@ export function FaceScan({
       }
     }
 
+    rafMesh = window.requestAnimationFrame(drawMesh);
     void start();
     return stop;
   }, [attempt]);
@@ -352,6 +432,24 @@ export function FaceScan({
           autoPlay
           className="aspect-square w-full -scale-x-100 object-cover"
         />
+        <canvas ref={meshRef} className="pointer-events-none absolute inset-0 h-full w-full" />
+        {[
+          "left-3 top-3 rounded-tl-xl border-l-2 border-t-2",
+          "right-3 top-3 rounded-tr-xl border-r-2 border-t-2",
+          "left-3 bottom-3 rounded-bl-xl border-l-2 border-b-2",
+          "right-3 bottom-3 rounded-br-xl border-r-2 border-b-2",
+        ].map((position) => (
+          <span
+            key={position}
+            className={`pointer-events-none absolute size-7 transition-colors duration-300 ${position} ${
+              status === "found"
+                ? "border-emerald-400"
+                : status === "blink"
+                  ? "animate-pulse border-amber-400/90"
+                  : "border-white/70"
+            }`}
+          />
+        ))}
         <span
           className={
             status === "blink"
@@ -423,14 +521,62 @@ export function FaceScan({
 
         {status === "blink" ? (
           <>
-            <span className="pointer-events-none absolute inset-x-0 bottom-4 flex animate-fade-in items-center justify-center gap-1.5 text-center text-xs font-semibold text-amber-300">
+            <div className="pointer-events-none absolute inset-x-0 bottom-10 flex animate-fade-in justify-center gap-1.5 px-10">
+              {[
+                {
+                  key: "blink" as const,
+                  label: t("schFaceCueBlink"),
+                  icon: (
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  ),
+                },
+                {
+                  key: "smile" as const,
+                  label: t("schFaceCueSmile"),
+                  icon: (
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M8.5 14a4.5 4.5 0 0 0 7 0" />
+                      <path d="M9 9.5h.01M15 9.5h.01" />
+                    </svg>
+                  ),
+                },
+                {
+                  key: "turn" as const,
+                  label: t("schFaceCueTurn"),
+                  icon: (
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 12h16" />
+                      <path d="m7 9-3 3 3 3" />
+                      <path d="m17 9 3 3-3 3" />
+                    </svg>
+                  ),
+                },
+              ].map((cue) => (
+                <span
+                  key={cue.key}
+                  className={
+                    cueHint === cue.key
+                      ? "flex items-center gap-1 rounded-full bg-amber-400/95 px-2.5 py-1 text-[10px] font-semibold text-amber-950 shadow-lg transition-all duration-200"
+                      : "flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-medium text-white/75 backdrop-blur-sm transition-all duration-200"
+                  }
+                >
+                  {cue.icon}
+                  {cue.label}
+                </span>
+              ))}
+            </div>
+            <span className="pointer-events-none absolute inset-x-0 bottom-3.5 flex animate-fade-in items-center justify-center gap-1.5 text-center text-xs font-semibold text-amber-300">
               <svg className="animate-pulse" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
                 <circle cx="12" cy="12" r="3" />
               </svg>
               {t("schFaceBlinkHint")}
             </span>
-            <span className="pointer-events-none absolute inset-x-8 bottom-1.5 h-0.5 overflow-hidden rounded-full bg-white/15">
+            <span className="pointer-events-none absolute inset-x-8 bottom-1 overflow-hidden rounded-full bg-white/15" style={{ height: 3 }}>
               <span className="block h-full w-full animate-countdown rounded-full bg-amber-300/90" />
             </span>
           </>
@@ -440,6 +586,7 @@ export function FaceScan({
           <div className="absolute inset-0 grid animate-fade-in place-items-center bg-emerald-950/35">
             <span className="relative flex size-24 items-center justify-center">
               <span className="absolute inset-0 animate-pulse-ring rounded-full bg-emerald-400/50" />
+              <span className="absolute inset-0 animate-pulse-ring rounded-full bg-emerald-400/30" style={{ animationDelay: "420ms" }} />
               <span className="relative grid size-16 animate-pop-in place-items-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/40 ring-8 ring-emerald-50/90">
                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m5 13 4 4L19 7" />
