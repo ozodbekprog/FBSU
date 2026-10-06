@@ -327,9 +327,6 @@ export default async function AssignmentDetailPage({
             )}
           </CardBody>
         </Card>
-        <ButtonLink href={`/board?assignment=${id}`} variant="secondary" className="w-full">
-          {dictionary.brdOpen}
-        </ButtonLink>
         <OralDefenseCard assignmentId={id} />
       </div>
     </>
