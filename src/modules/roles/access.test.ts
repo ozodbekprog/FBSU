@@ -3,13 +3,13 @@ import { canApprove, canViewMonitoring, isLeadership, isTyutor } from "@/modules
 
 describe("rol vakolatlari: monitoring", () => {
   it("rahbariyat va o'quv bo'limi monitoringni ko'radi", () => {
-    for (const role of ["ADMIN", "REKTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR"]) {
+    for (const role of ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR"]) {
       expect(canViewMonitoring(role), role).toBe(true);
     }
   });
 
-  it("o'qituvchi, tyutor va talaba monitoringni ko'rmaydi", () => {
-    for (const role of ["TEACHER", "TYUTOR", "STUDENT"]) {
+  it("o'qituvchi, tyutor, xodim va talaba monitoringni ko'rmaydi", () => {
+    for (const role of ["TEACHER", "TYUTOR", "STUDENT", "XODIM"]) {
       expect(canViewMonitoring(role), role).toBe(false);
     }
   });
@@ -25,11 +25,13 @@ describe("rol vakolatlari: tasdiqlash", () => {
 });
 
 describe("rol vakolatlari: rahbariyat", () => {
-  it("rektor, dekan va kafedra mudiri — rahbariyat", () => {
+  it("rektor, prorektor, dekan va kafedra mudiri — rahbariyat", () => {
     expect(isLeadership("REKTOR")).toBe(true);
+    expect(isLeadership("PRO_RECTOR")).toBe(true);
     expect(isLeadership("DEKAN")).toBe(true);
     expect(isLeadership("KAFEDRA_MUDIRI")).toBe(true);
     expect(isLeadership("REGISTRAR")).toBe(false);
+    expect(isLeadership("XODIM")).toBe(false);
   });
 });
 

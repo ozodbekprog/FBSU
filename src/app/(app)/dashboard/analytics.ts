@@ -63,8 +63,10 @@ const ROLE_COLORS: Record<Role, string> = {
   TYUTOR: "#059669",
   KAFEDRA_MUDIRI: "#0ea5e9",
   DEKAN: "#7c3aed",
+  PRO_RECTOR: "#ca8a04",
   REKTOR: "#c9a227",
   ADMIN: "#e11d48",
+  XODIM: "#64748b",
 };
 
 const ROLE_LABELS: Record<Role, keyof Dictionary> = {
@@ -74,8 +76,10 @@ const ROLE_LABELS: Record<Role, keyof Dictionary> = {
   TYUTOR: "dashRoleTutors",
   KAFEDRA_MUDIRI: "dashRoleHeads",
   DEKAN: "dashRoleDeans",
+  PRO_RECTOR: "dashRoleProRectors",
   REKTOR: "dashRoleRector",
   ADMIN: "dashRoleAdmins",
+  XODIM: "dashRoleStaff",
 };
 
 const ATTENDED: AttendanceStatus[] = ["PRESENT", "LATE", "EXCUSED", "SUSPICIOUS"];

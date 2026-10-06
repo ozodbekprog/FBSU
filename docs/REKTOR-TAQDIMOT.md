@@ -8,10 +8,12 @@
 | Rol | Login | Nima ko'rsatiladi |
 |---|---|---|
 | Rektor | `rektor@ttpu.uz` | Monitoring paneli, universitet kesimidagi ko'rsatkichlar |
+| Prorektor | `prorektor-oquv@ttpu.uz` | Monitoring (o'quv ishlari), universitet ko'rsatkichlari |
 | Dekan | `dekan-ki@ttpu.uz` | Monitoring, fakultet kesimi |
 | Kafedra mudiri | `kafedra-di@ttpu.uz` | Monitoring, o'qituvchilar yuklamasi (Workload) |
 | Registrator | `registrator@ttpu.uz` | Monitoring, tasdiqlashlar (Approvals), jadval |
 | Tyutor | `tyutor-1@ttpu.uz` | Kurator paneli (guruhlar) |
+| Xodim | `buxgalter@ttpu.uz` | Umumiy ko'rinish (dashboard) |
 | O'qituvchi | `t.prog@ttpu.uz` | Jurnal, QR davomat, katta ekran |
 | Talaba | `ai1s01@ttpu.uz` | Face ID, davomat, baholar, laboratoriya |
 
@@ -20,7 +22,7 @@
 ## 2. Universitet tuzilmasi (bazada mavjud)
 
 - **4 fakultet**: Kompyuter injiniringi, Mexanika va texnologiyalar, Arxitektura va dizayn, Iqtisodiyot va boshqaruv
-- **9 kafedra**, **6 guruh**, **106 talaba**, **14 o'qituvchi**, **18 rahbar/xodim** (rektor, dekanlar, kafedra mudirlari, registrator, tyutorlar)
+- **9 kafedra**, **6 guruh**, **106 talaba**, **14 o'qituvchi**, **25 rahbar/xodim** (rektor, 3 prorektor, 4 dekan, 9 kafedra mudiri, registrator, 3 tyutor, 4 boshqa xodim)
 - **14 fan/kurs**, haftalik dars jadvali, **2 oylik tarix** (8,672 davomat, 855 test urinishi, 1,353 baholangan ish, rag'bat ballari, og'zaki himoyalar)
 
 ## 3. 10 daqiqalik demo ssenariy
@@ -62,7 +64,7 @@
 
 ## 4. Asosiy raqamlar (2 oylik simulyatsiya — jonli bazadan)
 
-- **139 foydalanuvchi**: 106 talaba, 14 o'qituvchi, **18 rahbar/xodim** (rektor, 4 dekan, 9 kafedra mudiri, registrator, 3 tyutor)
+- **146 foydalanuvchi**: 106 talaba, 14 o'qituvchi, **25 rahbar/xodim** (rektor, 3 prorektor, 4 dekan, 9 kafedra mudiri, registrator, 3 tyutor, 4 boshqa xodim)
 - **8,672 davomat yozuvi** — 264 dars sessiyasi, 2 oy davomida
   - Qatnashish darajasi: **93.1%** (kelganlar), kelmagan: 6.9%
   - 435 kechikkan, 377 erta ketgan, 231 shubhali (anti-fraud ishlagan)

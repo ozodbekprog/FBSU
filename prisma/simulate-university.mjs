@@ -68,6 +68,9 @@ const ORG = [
 
 const STAFF = [
   { email: "rektor@ttpu.uz", name: "Sh. Mirzayev", role: "REKTOR" },
+  { email: "prorektor-oquv@ttpu.uz", name: "A. Yo'ldoshev", role: "PRO_RECTOR" },
+  { email: "prorektor-ilmiy@ttpu.uz", name: "M. Xolmatova", role: "PRO_RECTOR" },
+  { email: "prorektor-yoshlar@ttpu.uz", name: "J. Bekmurodov", role: "PRO_RECTOR" },
   { email: "registrator@ttpu.uz", name: "M. Sattorova", role: "REGISTRAR" },
   { email: "dekan-ki@ttpu.uz", name: "B. Rahimov", role: "DEKAN", facultyCode: "KI" },
   { email: "dekan-mex@ttpu.uz", name: "S. Umarov", role: "DEKAN", facultyCode: "MEX" },
@@ -85,6 +88,10 @@ const STAFF = [
   { email: "tyutor-1@ttpu.uz", name: "O. Ravshanov", role: "TYUTOR" },
   { email: "tyutor-2@ttpu.uz", name: "K. Aliyeva", role: "TYUTOR" },
   { email: "tyutor-3@ttpu.uz", name: "S. Tosheva", role: "TYUTOR" },
+  { email: "buxgalter@ttpu.uz", name: "N. Karimova", role: "XODIM" },
+  { email: "kutubxona@ttpu.uz", name: "D. Rasulova", role: "XODIM" },
+  { email: "it@ttpu.uz", name: "S. Toshmatov", role: "XODIM" },
+  { email: "devonxona@ttpu.uz", name: "G. Umarova", role: "XODIM" },
 ];
 
 const TEACHERS = [

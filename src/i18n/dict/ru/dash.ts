@@ -127,6 +127,8 @@ export const dash = {
   dashRoleHeads: "Заведующие кафедрами",
   dashRoleDeans: "Деканы",
   dashRoleRector: "Ректор",
+  dashRoleProRectors: "Проректоры",
+  dashRoleStaff: "Сотрудники",
   dashRoleAdmins: "Администраторы",
   dashAcalSemester: "Семестр",
   dashAcalHoliday: "Каникулы",

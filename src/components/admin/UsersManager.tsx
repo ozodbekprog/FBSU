@@ -65,12 +65,14 @@ const ROLE_META: Record<
 > = {
   ADMIN: { label: "admRoleAdmin", tone: "brand", dot: "bg-brand-500", ring: "ring-brand-200/80" },
   REKTOR: { label: "admRoleRector", tone: "gold", dot: "bg-gold-500", ring: "ring-gold-300/60" },
+  PRO_RECTOR: { label: "admRoleProRector", tone: "gold", dot: "bg-gold-400", ring: "ring-gold-300/60" },
   DEKAN: { label: "admRoleDean", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
   KAFEDRA_MUDIRI: { label: "admRoleHead", tone: "blue", dot: "bg-sky-500", ring: "ring-sky-200/80" },
   REGISTRAR: { label: "admRoleRegistrar", tone: "brand", dot: "bg-sky-500", ring: "ring-sky-200/80" },
   TYUTOR: { label: "admRoleTutor", tone: "green", dot: "bg-emerald-500", ring: "ring-emerald-200/80" },
   TEACHER: { label: "admRoleTeacher", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
   STUDENT: { label: "admRoleStudent", tone: "slate", dot: "bg-slate-400", ring: "ring-slate-200" },
+  XODIM: { label: "admRoleStaff", tone: "slate", dot: "bg-slate-500", ring: "ring-slate-200" },
 };
 
 export default function UsersManager({
@@ -329,8 +331,10 @@ export default function UsersManager({
                     <option value="STUDENT">{t("admRoleStudent")}</option>
                     <option value="TEACHER">{t("admRoleTeacher")}</option>
                     <option value="TYUTOR">{t("admRoleTutor")}</option>
+                    <option value="XODIM">{t("admRoleStaff")}</option>
                     <option value="KAFEDRA_MUDIRI">{t("admRoleHead")}</option>
                     <option value="DEKAN">{t("admRoleDean")}</option>
+                    <option value="PRO_RECTOR">{t("admRoleProRector")}</option>
                     <option value="REKTOR">{t("admRoleRector")}</option>
                     <option value="REGISTRAR">{t("admRoleRegistrar")}</option>
                     <option value="ADMIN">{t("admRoleAdmin")}</option>

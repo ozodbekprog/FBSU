@@ -23,8 +23,10 @@ const ROLE_META: Record<Role, { label: string; color: string }> = {
   TYUTOR: { label: "Tyutorlar", color: "#059669" },
   KAFEDRA_MUDIRI: { label: "Kafedra mudirlari", color: "#0ea5e9" },
   DEKAN: { label: "Dekanlar", color: "#7c3aed" },
+  PRO_RECTOR: { label: "Prorektorlar", color: "#ca8a04" },
   REKTOR: { label: "Rektor", color: "#c9a227" },
   ADMIN: { label: "Adminlar", color: "#e11d48" },
+  XODIM: { label: "Xodimlar", color: "#64748b" },
 };
 
 function startOfDay(date: Date) {

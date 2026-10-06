@@ -10,12 +10,14 @@ datasource db {
 enum Role {
   ADMIN
   REKTOR
+  PRO_RECTOR
   DEKAN
   KAFEDRA_MUDIRI
   REGISTRAR
   TYUTOR
   TEACHER
   STUDENT
+  XODIM
 }
 
 enum MaterialType {

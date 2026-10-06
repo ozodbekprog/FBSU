@@ -72,7 +72,7 @@ export default async function AppLayout({
     {
       label: dictionary.navGroupManage,
       links: [
-        ...(["ADMIN", "REKTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR"].includes(user.role)
+        ...(["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR"].includes(user.role)
           ? [{ href: "/monitoring", label: dictionary.navMonitoring }]
           : []),
         ...(user.role === "ADMIN" || user.role === "REGISTRAR"
@@ -93,7 +93,9 @@ export default async function AppLayout({
       ? dictionary.roleAdmin
       : user.role === "REKTOR"
         ? dictionary.roleRector
-        : user.role === "DEKAN"
+        : user.role === "PRO_RECTOR"
+          ? dictionary.roleProRector
+          : user.role === "DEKAN"
           ? dictionary.roleDean
           : user.role === "KAFEDRA_MUDIRI"
             ? dictionary.roleHead
@@ -101,7 +103,9 @@ export default async function AppLayout({
               ? dictionary.roleRegistrar
               : user.role === "TYUTOR"
                 ? dictionary.roleTutor
-                : user.role === "TEACHER"
+                : user.role === "XODIM"
+                  ? dictionary.roleStaff
+                  : user.role === "TEACHER"
                   ? dictionary.roleTeacher
                   : user.group?.name ?? dictionary.roleStudent;
 

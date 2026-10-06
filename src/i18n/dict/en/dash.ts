@@ -127,6 +127,8 @@ export const dash = {
   dashRoleHeads: "Department heads",
   dashRoleDeans: "Deans",
   dashRoleRector: "Rector",
+  dashRoleProRectors: "Vice-Rectors",
+  dashRoleStaff: "Staff",
   dashRoleAdmins: "Admins",
   dashAcalSemester: "Semester",
   dashAcalHoliday: "Holiday",

@@ -1,16 +1,19 @@
 export type AppRole =
   | "ADMIN"
   | "REKTOR"
+  | "PRO_RECTOR"
   | "DEKAN"
   | "KAFEDRA_MUDIRI"
   | "REGISTRAR"
   | "TYUTOR"
   | "TEACHER"
-  | "STUDENT";
+  | "STUDENT"
+  | "XODIM";
 
 const MONITORING_ROLES: readonly string[] = [
   "ADMIN",
   "REKTOR",
+  "PRO_RECTOR",
   "DEKAN",
   "KAFEDRA_MUDIRI",
   "REGISTRAR",
@@ -18,7 +21,7 @@ const MONITORING_ROLES: readonly string[] = [
 
 const APPROVER_ROLES: readonly string[] = ["ADMIN", "REGISTRAR"];
 
-const LEADERSHIP_ROLES: readonly string[] = ["REKTOR", "DEKAN", "KAFEDRA_MUDIRI"];
+const LEADERSHIP_ROLES: readonly string[] = ["REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI"];
 
 export function canViewMonitoring(role: string): boolean {
   return MONITORING_ROLES.includes(role);

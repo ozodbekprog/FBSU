@@ -1,12 +1,14 @@
 export type RegradeRole =
   | "ADMIN"
   | "REKTOR"
+  | "PRO_RECTOR"
   | "DEKAN"
   | "KAFEDRA_MUDIRI"
   | "REGISTRAR"
   | "TYUTOR"
   | "TEACHER"
-  | "STUDENT";
+  | "STUDENT"
+  | "XODIM";
 
 /**
  * Baho allaqachon qo'yilgan (GRADED) va o'qituvchi ballni o'zgartirmoqchi bo'lsa —

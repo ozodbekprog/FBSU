@@ -10,23 +10,27 @@ import type { SearchResults } from "./search-data";
 const ROLE_KEY: Record<Role, keyof Dictionary> = {
   ADMIN: "mscSrchRoleAdmin",
   REKTOR: "mscSrchRoleRector",
+  PRO_RECTOR: "mscSrchRoleProRector",
   DEKAN: "mscSrchRoleDean",
   KAFEDRA_MUDIRI: "mscSrchRoleDeptHead",
   REGISTRAR: "mscSrchRoleRegistrar",
   TYUTOR: "mscSrchRoleTutor",
   TEACHER: "mscSrchRoleTeacher",
   STUDENT: "mscSrchRoleStudent",
+  XODIM: "mscSrchRoleStaff",
 };
 
 const ROLE_TONES: Record<Role, string> = {
   ADMIN: "rose",
   REKTOR: "gold",
+  PRO_RECTOR: "gold",
   DEKAN: "purple",
   KAFEDRA_MUDIRI: "blue",
   REGISTRAR: "brand",
   TYUTOR: "green",
   TEACHER: "blue",
   STUDENT: "slate",
+  XODIM: "slate",
 };
 
 const MATERIAL_TYPE_KEY: Record<MaterialType, keyof Dictionary> = {

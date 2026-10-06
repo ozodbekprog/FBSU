@@ -6,7 +6,7 @@ import { Button, Card, CardBody, Input, PageHeader, Select } from "@/components/
 import UsersManager from "@/components/admin/UsersManager";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 
-const ROLES = ["ADMIN", "REKTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER", "STUDENT"] as const;
+const ROLES = ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER", "STUDENT", "XODIM"] as const;
 
 export default async function AdminUsersPage({
   searchParams,
@@ -79,8 +79,10 @@ export default async function AdminUsersPage({
               <option value="STUDENT">{dictionary.admRoleStudent}</option>
               <option value="TEACHER">{dictionary.admRoleTeacher}</option>
               <option value="TYUTOR">{dictionary.admRoleTutor}</option>
+              <option value="XODIM">{dictionary.admRoleStaff}</option>
               <option value="KAFEDRA_MUDIRI">{dictionary.admRoleHead}</option>
               <option value="DEKAN">{dictionary.admRoleDean}</option>
+              <option value="PRO_RECTOR">{dictionary.admRoleProRector}</option>
               <option value="REKTOR">{dictionary.admRoleRector}</option>
               <option value="REGISTRAR">{dictionary.admRoleRegistrar}</option>
               <option value="ADMIN">{dictionary.admRoleAdmin}</option>

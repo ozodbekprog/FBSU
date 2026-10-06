@@ -32,6 +32,8 @@ export const msc = {
 
   mscRoleAdmin: "Администратор",
   mscRoleRector: "Ректор",
+  mscRoleProRector: "Проректор",
+  mscRoleStaff: "Сотрудник",
   mscRoleDean: "Декан",
   mscRoleHead: "Заведующий кафедрой",
   mscRoleRegistrar: "Учебный отдел",
@@ -462,6 +464,8 @@ export const msc = {
   mscSrchDue: "Срок: {date}",
   mscSrchRoleAdmin: "Администратор",
   mscSrchRoleRector: "Ректор",
+  mscSrchRoleProRector: "Проректор",
+  mscSrchRoleStaff: "Сотрудник",
   mscSrchRoleDean: "Декан",
   mscSrchRoleDeptHead: "Заведующий кафедрой",
   mscSrchRoleRegistrar: "Учебный отдел",

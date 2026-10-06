@@ -56,6 +56,8 @@ export const adm = {
   admSeverityLow: "Низкая",
   admRoleAdmin: "Администратор",
   admRoleRector: "Ректор",
+  admRoleProRector: "Проректор",
+  admRoleStaff: "Сотрудник",
   admRoleDean: "Декан",
   admRoleHead: "Заведующий кафедрой",
   admRoleRegistrar: "Учебный отдел",

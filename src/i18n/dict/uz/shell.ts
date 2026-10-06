@@ -41,6 +41,8 @@ export const shell = {
 
   roleAdmin: "Administrator",
   roleRector: "Rektor",
+  roleProRector: "Prorektor",
+  roleStaff: "Xodim",
   roleDean: "Dekan",
   roleHead: "Kafedra mudiri",
   roleRegistrar: "O'quv bo'limi",
