@@ -206,7 +206,7 @@ export function SessionPanel({
     void fetchToken();
     const timer = window.setInterval(() => {
       void fetchToken();
-    }, 10_000);
+    }, 5_000);
     return () => {
       cancelled = true;
       window.clearInterval(timer);

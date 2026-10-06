@@ -4,6 +4,30 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 
+type LandmarkPoint = { x: number; y: number };
+type LandmarksLike = {
+  getLeftEye: () => LandmarkPoint[];
+  getRightEye: () => LandmarkPoint[];
+};
+
+const EAR_CLOSED = 0.21;
+const EAR_OPEN = 0.24;
+const BLINK_TIMEOUT_MS = 12_000;
+
+function distance(a: LandmarkPoint, b: LandmarkPoint): number {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function eyeAspectRatio(landmarks: LandmarksLike): number {
+  const measure = (eye: LandmarkPoint[]) => {
+    if (eye.length < 6) return 0.3;
+    const vertical = distance(eye[1], eye[5]) + distance(eye[2], eye[4]);
+    const horizontal = 2 * distance(eye[0], eye[3]);
+    return horizontal === 0 ? 0.3 : vertical / horizontal;
+  };
+  return (measure(landmarks.getLeftEye()) + measure(landmarks.getRightEye())) / 2;
+}
+
 export function FaceScan({
   onDescriptor,
   onCancel,
@@ -13,13 +37,18 @@ export function FaceScan({
 }) {
   const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [status, setStatus] = useState<"loading" | "searching" | "found" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "searching" | "blink" | "found" | "noblink" | "error">(
+    "loading",
+  );
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let stream: MediaStream | null = null;
     let stopped = false;
     let timer = 0;
+    let closedSeen = false;
+    let blinked = false;
+    let blinkDeadline = 0;
 
     function stop() {
       stopped = true;
@@ -33,6 +62,9 @@ export function FaceScan({
 
     async function start() {
       setStatus("loading");
+      closedSeen = false;
+      blinked = false;
+      blinkDeadline = 0;
       try {
         if (!navigator.mediaDevices?.getUserMedia) {
           setStatus("error");
@@ -66,7 +98,25 @@ export function FaceScan({
               )
               .withFaceLandmarks()
               .withFaceDescriptor();
-            if (result?.descriptor && !stopped) {
+            if (stopped) return;
+            if (!result?.descriptor) {
+              if (blinkDeadline > 0 && Date.now() > blinkDeadline) {
+                window.clearInterval(timer);
+                setStatus("noblink");
+              }
+              return;
+            }
+            if (blinkDeadline === 0) {
+              blinkDeadline = Date.now() + BLINK_TIMEOUT_MS;
+              setStatus("blink");
+            }
+            const ear = eyeAspectRatio(result.landmarks);
+            if (ear < EAR_CLOSED) {
+              closedSeen = true;
+            } else if (closedSeen && ear > EAR_OPEN) {
+              blinked = true;
+            }
+            if (blinked) {
               window.clearInterval(timer);
               setStatus("found");
               try {
@@ -78,11 +128,16 @@ export function FaceScan({
               window.setTimeout(() => {
                 if (!stopped) onDescriptor(descriptor);
               }, 350);
+              return;
+            }
+            if (Date.now() > blinkDeadline) {
+              window.clearInterval(timer);
+              setStatus("noblink");
             }
           } catch {
             void 0;
           }
-        }, 700);
+        }, 500);
       } catch {
         if (!stopped) setStatus("error");
       }
@@ -97,9 +152,15 @@ export function FaceScan({
       ? t("schFaceLoading")
       : status === "searching"
         ? t("schFaceSearching")
-        : status === "found"
-          ? t("schFaceFound")
-          : t("schFacePermission");
+        : status === "blink"
+          ? t("schFaceBlink")
+          : status === "found"
+            ? t("schFaceFound")
+            : status === "noblink"
+              ? t("schFaceNoBlink")
+              : t("schFacePermission");
+
+  const isError = status === "error" || status === "noblink";
 
   return (
     <div className="space-y-3">
@@ -111,14 +172,25 @@ export function FaceScan({
           autoPlay
           className="aspect-square w-full -scale-x-100 object-cover"
         />
-        <span className="pointer-events-none absolute inset-6 rounded-[2rem] border-2 border-white/70" />
+        <span
+          className={
+            status === "blink"
+              ? "pointer-events-none absolute inset-6 rounded-[2rem] border-2 border-amber-400"
+              : "pointer-events-none absolute inset-6 rounded-[2rem] border-2 border-white/70"
+          }
+        />
         {status === "found" ? (
           <span className="pointer-events-none absolute inset-6 rounded-[2rem] border-2 border-emerald-400" />
+        ) : null}
+        {status === "blink" ? (
+          <span className="pointer-events-none absolute inset-x-0 bottom-4 text-center text-xs font-semibold text-amber-300">
+            {t("schFaceBlinkHint")}
+          </span>
         ) : null}
       </div>
       <p
         className={
-          status === "error"
+          isError
             ? "rounded-xl bg-rose-50 px-3 py-2 text-center text-sm text-rose-700"
             : "text-center text-sm font-medium text-slate-600"
         }
@@ -126,7 +198,7 @@ export function FaceScan({
         {statusText}
       </p>
       <p className="text-center text-xs text-slate-500">{t("schFaceScoreHint")}</p>
-      {status === "error" ? (
+      {isError ? (
         <Button variant="secondary" className="w-full" onClick={() => setAttempt((n) => n + 1)}>
           {t("schFaceRetry")}
         </Button>
