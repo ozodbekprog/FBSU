@@ -86,6 +86,14 @@
 - [ ] Skip-to-content ilovada
 - [ ] Confirm dialog yagonaligi
 
+## 🆕 YANGI MODUL TAKLIFI — Hujjatlar aylanmasi (Document Management)
+- [ ] Buyruqlar registri (raqam, sana, asos, kim imzoladi)
+- [ ] Xizmat xatlari registri (kirim/chiqim, devonxona)
+- [ ] Shablonlar + avtomatik to'ldirish (buyruq/xat/ma'lumotnoma)
+- [ ] Ma'lumotnomalar (o'qish joyidan, xarakteristika)
+- [ ] Imzo zanjiri (tuzuvchi → kelishuv → imzo → arxiv)
+- [ ] Arxiv: raqamlangan, izlanadigan
+
 ## 🤝 TONY QARORI KERAK
 - Face ID siyosati: majburiymi yoki ixtiyoriymi? (hozir ixtiyoriy — o'chirib bypass mumkin)
 - APP_URL (domen) — Vercel'da
