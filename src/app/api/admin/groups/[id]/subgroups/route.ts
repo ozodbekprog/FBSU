@@ -42,7 +42,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
       orderBy: { name: "asc" },
     }),
     prisma.user.findMany({
-      where: { role: "TEACHER", isActive: true },
+      where: { role: { in: ["TEACHER", "TYUTOR"] }, isActive: true },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),

@@ -44,6 +44,9 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
         { status: 400 },
       );
     }
+    if (!curator.isActive) {
+      return Response.json({ ok: false, error: "Kurator faol emas" }, { status: 400 });
+    }
   }
 
   const updated = await prisma.group.update({
