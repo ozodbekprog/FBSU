@@ -108,6 +108,18 @@ const LINKS: { href: string; label: keyof Dictionary; icon: ReactNode }[] = [
     ),
   },
   {
+    href: "/admin/hemis",
+    label: "admNavHemis",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 7h18" />
+        <path d="M3 12h18" />
+        <path d="M3 17h18" />
+        <path d="m12 3 9 4-9 4-9-4 9-4Z" />
+      </svg>
+    ),
+  },
+  {
     href: "/admin/audit",
     label: "admNavAudit",
     icon: (
@@ -167,7 +179,13 @@ export default function AdminNav({ role }: { role?: string }) {
   const pathname = usePathname();
   const links =
     role === "REGISTRAR"
-      ? LINKS.filter((link) => link.href === "/admin/users" || link.href === "/admin/groups")
+      ? LINKS.filter(
+          (link) =>
+            link.href === "/admin/users" ||
+            link.href === "/admin/groups" ||
+            link.href === "/admin/import" ||
+            link.href === "/admin/hemis",
+        )
       : LINKS;
 
   return (

@@ -455,6 +455,7 @@ export const adm = {
   admNavStructure: "Структура",
   admNavDepartments: "Кафедры",
   admNavImport: "Импорт",
+  admNavHemis: "Экспорт HEMIS",
   admNavAudit: "Аудит",
   admNavSettings: "Настройки",
   admNavBugs: "Ошибки",
