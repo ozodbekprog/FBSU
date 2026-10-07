@@ -2,7 +2,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, isStaff } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { uploadsRoot } from "@/lib/uploads";
 
 const MAX_SIZE = 10 * 1024 * 1024;
@@ -52,7 +52,15 @@ export async function POST(
     if (enrolled?.status !== "ACTIVE") {
       return Response.json({ ok: false, error: "Siz bu kursga yozilmagansiz" }, { status: 403 });
     }
-  } else if (!isStaff(user.role)) {
+  } else if (user.role === "TEACHER") {
+    const course = await prisma.course.findUnique({
+      where: { id: assignment.courseId },
+      select: { teacherId: true },
+    });
+    if (!course || course.teacherId !== user.id) {
+      return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+    }
+  } else if (user.role !== "ADMIN") {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

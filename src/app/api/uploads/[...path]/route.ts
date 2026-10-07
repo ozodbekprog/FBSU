@@ -1,6 +1,7 @@
 import path from "node:path";
 import { readFile, stat } from "node:fs/promises";
 import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
 import { safeUploadContentType, uploadsRoot } from "@/lib/uploads";
 
@@ -47,6 +48,47 @@ export async function GET(
       userAgent: clientInfo.userAgent,
     });
     return new Response("Not found", { status: 404 });
+  }
+
+  const subdir = segments.length > 1 ? segments[0] : null;
+  const lastSegment = segments[segments.length - 1];
+
+  if (subdir === "submissions") {
+    const submission = await prisma.submission.findFirst({
+      where: { fileUrl: { endsWith: `/${lastSegment}` } },
+      select: {
+        studentId: true,
+        assignment: { select: { course: { select: { teacherId: true } } } },
+      },
+    });
+    const allowed =
+      user.role === "ADMIN" ||
+      (submission !== null &&
+        (submission.studentId === user.id ||
+          submission.assignment.course.teacherId === user.id));
+    if (!allowed) {
+      await createAuditLog({
+        action: "FILE_DOWNLOAD",
+        entity: "File",
+        entityId: lastSegment,
+        meta: { subdir: "submissions", reason: "forbidden" },
+        ip: clientInfo.ip,
+        userAgent: clientInfo.userAgent,
+      });
+      return new Response("Forbidden", { status: 403 });
+    }
+  } else if (subdir !== null && subdir !== "avatars" && subdir !== "covers") {
+    if (user.role !== "ADMIN") {
+      await createAuditLog({
+        action: "FILE_DOWNLOAD",
+        entity: "File",
+        entityId: lastSegment,
+        meta: { subdir, reason: "forbidden_folder" },
+        ip: clientInfo.ip,
+        userAgent: clientInfo.userAgent,
+      });
+      return new Response("Forbidden", { status: 403 });
+    }
   }
 
   try {
