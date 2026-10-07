@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 
 const actionSchema = z.object({
@@ -35,6 +36,18 @@ export async function POST(request: Request) {
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   if (user.role === "STUDENT") {
     return Response.json({ ok: false, error: "Faqat xodimlar uchun" }, { status: 403 });
+  }
+
+  const staffRateLimit = await checkRateLimit(`staff:attendance:${user.id}`, {
+    windowMs: 60_000,
+    maxAttempts: 20,
+    keyPrefix: "api",
+  });
+  if (!staffRateLimit.allowed) {
+    return Response.json(
+      { ok: false, error: "Juda ko'p urinish. Keyinroq qayta urinib ko'ring" },
+      { status: 429 },
+    );
   }
 
   const csrfValid = await verifyCsrfFromRequest(request);

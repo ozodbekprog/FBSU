@@ -58,16 +58,39 @@ export function scoreKey(studentId: string, itemId: string) {
   return `${studentId}:${itemId}`;
 }
 
-export async function resolveManagedCourse(ref: string, user: { id: string; role: Role }) {
+export async function resolveManagedCourse(
+  ref: string,
+  user: { id: string; role: Role; facultyId?: string | null; departmentId?: string | null },
+) {
   const course = await prisma.course.findFirst({
     where: { OR: [{ id: ref }, { slug: ref }] },
-    select: { id: true, title: true, slug: true, teacherId: true },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      teacherId: true,
+      teacher: { select: { facultyId: true, departmentId: true } },
+    },
   });
   if (!course) {
     return { ok: false as const, status: 404, error: "Kurs topilmadi" };
   }
+  const isGlobalLeadership =
+    user.role === "REKTOR" || user.role === "PRO_RECTOR" || user.role === "REGISTRAR";
+  const isScopedDean =
+    user.role === "DEKAN" &&
+    Boolean(user.facultyId) &&
+    course.teacher.facultyId === user.facultyId;
+  const isScopedDeptHead =
+    user.role === "KAFEDRA_MUDIRI" &&
+    Boolean(user.departmentId) &&
+    course.teacher.departmentId === user.departmentId;
   const canManage =
-    user.role === "ADMIN" || (user.role === "TEACHER" && course.teacherId === user.id);
+    user.role === "ADMIN" ||
+    (user.role === "TEACHER" && course.teacherId === user.id) ||
+    isGlobalLeadership ||
+    isScopedDean ||
+    isScopedDeptHead;
   if (!canManage) {
     return { ok: false as const, status: 403, error: "Forbidden" };
   }
@@ -87,7 +110,7 @@ export async function buildCourseReport(course: {
 }): Promise<CourseReport> {
   const [enrollments, assignments, submissions, attendance, quizzes] = await Promise.all([
     prisma.enrollment.findMany({
-      where: { courseId: course.id },
+      where: { courseId: course.id, status: "ACTIVE" },
       include: {
         user: {
           select: {

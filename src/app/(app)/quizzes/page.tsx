@@ -4,6 +4,7 @@ import { isStaff, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Badge, ButtonLink, Card, EmptyState, PageHeader } from "@/components/ui";
 import { ScoreRing } from "@/components/quiz/score-ring";
+import { getDictionary, getLocale, t as translate, type Locale } from "@/i18n";
 
 function ListIcon() {
   return (
@@ -54,6 +55,8 @@ function QuestionIcon() {
 
 export default async function QuizzesPage() {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
 
   if (isStaff(user.role)) {
     const quizzes = await prisma.quiz.findMany({
@@ -73,15 +76,15 @@ export default async function QuizzesPage() {
     return (
       <>
         <PageHeader
-          title="Testlar"
-          subtitle={user.role === "TEACHER" ? "O'qitadigan kurslaringiz testlari" : "Barcha testlar"}
-          action={<ButtonLink href="/quizzes/new">Yangi test</ButtonLink>}
+          title={dictionary.grdQuizzes}
+          subtitle={translate(locale, "grdQuizCount", { count: quizzes.length })}
+          action={<ButtonLink href="/quizzes/new">{dictionary.crsQuizCreate}</ButtonLink>}
         />
         {quizzes.length === 0 ? (
           <EmptyState
-            title="Testlar yo'q"
-            description="Birinchi testni yaratish uchun 'Yangi test' tugmasini bosing."
-            action={<ButtonLink href="/quizzes/new">Yangi test</ButtonLink>}
+            title={dictionary.grdNoAssessments}
+            description={dictionary.grdNoAssessmentsDescStaff}
+            action={<ButtonLink href="/quizzes/new">{dictionary.crsQuizCreate}</ButtonLink>}
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -112,7 +115,7 @@ export default async function QuizzesPage() {
                       <p className="mt-0.5 truncate text-sm text-slate-500">{quiz.course.title}</p>
                       <div className="mt-3">
                         <Badge tone={quiz.isPublished ? "green" : "slate"}>
-                          {quiz.isPublished ? "E'lon qilingan" : "Qoralama"}
+                          {quiz.isPublished ? dictionary.grdExPublished : dictionary.grdExDraft}
                         </Badge>
                       </div>
                     </div>
@@ -120,23 +123,25 @@ export default async function QuizzesPage() {
                       score={average}
                       max={total}
                       size={88}
-                      caption="O'rtacha"
-                      hint={attemptsHint(quiz._count.attempts, best, total)}
+                      caption={dictionary.grdAverage}
+                      hint={attemptsHint(quiz._count.attempts, best, total, locale)}
                       className="shrink-0"
                     />
                   </div>
                   <div className="mt-4 flex flex-wrap items-center gap-2">
                     <MetaChip>
                       <QuestionIcon />
-                      {quiz.questions.length} savol
+                      {translate(locale, "grdQbQuestionCount", { count: quiz.questions.length })}
                     </MetaChip>
                     <MetaChip>
                       <ClockIcon />
-                      {quiz.timeLimitMin ? `${quiz.timeLimitMin} daqiqa` : "Vaqtsiz"}
+                      {quiz.timeLimitMin
+                        ? translate(locale, "grdExMinutes", { count: quiz.timeLimitMin })
+                        : dictionary.grdExNoTimeLimit}
                     </MetaChip>
                     <MetaChip>
                       <RepeatIcon />
-                      {quiz._count.attempts} urinish
+                      {translate(locale, "grdAttemptsCount", { count: quiz._count.attempts })}
                     </MetaChip>
                   </div>
                   <div className="relative z-10 mt-4 flex items-center gap-2 border-t border-slate-100 pt-4">
@@ -145,17 +150,17 @@ export default async function QuizzesPage() {
                       variant="secondary"
                       size="sm"
                     >
-                      Natijalar
+                      {dictionary.grdExResults}
                     </ButtonLink>
                     <ButtonLink
                       href={`/quizzes/${quiz.id}/edit`}
                       variant="secondary"
                       size="sm"
                     >
-                      Tahrirlash
+                      {dictionary.grdExEdit}
                     </ButtonLink>
                     <span className="ml-auto text-xs text-slate-600">
-                      Maks: {quiz.maxAttempts} urinish
+                      {translate(locale, "grdExMaxAttempts", { count: quiz.maxAttempts })}
                     </span>
                   </div>
                 </Card>
@@ -190,9 +195,15 @@ export default async function QuizzesPage() {
 
   return (
     <>
-      <PageHeader title="Testlar" subtitle={`${quizzes.length} ta mavjud test`} />
+      <PageHeader
+        title={dictionary.grdQuizzes}
+        subtitle={translate(locale, "grdQuizCount", { count: quizzes.length })}
+      />
       {quizzes.length === 0 ? (
-        <EmptyState title="Testlar yo'q" description="Kurslaringizda hozircha e'lon qilingan test yo'q." />
+        <EmptyState
+          title={dictionary.grdNoAssessments}
+          description={dictionary.grdNoAssessmentsStudentDesc}
+        />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {quizzes.map((quiz) => {
@@ -206,12 +217,12 @@ export default async function QuizzesPage() {
             const lastScore = finished.find((attempt) => attempt.score != null)?.score ?? null;
             const exhausted = finished.length >= quiz.maxAttempts;
             const status = active
-              ? { tone: "amber" as const, label: "Davom etmoqda" }
+              ? { tone: "amber" as const, label: dictionary.grdExInProgress }
               : exhausted
-                ? { tone: "amber" as const, label: "Urinishlar tugagan" }
+                ? { tone: "amber" as const, label: dictionary.grdCompleted }
                 : lastScore != null
-                  ? { tone: "green" as const, label: `Ball: ${lastScore}` }
-                  : { tone: "brand" as const, label: "Yangi" };
+                  ? { tone: "green" as const, label: `${dictionary.grdScoreLabelColon} ${lastScore}` }
+                  : { tone: "brand" as const, label: dictionary.mscOrderStatusNew };
             return (
               <Link key={quiz.id} href={`/quizzes/${quiz.id}`} className="block h-full">
                 <Card className="group relative flex h-full flex-col overflow-hidden p-5 transition-all duration-200 hover:border-brand-200 hover:shadow-lift">
@@ -228,35 +239,45 @@ export default async function QuizzesPage() {
                       score={best}
                       max={total}
                       size={88}
-                      caption="Eng yaxshi"
-                      hint={finished.length > 0 ? `${finished.length}/${quiz.maxAttempts} urinish` : "Hali topshirilmagan"}
+                      caption={dictionary.grdResult}
+                      hint={
+                        finished.length > 0
+                          ? translate(locale, "grdAttemptsCount", {
+                              count: `${finished.length}/${quiz.maxAttempts}`,
+                            })
+                          : dictionary.crsNotSubmittedYet
+                      }
                       className="shrink-0"
                     />
                   </div>
                   <div className="mt-4 flex flex-wrap items-center gap-2">
                     <MetaChip>
                       <QuestionIcon />
-                      {quiz.questions.length} savol
+                      {translate(locale, "grdQbQuestionCount", { count: quiz.questions.length })}
                     </MetaChip>
                     <MetaChip>
                       <ClockIcon />
-                      {quiz.timeLimitMin ? `${quiz.timeLimitMin} daqiqa` : "Vaqtsiz"}
+                      {quiz.timeLimitMin
+                        ? translate(locale, "grdExMinutes", { count: quiz.timeLimitMin })
+                        : dictionary.grdExNoTimeLimit}
                     </MetaChip>
                     <MetaChip>
                       <ListIcon />
-                      {quiz.questions.length > 0 ? `${total} ball` : "Ball yo'q"}
+                      {quiz.questions.length > 0
+                        ? translate(locale, "crsQuizPoints", { points: total })
+                        : dictionary.crsQuizNoScore}
                     </MetaChip>
                   </div>
                   <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4">
                     <span className="text-xs text-slate-500">
                       {active
-                        ? "Yarim qolgan urinishni davom ettiring"
+                        ? dictionary.grdExInProgress
                         : exhausted
-                          ? "Natijalarni ko'rish"
-                          : "Testni boshlash"}
+                          ? dictionary.grdExResults
+                          : dictionary.crsQuizStart}
                     </span>
                     <span className="text-xs font-medium text-brand-700 transition-transform duration-200 group-hover:translate-x-0.5">
-                      Ochish &rarr;
+                      {dictionary.crsOpen} &rarr;
                     </span>
                   </div>
                 </Card>
@@ -269,8 +290,8 @@ export default async function QuizzesPage() {
   );
 }
 
-function attemptsHint(count: number, best: number | null, total: number): string {
-  if (count === 0) return "Urinish yo'q";
-  if (best == null) return `${count} urinish`;
-  return `Eng yaxshi: ${best}/${total}`;
+function attemptsHint(count: number, best: number | null, total: number, locale: Locale): string {
+  if (count === 0) return translate(locale, "crsNotSubmittedYet");
+  if (best == null) return translate(locale, "grdAttemptsCount", { count });
+  return translate(locale, "crsQuizPoints", { points: `${best}/${total}` });
 }

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { notifyUser } from "@/server/notify";
 import { buildCuratorReport, getCuratorGroups } from "@/app/api/curator/data";
 
@@ -17,6 +18,18 @@ export async function POST(request: Request) {
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   if (user.role !== "TEACHER" && user.role !== "TYUTOR" && user.role !== "ADMIN") {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
+
+  const reportRateLimit = await checkRateLimit(`curator:report:${user.id}`, {
+    windowMs: 3_600_000,
+    maxAttempts: 10,
+    keyPrefix: "api",
+  });
+  if (!reportRateLimit.allowed) {
+    return Response.json(
+      { ok: false, error: "Juda ko'p hisobot. Keyinroq qayta urinib ko'ring" },
+      { status: 429 },
+    );
   }
 
   const body = await request.json().catch(() => null);

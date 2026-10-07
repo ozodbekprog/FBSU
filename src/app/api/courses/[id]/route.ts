@@ -61,7 +61,9 @@ export async function GET(
     return Response.json({ ok: false, error: "Kurs topilmadi" }, { status: 404 });
   }
 
-  const isEnrolled = course.enrollments.some((e) => e.user.id === user.id);
+  const isEnrolled = course.enrollments.some(
+    (e) => e.user.id === user.id && e.status === "ACTIVE",
+  );
   if (!canViewCourse(user, course, isEnrolled)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }

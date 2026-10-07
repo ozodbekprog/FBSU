@@ -13,7 +13,6 @@ import {
   Stat,
   Table,
 } from "@/components/ui";
-import { atRiskStudents, attendancePercent } from "@/modules/monitoring/attendance-kpi";
 import { canViewMonitoring } from "@/modules/roles/access";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 
@@ -21,6 +20,24 @@ function toneFor(percent: number): "green" | "amber" | "rose" {
   if (percent >= 80) return "green";
   if (percent >= 60) return "amber";
   return "rose";
+}
+
+function attendanceStats(counts: Map<string, number>): {
+  total: number;
+  attended: number;
+  percent: number;
+} {
+  let total = 0;
+  let attended = 0;
+  for (const [status, count] of counts) {
+    total += count;
+    if (status === "PRESENT" || status === "LATE") attended += count;
+  }
+  return {
+    total,
+    attended,
+    percent: total > 0 ? Math.round((attended / total) * 100) : 0,
+  };
 }
 
 export default async function MonitoringPage({
@@ -92,45 +109,72 @@ export default async function MonitoringPage({
     return true;
   });
 
-  const [students, teachersCount, coursesCount, attendanceRows, submissionsTotal, submissionsGraded, pendingSchedule] =
-    await Promise.all([
-      prisma.user.findMany({
-        where: { role: "STUDENT", isActive: true, groupId: { in: scopeGroupIds } },
-        select: { id: true, groupId: true },
-      }),
-      prisma.user.count({
-        where: {
-          role: "TEACHER",
-          isActive: true,
-          ...(isDean ? { facultyId: user.facultyId ?? "__none__" } : {}),
-          ...(isDeptHead ? { departmentId: user.departmentId ?? "__none__" } : {}),
-        },
-      }),
-      prisma.course.count({
-        where: isDean
-          ? { teacher: { facultyId: user.facultyId ?? "__none__" } }
-          : isDeptHead
-            ? { teacher: { departmentId: user.departmentId ?? "__none__" } }
-            : {},
-      }),
-      prisma.attendance.findMany({
-        where: { student: { groupId: { in: scopeGroupIds } } },
-        select: { studentId: true, status: true, student: { select: { groupId: true } } },
-      }),
-      prisma.submission.count({ where: { student: { groupId: { in: scopeGroupIds } } } }),
-      prisma.submission.count({
-        where: { student: { groupId: { in: scopeGroupIds } }, status: "GRADED" },
-      }),
-      prisma.scheduleEntry.count({
-        where: { groupId: { in: scopeGroupIds }, approval: "PENDING" },
-      }),
-    ]);
+  const [
+    students,
+    teachersCount,
+    coursesCount,
+    attendanceGroups,
+    attendanceUsers,
+    submissionsTotal,
+    submissionsGraded,
+    pendingSchedule,
+  ] = await Promise.all([
+    prisma.user.findMany({
+      where: { role: "STUDENT", isActive: true, groupId: { in: scopeGroupIds } },
+      select: { id: true, groupId: true },
+    }),
+    prisma.user.count({
+      where: {
+        role: "TEACHER",
+        isActive: true,
+        ...(isDean ? { facultyId: user.facultyId ?? "__none__" } : {}),
+        ...(isDeptHead ? { departmentId: user.departmentId ?? "__none__" } : {}),
+      },
+    }),
+    prisma.course.count({
+      where: isDean
+        ? { teacher: { facultyId: user.facultyId ?? "__none__" } }
+        : isDeptHead
+          ? { teacher: { departmentId: user.departmentId ?? "__none__" } }
+          : {},
+    }),
+    prisma.attendance.groupBy({
+      by: ["studentId", "status"],
+      where: { student: { groupId: { in: scopeGroupIds } } },
+      _count: { _all: true },
+    }),
+    prisma.user.findMany({
+      where: { groupId: { in: scopeGroupIds } },
+      select: { id: true, groupId: true },
+    }),
+    prisma.submission.count({ where: { student: { groupId: { in: scopeGroupIds } } } }),
+    prisma.submission.count({
+      where: { student: { groupId: { in: scopeGroupIds } }, status: "GRADED" },
+    }),
+    prisma.scheduleEntry.count({
+      where: { groupId: { in: scopeGroupIds }, approval: "PENDING" },
+    }),
+  ]);
 
-  const overallPercent = attendancePercent(attendanceRows.map((row) => row.status));
-  const risk = atRiskStudents(
-    attendanceRows.map((row) => ({ studentId: row.studentId, status: row.status })),
-  );
-  const riskTop = risk.slice(0, 10);
+  const overallCounts = new Map<string, number>();
+  const attendanceCounts = new Map<string, Map<string, number>>();
+  for (const row of attendanceGroups) {
+    const count = row._count._all;
+    overallCounts.set(row.status, (overallCounts.get(row.status) ?? 0) + count);
+    const perStatus = attendanceCounts.get(row.studentId);
+    if (perStatus) {
+      perStatus.set(row.status, count);
+    } else {
+      attendanceCounts.set(row.studentId, new Map<string, number>([[row.status, count]]));
+    }
+  }
+
+  const overallPercent = attendanceStats(overallCounts).percent;
+  const riskTop = Array.from(attendanceCounts.entries())
+    .map(([studentId, counts]) => ({ studentId, ...attendanceStats(counts) }))
+    .filter((row) => row.total >= 3 && row.percent < 80)
+    .sort((a, b) => a.percent - b.percent)
+    .slice(0, 10);
   const riskUsers = riskTop.length
     ? await prisma.user.findMany({
         where: { id: { in: riskTop.map((row) => row.studentId) } },
@@ -139,15 +183,27 @@ export default async function MonitoringPage({
     : [];
   const riskUserMap = new Map(riskUsers.map((row) => [row.id, row]));
 
+  const groupIdByStudent = new Map(attendanceUsers.map((row) => [row.id, row.groupId]));
+  const groupTotals = new Map<string, { total: number; attended: number }>();
+  for (const [studentId, counts] of attendanceCounts) {
+    const studentGroupId = groupIdByStudent.get(studentId);
+    if (!studentGroupId) continue;
+    const stats = attendanceStats(counts);
+    const bucket = groupTotals.get(studentGroupId) ?? { total: 0, attended: 0 };
+    bucket.total += stats.total;
+    bucket.attended += stats.attended;
+    groupTotals.set(studentGroupId, bucket);
+  }
+
   const groupStats = scopeGroups
     .map((group) => {
-      const groupRows = attendanceRows.filter((row) => row.student.groupId === group.id);
+      const stats = groupTotals.get(group.id) ?? { total: 0, attended: 0 };
       return {
         id: group.id,
         name: group.name,
         studentCount: students.filter((student) => student.groupId === group.id).length,
-        records: groupRows.length,
-        percent: attendancePercent(groupRows.map((row) => row.status)),
+        records: stats.total,
+        percent: stats.total > 0 ? Math.round((stats.attended / stats.total) * 100) : 0,
       };
     })
     .sort((a, b) => a.percent - b.percent);

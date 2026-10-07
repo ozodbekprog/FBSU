@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { verifyAccessToken } from "@/lib/access-token";
 import { canScanAccess } from "@/modules/roles/access";
 
@@ -16,6 +17,18 @@ export async function POST(request: Request) {
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   if (!canScanAccess(user.role)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
+
+  const rateLimit = await checkRateLimit(`access:scan:${user.id}`, {
+    windowMs: 60_000,
+    maxAttempts: 60,
+    keyPrefix: "api",
+  });
+  if (!rateLimit.allowed) {
+    return Response.json(
+      { ok: false, error: "Juda ko'p urinish. Keyinroq qayta urinib ko'ring" },
+      { status: 429 },
+    );
   }
 
   const csrfValid = await verifyCsrfFromRequest(request);

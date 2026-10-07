@@ -6,6 +6,7 @@ import {
   isEnrolled,
   publicError,
 } from "@/components/quiz/server";
+import { attendanceCounts } from "@/app/api/attendance/summary/data";
 import { toQuestionFull, toQuestionPublic, type QuestionFull } from "@/components/quiz/shared";
 
 function hashSeed(value: string): number {
@@ -140,6 +141,17 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
         await closeExpiredAttempt(tx, active.id, active.answers, questions, deadline);
       }
 
+      if (quiz.dueAt && quiz.dueAt.getTime() < Date.now()) {
+        return { kind: "due" as const };
+      }
+
+      const attendanceRecords = await tx.attendance.findMany({
+        where: { courseId: quiz.courseId, studentId: user.id },
+        select: { status: true },
+      });
+      const attendance = attendanceCounts(attendanceRecords.map((record) => record.status));
+      if (!attendance.eligible) return { kind: "attendance" as const };
+
       const finishedCount = await tx.quizAttempt.count({
         where: { quizId: id, studentId: user.id, finishedAt: { not: null } },
       });
@@ -151,6 +163,15 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
       return { kind: "created" as const, attempt };
     });
 
+    if (result.kind === "due") {
+      return Response.json({ ok: false, error: "Test muddati tugagan" }, { status: 400 });
+    }
+    if (result.kind === "attendance") {
+      return Response.json(
+        { ok: false, error: "Imtihonga ruxsat yo'q (davomat past)" },
+        { status: 403 },
+      );
+    }
     if (result.kind === "limit") {
       return Response.json({ ok: false, error: "Urinishlar soni tugagan" }, { status: 409 });
     }

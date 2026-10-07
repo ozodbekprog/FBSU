@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { canManageCourse } from "@/components/courses/course-access";
 
 const reviewSchema = z.object({
@@ -92,6 +93,18 @@ export async function POST(
     return Response.json(
       { ok: false, error: "Faqat talabalar sharh qoldirishi mumkin" },
       { status: 403 },
+    );
+  }
+
+  const reviewRateLimit = await checkRateLimit(`reviews:create:${user.id}`, {
+    windowMs: 3_600_000,
+    maxAttempts: 5,
+    keyPrefix: "api",
+  });
+  if (!reviewRateLimit.allowed) {
+    return Response.json(
+      { ok: false, error: "Juda ko'p sharh. Keyinroq qayta urinib ko'ring" },
+      { status: 429 },
     );
   }
 

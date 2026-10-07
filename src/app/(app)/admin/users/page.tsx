@@ -5,13 +5,19 @@ import { prisma } from "@/lib/prisma";
 import { Button, Card, CardBody, Input, PageHeader, Select } from "@/components/ui";
 import UsersManager from "@/components/admin/UsersManager";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
+import { cn } from "@/lib/utils";
 
 const ROLES = ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA"] as const;
+
+const PAGE_SIZE = 50;
+
+const PAGE_LINK =
+  "inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition-colors duration-150 hover:bg-slate-50 hover:text-brand-900";
 
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; role?: string }>;
+  searchParams: Promise<{ q?: string; role?: string; page?: string }>;
 }) {
   const admin = await requireRole(["ADMIN", "REGISTRAR"]);
   const locale = await getLocale();
@@ -23,6 +29,8 @@ export default async function AdminUsersPage({
     typeof params.role === "string" && ROLES.includes(params.role as (typeof ROLES)[number])
       ? (params.role as (typeof ROLES)[number])
       : "";
+  const pageParam = Number(params.page);
+  const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
 
   const where: Prisma.UserWhereInput = {};
   if (q) {
@@ -41,7 +49,8 @@ export default async function AdminUsersPage({
     where.role = role;
   }
 
-  const [users, groups, departments] = await Promise.all([
+  const [total, users, groups, departments] = await Promise.all([
+    prisma.user.count({ where }),
     prisma.user.findMany({
       where,
       select: {
@@ -55,6 +64,8 @@ export default async function AdminUsersPage({
         department: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
     }),
     prisma.group.findMany({
       select: { id: true, name: true },
@@ -65,10 +76,20 @@ export default async function AdminUsersPage({
       orderBy: { name: "asc" },
     }),
   ]);
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const pageParams = new URLSearchParams();
+  if (q) pageParams.set("q", q);
+  if (role) pageParams.set("role", role);
+  const pageHref = (target: number) => {
+    const next = new URLSearchParams(pageParams);
+    next.set("page", String(target));
+    return `/admin/users?${next.toString()}`;
+  };
 
   return (
     <>
-      <PageHeader title={dictionary.admUsersTitle} subtitle={translate(locale, "admUsersResults", { count: users.length })} />
+      <PageHeader title={dictionary.admUsersTitle} subtitle={translate(locale, "admUsersResults", { count: total })} />
 
       <form action="/admin/users" method="get" className="mb-4">
         <Card className="overflow-hidden">
@@ -124,7 +145,7 @@ export default async function AdminUsersPage({
                 <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
-              {translate(locale, "admUsersResults", { count: users.length })}
+              {translate(locale, "admUsersResults", { count: total })}
             </span>
           </CardBody>
         </Card>
@@ -137,6 +158,28 @@ export default async function AdminUsersPage({
         currentUserId={admin.id}
         allowedRoles={admin.role === "ADMIN" ? null : ["STUDENT", "TEACHER"]}
       />
+
+      {pageCount > 1 ? (
+        <div className="mt-6 flex items-center justify-between gap-3">
+          {page > 1 ? (
+            <Link href={pageHref(page - 1)} className={PAGE_LINK}>
+              {dictionary.admPreviousArrow}
+            </Link>
+          ) : (
+            <span className={cn(PAGE_LINK, "pointer-events-none opacity-40")}>{dictionary.admPreviousArrow}</span>
+          )}
+          <span className="text-sm text-slate-500">
+            {translate(locale, "admPagination", { page, pageCount })}
+          </span>
+          {page < pageCount ? (
+            <Link href={pageHref(page + 1)} className={PAGE_LINK}>
+              {dictionary.admNextArrow}
+            </Link>
+          ) : (
+            <span className={cn(PAGE_LINK, "pointer-events-none opacity-40")}>{dictionary.admNextArrow}</span>
+          )}
+        </div>
+      ) : null}
     </>
   );
 }

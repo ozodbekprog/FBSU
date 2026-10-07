@@ -6,6 +6,7 @@ import { Badge, Button } from "@/components/ui";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { fmtDate } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
+import { requestBrowserLocation, type BrowserLocation } from "./live-qr";
 
 type Mark = { studentId: string; name: string; status: string };
 
@@ -58,6 +59,7 @@ export function SessionPresent({
   const seenRef = useRef<Set<string>>(new Set());
   const initializedRef = useRef(false);
   const toastTimerRef = useRef(0);
+  const locationRef = useRef<BrowserLocation | null>(null);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -77,10 +79,21 @@ export function SessionPresent({
 
   useEffect(() => {
     let cancelled = false;
+    void requestBrowserLocation().then((location) => {
+      if (!cancelled && location) locationRef.current = location;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
     async function fetchToken() {
+      const location = locationRef.current;
       const response = await apiFetch(`/api/attendance/sessions/${sessionId}/token`, {
         method: "POST",
-        body: JSON.stringify({}),
+        body: JSON.stringify(location ? { lat: location.lat, lng: location.lng } : {}),
       });
       const json = (await response.json().catch(() => null)) as
         | { ok?: boolean; data?: { url: string; expiresIn: number } }

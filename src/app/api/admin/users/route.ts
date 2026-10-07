@@ -13,6 +13,8 @@ const ROLES = ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGI
 
 const REGISTRAR_MANAGED_ROLES: readonly Role[] = ["STUDENT", "TEACHER"];
 
+const PAGE_SIZE = 50;
+
 function canManageUsers(role: Role) {
   return role === "ADMIN" || role === "REGISTRAR";
 }
@@ -38,6 +40,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim();
   const role = searchParams.get("role");
+  const pageParam = Number(searchParams.get("page"));
+  const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
 
   const where: Prisma.UserWhereInput = {};
   if (q) {
@@ -60,6 +64,8 @@ export async function GET(request: Request) {
     where,
     select: userSelect,
     orderBy: { createdAt: "desc" },
+    skip: (page - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
   });
 
   return Response.json({ ok: true, data: users });

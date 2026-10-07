@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { isStaff, requireUser } from "@/lib/auth";
+import { isRegistrar, isStaff, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { buildTranscript } from "@/components/transcript/transcript-data";
@@ -108,7 +108,7 @@ export default async function TranscriptPage({
   searchParams: Promise<{ studentId?: string }>;
 }) {
   const user = await requireUser();
-  const staff = isStaff(user.role);
+  const staff = isStaff(user.role) || isRegistrar(user.role);
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
   const { studentId } = await searchParams;
@@ -116,6 +116,19 @@ export default async function TranscriptPage({
   if (!staff && studentId && studentId !== user.id) notFound();
 
   const targetId = staff && studentId ? studentId : user.id;
+
+  let scopedCourseIds: string[] | undefined;
+  if (user.role === "TEACHER" && studentId && studentId !== user.id) {
+    const ownedCourses = await prisma.course.findMany({
+      where: {
+        teacherId: user.id,
+        enrollments: { some: { userId: studentId, status: "ACTIVE" } },
+      },
+      select: { id: true },
+    });
+    if (ownedCourses.length === 0) notFound();
+    scopedCourseIds = ownedCourses.map((course) => course.id);
+  }
 
   const studentsPromise: Promise<StudentOption[]> = staff
     ? prisma.user.findMany({
@@ -126,7 +139,10 @@ export default async function TranscriptPage({
       })
     : Promise.resolve([]);
 
-  const [data, students] = await Promise.all([buildTranscript(targetId), studentsPromise]);
+  const [data, students] = await Promise.all([
+    buildTranscript(targetId, scopedCourseIds),
+    studentsPromise,
+  ]);
 
   if (!data) {
     if (!staff) notFound();

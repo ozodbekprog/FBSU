@@ -48,7 +48,11 @@ export async function buildTranscript(
   if (!student || student.role !== "STUDENT") return null;
 
   const enrollments = await prisma.enrollment.findMany({
-    where: { userId: studentId, ...(courseIds ? { courseId: { in: courseIds } } : {}) },
+    where: {
+      userId: studentId,
+      status: "ACTIVE",
+      ...(courseIds ? { courseId: { in: courseIds } } : {}),
+    },
     select: {
       course: {
         select: { id: true, title: true, teacher: { select: { name: true } } },

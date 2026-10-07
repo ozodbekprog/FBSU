@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Role } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 
 const MANAGER_ROLES: Role[] = [
@@ -51,6 +52,18 @@ export async function POST(request: Request) {
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   if (!MANAGER_ROLES.includes(user.role)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
+
+  const taskRateLimit = await checkRateLimit(`tasks:create:${user.id}`, {
+    windowMs: 3_600_000,
+    maxAttempts: 30,
+    keyPrefix: "api",
+  });
+  if (!taskRateLimit.allowed) {
+    return Response.json(
+      { ok: false, error: "Juda ko'p topshiriq. Keyinroq qayta urinib ko'ring" },
+      { status: 429 },
+    );
   }
 
   const csrfValid = await verifyCsrfFromRequest(request);

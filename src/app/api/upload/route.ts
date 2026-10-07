@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { getCurrentUser, isStaff } from "@/lib/auth";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { uploadsRoot } from "@/lib/uploads";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
 
@@ -61,6 +62,18 @@ export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   if (!isStaff(user.role)) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+
+  const rateLimit = await checkRateLimit(`upload:${user.id}`, {
+    windowMs: 3_600_000,
+    maxAttempts: 20,
+    keyPrefix: "api",
+  });
+  if (!rateLimit.allowed) {
+    return Response.json(
+      { ok: false, error: "Juda ko'p yuklash. Keyinroq qayta urinib ko'ring" },
+      { status: 429 },
+    );
+  }
 
   const contentLength = request.headers.get("content-length");
   const declaredSize = contentLength === null ? Number.NaN : Number(contentLength);

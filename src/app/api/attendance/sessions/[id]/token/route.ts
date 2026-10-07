@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canManageCourse } from "@/components/courses/course-access";
 import { QR_TOKEN_TTL_SECONDS } from "@/modules/attendance-security/config";
 import { checkInUrl, signQrToken } from "@/modules/attendance-security/qr-token";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { requestOrigin } from "@/lib/request-origin";
 
 const bodySchema = z.object({
@@ -22,6 +23,18 @@ export async function POST(
   }
   if (user.role !== "TEACHER" && user.role !== "ADMIN") {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
+
+  const tokenRateLimit = await checkRateLimit(`attendance:token:${user.id}`, {
+    windowMs: 60_000,
+    maxAttempts: 150,
+    keyPrefix: "api",
+  });
+  if (!tokenRateLimit.allowed) {
+    return Response.json(
+      { ok: false, error: "Juda ko'p so'rov. Keyinroq qayta urinib ko'ring" },
+      { status: 429 },
+    );
   }
 
   const { id } = await params;

@@ -171,7 +171,10 @@ export async function getStudentGpa(
   }
 
   const records = await prisma.course.findMany({
-    where: { id: { in: [...totals.keys()] } },
+    where: {
+      id: { in: [...totals.keys()] },
+      enrollments: { some: { userId: studentId, status: "ACTIVE" } },
+    },
     select: { id: true, title: true, slug: true },
     orderBy: { title: "asc" },
   });

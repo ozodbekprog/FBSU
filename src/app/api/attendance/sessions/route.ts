@@ -3,6 +3,7 @@ import { randomInt } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canManageCourse } from "@/components/courses/course-access";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { finalizeExpiredAttendanceSessions } from "@/modules/attendance/auto-close";
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -44,6 +45,18 @@ export async function POST(request: Request) {
   }
   if (user.role !== "TEACHER" && user.role !== "ADMIN") {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
+
+  const sessionRateLimit = await checkRateLimit(`attendance:session:${user.id}`, {
+    windowMs: 600_000,
+    maxAttempts: 15,
+    keyPrefix: "api",
+  });
+  if (!sessionRateLimit.allowed) {
+    return Response.json(
+      { ok: false, error: "Juda ko'p sessiya. Keyinroq qayta urinib ko'ring" },
+      { status: 429 },
+    );
   }
 
   const body = await request.json().catch(() => null);

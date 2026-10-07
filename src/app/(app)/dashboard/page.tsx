@@ -583,7 +583,10 @@ export default async function DashboardPage() {
     if (user.role === "TEACHER") {
       const [entries, teacherCourses, marks] = await Promise.all([
         prisma.scheduleEntry.findMany({
-          where: { dayOfWeek: todayDow },
+          where: {
+            dayOfWeek: todayDow,
+            OR: [{ teacherId: user.id }, { teacherId: null, teacher: { not: null } }],
+          },
           orderBy: { slot: "asc" },
           include: { group: { select: { name: true } } },
         }),
@@ -847,33 +850,35 @@ export default async function DashboardPage() {
     );
   }
 
-  const enrollments = await prisma.enrollment.findMany({
-    where: { userId: user.id, status: "ACTIVE" },
-    include: {
-      course: { include: { teacher: true } },
-    },
-    orderBy: { createdAt: "asc" },
-  });
-
-  const upcoming = await prisma.assignment.findMany({
-    where: { courseId: { in: enrollments.map((e) => e.courseId) } },
-    orderBy: { dueAt: "asc" },
-    take: 5,
-    include: {
-      course: true,
-      submissions: { where: { studentId: user.id } },
-    },
-  });
-
   const today = new Date().getDay() === 0 ? 7 : new Date().getDay();
-  const scheduleToday = user.groupId
-    ? await prisma.scheduleEntry.findMany({
-        where: { groupId: user.groupId, dayOfWeek: today },
-        orderBy: { slot: "asc" },
-      })
-    : [];
+  const [enrollments, scheduleToday] = await Promise.all([
+    prisma.enrollment.findMany({
+      where: { userId: user.id, status: "ACTIVE" },
+      include: {
+        course: { include: { teacher: true } },
+      },
+      orderBy: { createdAt: "asc" },
+    }),
+    user.groupId
+      ? prisma.scheduleEntry.findMany({
+          where: { groupId: user.groupId, dayOfWeek: today },
+          orderBy: { slot: "asc" },
+        })
+      : Promise.resolve([]),
+  ]);
 
-  const analytics = await getStudentAnalytics(user.id, locale);
+  const [upcoming, analytics] = await Promise.all([
+    prisma.assignment.findMany({
+      where: { courseId: { in: enrollments.map((e) => e.courseId) } },
+      orderBy: { dueAt: "asc" },
+      take: 5,
+      include: {
+        course: true,
+        submissions: { where: { studentId: user.id } },
+      },
+    }),
+    getStudentAnalytics(user.id, locale),
+  ]);
 
   const assignmentsHref = enrollments[0]
     ? `/courses/${enrollments[0].course.slug}/assignments`

@@ -126,7 +126,7 @@ export async function POST(request: Request) {
       : [];
     const nextStatus = faceSuspicious
       ? "SUSPICIOUS"
-      : row.status === "SUSPICIOUS"
+      : row.status === "SUSPICIOUS" || row.status === "LEFT_EARLY"
         ? "PRESENT"
         : row.status;
     const nextNote = faceSuspicious

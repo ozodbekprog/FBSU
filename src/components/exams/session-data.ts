@@ -35,7 +35,7 @@ async function getEligibleByCourse(courseIds: string[]) {
   if (courseIds.length === 0) return result;
   const [enrollments, records] = await Promise.all([
     prisma.enrollment.findMany({
-      where: { courseId: { in: courseIds } },
+      where: { courseId: { in: courseIds }, status: "ACTIVE" },
       select: { courseId: true, userId: true },
     }),
     prisma.attendance.findMany({
@@ -104,7 +104,9 @@ export async function getStaffSessions(
 
 export async function getStudentSessions(studentId: string): Promise<StudentSessionItem[]> {
   const sessions = await prisma.examSession.findMany({
-    where: { course: { enrollments: { some: { userId: studentId } } } },
+    where: {
+      course: { enrollments: { some: { userId: studentId, status: "ACTIVE" } } },
+    },
     orderBy: [{ date: "asc" }, { startTime: "asc" }],
     include: {
       course: { select: { id: true, title: true, slug: true } },
@@ -188,7 +190,7 @@ export async function getSessionSheetRows(
 
   const [enrollments, sheets] = await Promise.all([
     prisma.enrollment.findMany({
-      where: { courseId: session.courseId },
+      where: { courseId: session.courseId, status: "ACTIVE" },
       orderBy: { createdAt: "asc" },
       select: {
         userId: true,
@@ -232,7 +234,10 @@ export async function getStudentSessionView(sessionId: string, studentId: string
   if (!session) return null;
 
   const enrollment = await prisma.enrollment.findUnique({
-    where: { courseId_userId: { courseId: session.courseId, userId: studentId } },
+    where: {
+      courseId_userId: { courseId: session.courseId, userId: studentId },
+      status: "ACTIVE",
+    },
     select: { id: true },
   });
   if (!enrollment) return null;
