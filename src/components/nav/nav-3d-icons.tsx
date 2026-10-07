@@ -584,6 +584,89 @@ function Monitoring() {
   );
 }
 
+/** Xodimlar davomati — xodim siluetlari va barmoq izi. */
+function Staff() {
+  return (
+    <group>
+      <Tile a={[1.92, 1.5, 0.2]} m="brandDeep" p={[0, -0.04, -0.08]} radius={0.14} />
+      {/* orqa xodim */}
+      <Ball rad={0.2} m="brandLight" p={[-0.44, 0.28, 0.14]} />
+      <Tile a={[0.62, 0.56, 0.12]} m="brandLight" p={[-0.44, -0.28, 0.14]} radius={0.16} />
+      {/* old xodim */}
+      <Ball rad={0.25} m="goldLight" p={[0.3, 0.32, 0.26]} />
+      <Tile a={[0.78, 0.7, 0.14]} m="gold" p={[0.3, -0.3, 0.26]} radius={0.18} />
+      {/* barmoq izi halqasi */}
+      <Ring rad={0.46} tube={0.055} arc={PI * 0.42} m="paper" p={[0, 0, 0.34]} r={[0, 0, -0.5]} />
+    </group>
+  );
+}
+
+/** Topshiriqlar — vazifa ro'yxati va belgi. */
+function Tasks() {
+  return (
+    <group>
+      <Tile a={[1.6, 1.76, 0.22]} m="brand" p={[0, -0.02, 0]} radius={0.12} />
+      <Tile a={[1.28, 1.44, 0.1]} m="paper" p={[0, -0.06, 0.14]} radius={0.05} />
+      {[0.48, 0.16, -0.16].map((y, i) => (
+        <group key={y}>
+          <Cube a={[0.2, 0.2, 0.08]} m="brandDeep" p={[-0.36, y, 0.2]} />
+          <Cube a={[0.62, 0.07, 0.06]} m={i === 2 ? "brandLight" : "brandDeep"} p={[0.16, y, 0.2]} />
+        </group>
+      ))}
+      {/* ustidan chizilgan chiziq — bajarilgan */}
+      <Cube a={[0.86, 0.1, 0.09]} m="gold" p={[0.06, 0.48, 0.24]} r={[0, 0, 0.26]} />
+      <Cyl rt={0.055} h={0.72} m="gold" p={[0.72, 0.3, 0.3]} r={[0, 0, PI / 3.2]} />
+    </group>
+  );
+}
+
+/** Mening QR kodim — QR katak va ramkalar. */
+function MyQr() {
+  return (
+    <group>
+      <Tile a={[1.76, 1.76, 0.16]} m="paper" p={[0, 0, 0]} radius={0.1} />
+      <Tile a={[1.9, 1.9, 0.1]} m="brand" p={[0, 0, -0.08]} radius={0.12} />
+      {/* uchta burchak ramkasi */}
+      {([[-1, 1], [1, 1], [-1, -1]] as [number, number][]).map(([sx, sy]) => (
+        <group key={`${sx}${sy}`}>
+          <Cube a={[0.56, 0.11, 0.07]} m="brandDeep" p={[sx * 0.56, sy * 0.62, 0.12]} />
+          <Cube a={[0.11, 0.56, 0.07]} m="brandDeep" p={[sx * 0.78, sy * 0.4, 0.12]} />
+        </group>
+      ))}
+      {/* kataklar */}
+      {([[-0.36, 0.34], [0.06, 0.34], [0.44, 0.06], [-0.2, -0.16], [0.3, -0.42], [-0.44, -0.5]] as [number, number][]).map(
+        ([x, y], i) => (
+          <Cube key={i} a={[0.18, 0.18, 0.07]} m={i % 2 === 0 ? "brand" : "brandLight"} p={[x, y, 0.12]} />
+        ),
+      )}
+      {/* skaner chizig'i */}
+      <Cube a={[1.5, 0.09, 0.09]} m="gold" p={[0, 0, 0.2]} />
+    </group>
+  );
+}
+
+/** Turniket — aylanuvchi blagaminga o'tkazuvchi turniket. */
+function Access() {
+  return (
+    <group>
+      {/* asos */}
+      <Cyl rt={0.82} rb={0.86} h={0.16} seg={28} m="brandDeep" p={[0, -0.78, 0]} />
+      <Cyl rt={0.2} rb={0.24} h={0.72} seg={18} m="brand" p={[0, -0.36, 0]} />
+      {/* turniket blagami — uchta tarmoq */}
+      {[0, (PI * 2) / 3, (PI * 4) / 3].map((a) => (
+        <group key={a} rotation={[0, 0, a]}>
+          <Cyl rt={0.07} h={0.78} m="gold" p={[0, 0.5, 0]} r={[0, 0, PI / 2]} />
+          <Ball rad={0.11} m="goldLight" p={[0.82, 0.5, 0]} />
+          <Cyl rt={0.05} h={0.3} m="brandLight" p={[0.38, 0.72, 0]} r={[0, 0, -0.5]} />
+        </group>
+      ))}
+      {/* markaz */}
+      <Cyl rt={0.16} h={0.26} seg={18} m="brandLight" p={[0, 0.5, 0]} />
+      <Ball rad={0.13} m="gold" p={[0, 0.66, 0]} />
+    </group>
+  );
+}
+
 export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/dashboard": Gauge,
   "/courses": Courses,
@@ -616,6 +699,10 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/labs": Labs,
   "/approvals": Approvals,
   "/monitoring": Monitoring,
+  "/staff": Staff,
+  "/tasks": Tasks,
+  "/my-qr": MyQr,
+  "/access": Access,
 };
 
 export const NAV3D_SPINNING = new Set([
