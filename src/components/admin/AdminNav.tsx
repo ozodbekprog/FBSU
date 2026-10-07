@@ -44,6 +44,18 @@ const LINKS: { href: string; label: keyof Dictionary; icon: ReactNode }[] = [
     ),
   },
   {
+    href: "/admin/orders",
+    label: "admOrdersTitle",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <path d="M14 2v6h6" />
+        <path d="M8 13h8" />
+        <path d="M8 17h5" />
+      </svg>
+    ),
+  },
+  {
     href: "/admin/courses",
     label: "admNavCourses",
     icon: (
@@ -183,6 +195,7 @@ export default function AdminNav({ role }: { role?: string }) {
           (link) =>
             link.href === "/admin/users" ||
             link.href === "/admin/groups" ||
+            link.href === "/admin/orders" ||
             link.href === "/admin/import" ||
             link.href === "/admin/hemis",
         )

@@ -135,7 +135,7 @@ export default async function AdminOrdersPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
-  await requireRole(["ADMIN"]);
+  await requireRole(["ADMIN", "REGISTRAR"]);
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
   const params = await searchParams;
