@@ -8,7 +8,7 @@ import { ReportSendButton } from "@/components/curator/report-send";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 export default async function CuratorGroupPage({ params }: { params: Promise<{ id: string }> }) {
-  const user = await requireRole(["TEACHER", "ADMIN"]);
+  const user = await requireRole(["TEACHER", "ADMIN", "TYUTOR"]);
   const { id } = await params;
 
   const allowed = await getCuratorGroups(user, id);
