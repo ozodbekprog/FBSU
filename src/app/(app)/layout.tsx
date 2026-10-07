@@ -30,6 +30,7 @@ export default async function AppLayout({
       label: dictionary.navGroupMain,
       links: [
         { href: "/dashboard", label: dictionary.navDashboard },
+        ...(user.role === "OTA_ONA" ? [{ href: "/parent", label: dictionary.parentTitle }] : []),
         { href: "/courses", label: dictionary.navCourses },
         { href: "/labs", label: dictionary.labTitle },
         ...(modules.catalog ? [{ href: "/catalog", label: dictionary.navCatalog }] : []),

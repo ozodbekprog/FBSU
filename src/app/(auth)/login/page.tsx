@@ -139,6 +139,25 @@ const DEMO_ACCOUNTS = [
       </svg>
     ),
   },
+  {
+    roleKey: "roleParent" as const,
+    email: "ota-ona@ttpu.uz",
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="size-4"
+      >
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M20.8 14.6a2.2 2.2 0 0 0-2.9-3.2l-.4.4-.4-.4a2.2 2.2 0 0 0-2.9 3.2l3.3 3.3 3.3-3.3Z" />
+      </svg>
+    ),
+  },
 ];
 
 const PANEL_FEATURES = [
@@ -168,17 +187,18 @@ export default function LoginPage() {
 
   function fillDemo(demoEmail: string) {
     setEmail(demoEmail);
+    setPassword("ttpu1234");
     setError(null);
+    void loginWith(demoEmail, "ttpu1234");
   }
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function loginWith(emailValue: string, passwordValue: string) {
     setLoading(true);
     setError(null);
     try {
       const res = await apiFetch("/api/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: emailValue, password: passwordValue }),
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) {
@@ -197,6 +217,11 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await loginWith(email, password);
   }
 
   return (

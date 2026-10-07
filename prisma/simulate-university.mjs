@@ -835,6 +835,22 @@ async function main() {
     console.log(`   turniket yozuvlari: mavjud (${accessCount})`);
   }
 
+  console.log("16) Demo ota-ona akkaunti...");
+  const demoStudent = await prisma.user.findUnique({ where: { email: "ai1s01@ttpu.uz" }, select: { id: true } });
+  if (demoStudent) {
+    const parent = await prisma.user.upsert({
+      where: { email: "ota-ona@ttpu.uz" },
+      update: { role: "OTA_ONA", isActive: true },
+      create: { email: "ota-ona@ttpu.uz", name: "R. Qodirov", role: "OTA_ONA", passwordHash },
+    });
+    await prisma.parentLink.upsert({
+      where: { parentId_studentId: { parentId: parent.id, studentId: demoStudent.id } },
+      update: {},
+      create: { parentId: parent.id, studentId: demoStudent.id, relation: "FATHER" },
+    });
+    console.log("   ota-ona@ttpu.uz -> ai1s01@ttpu.uz bog'landi");
+  }
+
   const summary = {
     seconds: Math.round((Date.now() - started) / 1000),
     faculties: await prisma.faculty.count(),
