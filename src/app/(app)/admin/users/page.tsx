@@ -13,7 +13,7 @@ export default async function AdminUsersPage({
 }: {
   searchParams: Promise<{ q?: string; role?: string }>;
 }) {
-  const admin = await requireRole(["ADMIN"]);
+  const admin = await requireRole(["ADMIN", "REGISTRAR"]);
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
   const params = await searchParams;
@@ -118,7 +118,13 @@ export default async function AdminUsersPage({
         </Card>
       </form>
 
-      <UsersManager users={users} groups={groups} departments={departments} currentUserId={admin.id} />
+      <UsersManager
+        users={users}
+        groups={groups}
+        departments={departments}
+        currentUserId={admin.id}
+        allowedRoles={admin.role === "ADMIN" ? null : ["STUDENT", "TEACHER"]}
+      />
     </>
   );
 }

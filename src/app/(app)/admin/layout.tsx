@@ -2,11 +2,11 @@ import AdminNav from "@/components/admin/AdminNav";
 import { requireRole } from "@/lib/auth";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  await requireRole(["ADMIN"]);
+  const user = await requireRole(["ADMIN", "REGISTRAR"]);
 
   return (
     <div>
-      <AdminNav />
+      <AdminNav role={user.role} />
       {children}
     </div>
   );

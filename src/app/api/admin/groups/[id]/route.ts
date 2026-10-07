@@ -11,7 +11,7 @@ const patchSchema = z.object({
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const { id } = await ctx.params;
   const group = await prisma.group.findUnique({ where: { id } });
@@ -54,7 +54,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const { id } = await ctx.params;
   const group = await prisma.group.findUnique({

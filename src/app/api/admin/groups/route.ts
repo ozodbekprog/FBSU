@@ -10,7 +10,7 @@ const createSchema = z.object({
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const groups = await prisma.group.findMany({
     include: { _count: { select: { users: true } } },
@@ -23,7 +23,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const body = await request.json().catch(() => null);
   const parsed = createSchema.safeParse(body);

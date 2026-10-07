@@ -11,6 +11,12 @@ import { getClientIp as getClientIpFromHeaders } from "@/lib/client-ip";
 
 const ROLES = ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER", "STUDENT", "XODIM"] as const;
 
+const REGISTRAR_MANAGED_ROLES: readonly Role[] = ["STUDENT", "TEACHER"];
+
+function canManageUsers(role: Role) {
+  return role === "ADMIN" || role === "REGISTRAR";
+}
+
 const createSchema = z.object({
   name: z.string().trim().min(2).max(100),
   email: z.string().trim().email(),
@@ -27,7 +33,7 @@ function getClientIp(request: Request) {
 export async function GET(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (!canManageUsers(user.role)) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim();
@@ -67,7 +73,7 @@ export async function POST(request: Request) {
 
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (!canManageUsers(user.role)) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const limitKey = `admin:create_user:${getClientIp(request)}`;
   const rateLimit = await checkRateLimit(limitKey, {
@@ -93,6 +99,10 @@ export async function POST(request: Request) {
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json({ ok: false, error: "Ma'lumotlar to'liq emas yoki xato" }, { status: 400 });
+  }
+
+  if (user.role === "REGISTRAR" && !REGISTRAR_MANAGED_ROLES.includes(parsed.data.role)) {
+    return Response.json({ ok: false, error: "Bu rolni yaratishga ruxsat yo'q" }, { status: 403 });
   }
 
   const email = parsed.data.email.toLowerCase();

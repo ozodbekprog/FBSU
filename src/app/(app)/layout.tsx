@@ -82,6 +82,12 @@ export default async function AppLayout({
         ...(isStaff(user.role) || user.role === "TYUTOR"
           ? [{ href: "/curator", label: dictionary.navCurator }]
           : []),
+        ...(user.role === "REGISTRAR"
+          ? [
+              { href: "/admin/users", label: dictionary.admNavUsers },
+              { href: "/admin/groups", label: dictionary.admNavGroups },
+            ]
+          : []),
         ...(canViewAnalysis(user.role) ? [{ href: "/reports", label: dictionary.navReports }] : []),
         ...(canViewAnalysis(user.role) ? [{ href: "/workload", label: dictionary.navWorkload }] : []),
         ...(user.role === "ADMIN" ? [{ href: "/admin", label: dictionary.navAdmin }] : []),

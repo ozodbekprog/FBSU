@@ -162,13 +162,17 @@ const LINKS: { href: string; label: keyof Dictionary; icon: ReactNode }[] = [
   },
 ];
 
-export default function AdminNav() {
+export default function AdminNav({ role }: { role?: string }) {
   const { t } = useI18n();
   const pathname = usePathname();
+  const links =
+    role === "REGISTRAR"
+      ? LINKS.filter((link) => link.href === "/admin/users" || link.href === "/admin/groups")
+      : LINKS;
 
   return (
     <nav className="mb-6 flex w-fit max-w-full flex-wrap items-center gap-1 rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_14px_30px_-22px_rgba(29,52,96,0.25)] backdrop-blur">
-      {LINKS.map((link) => {
+      {links.map((link) => {
         const active = link.href === "/admin" ? pathname === "/admin" : pathname.startsWith(link.href);
         return (
           <Link

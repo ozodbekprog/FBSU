@@ -80,14 +80,19 @@ export default function UsersManager({
   groups,
   departments,
   currentUserId,
+  allowedRoles = null,
 }: {
   users: AdminUser[];
   groups: GroupOption[];
   departments: DepartmentOption[];
   currentUserId: string;
+  allowedRoles?: Role[] | null;
 }) {
   const router = useRouter();
   const { t } = useI18n();
+  const roleOptions: Role[] =
+    allowedRoles ??
+    ["STUDENT", "TEACHER", "TYUTOR", "XODIM", "KAFEDRA_MUDIRI", "DEKAN", "PRO_RECTOR", "REKTOR", "REGISTRAR", "ADMIN"];
   const [mode, setMode] = useState<FormMode | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -328,16 +333,11 @@ export default function UsersManager({
                     disabled={isSelfEdit}
                     onChange={(e) => update("role", e.target.value as Role)}
                   >
-                    <option value="STUDENT">{t("admRoleStudent")}</option>
-                    <option value="TEACHER">{t("admRoleTeacher")}</option>
-                    <option value="TYUTOR">{t("admRoleTutor")}</option>
-                    <option value="XODIM">{t("admRoleStaff")}</option>
-                    <option value="KAFEDRA_MUDIRI">{t("admRoleHead")}</option>
-                    <option value="DEKAN">{t("admRoleDean")}</option>
-                    <option value="PRO_RECTOR">{t("admRoleProRector")}</option>
-                    <option value="REKTOR">{t("admRoleRector")}</option>
-                    <option value="REGISTRAR">{t("admRoleRegistrar")}</option>
-                    <option value="ADMIN">{t("admRoleAdmin")}</option>
+                    {roleOptions.map((roleOption) => (
+                      <option key={roleOption} value={roleOption}>
+                        {t(ROLE_META[roleOption].label)}
+                      </option>
+                    ))}
                   </Select>
                 </div>
                 <div>

@@ -5,7 +5,7 @@ import GroupsManager from "@/components/admin/GroupsManager";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 export default async function AdminGroupsPage() {
-  await requireRole(["ADMIN"]);
+  await requireRole(["ADMIN", "REGISTRAR"]);
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
 
