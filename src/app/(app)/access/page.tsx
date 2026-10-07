@@ -1,0 +1,85 @@
+import { redirect } from "next/navigation";
+import type { Role } from "@prisma/client";
+import { requireUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { Badge, Card, CardBody, CardHeader, EmptyState, PageHeader, Table } from "@/components/ui";
+import { getDictionary, getLocale } from "@/i18n";
+import { fmtDateTime } from "@/lib/utils";
+import { ROLE_LABEL_KEY } from "@/components/profile/ProfileHero";
+import { AccessKiosk } from "@/components/access/access-kiosk";
+
+const LOG_ROLES: Role[] = ["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"];
+
+export default async function AccessPage() {
+  const user = await requireUser();
+  if (user.role === "STUDENT") redirect("/dashboard");
+
+  const dictionary = getDictionary(await getLocale());
+  const canViewLogs = LOG_ROLES.includes(user.role);
+
+  const logs = canViewLogs
+    ? await prisma.accessLog.findMany({
+        orderBy: { at: "desc" },
+        take: 20,
+        include: { user: { select: { name: true, role: true } } },
+      })
+    : [];
+
+  return (
+    <>
+      <PageHeader title={dictionary.accTitle} subtitle={dictionary.accSubtitle} />
+      <AccessKiosk />
+      {canViewLogs ? (
+        <div className="mt-6">
+          <Card>
+            <CardHeader title={dictionary.accLogs} subtitle={dictionary.accLogsSubtitle} />
+            {logs.length === 0 ? (
+              <CardBody>
+                <EmptyState title={dictionary.accEmpty} />
+              </CardBody>
+            ) : (
+              <Table>
+                <thead>
+                  <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
+                    <th className="border-b border-slate-100 px-6 py-3 font-semibold">{dictionary.accPerson}</th>
+                    <th className="border-b border-slate-100 px-6 py-3 font-semibold">{dictionary.accDirection}</th>
+                    <th className="border-b border-slate-100 px-6 py-3 font-semibold">{dictionary.accTime}</th>
+                    <th className="border-b border-slate-100 px-6 py-3 font-semibold">{dictionary.accAllowed}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.map((log) => (
+                    <tr
+                      key={log.id}
+                      className="border-b border-slate-50 transition-colors duration-150 last:border-0 hover:bg-slate-50/60"
+                    >
+                      <td className="px-6 py-3">
+                        <span className="block font-medium text-slate-900">{log.user?.name ?? "—"}</span>
+                        {log.user ? (
+                          <span className="block text-xs text-slate-500">
+                            {dictionary[ROLE_LABEL_KEY[log.user.role]]}
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="px-6 py-3">
+                        <Badge tone={log.direction === "IN" ? "green" : "amber"}>
+                          {log.direction === "IN" ? dictionary.accIn : dictionary.accOut}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-3 text-slate-600">{fmtDateTime(log.at)}</td>
+                      <td className="px-6 py-3">
+                        <Badge tone={log.allowed ? "green" : "rose"}>
+                          {log.allowed ? "✓" : dictionary.accDenied}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            )}
+          </Card>
+        </div>
+      ) : null}
+    </>
+  );
+}

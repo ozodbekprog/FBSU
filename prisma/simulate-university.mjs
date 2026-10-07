@@ -790,6 +790,51 @@ async function main() {
   }
   console.log(`   ish topshiriqlari: +${taskCount}`);
 
+  console.log("15) Turniket jurnali...");
+  const accessCount = await prisma.accessLog.count();
+  if (accessCount < 50) {
+    const gate = "Asosiy kirish";
+    const accessRows = [];
+    const staffForAccess = await prisma.user.findMany({
+      where: { role: { in: ["XODIM", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER"] } },
+      select: { id: true },
+    });
+    const studentsForAccess = await prisma.user.findMany({ where: { role: "STUDENT" }, select: { id: true }, take: 60 });
+    const people = [...staffForAccess, ...studentsForAccess];
+    for (let offset = -3; offset <= 0; offset += 1) {
+      const day = utcDay(offset);
+      const dow = day.getUTCDay();
+      if (dow === 0 || dow === 6) continue;
+      for (const person of people) {
+        if (chance(0.12)) continue;
+        accessRows.push({
+          userId: person.id,
+          direction: "IN",
+          gate,
+          method: chance(0.3) ? "TERMINAL" : "QR",
+          allowed: true,
+          at: atHour(day, 8, ri(0, 70)),
+        });
+        if (offset < 0 || chance(0.7)) {
+          accessRows.push({
+            userId: person.id,
+            direction: "OUT",
+            gate,
+            method: chance(0.3) ? "TERMINAL" : "QR",
+            allowed: true,
+            at: atHour(day, 17, ri(10, 80)),
+          });
+        }
+      }
+    }
+    for (let index = 0; index < accessRows.length; index += 800) {
+      await prisma.accessLog.createMany({ data: accessRows.slice(index, index + 800) });
+    }
+    console.log(`   turniket yozuvlari: +${accessRows.length}`);
+  } else {
+    console.log(`   turniket yozuvlari: mavjud (${accessCount})`);
+  }
+
   const summary = {
     seconds: Math.round((Date.now() - started) / 1000),
     faculties: await prisma.faculty.count(),
