@@ -89,7 +89,7 @@ const ROLE_LABELS: Record<Role, keyof Dictionary> = {
   OTA_ONA: "dashRoleParents",
 };
 
-const ATTENDED: AttendanceStatus[] = ["PRESENT", "LATE", "EXCUSED", "SUSPICIOUS"];
+const ATTENDED: AttendanceStatus[] = ["PRESENT", "LATE"];
 
 function startOfDay(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());

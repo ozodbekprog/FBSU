@@ -118,7 +118,7 @@ export async function buildTranscript(
   for (const record of attendance) {
     const current = attendanceTotals.get(record.courseId) ?? { attended: 0, total: 0 };
     current.total += 1;
-    if (record.status !== "ABSENT") current.attended += 1;
+    if (record.status === "PRESENT" || record.status === "LATE") current.attended += 1;
     attendanceTotals.set(record.courseId, current);
   }
 

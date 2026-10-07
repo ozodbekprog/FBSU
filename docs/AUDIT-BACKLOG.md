@@ -10,49 +10,50 @@
 - [x] Transcript jadvali mobil scroll
 - [x] 187 unit test
 
-## 🔴 TO'LQIN 2 — YUQORI (navbatda)
+## 🟡 TO'LQIN 2 — YUQORI (asosiy qismi bajarildi: f29a40d)
 
 ### O'quv jarayoni
-- [ ] `transcript/page.tsx` — TEACHER faqat o'z kurslarini ko'rsin (API bilan mos)
+- [x] `transcript/page.tsx` — TEACHER faqat o'z kurslarini ko'rsin (API bilan mos)
 - [ ] Yagona baholash dvigateli: quiz "eng yaxshi urinish" siyosati (grades/gpa/transcript/report bir xil hisoblasin)
-- [ ] Quiz `dueAt` + attendance eligibility serverda majburiy (UI va'dasiga mos)
+- [x] Quiz `dueAt` + attendance eligibility serverda majburiy (UI va'dasiga mos)
 - [ ] Sana siyosati: Asia/Tashkent (+5) — `datetime-local`, `startOfToday`, `todayIso` hammasi bitta helper
 - [ ] Transcript: EXCUSED/SUSPICIOUS qatnashmagan hisoblansin (`attendanceCounts`)
-- [ ] Enrollment `ACTIVE` filtri qolgan joylar: report-data, transcript-data, exams session-data, gpa, courses API
+- [x] Enrollment `ACTIVE` filtri qolgan joylar: report-data, transcript-data, exams session-data, gpa, courses API
 - [ ] Quiz shuffle va baholash remap mosligi (hozir aralashtirish bahoga ta'sir qilmaydi)
 
 ### Davomat / Face ID / Turniket
 - [ ] Face policy qarori (Tony): yuzsiz check-in → FACE_NOT_ENROLLED signal; yuzni o'chirib bypass qilishni to'sish
 - [ ] `faceCheck ok` bo'lganda IP flaglarni O'CHIRMASLIK (auditga yuborish)
 - [ ] QR `jti` bir martalik (replay himoyasi) + grace qisqartirish
-- [ ] LEFT_EARLY: keyingi CHECK_OUT bilan PRESENT/LATE ga tiklash
-- [ ] `SessionPresent` o'qituvchi lokatsiyasini token so'rovida yuborsin (GEO_FAR ishlashi uchun)
+- [x] LEFT_EARLY: keyingi CHECK_OUT bilan PRESENT/LATE ga tiklash
+- [x] `SessionPresent` o'qituvchi lokatsiyasini token so'rovida yuborsin (GEO_FAR ishlashi uchun)
 - [ ] Journal UI va server hisobini bitta helperga birlashtirish
-- [ ] `access/scan` rate-limit + anti-passback (ketma-ket IN-IN)
+- [x] `access/scan` rate-limit
+- [ ] `access/scan` anti-passback (ketma-ket IN-IN)
 
 ### Infratuzilma
-- [ ] Rate-limit 9 ta endpointga: scan, upload, search, sessions, token, report/send, tasks, staff-attendance, reviews
+- [x] Rate-limit 9 ta endpointga: scan, upload, search, sessions, token, report/send, tasks, staff-attendance, reviews
 - [ ] `withRouteErrors` wrapper — 108 route'da try/catch (strukturaviy 500)
 - [ ] XFF: faqat ishonchli hop (x-real-ip) yoki TRUSTED_PROXY flag
 - [ ] Rate-limit Redis'siz: fail-safe try/catch + ogohlantirish
 - [ ] APP_URL va SMTP sozlash (infra/Tony)
 
 ### Boshqaruv / Rollar
-- [ ] Hisobot eksport 403 muammosi (rahbariyat scope bilan ruxsat yoki tugmani yashirish)
+- [x] Hisobot eksport 403 muammosi (rahbariyat scope bilan ruxsat)
 - [ ] Orders (transcript/certificate/retake arizalari) → REGISTRATOR
 - [ ] Kurator tayinlash UI: TYUTOR qo'shish + `isActive` tekshiruvi (subgroups teachers ro'yxati)
 - [ ] Staff overview `notCame` hisobi xatosi (ADMIN hisobga mosligi)
 
 ### UI/UX
-- [ ] 7 sahifa i18n: quizzes (4 sahifa), bonus-points, users/[id] — hardcode o'zbekcha → t()
+- [ ] 7 sahifa i18n: quizzes (4 sahifa), bonus-points, users/[id] — hardcode o'zbekcha → t() ⏳ agent ishlamoqda
 - [ ] `/schedule` mobilda default "list" ko'rinish
 - [ ] 44px touch targets (sm tugmalar, oy strelkalari, til almashtirish)
 - [ ] Label htmlFor binding + xato bloklarida `role="alert"`
 
 ### Tezlik
-- [ ] `/monitoring` — attendance `groupBy` aggregatsiya (xotiraga hammasini olmaslik)
-- [ ] `/admin/users` — pagination (take/skip + count)
-- [ ] `/dashboard` (talaba) — Promise.all; teacher darslar DB filtri
+- [x] `/monitoring` — attendance `groupBy` aggregatsiya (xotiraga hammasini olmaslik)
+- [x] `/admin/users` — pagination (take/skip + count)
+- [x] `/dashboard` (talaba) — Promise.all; teacher darslar DB filtri
 - [ ] `curator/data.ts` — sana oynasi + groupBy
 - [ ] `admin/charts/data.ts` — select optimizatsiya (answers/options olib tashlash)
 - [ ] `chat/unread` — conversationId prefetch + count
@@ -86,15 +87,17 @@
 - [ ] Skip-to-content ilovada
 - [ ] Confirm dialog yagonaligi
 
-## 🆕 YANGI MODULLAR TAKLIFI (HEMIS tadqiqoti asosida)
-- [ ] **Hujjatlar aylanmasi** — qurilmoqda ✅ (buyruq/xat/ma'lumotnoma/bayonnoma)
-- [ ] **Normativ buyruq shablonlari** (6 tur: qabul/ko'chirish/tiklash/chetlashtirish/stipendiya/jazo)
-- [ ] **Ota-onalar portali** — farzand davomati/bahosi (HEMISda bor)
-- [ ] **Moliya moduli** — shartnoma/to'lovlar, qarzlar, invoyslar
-- [ ] **QR-diplom** + tekshirish sahifasi (check-diplom kabi)
-- [ ] **HEMIS eksport paketi** — VM 403 talabi: kontingent/baholar/davomat HEMIS formatiga
+## 🆕 YANGI MODULLAR (HEMIS tadqiqoti asosida)
+- [x] **Hujjatlar aylanmasi** — buyruq/xat/ma'lumotnoma/bayonnoma ✅
+- [x] **Normativ buyruq shablonlari** — 9 tur: qabul/ko'chirish/tiklash/chetlashtirish/stipendiya/ta'til/rag'batlantirish/jazo/ishdan bo'shatish ✅
+- [x] **Ota-onalar portali** — farzand davomati/bahosi ✅
+- [x] **Moliya moduli** — shartnoma/to'lovlar, qarzlar ✅
+- [x] **QR-diplom** + tekshirish sahifasi ✅
+- [x] **HEMIS eksport paketi** — kontingent/baholar/davomat HEMIS formatiga ✅ (VM 403)
 - [ ] **HEMIS API integratsiya** — rasmiy kalit olinib to'liq sinxronizatsiya
 - [ ] **Ilmiy faoliyat moduli** (IFB)
+- [ ] Kutubxona moduli tizimlashtirish
+- [ ] Ota-onalar bildirishnomalari (SMS/Telegram)
 
 ## 🤝 TONY QARORI KERAK
 - Face ID siyosati: majburiymi yoki ixtiyoriymi? (hozir ixtiyoriy — o'chirib bypass mumkin)

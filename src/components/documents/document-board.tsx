@@ -77,6 +77,80 @@ const STATUS_TONES: Record<DocumentStatus, "slate" | "amber" | "green" | "rose" 
 
 const STATUS_ORDER: DocumentStatus[] = ["DRAFT", "PENDING", "SIGNED", "REJECTED", "ARCHIVED"];
 
+type OrderTemplate = {
+  id: string;
+  label: string;
+  title: string;
+  body: string;
+  needsStudent: boolean;
+};
+
+const ORDER_TEMPLATES: OrderTemplate[] = [
+  {
+    id: "enroll",
+    label: "Talabani qabul qilish",
+    title: "O'qishga qabul qilish to'g'risida",
+    body: "TTPU qabul komissiyasi qarori va {{talaba}} ning arizasiga asosan, uni Turin Politexnika Universitetining bakalavriat bosqichiga talaba sifatida qabul qilishni buyuraman. Registrator bo'limiga shaxsiy ish hujjatlarini to'liq rasmiylashtirishni topshiraman.",
+    needsStudent: true,
+  },
+  {
+    id: "transfer",
+    label: "Ko'chirish (yo'nalish/guruh)",
+    title: "O'qishni ko'chirish to'g'risida",
+    body: "{{talaba}} ning arizasiga asosan, uni boshqa ta'lim yo'nalishiga (guruhga) o'qishini ko'chirishga ruxsat berilsin. Registrator bo'limiga o'quv rejasidagi farq fanlarini qayta hisoblash, tyutoriga moslashuv davrida yordam ko'rsatish topshirilsin.",
+    needsStudent: true,
+  },
+  {
+    id: "reinstate",
+    label: "Qayta tiklash",
+    title: "Talabalar safiga qayta tiklash to'g'risida",
+    body: "{{talaba}} ni akademik qarzdorliklarni tugatganligi munosabati bilan Turin Politexnika Universiteti talabalari safiga qayta tiklashni buyuraman. Moliya bo'limiga o'quv shartnomasini yangilash, dekanga o'quv jarayoniga qo'shish topshirilsin.",
+    needsStudent: true,
+  },
+  {
+    id: "scholarship",
+    label: "Stipendiya tayinlash",
+    title: "Stipendiya tayinlash to'g'risida",
+    body: "{{talaba}} ning o'quv yilidagi yuqori natijalari inobatga olinib, unga davlat stipendiyasi tayinlansin. Moliya bo'limiga stipendiyani belgilangan tartibda oylik to'lashni yo'lga qo'yish topshirilsin.",
+    needsStudent: true,
+  },
+  {
+    id: "expel",
+    label: "O'qishdan chetlatish",
+    title: "O'qishdan chetlatish to'g'risida",
+    body: "{{talaba}} o'quv mashg'ulotlariga uzrsiz sabablarga ko'ra qatnashmaganligi va ichki tartib qoidalarini buzganligi munosabati bilan universitet talabalari safidan chetlatilsin. Registrator bo'limiga buyruq nusxasini talabaning shaxsiy ishiga ilova qilishni topshiraman.",
+    needsStudent: true,
+  },
+  {
+    id: "vacation",
+    label: "Ta'til berish",
+    title: "Ta'til berish to'g'risida",
+    body: "{{talaba}} ga o'qish ta'tili berilsin. Moliya bo'limiga ta'til davridagi to'lov shartlarini qayta hisoblash, guruh tyutoriga talaba bilan aloqani saqlash topshirilsin.",
+    needsStudent: true,
+  },
+  {
+    id: "reward",
+    label: "Rag'batlantirish",
+    title: "Rag'batlantirish to'g'risida",
+    body: "{{talaba}} ning o'quv yilida erishgan yutuqlari va xalqaro tanlovlardagi faol ishtiroki uchun unga minnatdorchilik e'lon qilinsin hamda qo'shimcha rag'batlantirish choralari qo'llanilsin.",
+    needsStudent: true,
+  },
+  {
+    id: "penalty",
+    label: "Intizomiy jazo",
+    title: "Intizomiy jazo qo'llash to'g'risida",
+    body: "{{talaba}} tomonidan ichki tartib qoidalari va akademik halollik talablari buzilganligi munosabati bilan unga intizomiy jazo choralari qo'llanilsin. Yoshlar ishlari bo'limiga tushuntirish ishlarini olib borish topshirilsin.",
+    needsStudent: true,
+  },
+  {
+    id: "dismiss",
+    label: "Ishdan bo'shatish",
+    title: "Ishdan bo'shatish to'g'risida",
+    body: "TTPU xodimining mehnat shartnomasini bekor qilish to'g'risidagi arizasi va mehnat qonunchiligi talablari asosida uni egallab turgan lavozimidan ozod etilsin. Buxgalteriya bo'limiga to'liq hisob-kitob qilishni topshiraman.",
+    needsStudent: false,
+  },
+];
+
 export default function DocumentBoard({
   documents,
   staff,
@@ -101,6 +175,7 @@ export default function DocumentBoard({
   const [body, setBody] = useState("");
   const [signerId, setSignerId] = useState("");
   const [studentId, setStudentId] = useState("");
+  const [orderTemplateId, setOrderTemplateId] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [busy, setBusy] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -113,6 +188,21 @@ export default function DocumentBoard({
   );
 
   const canSave = signerId !== "" && title.trim().length >= 3 && body.trim().length >= 3;
+
+  const activeOrderTemplate =
+    kind === "ORDER" ? (ORDER_TEMPLATES.find((item) => item.id === orderTemplateId) ?? null) : null;
+
+  function applyOrderTemplate() {
+    if (!activeOrderTemplate) return;
+    const student = students.find((item) => item.id === studentId);
+    if (activeOrderTemplate.needsStudent && !student) return;
+    const replacement = student
+      ? `${student.name}${student.group ? ` (${student.group} guruhi)` : ""}`
+      : "TTPU xodimi";
+    setTitle(activeOrderTemplate.title);
+    setBody(activeOrderTemplate.body.split("{{talaba}}").join(replacement));
+    setNotice("Shablon matni avtomatik to'ldirildi");
+  }
 
   function applyReferenceTemplate() {
     const student = students.find((item) => item.id === studentId);
@@ -138,7 +228,10 @@ export default function DocumentBoard({
           title: title.trim(),
           body: body.trim(),
           signerId,
-          meta: kind === "REFERENCE" && studentId ? { studentId } : undefined,
+          meta:
+            (kind === "REFERENCE" || activeOrderTemplate?.needsStudent) && studentId
+              ? { studentId }
+              : undefined,
         }),
       });
       const json = (await res.json().catch(() => null)) as ApiResult<DocumentItem> | null;
@@ -151,6 +244,7 @@ export default function DocumentBoard({
       setBody("");
       setSignerId("");
       setStudentId("");
+      setOrderTemplateId("");
       router.refresh();
     } catch {
       setError(null);
@@ -241,6 +335,46 @@ export default function DocumentBoard({
                     onClick={applyReferenceTemplate}
                   >
                     {t("docReferenceGenerated")}
+                  </Button>
+                </div>
+              ) : null}
+              {kind === "ORDER" ? (
+                <div className="flex flex-wrap items-end gap-3 sm:col-span-2">
+                  <div className="min-w-56 flex-1">
+                    <Label>Buyruq shabloni</Label>
+                    <Select
+                      value={orderTemplateId}
+                      onChange={(e) => setOrderTemplateId(e.target.value)}
+                    >
+                      <option value="">—</option>
+                      {ORDER_TEMPLATES.map((template) => (
+                        <option key={template.id} value={template.id}>
+                          {template.label}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                  {activeOrderTemplate?.needsStudent ? (
+                    <div className="min-w-56 flex-1">
+                      <Label>{t("docForStudent")}</Label>
+                      <Select value={studentId} onChange={(e) => setStudentId(e.target.value)}>
+                        <option value="">—</option>
+                        {students.map((student) => (
+                          <option key={student.id} value={student.id}>
+                            {student.name}
+                            {student.group ? ` — ${student.group}` : ""}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                  ) : null}
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={!activeOrderTemplate || (activeOrderTemplate.needsStudent && !studentId)}
+                    onClick={applyOrderTemplate}
+                  >
+                    Shablonni qo'llash
                   </Button>
                 </div>
               ) : null}

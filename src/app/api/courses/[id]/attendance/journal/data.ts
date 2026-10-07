@@ -68,7 +68,7 @@ export async function getAttendanceJournal(
     }
     const totals = totalsByDate.get(key) ?? { attended: 0, total: 0 };
     totals.total += 1;
-    if (row.status !== "ABSENT") totals.attended += 1;
+    if (row.status === "PRESENT" || row.status === "LATE") totals.attended += 1;
     totalsByDate.set(key, totals);
   }
 

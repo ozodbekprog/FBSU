@@ -14,7 +14,7 @@ export type AdminCharts = {
 };
 
 const DAY_WINDOW = 14;
-const ATTENDED: AttendanceStatus[] = ["PRESENT", "EXCUSED"];
+const ATTENDED: AttendanceStatus[] = ["PRESENT", "LATE"];
 
 const ROLE_META: Record<Role, { label: string; color: string }> = {
   STUDENT: { label: "Talabalar", color: "#5373b8" },

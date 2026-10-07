@@ -151,7 +151,7 @@ export function AttendanceJournal({
         const entry = map[date];
         if (!entry) continue;
         entry.total += 1;
-        if (status !== "ABSENT") entry.attended += 1;
+        if (status === "PRESENT" || status === "LATE") entry.attended += 1;
       }
     }
     return map;
