@@ -10,7 +10,7 @@
 - [x] Transcript jadvali mobil scroll
 - [x] 187 unit test
 
-## 🟡 TO'LQIN 2 — YUQORI (asosiy qismi bajarildi: f29a40d)
+## 🟡 TO'LQIN 2 — YUQORI (bajarildi, deploy l2ftc7tdq; qolganlari keyingi bosqichga)
 
 ### O'quv jarayoni
 - [x] `transcript/page.tsx` — TEACHER faqat o'z kurslarini ko'rsin (API bilan mos)
@@ -19,6 +19,7 @@
 - [ ] Sana siyosati: Asia/Tashkent (+5) — `datetime-local`, `startOfToday`, `todayIso` hammasi bitta helper
 - [ ] Transcript: EXCUSED/SUSPICIOUS qatnashmagan hisoblansin (`attendanceCounts`)
 - [x] Enrollment `ACTIVE` filtri qolgan joylar: report-data, transcript-data, exams session-data, gpa, courses API
+- [x] Transcript/jurnal/analitika: EXCUSED/SUSPICIOUS/LEFT_EARLY qatnashmagan hisoblanadi (faqat PRESENT+LATE)
 - [ ] Quiz shuffle va baholash remap mosligi (hozir aralashtirish bahoga ta'sir qilmaydi)
 
 ### Davomat / Face ID / Turniket
@@ -40,12 +41,12 @@
 
 ### Boshqaruv / Rollar
 - [x] Hisobot eksport 403 muammosi (rahbariyat scope bilan ruxsat)
-- [ ] Orders (transcript/certificate/retake arizalari) → REGISTRATOR
-- [ ] Kurator tayinlash UI: TYUTOR qo'shish + `isActive` tekshiruvi (subgroups teachers ro'yxati)
-- [ ] Staff overview `notCame` hisobi xatosi (ADMIN hisobga mosligi)
+- [x] Orders (transcript/certificate/retake arizalari) → REGISTRATOR + AdminNav'da "Arizalar" bo'limi
+- [x] Kurator tayinlash UI: TYUTOR qo'shildi + `isActive` tekshiruvi
+- [x] Staff overview `notCame` hisobi (faqat aktiv xodimlar)
 
 ### UI/UX
-- [ ] 7 sahifa i18n: quizzes (4 sahifa), bonus-points, users/[id] — hardcode o'zbekcha → t() ⏳ agent ishlamoqda
+- [x] 7 sahifa i18n: quizzes (4 sahifa), bonus-points, users/[id] — hardcode o'zbekcha → t() ✅ (i18n-sweep toza)
 - [ ] `/schedule` mobilda default "list" ko'rinish
 - [ ] 44px touch targets (sm tugmalar, oy strelkalari, til almashtirish)
 - [ ] Label htmlFor binding + xato bloklarida `role="alert"`
@@ -63,7 +64,7 @@
 - [ ] Submission TOCTOU: baholangan javobni qayta topshirishda baho yo'qolishi
 - [ ] GRADED dan keyin quiz/savol tahriri natijalarni o'zgartiradi (maxScore snapshot)
 - [ ] `maxScore` ni pasaytirish tekshiruvi
-- [ ] Sertifikat sahifasi: faqat kurs egasi/admin ko'rsin; berishda ACTIVE + yakun sharti
+- [x] Sertifikat sahifasi: kurs egasi/admin scope + berishda ACTIVE sharti (yakun sharti — keyingi bosqich)
 - [ ] Oral defense: DONE da o'lik tugma + `scheduledAt` UI da; bildirishnomalar (notifyUser)
 - [ ] Test parallel start `maxAttempts` bypass (advisory lock)
 - [ ] Assignments: topshirmaganlar ro'yxati, bulk baholash, per-student deadline
