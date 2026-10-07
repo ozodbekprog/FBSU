@@ -123,7 +123,7 @@ export default async function ForumTopicPage({
           {topic.replies.map((reply) => {
             const canDelete = management || reply.author.id === user.id;
             return (
-              <Card key={reply.id} className="transition-all duration-200 hover:shadow-lift">
+              <Card key={reply.id}>
                 <CardBody>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex items-center gap-3">

@@ -28,7 +28,7 @@ export function GradeBadge({
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-full font-semibold leading-none tabular-nums transition-transform duration-150 hover:scale-105",
+        "inline-flex shrink-0 items-center justify-center rounded-full font-semibold leading-none tabular-nums",
         BADGE_SIZES[size],
         gradeBadgeTone(percent),
         className,

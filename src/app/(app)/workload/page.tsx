@@ -67,28 +67,28 @@ export default async function WorkloadPage({
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-brand-50/70">
+        <div className="rounded-2xl [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-brand-50/70">
           <Stat
             label={dictionary.admCourses}
             value={data.summary.courseCount}
             hint={scopeName ? dictionary.admWorkloadStatCoursesHintAssigned : dictionary.admWorkloadStatCoursesHintAll}
           />
         </div>
-        <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-emerald-50/70">
+        <div className="rounded-2xl [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-emerald-50/70">
           <Stat
             label={dictionary.admStudents}
             value={data.summary.studentCount}
             hint={dictionary.admWorkloadStatStudentsHint}
           />
         </div>
-        <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-amber-50/70">
+        <div className="rounded-2xl [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-amber-50/70">
           <Stat
             label={dictionary.admWorkloadStatPending}
             value={data.summary.pendingReviews}
             hint={dictionary.admWorkloadStatPendingHint}
           />
         </div>
-        <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-purple-50/70">
+        <div className="rounded-2xl [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-purple-50/70">
           <Stat
             label={dictionary.admWorkloadStatHours}
             value={formatHours(data.summary.weeklyHours)}

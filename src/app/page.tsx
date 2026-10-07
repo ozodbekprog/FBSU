@@ -636,7 +636,7 @@ export default async function HomePage() {
               {features.map((feature) => (
                 <Card
                   key={feature.title}
-                  className="group flex h-full flex-col p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift"
+                  className="group flex h-full flex-col p-6"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <span className="inline-flex size-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 transition-colors duration-200 group-hover:bg-brand-100">
@@ -673,7 +673,7 @@ export default async function HomePage() {
               {steps.map((step, index) => (
                 <Card
                   key={step.title}
-                  className="group relative h-full overflow-hidden p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift"
+                  className="group relative h-full overflow-hidden p-6"
                 >
                   <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
                   <div className="flex items-start justify-between gap-4">

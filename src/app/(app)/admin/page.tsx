@@ -145,39 +145,55 @@ function StatTile({
   value,
   hint,
   delay,
+  href,
 }: {
   meta: keyof typeof STAT_META;
   label: string;
   value: ReactNode;
   hint: ReactNode;
   delay: number;
+  href?: string;
 }) {
   const { bar, bubble, icon } = STAT_META[meta];
-  return (
-    <div className="animate-fade-up" style={{ animationDelay: `${delay}ms` }}>
-      <Card className="group relative h-full overflow-hidden p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
-        <span className={cn("absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r", bar)} />
+  const tile = (
+    <Card
+      className={cn(
+        "group relative h-full overflow-hidden p-5",
+        href && "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift",
+      )}
+    >
+      <span className={cn("absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r", bar)} />
+      <span
+        className={cn(
+          "absolute -right-8 -top-8 size-24 rounded-full bg-gradient-to-br opacity-[0.07]",
+          bubble,
+        )}
+      />
+      <div className="relative flex items-start justify-between gap-3">
+        <p className="text-sm font-medium text-slate-500">{label}</p>
         <span
           className={cn(
-            "absolute -right-8 -top-8 size-24 rounded-full bg-gradient-to-br opacity-[0.07] transition-transform duration-300 group-hover:scale-125",
+            "inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-lg",
             bubble,
           )}
-        />
-        <div className="relative flex items-start justify-between gap-3">
-          <p className="text-sm font-medium text-slate-500">{label}</p>
-          <span
-            className={cn(
-              "inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-lg transition-transform duration-200 group-hover:scale-105",
-              bubble,
-            )}
-          >
-            {icon}
-          </span>
-        </div>
-        <p className="relative mt-3 text-3xl font-semibold tabular-nums tracking-tight text-brand-950">{value}</p>
-        <p className="relative mt-1 text-xs text-slate-600">{hint}</p>
-      </Card>
+        >
+          {icon}
+        </span>
+      </div>
+      <p className="relative mt-3 text-3xl font-semibold tabular-nums tracking-tight text-brand-950">{value}</p>
+      <p className="relative mt-1 text-xs text-slate-600">{hint}</p>
+    </Card>
+  );
+  const wrapped = (
+    <div className="animate-fade-up" style={{ animationDelay: `${delay}ms` }}>
+      {tile}
     </div>
+  );
+  if (!href) return wrapped;
+  return (
+    <Link href={href} className="block h-full" aria-label={label}>
+      {wrapped}
+    </Link>
   );
 }
 
@@ -220,25 +236,27 @@ export default async function AdminPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatTile
           meta="users"
+          href="/admin/users"
           label={dictionary.admStatUsers}
           value={users}
           hint={translate(locale, "admStatUsersHint", { teachers, students })}
           delay={0}
         />
-        <StatTile meta="courses" label={dictionary.admCourses} value={courses} hint={dictionary.admStatCoursesHint} delay={60} />
-        <StatTile meta="groups" label={dictionary.admGroups} value={groups} hint={dictionary.admStatGroupsHint} delay={120} />
+        <StatTile meta="courses" href="/admin/courses" label={dictionary.admCourses} value={courses} hint={dictionary.admStatCoursesHint} delay={60} />
+        <StatTile meta="groups" href="/admin/groups" label={dictionary.admGroups} value={groups} hint={dictionary.admStatGroupsHint} delay={120} />
         <StatTile
           meta="submissions"
+          href="/reports"
           label={dictionary.admStatSubmissions}
           value={submissions}
           hint={dictionary.admStatSubmissionsHint}
           delay={180}
         />
-        <StatTile meta="quizzes" label={dictionary.admQuizzes} value={quizzes} hint={dictionary.admStatQuizzesHint} delay={240} />
+        <StatTile meta="quizzes" href="/quizzes" label={dictionary.admQuizzes} value={quizzes} hint={dictionary.admStatQuizzesHint} delay={240} />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
-        <Card className="animate-fade-up transition-shadow duration-200 hover:shadow-lift lg:col-span-2">
+        <Card className="animate-fade-up lg:col-span-2">
           <CardHeader title={dictionary.admQuickLinksTitle} subtitle={dictionary.admQuickLinksSubtitle} />
           <CardBody className="grid gap-3 sm:grid-cols-2">
             {QUICK_LINKS.map((link) => {
@@ -278,7 +296,7 @@ export default async function AdminPage() {
           </CardBody>
         </Card>
 
-        <Card className="animate-fade-up transition-shadow duration-200 hover:shadow-lift">
+        <Card className="animate-fade-up">
           <CardHeader title={dictionary.admFileUploadTitle} subtitle={dictionary.admFileUploadHint} />
           <CardBody>
             <FileUpload />
@@ -299,7 +317,7 @@ export default async function AdminPage() {
 
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="animate-fade-up" style={{ animationDelay: "60ms" }}>
-            <Card className="h-full transition-shadow duration-200 hover:shadow-lift">
+            <Card className="h-full">
               <CardHeader
                 title={dictionary.admChartRolesTitle}
                 subtitle={dictionary.admChartRolesSubtitle}
@@ -312,7 +330,7 @@ export default async function AdminPage() {
           </div>
 
           <div className="animate-fade-up" style={{ animationDelay: "120ms" }}>
-            <Card className="h-full transition-shadow duration-200 hover:shadow-lift">
+            <Card className="h-full">
               <CardHeader
                 title={dictionary.admChartSubmissionsTitle}
                 subtitle={dictionary.admChartSubmissionsSubtitle}
@@ -325,7 +343,7 @@ export default async function AdminPage() {
           </div>
 
           <div className="animate-fade-up" style={{ animationDelay: "180ms" }}>
-            <Card className="h-full transition-shadow duration-200 hover:shadow-lift">
+            <Card className="h-full">
               <CardHeader
                 title={dictionary.admChartAttendanceTitle}
                 subtitle={dictionary.admChartAttendanceSubtitle}
@@ -338,7 +356,7 @@ export default async function AdminPage() {
           </div>
 
           <div className="animate-fade-up" style={{ animationDelay: "240ms" }}>
-            <Card className="h-full transition-shadow duration-200 hover:shadow-lift">
+            <Card className="h-full">
               <CardHeader
                 title={dictionary.admChartTopCoursesTitle}
                 subtitle={dictionary.admChartTopCoursesSubtitle}
@@ -351,7 +369,7 @@ export default async function AdminPage() {
           </div>
 
           <div className="animate-fade-up lg:col-span-2" style={{ animationDelay: "300ms" }}>
-            <Card className="h-full transition-shadow duration-200 hover:shadow-lift">
+            <Card className="h-full">
               <CardHeader
                 title={dictionary.admChartQuizTitle}
                 subtitle={dictionary.admChartQuizSubtitle}

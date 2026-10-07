@@ -61,7 +61,7 @@ export function StatsRow({ items }: { items: ProfileStat[] }) {
     <div className="grid gap-4 sm:grid-cols-3">
       {items.map((item, index) => (
         <div key={item.label} className="animate-fade-up" style={{ animationDelay: `${index * 70}ms` }}>
-          <Card className="group relative h-full overflow-hidden p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+          <Card className="group relative h-full overflow-hidden p-5">
             <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400 opacity-60 transition-opacity duration-200 group-hover:opacity-100" />
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -71,7 +71,7 @@ export function StatsRow({ items }: { items: ProfileStat[] }) {
               </div>
               <span
                 className={cn(
-                  "inline-flex size-11 shrink-0 items-center justify-center rounded-2xl ring-1 transition-transform duration-200 group-hover:scale-105",
+                  "inline-flex size-11 shrink-0 items-center justify-center rounded-2xl ring-1",
                   STAT_TONES[item.kind],
                 )}
               >

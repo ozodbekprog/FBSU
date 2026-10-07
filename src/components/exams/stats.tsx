@@ -75,7 +75,7 @@ export function ExamStat({
   icon: ExamStatIcon;
 }) {
   return (
-    <Card className="p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+    <Card className="p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-slate-500">{label}</p>

@@ -167,8 +167,8 @@ export default function SettingsManager({
                 className={cn(
                   "group relative h-full overflow-hidden transition-all duration-300",
                   enabled
-                    ? "border-brand-200/70 hover:shadow-lift"
-                    : "border-slate-200/70 bg-slate-50/40 hover:shadow-lift",
+                    ? "border-brand-200/70"
+                    : "border-slate-200/70 bg-slate-50/40",
                 )}
               >
                 <span
@@ -183,7 +183,7 @@ export default function SettingsManager({
                       "inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg transition-all duration-300",
                       ICON_TONES[item.key],
                       enabled
-                        ? "scale-100 group-hover:scale-105"
+                        ? "scale-100"
                         : "scale-95 opacity-70 saturate-0 group-hover:opacity-100 group-hover:saturate-50",
                     )}
                   >

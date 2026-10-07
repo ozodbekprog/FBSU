@@ -63,10 +63,7 @@ export default async function CourseAnnouncementsPage({
           {announcements.map((announcement) => {
             const canModify = management || announcement.author.id === user.id;
             return (
-              <Card
-                key={announcement.id}
-                className="transition-all duration-200 hover:shadow-lift"
-              >
+              <Card key={announcement.id}>
                 <CardBody>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex min-w-0 items-start gap-3">

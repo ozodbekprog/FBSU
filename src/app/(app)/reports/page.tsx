@@ -103,7 +103,7 @@ export default async function ReportsPage({
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-brand-50/70">
+        <div className="rounded-2xl [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-brand-50/70">
           <Stat
             label={dictionary.grdStudents}
             value={stats.studentCount}
@@ -113,7 +113,7 @@ export default async function ReportsPage({
             })}
           />
         </div>
-        <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-emerald-50/70">
+        <div className="rounded-2xl [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-emerald-50/70">
           <Stat
             label={dictionary.grdAssignmentAverage}
             value={percent(stats.assignmentAverage)}
@@ -123,21 +123,21 @@ export default async function ReportsPage({
             })}
           />
         </div>
-        <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-sky-50/70">
+        <div className="rounded-2xl [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-sky-50/70">
           <Stat
             label={dictionary.grdSubmissionRate}
             value={percent(stats.submissionRate)}
             hint={translate(locale, "grdSubmissionsCount", { count: stats.submissionCount })}
           />
         </div>
-        <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-amber-50/70">
+        <div className="rounded-2xl [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-amber-50/70">
           <Stat
             label={dictionary.grdAttendanceRate}
             value={percent(stats.attendanceRate)}
             hint={translate(locale, "grdRecordsCount", { count: stats.attendanceCount })}
           />
         </div>
-        <div className="rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-purple-50/70">
+        <div className="rounded-2xl [&>div]:h-full [&>div]:bg-gradient-to-br [&>div]:from-white [&>div]:to-purple-50/70">
           <Stat
             label={dictionary.grdQuizAverage}
             value={percent(stats.quizAverage)}

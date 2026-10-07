@@ -79,7 +79,7 @@ function StatusCard({
 }) {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   return (
-    <Card className="p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+    <Card className="p-5">
       <div className="flex items-center justify-between gap-2">
         <span className={cn("inline-flex size-10 items-center justify-center rounded-xl ring-1", STAT_TONES[tone])}>
           {STAT_ICONS[icon]}

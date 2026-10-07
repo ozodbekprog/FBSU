@@ -279,7 +279,7 @@ export function CalendarView() {
             selectedItems.map((item) => (
               <div
                 key={item.id}
-                className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-100 bg-white p-3.5 transition-shadow duration-150 hover:shadow-lift"
+                className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-100 bg-white p-3.5"
               >
                 <span
                   className={cn(

@@ -390,7 +390,7 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
             ) : (
               <Card
                 key={question.id}
-                className="group relative overflow-hidden transition-all duration-150 hover:shadow-lift"
+                className="group relative overflow-hidden"
               >
                 <span className={cn("absolute inset-y-0 left-0 w-1", QUESTION_TYPE_ACCENT[question.type])} />
                 <CardBody className="flex flex-wrap items-start justify-between gap-4 pl-7">

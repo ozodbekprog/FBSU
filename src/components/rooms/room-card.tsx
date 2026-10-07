@@ -57,9 +57,15 @@ export function RoomCard({
         .map((item) => item.trim())
         .filter(Boolean)
     : [];
+  const wrapped = Boolean(href) && !actions;
 
-  return (
-    <Card className="group relative flex h-full flex-col overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200/80 hover:shadow-lift">
+  const card = (
+    <Card
+      className={cn(
+        "group relative flex h-full flex-col overflow-hidden",
+        wrapped && "transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200/80 hover:shadow-lift",
+      )}
+    >
       <span className={cn("absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r", meta.stripe)} />
       <CardBody className="flex flex-1 flex-col gap-4">
         <div className="flex items-start gap-3">
@@ -162,20 +168,39 @@ export function RoomCard({
           <div className="mt-auto flex flex-wrap items-center justify-end gap-1.5 border-t border-slate-100 pt-3">
             {actions}
             {href ? (
-              <Link
-                href={href}
-                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-700 transition-colors duration-150 hover:bg-brand-50"
-              >
-                {t("mscRoomWeeklyUsage")}
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14" />
-                  <path d="m13 6 6 6-6 6" />
-                </svg>
-              </Link>
+              wrapped ? (
+                <span className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-700">
+                  {t("mscRoomWeeklyUsage")}
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14" />
+                    <path d="m13 6 6 6-6 6" />
+                  </svg>
+                </span>
+              ) : (
+                <Link
+                  href={href}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-700 transition-colors duration-150 hover:bg-brand-50"
+                >
+                  {t("mscRoomWeeklyUsage")}
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14" />
+                    <path d="m13 6 6 6-6 6" />
+                  </svg>
+                </Link>
+              )
             ) : null}
           </div>
         ) : null}
       </CardBody>
     </Card>
   );
+
+  if (href && !actions) {
+    return (
+      <Link href={href} className="block h-full">
+        {card}
+      </Link>
+    );
+  }
+  return card;
 }

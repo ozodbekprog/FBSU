@@ -232,16 +232,32 @@ function StatTile({
   hint,
   tone = "brand",
   icon,
+  href,
 }: {
   label: string;
   value: ReactNode;
   hint?: string;
   tone?: keyof typeof STAT_TONES;
   icon: ReactNode;
+  href?: string;
 }) {
-  return (
+  const tile = (
     <Card className="group relative h-full overflow-hidden p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
       <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400 opacity-60 transition-opacity duration-200 group-hover:opacity-100" />
+      {href ? (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="absolute right-3 top-3 size-4 text-slate-300 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-brand-600"
+        >
+          <path d="M7 17 17 7" />
+          <path d="m8 7 9 0 0 9" />
+        </svg>
+      ) : null}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-slate-500">{label}</p>
@@ -258,6 +274,12 @@ function StatTile({
         </span>
       </div>
     </Card>
+  );
+  if (!href) return tile;
+  return (
+    <Link href={href} className="block h-full" aria-label={label}>
+      {tile}
+    </Link>
   );
 }
 
@@ -681,6 +703,24 @@ export default async function DashboardPage() {
                   { href: "/schedule", label: dict.navSchedule, icon: <CalendarIcon /> },
                 ];
 
+    const staffStudentsHref =
+      user.role === "ADMIN" || user.role === "REGISTRAR"
+        ? "/admin/users"
+        : user.role === "TYUTOR"
+          ? "/curator"
+          : user.role === "TEACHER"
+            ? "/journal"
+            : "/monitoring";
+
+    const staffSubmissionsHref =
+      user.role === "TEACHER"
+        ? "/grades"
+        : user.role === "TYUTOR"
+          ? "/tasks"
+          : user.role === "REGISTRAR"
+            ? "/monitoring"
+            : "/reports";
+
     return (
       <>
         <Hero
@@ -707,6 +747,7 @@ export default async function DashboardPage() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Reveal delay={60}>
             <StatTile
+              href="/courses"
               label={dict.dashStatCourses}
               value={courses}
               hint={
@@ -724,6 +765,7 @@ export default async function DashboardPage() {
           </Reveal>
           <Reveal delay={120}>
             <StatTile
+              href={staffStudentsHref}
               label={dict.dashStatStudents}
               value={students}
               hint={dict.dashStatStudentsHint}
@@ -740,6 +782,7 @@ export default async function DashboardPage() {
           </Reveal>
           <Reveal delay={180}>
             <StatTile
+              href={staffSubmissionsHref}
               label={dict.dashStatAssignments}
               value={submissions}
               hint={dict.dashStatAssignmentsHint}
@@ -755,6 +798,7 @@ export default async function DashboardPage() {
           </Reveal>
           <Reveal delay={240}>
             <StatTile
+              href="/quizzes"
               label={dict.dashStatQuizzes}
               value={quizzes}
               hint={dict.dashStatQuizzesHint}
@@ -915,6 +959,7 @@ export default async function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         <Reveal delay={60}>
           <StatTile
+            href="/courses"
             label={dict.dashMyCourses}
             value={enrollments.length}
             hint={dict.dashMyCoursesHint}
@@ -928,6 +973,7 @@ export default async function DashboardPage() {
         </Reveal>
         <Reveal delay={120}>
           <StatTile
+            href="/schedule"
             label={dict.dashTodayLessons}
             value={scheduleToday.length}
             hint={dayName(now.getDay())}
@@ -942,6 +988,7 @@ export default async function DashboardPage() {
         </Reveal>
         <Reveal delay={180}>
           <StatTile
+            href="/courses"
             label={dict.dashUpcomingAssignments}
             value={upcoming.length}
             hint={dict.dashByDeadline}

@@ -428,7 +428,7 @@ export function AcademicCalendarView({ canManage }: { canManage: boolean }) {
         </span>
         <div
           className={cn(
-            "min-w-0 flex-1 rounded-2xl border border-slate-200/70 bg-white p-4 transition-all duration-150 hover:border-slate-300 hover:shadow-lift",
+            "min-w-0 flex-1 rounded-2xl border border-slate-200/70 bg-white p-4 transition-colors duration-150 hover:border-slate-300",
             isPast && "opacity-75 saturate-[0.85]",
           )}
         >

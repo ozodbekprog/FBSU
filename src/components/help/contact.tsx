@@ -52,7 +52,7 @@ export async function ContactCards() {
         {CONTACTS.map((channel) => (
           <Card
             key={channel.title}
-            className="flex flex-col p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift"
+            className="flex flex-col p-5"
           >
             <span className={`inline-flex size-10 items-center justify-center rounded-xl ring-1 ${channel.tone}`}>
               <HelpIcon name={channel.icon} size={19} />

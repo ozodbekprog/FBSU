@@ -68,7 +68,7 @@ export default async function CourseForumPage({
             <Card
               key={topic.id}
               className={cn(
-                "relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift",
+                "relative overflow-hidden",
                 topic.isPinned ? "border-gold-300/70" : undefined,
               )}
             >

@@ -118,7 +118,7 @@ export function CatalogCourseCard({
   return (
     <Card
       className={cn(
-        "group flex h-full flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lift",
+        "group flex h-full flex-col overflow-hidden transition-all duration-300",
         isElective ? "hover:border-gold-300/80" : "hover:border-brand-200/80",
       )}
     >

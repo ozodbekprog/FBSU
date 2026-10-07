@@ -173,7 +173,7 @@ export async function StaffAttendanceOverview({ courses }: { courses: StaffCours
               {TILE_KEYS.map((tile) => (
                 <div
                   key={tile}
-                  className="rounded-2xl border border-slate-100 bg-white/80 p-3 shadow-[0_1px_2px_rgba(16,24,40,0.03)] transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-lift"
+                  className="rounded-2xl border border-slate-100 bg-white/80 p-3 shadow-[0_1px_2px_rgba(16,24,40,0.03)]"
                 >
                   <span className={cn("inline-flex size-8 items-center justify-center rounded-xl ring-1", TILE_TONES[tile])}>
                     <TileIcon tile={tile} />
@@ -200,7 +200,7 @@ export async function StaffAttendanceOverview({ courses }: { courses: StaffCours
         {courses.map((course) => (
           <Card
             key={course.id}
-            className="animate-fade-up group relative overflow-hidden transition-shadow duration-200 hover:shadow-lift"
+            className="animate-fade-up group relative overflow-hidden"
           >
             <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400 opacity-70 transition-opacity duration-200 group-hover:opacity-100" />
             <CardBody className="flex h-full flex-col gap-4">

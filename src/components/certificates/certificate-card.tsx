@@ -1,4 +1,5 @@
-import { Badge, ButtonLink, Card, CardBody } from "@/components/ui";
+import Link from "next/link";
+import { Badge, Card, CardBody } from "@/components/ui";
 import { fmtDate } from "@/lib/utils";
 import { getDictionary, getLocale } from "@/i18n";
 import { certificateGrade, certificateSerial } from "@/components/certificates/certificate-access";
@@ -51,6 +52,7 @@ export async function CertificateCard({ certificate }: { certificate: Certificat
   });
 
   return (
+    <Link href={`/certificates/${certificate.id}`} className="block h-full">
     <Card className="group flex h-full flex-col overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
       <div className="relative h-[74px] shrink-0 overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-brand-800">
         <div
@@ -116,15 +118,12 @@ export async function CertificateCard({ certificate }: { certificate: Certificat
             </svg>
             {dictionary.grdVerifiedDocument}
           </span>
-          <ButtonLink
-            href={`/certificates/${certificate.id}`}
-            size="sm"
-            className="transition-transform duration-150 group-hover:translate-x-0.5"
-          >
+          <span className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-900 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm transition-transform duration-150 group-hover:translate-x-0.5">
             {dictionary.grdView}
-          </ButtonLink>
+          </span>
         </div>
       </CardBody>
     </Card>
+    </Link>
   );
 }

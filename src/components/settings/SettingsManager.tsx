@@ -256,7 +256,7 @@ export default function SettingsManager({
       <Card
         key={item.key}
         className={cn(
-          "group relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift",
+          "group relative overflow-hidden transition-all duration-200",
           enabled ? "border-brand-200/70" : "border-slate-200/70 bg-slate-50/40",
         )}
       >
@@ -357,13 +357,13 @@ export default function SettingsManager({
         />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {REMINDER_ITEMS.map(renderToggle)}
-          <Card className="group relative overflow-hidden border-brand-200/70 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+          <Card className="group relative overflow-hidden border-brand-200/70 transition-all duration-200">
             <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
             <CardBody className="flex flex-col gap-3">
               <div className="flex items-center gap-4">
                 <span
                   className={cn(
-                    "inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg transition-transform duration-200 group-hover:scale-105",
+                    "inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg",
                     HOUR_TONE,
                   )}
                 >
@@ -413,7 +413,7 @@ export default function SettingsManager({
         />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {VIEW_ITEMS.map(renderToggle)}
-          <Card className="group relative overflow-hidden border-brand-200/70 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+          <Card className="group relative overflow-hidden border-brand-200/70 transition-all duration-200">
             <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
             <CardBody className="flex flex-col gap-3">
               <div className="flex items-center gap-4">

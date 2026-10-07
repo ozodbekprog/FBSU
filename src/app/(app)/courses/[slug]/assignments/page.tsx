@@ -171,16 +171,17 @@ export default async function CourseAssignmentsPage({
                     className="animate-fade-up"
                     style={{ animationDelay: `${Math.min(index, 8) * 50 + 120}ms` }}
                   >
+                    <Link
+                      href={`/courses/${course.slug}/assignments/${assignment.id}`}
+                      className="block"
+                    >
                     <Card className="group relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
                       <span className={cn("absolute inset-y-0 left-0 w-1", accent)} />
                     <CardBody className="flex flex-wrap items-center justify-between gap-4 pl-6">
                       <div className="min-w-0 flex-1">
-                        <Link
-                          href={`/courses/${course.slug}/assignments/${assignment.id}`}
-                          className="font-semibold text-slate-900 transition-colors duration-150 hover:text-brand-700"
-                        >
+                        <span className="font-semibold text-slate-900">
                           {assignment.title}
-                        </Link>
+                        </span>
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                           <DueChip
                             dueAt={assignment.dueAt}
@@ -205,6 +206,7 @@ export default async function CourseAssignmentsPage({
                       </div>
                     </CardBody>
                   </Card>
+                    </Link>
                   </div>
                 );
               })}
@@ -255,7 +257,7 @@ export default async function CourseAssignmentsPage({
                 className="animate-fade-up"
                 style={{ animationDelay: `${Math.min(index, 8) * 50 + 120}ms` }}
               >
-              <Card className="group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+              <Card className="group transition-all duration-200">
                 <CardBody className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2.5">

@@ -512,7 +512,7 @@ export function BookingsBoard({
                         className={cn(
                           "relative overflow-hidden rounded-xl border p-4 transition-all duration-200",
                           active
-                            ? "border-slate-200 bg-white hover:border-brand-200 hover:shadow-card"
+                            ? "border-slate-200 bg-white hover:border-brand-200"
                             : "border-slate-200/70 bg-slate-50/70",
                         )}
                       >

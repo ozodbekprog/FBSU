@@ -240,7 +240,7 @@ export function CourseMaterials({
       ) : null}
 
       {sections.map((section) => (
-        <Card key={section.id} className="overflow-hidden transition-shadow duration-200 hover:shadow-lift">
+        <Card key={section.id} className="overflow-hidden">
           {editingSection?.id === section.id ? (
             <div className="flex flex-wrap items-center gap-2 px-5 py-4">
               <Input
@@ -408,7 +408,7 @@ function MaterialRow({
   const { t } = useI18n();
   const href = material.type === "FILE" ? material.fileUrl : material.content;
   return (
-    <div className="group flex items-start justify-between gap-3 rounded-xl border border-slate-100 bg-white p-3.5 transition-all duration-200 hover:border-brand-100 hover:shadow-sm">
+    <div className="group flex items-start justify-between gap-3 rounded-xl border border-slate-100 bg-white p-3.5 transition-colors duration-200 hover:border-brand-100">
       <div className="flex min-w-0 flex-1 items-start gap-3">
         <span
           className={cn(

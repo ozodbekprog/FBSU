@@ -1183,7 +1183,7 @@ export function ScheduleBoard({
                                   BLOCK_SHADOW,
                                   cancelled
                                     ? "opacity-70"
-                                    : "hover:-translate-y-0.5 hover:border-transparent hover:shadow-lift",
+                                    : "",
                                 )}
                               >
                                 <span className={cn("pointer-events-none absolute inset-0", tone.wash)} />
@@ -1313,7 +1313,9 @@ export function ScheduleBoard({
                               BLOCK_SHADOW,
                               cancelled
                                 ? "border-rose-200/70 opacity-70"
-                                : "border-slate-200/70 hover:-translate-y-0.5 hover:shadow-lift",
+                                : manageable
+                                  ? "border-slate-200/70 hover:-translate-y-0.5 hover:shadow-lift"
+                                  : "border-slate-200/70",
                               manageable && "cursor-pointer",
                             )}
                           >

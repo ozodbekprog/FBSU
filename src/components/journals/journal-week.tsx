@@ -1,4 +1,5 @@
-import { Badge, Button, ButtonLink, Card, EmptyState, Progress } from "@/components/ui";
+import { Badge, Button, Card, EmptyState, Progress } from "@/components/ui";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { getDictionary, getLocale, t as translate, type Dictionary, type Locale } from "@/i18n";
 import { formatShortIso } from "./journals-utils";
@@ -48,23 +49,21 @@ function LessonRow({
   const schedule = SCHEDULE_META[lesson.status] ?? null;
   const view = statusView(lesson, today);
   const max = lesson.studentCount > 0 ? lesson.studentCount : 1;
+  const lessonHref = lesson.courseSlug
+    ? `/courses/${lesson.courseSlug}/attendance/lesson?date=${lesson.date}&slot=${lesson.slot}`
+    : null;
 
-  return (
-    <li className="relative animate-fade-up" style={{ animationDelay: `${delay}ms` }}>
-      <span
-        className={cn(
-          "absolute -left-[22px] top-1/2 hidden size-2.5 -translate-y-1/2 rounded-full ring-4 ring-white sm:block",
-          cancelled ? "bg-rose-500" : DOT_TONES[lesson.attendanceStatus],
-        )}
-      />
-      <Card
-        className={cn(
-          "flex flex-wrap items-center gap-3 p-3.5 transition-all duration-200",
-          cancelled
-            ? "border-dashed border-rose-200 bg-rose-50/50 opacity-80"
-            : "hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift",
-        )}
-      >
+  const card = (
+    <Card
+      className={cn(
+        "flex flex-wrap items-center gap-3 p-3.5 transition-all duration-200",
+        cancelled
+          ? "border-dashed border-rose-200 bg-rose-50/50 opacity-80"
+          : lessonHref
+            ? "hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift"
+            : "",
+      )}
+    >
         <span
           className={cn(
             "inline-flex w-[4.6rem] shrink-0 flex-col rounded-xl px-2.5 py-1.5",
@@ -122,12 +121,9 @@ function LessonRow({
               {schedule ? <Badge tone={schedule.tone}>{dictionary[schedule.key]}</Badge> : null}
               <Badge tone={view.tone}>{dictionary[view.key]}</Badge>
               {lesson.courseSlug ? (
-                <ButtonLink
-                  href={`/courses/${lesson.courseSlug}/attendance/lesson?date=${lesson.date}&slot=${lesson.slot}`}
-                  size="sm"
-                >
+                <span className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-900 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm">
                   {dictionary.schJrnOpen}
-                </ButtonLink>
+                </span>
               ) : (
                 <span className="flex items-center gap-2">
                   <Button size="sm" disabled>
@@ -140,6 +136,17 @@ function LessonRow({
           )}
         </span>
       </Card>
+  );
+
+  return (
+    <li className="relative animate-fade-up" style={{ animationDelay: `${delay}ms` }}>
+      <span
+        className={cn(
+          "absolute -left-[22px] top-1/2 hidden size-2.5 -translate-y-1/2 rounded-full ring-4 ring-white sm:block",
+          cancelled ? "bg-rose-500" : DOT_TONES[lesson.attendanceStatus],
+        )}
+      />
+      {lessonHref ? <Link href={lessonHref} className="block">{card}</Link> : card}
     </li>
   );
 }

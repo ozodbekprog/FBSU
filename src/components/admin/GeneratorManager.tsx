@@ -433,12 +433,12 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
                 )}
                 style={{ transitionDelay: `${index * 45}ms` }}
               >
-                <Card className="group relative h-full overflow-hidden p-5 transition-shadow duration-200 hover:shadow-lift">
+                <Card className="group relative h-full overflow-hidden p-5">
                   <span className={cn("absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r", item.tone)} />
                   <div className="flex items-center justify-between gap-3">
                     <span
                       className={cn(
-                        "inline-flex size-9 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-lg transition-transform duration-200 group-hover:scale-105",
+                        "inline-flex size-9 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-lg",
                         item.tone,
                       )}
                     >

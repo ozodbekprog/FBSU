@@ -199,7 +199,7 @@ export async function StudentAttendanceOverview({
                 return (
                   <div
                     key={status}
-                    className="group rounded-2xl border border-slate-100 bg-white/80 p-3 shadow-[0_1px_2px_rgba(16,24,40,0.03)] transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-lift"
+                    className="group rounded-2xl border border-slate-100 bg-white/80 p-3 shadow-[0_1px_2px_rgba(16,24,40,0.03)]"
                   >
                     <span
                       className={cn(
@@ -252,7 +252,7 @@ export async function StudentAttendanceOverview({
               return (
                 <div
                   key={course.courseId}
-                  className="group rounded-2xl border border-slate-100 bg-white px-4 py-4 transition-all duration-200 hover:border-brand-200/80 hover:bg-brand-50/30 hover:shadow-lift"
+                  className="group rounded-2xl border border-slate-100 bg-white px-4 py-4 transition-colors duration-200 hover:border-brand-200/80 hover:bg-brand-50/30"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <Link
