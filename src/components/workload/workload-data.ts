@@ -92,25 +92,32 @@ export function formatHours(value: number) {
 export async function buildWorkloadData(options: {
   teacherId: string | null;
   includeAllTeachers: boolean;
+  departmentId?: string | null;
+  facultyId?: string | null;
 }): Promise<WorkloadData> {
-  const [teacherUsers, courseRows] = await Promise.all([
-    prisma.user.findMany({
-      where: { role: "TEACHER" },
-      orderBy: { name: "asc" },
-      select: { id: true, name: true, email: true },
-    }),
-    prisma.course.findMany({
-      orderBy: { title: "asc" },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        teacherId: true,
-        teacher: { select: { name: true } },
-        _count: { select: { enrollments: true, assignments: true, quizzes: true } },
-      },
-    }),
-  ]);
+  const hasScope = Boolean(options.departmentId || options.facultyId);
+  const teacherUsers = await prisma.user.findMany({
+    where: {
+      role: "TEACHER",
+      ...(options.departmentId ? { departmentId: options.departmentId } : {}),
+      ...(options.facultyId ? { facultyId: options.facultyId } : {}),
+    },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, email: true },
+  });
+  const scopedTeacherIds = teacherUsers.map((teacher) => teacher.id);
+  const courseRows = await prisma.course.findMany({
+    where: hasScope ? { teacherId: { in: scopedTeacherIds } } : {},
+    orderBy: { title: "asc" },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      teacherId: true,
+      teacher: { select: { name: true } },
+      _count: { select: { enrollments: true, assignments: true, quizzes: true } },
+    },
+  });
 
   const courseIds = courseRows.map((course) => course.id);
   const assignmentRows = await prisma.assignment.findMany({

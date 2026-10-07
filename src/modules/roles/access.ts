@@ -23,8 +23,21 @@ const APPROVER_ROLES: readonly string[] = ["ADMIN", "REGISTRAR"];
 
 const LEADERSHIP_ROLES: readonly string[] = ["REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI"];
 
+const ANALYSIS_ROLES: readonly string[] = [
+  "ADMIN",
+  "TEACHER",
+  "REKTOR",
+  "PRO_RECTOR",
+  "DEKAN",
+  "KAFEDRA_MUDIRI",
+];
+
 export function canViewMonitoring(role: string): boolean {
   return MONITORING_ROLES.includes(role);
+}
+
+export function canViewAnalysis(role: string): boolean {
+  return ANALYSIS_ROLES.includes(role);
 }
 
 export function canApprove(role: string): boolean {

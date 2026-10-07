@@ -424,6 +424,7 @@ export const adm = {
 
   admWorkloadTitle: "Yuklama",
   admWorkloadAdminPanel: "Administrator paneli",
+  admWorkloadLeadershipPanel: "Rahbariyat paneli",
   admWorkloadTeacherPanel: "O'qituvchi paneli",
   admWorkloadSubtitle: "{scope} · {count} ta kurs",
   admWorkloadAllTeachers: "Barcha o'qituvchilar · {count} ta kurs",

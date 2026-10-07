@@ -424,6 +424,7 @@ export const adm = {
 
   admWorkloadTitle: "Нагрузка",
   admWorkloadAdminPanel: "Панель администратора",
+  admWorkloadLeadershipPanel: "Панель руководства",
   admWorkloadTeacherPanel: "Панель преподавателя",
   admWorkloadSubtitle: "{scope} · {count} курсов",
   admWorkloadAllTeachers: "Все преподаватели · {count} курсов",

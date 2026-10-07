@@ -24,12 +24,20 @@ export default async function ReportsPage({
 }: {
   searchParams: Promise<{ courseId?: string }>;
 }) {
-  const user = await requireRole(["TEACHER", "ADMIN"]);
+  const user = await requireRole(["TEACHER", "ADMIN", "DEKAN", "KAFEDRA_MUDIRI", "PRO_RECTOR", "REKTOR"]);
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
 
+  const courseWhere =
+    user.role === "TEACHER"
+      ? { teacherId: user.id }
+      : user.role === "DEKAN"
+        ? { teacher: { facultyId: user.facultyId ?? "__none__" } }
+        : user.role === "KAFEDRA_MUDIRI"
+          ? { teacher: { departmentId: user.departmentId ?? "__none__" } }
+          : {};
   const courses = await prisma.course.findMany({
-    where: user.role === "ADMIN" ? {} : { teacherId: user.id },
+    where: courseWhere,
     orderBy: { title: "asc" },
     select: { id: true, title: true, slug: true },
   });

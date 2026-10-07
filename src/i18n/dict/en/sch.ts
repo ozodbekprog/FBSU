@@ -146,6 +146,7 @@ export const sch = {
   schCourseCount: "{count} courses",
   schAttendanceControl: "Attendance control",
   schAdminPanelAllCourses: "Administrator panel · all courses",
+  schAttendanceScoped: "Scoped to your area",
   schTeacherPanelYourCourses: "Teacher panel · your courses",
 
   schQrAttendanceTitle: "Attendance via QR",

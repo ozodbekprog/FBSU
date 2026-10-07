@@ -146,6 +146,7 @@ export const sch = {
   schCourseCount: "{count} ta kurs",
   schAttendanceControl: "Davomat nazorati",
   schAdminPanelAllCourses: "Administrator paneli · barcha kurslar",
+  schAttendanceScoped: "O'z doirangiz kesimida",
   schTeacherPanelYourCourses: "O'qituvchi paneli · sizning kurslaringiz",
 
   schQrAttendanceTitle: "QR orqali davomat",

@@ -15,18 +15,27 @@ export default async function WorkloadPage({
 }: {
   searchParams: Promise<{ teacherId?: string; sort?: string; dir?: string }>;
 }) {
-  const user = await requireRole(["TEACHER", "ADMIN"]);
+  const user = await requireRole(["TEACHER", "ADMIN", "DEKAN", "KAFEDRA_MUDIRI", "PRO_RECTOR", "REKTOR"]);
   const params = await searchParams;
   const requestedTeacherId =
     typeof params.teacherId === "string" && params.teacherId.length > 0 ? params.teacherId : null;
   const teacherId = user.role === "TEACHER" ? user.id : requestedTeacherId;
+  const isGlobalViewer = user.role === "ADMIN" || user.role === "PRO_RECTOR" || user.role === "REKTOR";
+  const canSelectTeachers = user.role !== "TEACHER";
 
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
 
+  const scopeFilter =
+    user.role === "DEKAN"
+      ? { facultyId: user.facultyId ?? "__none__" }
+      : user.role === "KAFEDRA_MUDIRI"
+        ? { departmentId: user.departmentId ?? "__none__" }
+        : {};
   const data = await buildWorkloadData({
     teacherId,
-    includeAllTeachers: user.role === "ADMIN",
+    includeAllTeachers: canSelectTeachers,
+    ...scopeFilter,
   });
 
   const { sort, dir } = parseWorkloadSort(params.sort, params.dir);
@@ -40,7 +49,13 @@ export default async function WorkloadPage({
     <>
       <PageHeader
         title={dictionary.admWorkloadTitle}
-        eyebrow={user.role === "ADMIN" ? dictionary.admWorkloadAdminPanel : dictionary.admWorkloadTeacherPanel}
+        eyebrow={
+          user.role === "TEACHER"
+            ? dictionary.admWorkloadTeacherPanel
+            : isGlobalViewer
+              ? dictionary.admWorkloadAdminPanel
+              : dictionary.admWorkloadLeadershipPanel
+        }
         subtitle={
           scopeName
             ? translate(locale, "admWorkloadSubtitle", {
@@ -82,7 +97,7 @@ export default async function WorkloadPage({
         </div>
       </div>
 
-      {user.role === "ADMIN" ? (
+      {canSelectTeachers ? (
         <Card className="mt-6">
           <CardHeader
             title={dictionary.admWorkloadTeachersTitle}
@@ -111,7 +126,7 @@ export default async function WorkloadPage({
           title={dictionary.admWorkloadCoursesTitle}
           subtitle={selectedTeacher ? selectedTeacher.name : dictionary.admWorkloadAllCourses}
           action={
-            user.role === "ADMIN" && teacherId ? (
+            canSelectTeachers && teacherId ? (
               <Link
                 href="/workload"
                 className="text-sm font-medium text-slate-500 transition-colors duration-150 hover:text-brand-800"
@@ -130,7 +145,7 @@ export default async function WorkloadPage({
           ) : (
             <WorkloadCoursesTable
               courses={data.courses}
-              showTeacher={user.role === "ADMIN" && !teacherId}
+              showTeacher={canSelectTeachers && !teacherId}
             />
           )}
         </CardBody>

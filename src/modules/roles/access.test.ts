@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canApprove, canViewMonitoring, isLeadership, isTyutor } from "@/modules/roles/access";
+import { canApprove, canViewAnalysis, canViewMonitoring, isLeadership, isTyutor } from "@/modules/roles/access";
 
 describe("rol vakolatlari: monitoring", () => {
   it("rahbariyat va o'quv bo'limi monitoringni ko'radi", () => {
@@ -11,6 +11,20 @@ describe("rol vakolatlari: monitoring", () => {
   it("o'qituvchi, tyutor, xodim va talaba monitoringni ko'rmaydi", () => {
     for (const role of ["TEACHER", "TYUTOR", "STUDENT", "XODIM"]) {
       expect(canViewMonitoring(role), role).toBe(false);
+    }
+  });
+});
+
+describe("rol vakolatlari: tahlil (hisobot/yuklama)", () => {
+  it("o'qituvchi va rahbariyat tahlilni ko'radi", () => {
+    for (const role of ["ADMIN", "TEACHER", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI"]) {
+      expect(canViewAnalysis(role), role).toBe(true);
+    }
+  });
+
+  it("tyutor, registrator, xodim va talaba tahlilni ko'rmaydi", () => {
+    for (const role of ["TYUTOR", "REGISTRAR", "XODIM", "STUDENT"]) {
+      expect(canViewAnalysis(role), role).toBe(false);
     }
   });
 });

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireUser, isStaff } from "@/lib/auth";
+import { canViewAnalysis } from "@/modules/roles/access";
 import { getModuleFlags } from "@/server/settings";
 import { getDictionary, getLocale } from "@/i18n";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
@@ -81,8 +82,8 @@ export default async function AppLayout({
         ...(isStaff(user.role) || user.role === "TYUTOR"
           ? [{ href: "/curator", label: dictionary.navCurator }]
           : []),
-        ...(isStaff(user.role) ? [{ href: "/reports", label: dictionary.navReports }] : []),
-        ...(isStaff(user.role) ? [{ href: "/workload", label: dictionary.navWorkload }] : []),
+        ...(canViewAnalysis(user.role) ? [{ href: "/reports", label: dictionary.navReports }] : []),
+        ...(canViewAnalysis(user.role) ? [{ href: "/workload", label: dictionary.navWorkload }] : []),
         ...(user.role === "ADMIN" ? [{ href: "/admin", label: dictionary.navAdmin }] : []),
       ],
     },

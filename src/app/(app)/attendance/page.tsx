@@ -53,8 +53,18 @@ export default async function AttendancePage() {
     );
   }
 
+  const isGlobalAttendance = ["ADMIN", "PRO_RECTOR", "REKTOR", "REGISTRAR"].includes(user.role);
+  const courseWhere = isGlobalAttendance
+    ? {}
+    : user.role === "DEKAN"
+      ? { teacher: { facultyId: user.facultyId ?? "__none__" } }
+      : user.role === "KAFEDRA_MUDIRI"
+        ? { teacher: { departmentId: user.departmentId ?? "__none__" } }
+        : user.role === "TYUTOR"
+          ? { enrollments: { some: { status: "ACTIVE" as const, user: { group: { curatorId: user.id } } } } }
+          : { teacherId: user.id };
   const courses = await prisma.course.findMany({
-    where: user.role === "ADMIN" ? {} : { teacherId: user.id },
+    where: courseWhere,
     select: {
       id: true,
       title: true,
@@ -95,9 +105,11 @@ export default async function AttendancePage() {
         eyebrow={dictionary.schAttendanceEyebrow}
         title={dictionary.schAttendanceControl}
         subtitle={
-          user.role === "ADMIN"
-            ? dictionary.schAdminPanelAllCourses
-            : dictionary.schTeacherPanelYourCourses
+          user.role === "TEACHER"
+            ? dictionary.schTeacherPanelYourCourses
+            : isGlobalAttendance
+              ? dictionary.schAdminPanelAllCourses
+              : dictionary.schAttendanceScoped
         }
       />
       <StaffAttendanceOverview courses={rows} />

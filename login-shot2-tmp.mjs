@@ -1,0 +1,18 @@
+import { chromium } from "playwright";
+const BASE = "https://fbsu.vercel.app";
+const browser = await chromium.launch({ channel: "chrome" });
+const ctx = await browser.newContext({ viewport: { width: 1280, height: 1400 } });
+const p = await ctx.newPage();
+await p.goto(`${BASE}/login`, { waitUntil: "domcontentloaded" });
+await p.waitForTimeout(4000);
+const body = await p.evaluate(() => document.body.innerText);
+const roles = ["Rektor", "Prorektor", "Dekan", "Kafedra mudiri", "Registrator", "Tyutor", "Xodim", "Admin", "O'qituvchi", "Talaba"];
+const found = roles.filter((r) => body.includes(r));
+console.log("Topilgan rollar:", found.length + "/10", found.length < 10 ? "| yo'q: " + roles.filter((r) => !body.includes(r)).join(", ") : "");
+const buttons = await p.locator("button").allInnerTexts();
+console.log("Tugmalar:", JSON.stringify(buttons.filter((b) => b.length < 30).slice(0, 14)));
+const block = p.locator("div.mt-8").first();
+console.log("Blok bor:", await block.count());
+await block.screenshot({ path: "/private/var/folders/hk/hq5x2bfs78g1_vk_dflzvnpw0000gn/T/opencode/login-rollar.png" });
+console.log("screenshot OK");
+await browser.close();

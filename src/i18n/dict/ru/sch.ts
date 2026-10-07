@@ -146,6 +146,7 @@ export const sch = {
   schCourseCount: "Курсов: {count}",
   schAttendanceControl: "Контроль посещаемости",
   schAdminPanelAllCourses: "Панель администратора · все курсы",
+  schAttendanceScoped: "В рамках вашей зоны",
   schTeacherPanelYourCourses: "Панель преподавателя · ваши курсы",
 
   schQrAttendanceTitle: "Посещаемость по QR",
