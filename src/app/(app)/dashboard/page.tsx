@@ -328,6 +328,7 @@ function AnalyticsCard({
   emptyDescription,
   locale,
   children,
+  className,
 }: {
   title: string;
   subtitle: string;
@@ -337,22 +338,23 @@ function AnalyticsCard({
   emptyDescription: string;
   locale: Locale;
   children: ReactNode;
+  className?: string;
 }) {
   return (
-    <Reveal delay={delay}>
-      <Card className="h-full overflow-hidden">
+    <Reveal delay={delay} className={className}>
+      <Card className="flex h-full flex-col overflow-hidden">
         <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 pb-2.5 pt-3.5">
           <div className="min-w-0">
             <h3 className="text-sm font-semibold tracking-tight text-brand-950">{title}</h3>
             <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>
           </div>
         </div>
-        <div className="px-4 pb-3.5 pt-3">
+        <div className="flex flex-1 flex-col px-4 pb-3.5 pt-3">
           {empty ? (
             <EmptyState title={translate(locale, "dashNoDataTitle")} description={emptyDescription} />
           ) : (
             <>
-              {children}
+              <div className="flex flex-1 items-center">{children}</div>
               <p className="mt-3 border-t border-slate-100 pt-2.5 text-[11px] leading-relaxed text-slate-500">
                 {note}
               </p>
@@ -403,6 +405,7 @@ function StudentAnalyticsSection({ data, locale }: { data: StudentAnalytics; loc
           empty={data.gradeTrend.length === 0}
           emptyDescription={translate(locale, "dashGradeTrendEmpty")}
           locale={locale}
+          className="lg:col-span-2"
         >
           <LineChart data={data.gradeTrend} />
         </AnalyticsCard>

@@ -317,65 +317,65 @@ export default async function AdminPage() {
 
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="animate-fade-up" style={{ animationDelay: "60ms" }}>
-            <Card className="h-full">
+            <Card className="flex h-full flex-col overflow-hidden">
               <CardHeader
                 title={dictionary.admChartRolesTitle}
                 subtitle={dictionary.admChartRolesSubtitle}
                 action={<Badge tone="blue">{translate(locale, "admCount", { count: roleTotal })}</Badge>}
               />
-              <CardBody className="px-4 pb-4 pt-3">
+              <CardBody className="flex flex-1 flex-col justify-center px-4 pb-4 pt-3">
                 <DonutChart data={charts.usersByRole} />
               </CardBody>
             </Card>
           </div>
 
           <div className="animate-fade-up" style={{ animationDelay: "120ms" }}>
-            <Card className="h-full">
+            <Card className="flex h-full flex-col overflow-hidden">
               <CardHeader
                 title={dictionary.admChartSubmissionsTitle}
                 subtitle={dictionary.admChartSubmissionsSubtitle}
                 action={<Badge tone="green">{translate(locale, "admCount", { count: submissionTotal })}</Badge>}
               />
-              <CardBody className="px-4 pb-4 pt-3">
+              <CardBody className="flex flex-1 flex-col justify-center px-4 pb-4 pt-3">
                 <BarChart data={charts.submissionsByDay} />
               </CardBody>
             </Card>
           </div>
 
           <div className="animate-fade-up" style={{ animationDelay: "180ms" }}>
-            <Card className="h-full">
+            <Card className="flex h-full flex-col overflow-hidden">
               <CardHeader
                 title={dictionary.admChartAttendanceTitle}
                 subtitle={dictionary.admChartAttendanceSubtitle}
                 action={<Badge tone={attendanceAvg >= 80 ? "green" : attendanceAvg >= 60 ? "amber" : "rose"}>{attendanceAvg}%</Badge>}
               />
-              <CardBody className="px-4 pb-4 pt-3">
+              <CardBody className="flex flex-1 flex-col justify-center px-4 pb-4 pt-3">
                 <LineChart data={charts.attendanceRateByDay} />
               </CardBody>
             </Card>
           </div>
 
           <div className="animate-fade-up" style={{ animationDelay: "240ms" }}>
-            <Card className="h-full">
+            <Card className="flex h-full flex-col overflow-hidden">
               <CardHeader
                 title={dictionary.admChartTopCoursesTitle}
                 subtitle={dictionary.admChartTopCoursesSubtitle}
                 action={topCourse ? <Badge tone="purple">{topCourse.label}</Badge> : null}
               />
-              <CardBody className="px-4 pb-4 pt-3">
+              <CardBody className="flex flex-1 flex-col justify-center px-4 pb-4 pt-3">
                 <BarChart data={charts.topCourses} />
               </CardBody>
             </Card>
           </div>
 
           <div className="animate-fade-up lg:col-span-2" style={{ animationDelay: "300ms" }}>
-            <Card className="h-full">
+            <Card className="flex h-full flex-col overflow-hidden">
               <CardHeader
                 title={dictionary.admChartQuizTitle}
                 subtitle={dictionary.admChartQuizSubtitle}
                 action={<Badge tone="gold">{translate(locale, "admQuizCountBadge", { count: charts.quizAverages.length })}</Badge>}
               />
-              <CardBody className="px-4 pb-4 pt-3">
+              <CardBody className="flex flex-1 flex-col justify-center px-4 pb-4 pt-3">
                 <BarChart data={charts.quizAverages} />
               </CardBody>
             </Card>
