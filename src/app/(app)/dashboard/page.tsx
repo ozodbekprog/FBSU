@@ -997,30 +997,16 @@ export default async function DashboardPage() {
             }
           />
         </Reveal>
-        <Reveal delay={180}>
-          <StatTile
-            href="/courses"
-            label={dict.dashUpcomingAssignments}
-            value={upcoming.length}
-            hint={dict.dashByDeadline}
-            tone="amber"
-            icon={
-              <Icon>
-                <rect x="3" y="5" width="18" height="16" rx="2" />
-                <path d="M16 3v4M8 3v4M3 11h18" />
-              </Icon>
-            }
-          />
-        </Reveal>
           </div>
         </div>
       </div>
 
       <div className="mt-6 grid items-start gap-4 lg:grid-cols-2">
-        <Reveal delay={240}>
-          <Card className="transition-shadow duration-200">
-            <CardHeader
-              title={dict.dashTodayLessons}
+        <div className="space-y-4">
+          <Reveal delay={240}>
+            <Card className="transition-shadow duration-200">
+              <CardHeader
+                title={dict.dashTodayLessons}
               subtitle={user.group?.name}
               action={
                 <Badge tone="blue">
@@ -1077,9 +1063,25 @@ export default async function DashboardPage() {
               )}
             </CardBody>
           </Card>
-        </Reveal>
+          </Reveal>
+          <Reveal delay={300}>
+            <StatTile
+              href="/courses"
+              label={dict.dashUpcomingAssignments}
+              value={upcoming.length}
+              hint={dict.dashByDeadline}
+              tone="amber"
+              icon={
+                <Icon>
+                  <rect x="3" y="5" width="18" height="16" rx="2" />
+                  <path d="M16 3v4M8 3v4M3 11h18" />
+                </Icon>
+              }
+            />
+          </Reveal>
+        </div>
 
-        <Reveal delay={300}>
+        <Reveal delay={320}>
             <Card className="transition-shadow duration-200">
               <CardHeader
                 title={dict.dashUpcomingAssignments}
@@ -1107,7 +1109,7 @@ export default async function DashboardPage() {
                     return (
                       <div
                         key={a.id}
-                        className="flex items-start justify-between gap-3 rounded-xl border border-slate-100 p-3 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-sm"
+                        className="flex items-start justify-between gap-3 rounded-xl border border-slate-100 p-3 transition-colors duration-150 hover:bg-slate-50"
                       >
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium text-slate-800">{a.title}</p>
