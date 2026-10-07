@@ -340,20 +340,25 @@ function AnalyticsCard({
 }) {
   return (
     <Reveal delay={delay}>
-      <Card className="h-full transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
-        <CardHeader title={title} subtitle={subtitle} />
-        <CardBody>
+      <Card className="h-full overflow-hidden">
+        <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 pb-2.5 pt-3.5">
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold tracking-tight text-brand-950">{title}</h3>
+            <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>
+          </div>
+        </div>
+        <div className="px-4 pb-3.5 pt-3">
           {empty ? (
             <EmptyState title={translate(locale, "dashNoDataTitle")} description={emptyDescription} />
           ) : (
             <>
               {children}
-              <p className="mt-4 border-t border-slate-100 pt-3 text-xs leading-relaxed text-slate-600">
+              <p className="mt-3 border-t border-slate-100 pt-2.5 text-[11px] leading-relaxed text-slate-500">
                 {note}
               </p>
             </>
           )}
-        </CardBody>
+        </div>
       </Card>
     </Reveal>
   );
@@ -361,13 +366,13 @@ function AnalyticsCard({
 
 function StudentAnalyticsSection({ data, locale }: { data: StudentAnalytics; locale: Locale }) {
   return (
-    <section className="mt-8">
+    <section className="mt-6">
       <SectionHeading
         title={translate(locale, "dashAnalyticsTitle")}
         subtitle={translate(locale, "dashStudentAnalyticsSubtitle")}
         action={<Badge tone="blue">{translate(locale, "dashRecordsCount", { count: data.attendanceTotal })}</Badge>}
       />
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <AnalyticsCard
           title={translate(locale, "dashAttendanceDistTitle")}
           subtitle={translate(locale, "dashAttendanceDistSubtitle")}
@@ -408,13 +413,13 @@ function StudentAnalyticsSection({ data, locale }: { data: StudentAnalytics; loc
 
 function TeacherAnalyticsSection({ data, locale }: { data: TeacherAnalytics; locale: Locale }) {
   return (
-    <section className="mt-8">
+    <section className="mt-6">
       <SectionHeading
         title={translate(locale, "dashAnalyticsTitle")}
         subtitle={translate(locale, "dashTeacherAnalyticsSubtitle")}
         action={<Badge tone="slate">{translate(locale, "dashLast14Days")}</Badge>}
       />
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <AnalyticsCard
           title={translate(locale, "dashSubmissionsTitle")}
           subtitle={translate(locale, "dashSubmissionsSubtitle")}
@@ -466,13 +471,13 @@ function TeacherAnalyticsSection({ data, locale }: { data: TeacherAnalytics; loc
 
 function AdminAnalyticsSection({ data, locale }: { data: AdminAnalytics; locale: Locale }) {
   return (
-    <section className="mt-8">
+    <section className="mt-6">
       <SectionHeading
         title={translate(locale, "dashAnalyticsTitle")}
         subtitle={translate(locale, "dashAdminAnalyticsSubtitle")}
         action={<Badge tone="slate">{translate(locale, "dashLast14Days")}</Badge>}
       />
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <AnalyticsCard
           title={translate(locale, "dashUserRolesTitle")}
           subtitle={translate(locale, "dashUserRolesSubtitle")}
@@ -815,7 +820,7 @@ export default async function DashboardPage() {
         </div>
 
         {user.role === "TEACHER" ? (
-          <Reveal delay={300} className="mt-8">
+          <Reveal delay={300} className="mt-6">
             <Card className="transition-shadow duration-200 hover:shadow-lift">
               <CardHeader
                 title={dict.dashMyTodayLessons}
@@ -1003,7 +1008,7 @@ export default async function DashboardPage() {
         </Reveal>
       </div>
 
-      <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
+      <div className="mt-6 grid items-start gap-4 lg:grid-cols-2">
         <Reveal delay={240}>
           <Card className="h-full transition-shadow duration-200 hover:shadow-lift">
             <CardHeader

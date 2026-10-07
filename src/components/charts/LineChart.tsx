@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { currentLocale } from "@/lib/utils";
 
 const NO_DATA: Record<string, string> = {
@@ -9,8 +10,8 @@ const NO_DATA: Record<string, string> = {
 export type LineChartDatum = { label: string; value: number };
 
 const WIDTH = 560;
-const HEIGHT = 230;
-const PAD = { top: 18, right: 20, bottom: 30, left: 38 };
+const HEIGHT = 200;
+const PAD = { top: 14, right: 16, bottom: 26, left: 30 };
 
 function clamp(value: number) {
   return Math.max(0, Math.min(100, value));
@@ -35,8 +36,14 @@ function smoothPath(points: { x: number; y: number }[]) {
 }
 
 export function LineChart({ data }: { data: LineChartDatum[] }) {
+  const areaId = useId();
+  const lineId = useId();
   if (data.length === 0) {
-    return <p className="py-12 text-center text-sm text-slate-600">{NO_DATA[currentLocale()] ?? NO_DATA.uz}</p>;
+    return (
+      <p className="py-10 text-center text-sm text-slate-500">
+        {NO_DATA[currentLocale()] ?? NO_DATA.uz}
+      </p>
+    );
   }
 
   const innerWidth = WIDTH - PAD.left - PAD.right;
@@ -55,10 +62,20 @@ export function LineChart({ data }: { data: LineChartDatum[] }) {
 
   const line = smoothPath(points);
   const area = `${line} L ${points[points.length - 1].x} ${baseY} L ${points[0].x} ${baseY} Z`;
-  const labelInterval = Math.max(1, Math.ceil(data.length / 7));
+  const labelInterval = Math.max(1, Math.ceil(data.length / 8));
 
   return (
     <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="h-auto w-full" role="img">
+      <defs>
+        <linearGradient id={areaId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#5373b8" stopOpacity="0.24" />
+          <stop offset="100%" stopColor="#5373b8" stopOpacity="0" />
+        </linearGradient>
+        <linearGradient id={lineId} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#1d3460" />
+          <stop offset="100%" stopColor="#d4af37" />
+        </linearGradient>
+      </defs>
       {[0, 25, 50, 75, 100].map((tick, tickIndex) => (
         <g key={tick}>
           <line
@@ -68,14 +85,15 @@ export function LineChart({ data }: { data: LineChartDatum[] }) {
             y2={yFor(tick)}
             className="animate-fade-in stroke-slate-200"
             strokeWidth={1}
+            strokeDasharray="3 5"
             style={{ animationDelay: `${tickIndex * 60}ms` }}
           />
           <text
-            x={PAD.left - 8}
-            y={yFor(tick) + 3}
+            x={PAD.left - 6}
+            y={yFor(tick) + 2.5}
             textAnchor="end"
             className="animate-fade-in fill-slate-400"
-            fontSize={9}
+            fontSize={8.5}
             style={{ animationDelay: `${tickIndex * 60}ms` }}
           >
             {tick}%
@@ -83,19 +101,15 @@ export function LineChart({ data }: { data: LineChartDatum[] }) {
         </g>
       ))}
 
-      <path
-        d={area}
-        className="animate-fade-in fill-brand-100"
-        fillOpacity={0.55}
-        style={{ animationDelay: "150ms" }}
-      />
+      <path d={area} fill={`url(#${areaId})`} className="animate-fade-in" style={{ animationDelay: "150ms" }} />
       <path
         d={line}
-        className="animate-draw stroke-brand-900"
+        stroke={`url(#${lineId})`}
         strokeWidth={2.5}
         fill="none"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="animate-draw"
         pathLength={1}
         strokeDasharray={1}
       />
@@ -108,7 +122,7 @@ export function LineChart({ data }: { data: LineChartDatum[] }) {
               <circle
                 cx={point.x}
                 cy={point.y}
-                r={9}
+                r={8.5}
                 className="animate-fade-in fill-gold-300"
                 fillOpacity={0.25}
                 style={{ animationDelay: `${index * 50}ms` }}
@@ -117,7 +131,7 @@ export function LineChart({ data }: { data: LineChartDatum[] }) {
             <circle
               cx={point.x}
               cy={point.y}
-              r={isLast ? 5 : 3.5}
+              r={isLast ? 4.5 : 3}
               className={
                 isLast
                   ? "animate-fade-in fill-gold-500 stroke-white"
@@ -131,10 +145,10 @@ export function LineChart({ data }: { data: LineChartDatum[] }) {
             {index % labelInterval === 0 || isLast ? (
               <text
                 x={point.x}
-                y={HEIGHT - 10}
+                y={HEIGHT - 9}
                 textAnchor="middle"
                 className="fill-slate-400"
-                fontSize={9.5}
+                fontSize={8.5}
               >
                 {point.label}
               </text>

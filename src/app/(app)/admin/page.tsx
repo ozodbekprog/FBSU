@@ -323,7 +323,7 @@ export default async function AdminPage() {
                 subtitle={dictionary.admChartRolesSubtitle}
                 action={<Badge tone="blue">{translate(locale, "admCount", { count: roleTotal })}</Badge>}
               />
-              <CardBody>
+              <CardBody className="px-4 pb-4 pt-3">
                 <DonutChart data={charts.usersByRole} />
               </CardBody>
             </Card>
@@ -336,7 +336,7 @@ export default async function AdminPage() {
                 subtitle={dictionary.admChartSubmissionsSubtitle}
                 action={<Badge tone="green">{translate(locale, "admCount", { count: submissionTotal })}</Badge>}
               />
-              <CardBody>
+              <CardBody className="px-4 pb-4 pt-3">
                 <BarChart data={charts.submissionsByDay} />
               </CardBody>
             </Card>
@@ -349,7 +349,7 @@ export default async function AdminPage() {
                 subtitle={dictionary.admChartAttendanceSubtitle}
                 action={<Badge tone={attendanceAvg >= 80 ? "green" : attendanceAvg >= 60 ? "amber" : "rose"}>{attendanceAvg}%</Badge>}
               />
-              <CardBody>
+              <CardBody className="px-4 pb-4 pt-3">
                 <LineChart data={charts.attendanceRateByDay} />
               </CardBody>
             </Card>
@@ -362,7 +362,7 @@ export default async function AdminPage() {
                 subtitle={dictionary.admChartTopCoursesSubtitle}
                 action={topCourse ? <Badge tone="purple">{topCourse.label}</Badge> : null}
               />
-              <CardBody>
+              <CardBody className="px-4 pb-4 pt-3">
                 <BarChart data={charts.topCourses} />
               </CardBody>
             </Card>
@@ -375,7 +375,7 @@ export default async function AdminPage() {
                 subtitle={dictionary.admChartQuizSubtitle}
                 action={<Badge tone="gold">{translate(locale, "admQuizCountBadge", { count: charts.quizAverages.length })}</Badge>}
               />
-              <CardBody>
+              <CardBody className="px-4 pb-4 pt-3">
                 <BarChart data={charts.quizAverages} />
               </CardBody>
             </Card>
