@@ -89,9 +89,18 @@ const STAFF = [
   { email: "tyutor-2@ttpu.uz", name: "K. Aliyeva", role: "TYUTOR" },
   { email: "tyutor-3@ttpu.uz", name: "S. Tosheva", role: "TYUTOR" },
   { email: "buxgalter@ttpu.uz", name: "N. Karimova", role: "XODIM" },
+  { email: "moliya@ttpu.uz", name: "M. Ergasheva", role: "XODIM" },
   { email: "kutubxona@ttpu.uz", name: "D. Rasulova", role: "XODIM" },
   { email: "it@ttpu.uz", name: "S. Toshmatov", role: "XODIM" },
   { email: "devonxona@ttpu.uz", name: "G. Umarova", role: "XODIM" },
+  { email: "farrosh-1@ttpu.uz", name: "Z. Abdullayeva", role: "XODIM" },
+  { email: "farrosh-2@ttpu.uz", name: "X. Norova", role: "XODIM" },
+  { email: "qorovul@ttpu.uz", name: "T. Raxmatov", role: "XODIM" },
+  { email: "oshxona@ttpu.uz", name: "G. Sattarova", role: "XODIM" },
+  { email: "tibbiyot@ttpu.uz", name: "D. Yusupova", role: "XODIM" },
+  { email: "psixolog@ttpu.uz", name: "A. Karimova", role: "XODIM" },
+  { email: "haydovchi@ttpu.uz", name: "B. Toshev", role: "XODIM" },
+  { email: "bogbon@ttpu.uz", name: "I. Nazarov", role: "XODIM" },
 ];
 
 const TEACHERS = [
@@ -691,6 +700,96 @@ async function main() {
     },
   });
 
+  console.log("13) Xodimlar davomati (kirish/chiqish)...");
+  const staffUsers = await prisma.user.findMany({
+    where: { role: { in: ["XODIM", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER"] } },
+    select: { id: true, email: true },
+  });
+  const existingStaffDays = new Set(
+    (await prisma.staffAttendance.findMany({ select: { userId: true, date: true } })).map(
+      (row) => `${row.userId}|${iso(row.date)}`,
+    ),
+  );
+  const staffAttendanceRows = [];
+  for (const staff of staffUsers) {
+    const isEarly = staff.email.startsWith("farrosh") || staff.email.startsWith("qorovul");
+    for (let offset = -30; offset <= 0; offset += 1) {
+      const day = utcDay(offset);
+      const dow = day.getUTCDay();
+      if (dow === 0 || dow === 6) continue;
+      const key = `${staff.id}|${iso(day)}`;
+      if (existingStaffDays.has(key)) continue;
+      existingStaffDays.add(key);
+      if (offset < 0 && chance(0.05)) continue;
+      const checkInHour = isEarly ? 7 : 8;
+      const checkInAt = atHour(day, checkInHour, ri(0, 45));
+      const checkOutAt =
+        offset === 0 && chance(0.6) ? null : chance(0.88) ? atHour(day, 17, ri(20, 59)) : null;
+      staffAttendanceRows.push({
+        userId: staff.id,
+        date: day,
+        checkInAt,
+        checkOutAt,
+        method: isEarly ? "TERMINAL" : "WEB",
+      });
+    }
+  }
+  for (let index = 0; index < staffAttendanceRows.length; index += 500) {
+    await prisma.staffAttendance.createMany({
+      data: staffAttendanceRows.slice(index, index + 500),
+      skipDuplicates: true,
+    });
+  }
+  console.log(`   xodim davomat yozuvlari: +${staffAttendanceRows.length}`);
+
+  console.log("14) Ish topshiriqlari...");
+  const adminUser = await prisma.user.findUnique({ where: { email: "admin@ttpu.uz" }, select: { id: true } });
+  const taskCreator = adminUser?.id ?? staffUsers.find((user) => user.email === "devonxona@ttpu.uz")?.id;
+  const TASK_SEEDS = [
+    { email: "farrosh-1@ttpu.uz", title: "201-xonani tozalash", description: "Dars tugagach tozalash va ventilyatsiya", status: "DONE", days: [-6, -6] },
+    { email: "farrosh-1@ttpu.uz", title: "Koridorni yuvish", description: "2-qavat koridori", status: "DONE", days: [-3, -3] },
+    { email: "farrosh-1@ttpu.uz", title: "Oshxonani tozalash", description: "Tushlikdan keyin", status: "OPEN", days: [0, 1] },
+    { email: "farrosh-2@ttpu.uz", title: "301-302 xonalarni tozalash", description: null, status: "DONE", days: [-5, -5] },
+    { email: "farrosh-2@ttpu.uz", title: "Zinapoyalarni yuvish", description: "Asosiy zinapoya", status: "OPEN", days: [-1, 1] },
+    { email: "qorovul@ttpu.uz", title: "Kechki smenada binoni tekshirish", description: "Barcha eshiklar va derazalar", status: "DONE", days: [-2, -2] },
+    { email: "qorovul@ttpu.uz", title: "Avtoturargohni nazorat qilish", description: null, status: "OPEN", days: [0, 2] },
+    { email: "it@ttpu.uz", title: "Kompyuter sinfida dasturlarni yangilash", description: "Python va Office paketlari", status: "DONE", days: [-4, -4] },
+    { email: "it@ttpu.uz", title: "Proyektor nosozligini tekshirish", description: "202-xona proyektori", status: "OPEN", days: [-1, 2] },
+    { email: "bogbon@ttpu.uz", title: "Hovlidagi daraxtlarni parvarishlash", description: null, status: "DONE", days: [-7, -7] },
+    { email: "bogbon@ttpu.uz", title: "Gulzorlarni sug'orish", description: "Har kuni ertalab", status: "OPEN", days: [0, 1] },
+    { email: "oshxona@ttpu.uz", title: "Haftalik oshxona hisobotini tayyorlash", description: "Moliya bo'limiga topshirish", status: "DONE", days: [-8, -8] },
+    { email: "haydovchi@ttpu.uz", title: "Xizmat avtomobilini texnik ko'rikka olib borish", description: null, status: "OPEN", days: [-2, 3] },
+    { email: "kutubxona@ttpu.uz", title: "Yangi kitoblarni kataloglashtirish", description: "30 ta yangi kitob", status: "DONE", days: [-10, -9] },
+    { email: "psixolog@ttpu.uz", title: "Birinchi kurs talabalari bilan suhbat", description: "Moslashuv dasturi doirasida", status: "OPEN", days: [1, 5] },
+    { email: "tibbiyot@ttpu.uz", title: "Birinchi yordam qutilarini yangilash", description: null, status: "OPEN", days: [-3, 2] },
+  ];
+  const staffByEmail = new Map(staffUsers.map((user) => [user.email, user.id]));
+  let taskCount = 0;
+  for (const seed of TASK_SEEDS) {
+    const assigneeId = staffByEmail.get(seed.email);
+    if (!assigneeId || !taskCreator) continue;
+    const existingTask = await prisma.workTask.findFirst({
+      where: { title: seed.title, assignedToId: assigneeId },
+      select: { id: true },
+    });
+    if (existingTask) continue;
+    const done = seed.status === "DONE";
+    await prisma.workTask.create({
+      data: {
+        title: seed.title,
+        description: seed.description,
+        assignedToId: assigneeId,
+        createdById: taskCreator,
+        status: done ? "DONE" : "OPEN",
+        dueAt: atHour(utcDay(seed.days[1]), 18, 0),
+        completedAt: done ? atHour(utcDay(seed.days[1]), ri(14, 17)) : null,
+        createdAt: atHour(utcDay(seed.days[0]), ri(8, 10)),
+      },
+    });
+    taskCount += 1;
+  }
+  console.log(`   ish topshiriqlari: +${taskCount}`);
+
   const summary = {
     seconds: Math.round((Date.now() - started) / 1000),
     faculties: await prisma.faculty.count(),
@@ -712,6 +811,8 @@ async function main() {
     submissions: await prisma.submission.count(),
     bonusPoints: await prisma.bonusPoint.count(),
     oralDefenses: await prisma.oralDefense.count(),
+    staffAttendance: await prisma.staffAttendance.count(),
+    workTasks: await prisma.workTask.count(),
   };
   console.log("YAKUN:", JSON.stringify(summary, null, 1));
 }

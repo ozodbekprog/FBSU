@@ -83,6 +83,10 @@ model User {
   enrollments   Enrollment[]
   submissions   Submission[]
   attendance    Attendance[]
+  staffAttendance StaffAttendance[]
+  accessLogs    AccessLog[]
+  tasksAssigned   WorkTask[] @relation("WorkTaskAssignee")
+  tasksCreated    WorkTask[] @relation("WorkTaskCreator")
   quizAttempts  QuizAttempt[]
   notifications Notification[]
 
@@ -533,6 +537,65 @@ model AttendanceSession {
   createdBy User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
   @@index([courseId, date])
+}
+
+enum WorkTaskStatus {
+  OPEN
+  DONE
+}
+
+enum AccessDirection {
+  IN
+  OUT
+}
+
+model AccessLog {
+  id        String          @id @default(cuid())
+  userId    String?
+  direction AccessDirection
+  gate      String          @default("Asosiy kirish")
+  method    String          @default("QR")
+  allowed   Boolean         @default(true)
+  reason    String?
+  at        DateTime        @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, at])
+  @@index([at])
+}
+
+model StaffAttendance {
+  id         String    @id @default(cuid())
+  userId     String
+  date       DateTime
+  checkInAt  DateTime?
+  checkOutAt DateTime?
+  method     String    @default("WEB")
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([date])
+}
+
+model WorkTask {
+  id           String         @id @default(cuid())
+  title        String
+  description  String?
+  assignedToId String
+  createdById  String
+  status       WorkTaskStatus @default(OPEN)
+  dueAt        DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime       @default(now())
+
+  assignedTo User @relation("WorkTaskAssignee", fields: [assignedToId], references: [id], onDelete: Cascade)
+  createdBy  User @relation("WorkTaskCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([assignedToId, status])
+  @@index([createdById])
 }
 
 model AppSetting {

@@ -65,6 +65,8 @@ export default async function AppLayout({
     {
       label: dictionary.navGroupServices,
       links: [
+        ...(user.role !== "STUDENT" ? [{ href: "/staff", label: dictionary.stfTitle }] : []),
+        ...(user.role !== "STUDENT" ? [{ href: "/tasks", label: dictionary.tskTitle }] : []),
         { href: "/search", label: dictionary.navSearch },
         { href: "/help", label: dictionary.navHelp },
         { href: "/settings", label: dictionary.navSettings },
