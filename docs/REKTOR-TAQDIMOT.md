@@ -7,13 +7,13 @@
 
 | Rol | Login | Nima ko'rsatiladi |
 |---|---|---|
-| Rektor | `rektor@ttpu.uz` | Monitoring paneli, universitet kesimidagi ko'rsatkichlar |
+| Rektor | `rektor@ttpu.uz` | Monitoring paneli, universitet ko'rsatkichlari |
 | Prorektor | `prorektor-oquv@ttpu.uz` | Monitoring (o'quv ishlari), universitet ko'rsatkichlari |
 | Dekan | `dekan-ki@ttpu.uz` | Monitoring, fakultet kesimi |
 | Kafedra mudiri | `kafedra-di@ttpu.uz` | Monitoring, o'qituvchilar yuklamasi (Workload) |
 | Registrator | `registrator@ttpu.uz` | Monitoring, tasdiqlashlar (Approvals), jadval |
 | Tyutor | `tyutor-1@ttpu.uz` | Kurator paneli (guruhlar) |
-| Xodim | `buxgalter@ttpu.uz` | Umumiy ko'rinish (dashboard) |
+| Xodim (farrosh) | `farrosh-1@ttpu.uz` | Keldim/Ketdim, o'z topshiriqlari, QR kod |
 | O'qituvchi | `t.prog@ttpu.uz` | Jurnal, QR davomat, katta ekran |
 | Talaba | `ai1s01@ttpu.uz` | Face ID, davomat, baholar, laboratoriya |
 
@@ -22,8 +22,9 @@
 ## 2. Universitet tuzilmasi (bazada mavjud)
 
 - **4 fakultet**: Kompyuter injiniringi, Mexanika va texnologiyalar, Arxitektura va dizayn, Iqtisodiyot va boshqaruv
-- **9 kafedra**, **6 guruh**, **106 talaba**, **14 o'qituvchi**, **25 rahbar/xodim** (rektor, 3 prorektor, 4 dekan, 9 kafedra mudiri, registrator, 3 tyutor, 4 boshqa xodim)
+- **9 kafedra**, **6 guruh**, **106 talaba**, **14 o'qituvchi**, **25 rahbar/xodim** + **13 xizmat xodimi** (farrosh, qorovul, moliyachi, oshxona, tibbiyot, psixolog, haydovchi, bog'bon...)
 - **14 fan/kurs**, haftalik dars jadvali, **2 oylik tarix** (8,672 davomat, 855 test urinishi, 1,353 baholangan ish, rag'bat ballari, og'zaki himoyalar)
+- **"Farroshdan rektorgacha"**: barcha xodimlar uchun davomat (Keldim/Ketdim), ish topshiriqlari, turniket o'tishlari (551 yozuv)
 
 ## 3. 10 daqiqalik demo ssenariy
 
@@ -57,6 +58,11 @@
 1. Topshiriq sahifasida **og'zaki himoya** bo'limi
 2. Talaba so'rov yuboradi → ustoz qabul qiladi → natija
 3. Aytish: *"150 talabani navbat bilan so'roq qilish o'rniga — tizimli, adolatli baholash"*
+
+### Qadam 5.1 — "Farroshdan rektorgacha" (2 daq) 🆕
+1. `farrosh-1@ttpu.uz` bilan kirish → **Keldim** bosish → **o'z topshiriqlari** ("201-xonani tozalash") → **Bajarildi**
+2. **Turniket**: `/access` kiosk sahifasi → farroshning QR kodini (`/my-qr` dan) skanerlash → "Xush kelibsiz, Z. Abdullayeva" 🟢
+3. Aytish: *"Bizda talabagina emas — farroshdan rektorgacha hamma tizimda: davomat, topshiriq, turniket"*
 
 ### Qadam 6 — Ko'p tillilik (30 sek)
 1. Profil → til: O'zbek / Русский / English
