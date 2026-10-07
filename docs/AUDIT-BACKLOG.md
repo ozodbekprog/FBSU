@@ -86,13 +86,15 @@
 - [ ] Skip-to-content ilovada
 - [ ] Confirm dialog yagonaligi
 
-## 🆕 YANGI MODUL TAKLIFI — Hujjatlar aylanmasi (Document Management)
-- [ ] Buyruqlar registri (raqam, sana, asos, kim imzoladi)
-- [ ] Xizmat xatlari registri (kirim/chiqim, devonxona)
-- [ ] Shablonlar + avtomatik to'ldirish (buyruq/xat/ma'lumotnoma)
-- [ ] Ma'lumotnomalar (o'qish joyidan, xarakteristika)
-- [ ] Imzo zanjiri (tuzuvchi → kelishuv → imzo → arxiv)
-- [ ] Arxiv: raqamlangan, izlanadigan
+## 🆕 YANGI MODULLAR TAKLIFI (HEMIS tadqiqoti asosida)
+- [ ] **Hujjatlar aylanmasi** — qurilmoqda ✅ (buyruq/xat/ma'lumotnoma/bayonnoma)
+- [ ] **Normativ buyruq shablonlari** (6 tur: qabul/ko'chirish/tiklash/chetlashtirish/stipendiya/jazo)
+- [ ] **Ota-onalar portali** — farzand davomati/bahosi (HEMISda bor)
+- [ ] **Moliya moduli** — shartnoma/to'lovlar, qarzlar, invoyslar
+- [ ] **QR-diplom** + tekshirish sahifasi (check-diplom kabi)
+- [ ] **HEMIS eksport paketi** — VM 403 talabi: kontingent/baholar/davomat HEMIS formatiga
+- [ ] **HEMIS API integratsiya** — rasmiy kalit olinib to'liq sinxronizatsiya
+- [ ] **Ilmiy faoliyat moduli** (IFB)
 
 ## 🤝 TONY QARORI KERAK
 - Face ID siyosati: majburiymi yoki ixtiyoriymi? (hozir ixtiyoriy — o'chirib bypass mumkin)
