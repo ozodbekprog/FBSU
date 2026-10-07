@@ -22,7 +22,7 @@ export async function GET(
   const course = await prisma.course.findFirst({
     where: { OR: [{ id }, { slug: id }] },
     include: {
-      enrollments: { where: { userId: user.id }, select: { id: true } },
+      enrollments: { where: { userId: user.id, status: "ACTIVE" }, select: { id: true } },
       sections: {
         orderBy: { position: "asc" },
         include: { materials: { orderBy: { position: "asc" } } },

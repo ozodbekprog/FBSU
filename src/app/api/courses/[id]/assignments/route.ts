@@ -36,8 +36,9 @@ export async function GET(
   if (user.role === "STUDENT") {
     const enrolled = await prisma.enrollment.findUnique({
       where: { courseId_userId: { courseId: course.id, userId: user.id } },
+      select: { status: true },
     });
-    if (!enrolled) {
+    if (enrolled?.status !== "ACTIVE") {
       return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
 

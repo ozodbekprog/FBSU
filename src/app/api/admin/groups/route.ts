@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { verifyCsrfFromRequest } from "@/lib/csrf";
+import { logAudit } from "@/server/audit";
 
 const createSchema = z.object({
   name: z.string().trim().min(2).max(60),
@@ -25,6 +27,11 @@ export async function POST(request: Request) {
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   if (user.role !== "ADMIN" && user.role !== "REGISTRAR") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
+  const csrfValid = await verifyCsrfFromRequest(request);
+  if (!csrfValid) {
+    return Response.json({ ok: false, error: "CSRF token yaroqsiz" }, { status: 403 });
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
@@ -38,6 +45,14 @@ export async function POST(request: Request) {
   const group = await prisma.group.create({
     data: { name, year: parsed.data.year ?? null },
     include: { _count: { select: { users: true } } },
+  });
+
+  await logAudit({
+    actorId: user.id,
+    action: "admin.group.create",
+    entity: "Group",
+    entityId: group.id,
+    meta: { name, year: parsed.data.year ?? null },
   });
 
   return Response.json({ ok: true, data: group }, { status: 201 });

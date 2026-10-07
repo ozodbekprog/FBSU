@@ -152,13 +152,16 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 
   if (parsed.data.password !== undefined) {
     data.passwordHash = await bcrypt.hash(parsed.data.password, 10);
+    data.sessionEpoch = { increment: 1 };
   }
 
   const updated = await prisma.user.update({ where: { id }, data, select: userSelect });
 
   const roleChanged = parsed.data.role !== undefined && parsed.data.role !== target.role;
   const activeChanged = parsed.data.isActive !== undefined && parsed.data.isActive !== target.isActive;
-  if (roleChanged || activeChanged) {
+  const emailChanged = parsed.data.email !== undefined && parsed.data.email.toLowerCase() !== target.email;
+  const passwordChanged = parsed.data.password !== undefined;
+  if (roleChanged || activeChanged || emailChanged || passwordChanged) {
     await logAudit({
       actorId: user.id,
       action: "admin.user.update",
@@ -169,6 +172,8 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
         isActive: parsed.data.isActive ?? target.isActive,
         previousRole: target.role,
         previousIsActive: target.isActive,
+        emailChanged,
+        passwordChanged,
       },
     });
   }

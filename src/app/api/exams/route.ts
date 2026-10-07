@@ -12,6 +12,10 @@ export async function GET() {
     return Response.json({ ok: true, data: { role: user.role, groups } });
   }
 
+  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+    return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
+
   const groups = await getStaffExams({ id: user.id, role: user.role });
   return Response.json({ ok: true, data: { role: user.role, groups } });
 }

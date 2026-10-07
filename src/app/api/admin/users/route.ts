@@ -46,7 +46,15 @@ export async function GET(request: Request) {
       { email: { contains: q, mode: "insensitive" } },
     ];
   }
-  if (role && ROLES.includes(role as Role)) where.role = role as Role;
+  if (user.role === "REGISTRAR") {
+    if (role && REGISTRAR_MANAGED_ROLES.includes(role as Role)) {
+      where.role = role as Role;
+    } else {
+      where.role = { in: [...REGISTRAR_MANAGED_ROLES] };
+    }
+  } else if (role && ROLES.includes(role as Role)) {
+    where.role = role as Role;
+  }
 
   const users = await prisma.user.findMany({
     where,

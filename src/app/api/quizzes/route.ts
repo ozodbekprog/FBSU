@@ -45,6 +45,10 @@ export async function GET(request: Request) {
       return Response.json({ ok: true, data: quizzes });
     }
 
+    if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+      return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+    }
+
     const quizzes = await prisma.quiz.findMany({
       where: {
         courseId,

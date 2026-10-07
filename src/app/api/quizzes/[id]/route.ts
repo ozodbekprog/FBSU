@@ -44,9 +44,9 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
   if (!quiz.isPublished) return Response.json({ ok: false, error: "Test topilmadi" }, { status: 404 });
   const enrollment = await prisma.enrollment.findUnique({
     where: { courseId_userId: { courseId: quiz.courseId, userId: user.id } },
-    select: { id: true },
+    select: { status: true },
   });
-  if (!enrollment) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (enrollment?.status !== "ACTIVE") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const attempts = await prisma.quizAttempt.findMany({
     where: { quizId: id, studentId: user.id },

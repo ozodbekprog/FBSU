@@ -29,7 +29,7 @@ export default async function AttendanceJournalPage({
     if (!enrolled) notFound();
   }
 
-  const journal = await getAttendanceJournal(course.id);
+  const journal = await getAttendanceJournal(course.id, management ? undefined : user.id);
 
   return (
     <>

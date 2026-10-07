@@ -16,8 +16,9 @@ export async function resolveCourseAccess(idOrSlug: string, user: ThreadUser) {
   if (!management) {
     const enrollment = await prisma.enrollment.findUnique({
       where: { courseId_userId: { courseId: course.id, userId: user.id } },
+      select: { status: true },
     });
-    enrolled = Boolean(enrollment);
+    enrolled = enrollment?.status === "ACTIVE";
   }
 
   return { course, management, enrolled, canView: management || enrolled };

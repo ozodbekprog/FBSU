@@ -51,10 +51,12 @@ export async function GET(request: Request) {
     const courses = await prisma.course.findMany({
       where:
         user.role === "STUDENT"
-          ? { enrollments: { some: { userId: user.id } } }
+          ? { enrollments: { some: { userId: user.id, status: "ACTIVE" } } }
           : user.role === "TEACHER"
             ? { teacherId: user.id }
-            : {},
+            : user.role === "ADMIN" || user.role === "REGISTRAR"
+              ? {}
+              : { id: "__none__" },
       select: { id: true, title: true },
     });
     const courseIds = courses.map((course) => course.id);

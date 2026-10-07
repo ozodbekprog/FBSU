@@ -21,6 +21,10 @@ export async function GET(request: Request) {
     return Response.json({ ok: true, data: { role: user.role, sessions } });
   }
 
+  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+    return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
+
   const courseId = new URL(request.url).searchParams.get("courseId") ?? undefined;
   const [sessions, options] = await Promise.all([
     getStaffSessions({ id: user.id, role: user.role }, courseId),

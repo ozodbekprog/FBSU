@@ -57,9 +57,9 @@ export async function findManageableQuestion(
 export async function isEnrolled(courseId: string, userId: string): Promise<boolean> {
   const enrollment = await prisma.enrollment.findUnique({
     where: { courseId_userId: { courseId, userId } },
-    select: { id: true },
+    select: { status: true },
   });
-  return enrollment !== null;
+  return enrollment?.status === "ACTIVE";
 }
 
 export function isStaffRole(role: Role): boolean {

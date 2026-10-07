@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { verifyCsrfFromRequest } from "@/lib/csrf";
+import { logAudit } from "@/server/audit";
 
 const createSchema = z.object({
   name: z.string().trim().min(1).max(20),
@@ -11,7 +13,7 @@ async function requireAdmin() {
   if (!user) {
     return { error: Response.json({ ok: false, error: "Unauthorized" }, { status: 401 }) };
   }
-  if (user.role !== "ADMIN") {
+  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") {
     return { error: Response.json({ ok: false, error: "Forbidden" }, { status: 403 }) };
   }
   return { error: null };
@@ -61,6 +63,11 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   const guard = await requireAdmin();
   if (guard.error) return guard.error;
 
+  const csrfValid = await verifyCsrfFromRequest(request);
+  if (!csrfValid) {
+    return Response.json({ ok: false, error: "CSRF token yaroqsiz" }, { status: 403 });
+  }
+
   const { id } = await ctx.params;
   const group = await prisma.group.findUnique({ where: { id }, select: { id: true } });
   if (!group) return Response.json({ ok: false, error: "Guruh topilmadi" }, { status: 404 });
@@ -78,6 +85,16 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   }
 
   const created = await prisma.subGroup.create({ data: { groupId: id, name } });
+  const actor = await getCurrentUser();
+  if (actor) {
+    await logAudit({
+      actorId: actor.id,
+      action: "admin.subgroup.create",
+      entity: "SubGroup",
+      entityId: created.id,
+      meta: { name, groupId: id },
+    });
+  }
   return Response.json(
     { ok: true, data: { id: created.id, name: created.name, userCount: 0 } },
     { status: 201 },

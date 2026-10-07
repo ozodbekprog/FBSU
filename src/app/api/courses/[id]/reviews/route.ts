@@ -34,9 +34,9 @@ export async function GET(
   if (!canManage) {
     const enrollment = await prisma.enrollment.findUnique({
       where: { courseId_userId: { courseId: course.id, userId: user.id } },
-      select: { id: true },
+      select: { status: true },
     });
-    if (!enrollment) {
+    if (enrollment?.status !== "ACTIVE") {
       return Response.json(
         { ok: false, error: "Sharhlarni ko'rish uchun ruxsat yo'q" },
         { status: 403 },
@@ -103,9 +103,9 @@ export async function POST(
 
   const enrollment = await prisma.enrollment.findUnique({
     where: { courseId_userId: { courseId: course.id, userId: user.id } },
-    select: { id: true },
+    select: { status: true },
   });
-  if (!enrollment) {
+  if (enrollment?.status !== "ACTIVE") {
     return Response.json(
       { ok: false, error: "Faqat kursga yozilgan talabalar sharh qoldirishi mumkin" },
       { status: 403 },

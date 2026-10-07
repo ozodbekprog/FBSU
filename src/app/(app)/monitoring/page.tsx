@@ -98,8 +98,21 @@ export default async function MonitoringPage({
         where: { role: "STUDENT", isActive: true, groupId: { in: scopeGroupIds } },
         select: { id: true, groupId: true },
       }),
-      prisma.user.count({ where: { role: "TEACHER", isActive: true } }),
-      prisma.course.count(),
+      prisma.user.count({
+        where: {
+          role: "TEACHER",
+          isActive: true,
+          ...(isDean ? { facultyId: user.facultyId ?? "__none__" } : {}),
+          ...(isDeptHead ? { departmentId: user.departmentId ?? "__none__" } : {}),
+        },
+      }),
+      prisma.course.count({
+        where: isDean
+          ? { teacher: { facultyId: user.facultyId ?? "__none__" } }
+          : isDeptHead
+            ? { teacher: { departmentId: user.departmentId ?? "__none__" } }
+            : {},
+      }),
       prisma.attendance.findMany({
         where: { student: { groupId: { in: scopeGroupIds } } },
         select: { studentId: true, status: true, student: { select: { groupId: true } } },

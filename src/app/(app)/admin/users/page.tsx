@@ -31,7 +31,15 @@ export default async function AdminUsersPage({
       { email: { contains: q, mode: "insensitive" } },
     ];
   }
-  if (role) where.role = role;
+  if (admin.role === "REGISTRAR") {
+    if (role === "STUDENT" || role === "TEACHER") {
+      where.role = role;
+    } else {
+      where.role = { in: ["STUDENT", "TEACHER"] };
+    }
+  } else if (role) {
+    where.role = role;
+  }
 
   const [users, groups, departments] = await Promise.all([
     prisma.user.findMany({
@@ -78,14 +86,18 @@ export default async function AdminUsersPage({
               <option value="">{dictionary.admUsersAllRoles}</option>
               <option value="STUDENT">{dictionary.admRoleStudent}</option>
               <option value="TEACHER">{dictionary.admRoleTeacher}</option>
-              <option value="TYUTOR">{dictionary.admRoleTutor}</option>
-              <option value="XODIM">{dictionary.admRoleStaff}</option>
-              <option value="KAFEDRA_MUDIRI">{dictionary.admRoleHead}</option>
-              <option value="DEKAN">{dictionary.admRoleDean}</option>
-              <option value="PRO_RECTOR">{dictionary.admRoleProRector}</option>
-              <option value="REKTOR">{dictionary.admRoleRector}</option>
-              <option value="REGISTRAR">{dictionary.admRoleRegistrar}</option>
-              <option value="ADMIN">{dictionary.admRoleAdmin}</option>
+              {admin.role === "ADMIN" ? (
+                <>
+                  <option value="TYUTOR">{dictionary.admRoleTutor}</option>
+                  <option value="XODIM">{dictionary.admRoleStaff}</option>
+                  <option value="KAFEDRA_MUDIRI">{dictionary.admRoleHead}</option>
+                  <option value="DEKAN">{dictionary.admRoleDean}</option>
+                  <option value="PRO_RECTOR">{dictionary.admRoleProRector}</option>
+                  <option value="REKTOR">{dictionary.admRoleRector}</option>
+                  <option value="REGISTRAR">{dictionary.admRoleRegistrar}</option>
+                  <option value="ADMIN">{dictionary.admRoleAdmin}</option>
+                </>
+              ) : null}
             </Select>
             <Button type="submit" variant="secondary" className="gap-1.5">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { verifyCsrfFromRequest } from "@/lib/csrf";
+import { logAudit } from "@/server/audit";
 
 const patchSchema = z.object({
   name: z.string().trim().min(2).max(60).optional(),
@@ -12,6 +14,11 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   if (user.role !== "ADMIN" && user.role !== "REGISTRAR") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+
+  const csrfValid = await verifyCsrfFromRequest(request);
+  if (!csrfValid) {
+    return Response.json({ ok: false, error: "CSRF token yaroqsiz" }, { status: 403 });
+  }
 
   const { id } = await ctx.params;
   const group = await prisma.group.findUnique({ where: { id } });
@@ -31,6 +38,12 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   if (parsed.data.curatorId) {
     const curator = await prisma.user.findUnique({ where: { id: parsed.data.curatorId } });
     if (!curator) return Response.json({ ok: false, error: "Kurator topilmadi" }, { status: 400 });
+    if (curator.role !== "TEACHER" && curator.role !== "TYUTOR") {
+      return Response.json(
+        { ok: false, error: "Kurator faqat o'qituvchi yoki tyutor bo'lishi mumkin" },
+        { status: 400 },
+      );
+    }
   }
 
   const updated = await prisma.group.update({
@@ -48,13 +61,30 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     include: { _count: { select: { users: true } } },
   });
 
+  await logAudit({
+    actorId: user.id,
+    action: "admin.group.update",
+    entity: "Group",
+    entityId: id,
+    meta: {
+      name: parsed.data.name ?? undefined,
+      previousCuratorId: group.curatorId,
+      curatorId: parsed.data.curatorId === undefined ? undefined : parsed.data.curatorId,
+    },
+  });
+
   return Response.json({ ok: true, data: updated });
 }
 
-export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   if (user.role !== "ADMIN" && user.role !== "REGISTRAR") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+
+  const csrfValid = await verifyCsrfFromRequest(request);
+  if (!csrfValid) {
+    return Response.json({ ok: false, error: "CSRF token yaroqsiz" }, { status: 403 });
+  }
 
   const { id } = await ctx.params;
   const group = await prisma.group.findUnique({
@@ -70,5 +100,12 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
   }
 
   await prisma.group.delete({ where: { id } });
+  await logAudit({
+    actorId: user.id,
+    action: "admin.group.delete",
+    entity: "Group",
+    entityId: id,
+    meta: { name: group.name, year: group.year },
+  });
   return Response.json({ ok: true, data: { id } });
 }

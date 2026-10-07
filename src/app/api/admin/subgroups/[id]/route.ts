@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { verifyCsrfFromRequest } from "@/lib/csrf";
+import { logAudit } from "@/server/audit";
 
 const patchSchema = z.object({
   name: z.string().trim().min(1).max(20).optional(),
@@ -11,7 +13,7 @@ async function requireAdmin() {
   if (!user) {
     return { error: Response.json({ ok: false, error: "Unauthorized" }, { status: 401 }) };
   }
-  if (user.role !== "ADMIN") {
+  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") {
     return { error: Response.json({ ok: false, error: "Forbidden" }, { status: 403 }) };
   }
   return { error: null };
@@ -20,6 +22,11 @@ async function requireAdmin() {
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const guard = await requireAdmin();
   if (guard.error) return guard.error;
+
+  const csrfValid = await verifyCsrfFromRequest(request);
+  if (!csrfValid) {
+    return Response.json({ ok: false, error: "CSRF token yaroqsiz" }, { status: 403 });
+  }
 
   const { id } = await ctx.params;
   const subGroup = await prisma.subGroup.findUnique({ where: { id } });
@@ -42,17 +49,42 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   }
 
   const updated = await prisma.subGroup.update({ where: { id }, data: { name } });
+  const actor = await getCurrentUser();
+  if (actor) {
+    await logAudit({
+      actorId: actor.id,
+      action: "admin.subgroup.update",
+      entity: "SubGroup",
+      entityId: id,
+      meta: { name, previousName: subGroup.name },
+    });
+  }
   return Response.json({ ok: true, data: { id: updated.id, name: updated.name } });
 }
 
-export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const guard = await requireAdmin();
   if (guard.error) return guard.error;
 
+  const csrfValid = await verifyCsrfFromRequest(request);
+  if (!csrfValid) {
+    return Response.json({ ok: false, error: "CSRF token yaroqsiz" }, { status: 403 });
+  }
+
   const { id } = await ctx.params;
-  const subGroup = await prisma.subGroup.findUnique({ where: { id }, select: { id: true } });
+  const subGroup = await prisma.subGroup.findUnique({ where: { id }, select: { id: true, name: true } });
   if (!subGroup) return Response.json({ ok: false, error: "Kichik guruh topilmadi" }, { status: 404 });
 
   await prisma.subGroup.delete({ where: { id } });
+  const actor = await getCurrentUser();
+  if (actor) {
+    await logAudit({
+      actorId: actor.id,
+      action: "admin.subgroup.delete",
+      entity: "SubGroup",
+      entityId: id,
+      meta: { name: subGroup.name },
+    });
+  }
   return Response.json({ ok: true, data: { id } });
 }

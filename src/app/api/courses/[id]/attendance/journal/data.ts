@@ -14,7 +14,10 @@ function isoDay(value: Date) {
   return value.toISOString().slice(0, 10);
 }
 
-export async function getAttendanceJournal(courseId: string): Promise<JournalData> {
+export async function getAttendanceJournal(
+  courseId: string,
+  onlyStudentId?: string,
+): Promise<JournalData> {
   const [enrollments, rows] = await Promise.all([
     prisma.enrollment.findMany({
       where: { courseId, user: { isActive: true } },
@@ -79,6 +82,15 @@ export async function getAttendanceJournal(courseId: string): Promise<JournalDat
     attended: totalsByDate.get(date)?.attended ?? 0,
     total: totalsByDate.get(date)?.total ?? 0,
   }));
+
+  if (onlyStudentId) {
+    const ownStudents = students.filter((student) => student.id === onlyStudentId);
+    const ownRecords: JournalData["records"] = {};
+    if (records[onlyStudentId]) ownRecords[onlyStudentId] = records[onlyStudentId];
+    const ownSummary: JournalData["summary"] = {};
+    if (summary[onlyStudentId]) ownSummary[onlyStudentId] = summary[onlyStudentId];
+    return { students: ownStudents, dates, records: ownRecords, summary: ownSummary, dateTotals: [] };
+  }
 
   return { students, dates, records, summary, dateTotals };
 }

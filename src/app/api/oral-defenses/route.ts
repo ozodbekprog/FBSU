@@ -96,6 +96,12 @@ export async function POST(request: Request) {
   if (existing && (existing.status === "REQUESTED" || existing.status === "ACCEPTED")) {
     return Response.json({ ok: false, error: "So'rov allaqachon mavjud" }, { status: 409 });
   }
+  if (existing && (existing.result !== null || existing.status === "DECLINED")) {
+    return Response.json(
+      { ok: false, error: "Yakunlangan himoyani qayta so'rab bo'lmaydi" },
+      { status: 409 },
+    );
+  }
 
   const data = {
     assignmentId: assignment.id,

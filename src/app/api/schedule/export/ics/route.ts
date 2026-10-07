@@ -10,8 +10,8 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
-  const groupId =
-    url.searchParams.get("groupId") ?? (user.role === "STUDENT" ? user.groupId : null);
+  const privileged = user.role === "ADMIN" || user.role === "TEACHER" || user.role === "REGISTRAR";
+  const groupId = url.searchParams.get("groupId") ?? user.groupId ?? null;
   if (!groupId) {
     return Response.json({ ok: false, error: "groupId ko'rsatilmagan" }, { status: 400 });
   }
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     return Response.json({ ok: false, error: "Guruh topilmadi" }, { status: 404 });
   }
 
-  if (user.role === "STUDENT" && user.groupId !== group.id) {
+  if (!privileged && user.groupId !== group.id) {
     return Response.json(
       { ok: false, error: "Bu guruh jadvalini ko'rish huquqingiz yo'q" },
       { status: 403 },
@@ -33,7 +33,10 @@ export async function GET(request: Request) {
 
   const monday = mondayOfIso(url.searchParams.get("week") ?? tashkentToday());
   const entries = await prisma.scheduleEntry.findMany({
-    where: { groupId: group.id },
+    where: {
+      groupId: group.id,
+      ...(!privileged ? { approval: "APPROVED" as const } : {}),
+    },
     orderBy: [{ dayOfWeek: "asc" }, { slot: "asc" }],
   });
 

@@ -17,7 +17,7 @@ async function findCourse(id: string, userId: string) {
   return prisma.course.findFirst({
     where: { OR: [{ id }, { slug: id }] },
     include: {
-      enrollments: { where: { userId }, select: { id: true } },
+      enrollments: { where: { userId, status: "ACTIVE" }, select: { id: true } },
     },
   });
 }

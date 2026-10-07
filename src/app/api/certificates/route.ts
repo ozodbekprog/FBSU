@@ -38,8 +38,15 @@ export async function GET(request: Request) {
     return Response.json({ ok: true, data: certificates });
   }
 
+  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+    return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
+
   const certificates = await prisma.certificate.findMany({
-    where: courseId ? { courseId } : {},
+    where: {
+      ...(courseId ? { courseId } : {}),
+      ...(user.role === "TEACHER" ? { course: { teacherId: user.id } } : {}),
+    },
     orderBy: { issuedAt: "desc" },
     include: certificateInclude,
   });
