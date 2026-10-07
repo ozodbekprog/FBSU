@@ -824,7 +824,7 @@ export default async function DashboardPage() {
 
         {user.role === "TEACHER" ? (
           <Reveal delay={300} className="mt-6">
-            <Card className="transition-shadow duration-200 hover:shadow-lift">
+            <Card className="transition-shadow duration-200">
               <CardHeader
                 title={dict.dashMyTodayLessons}
                 subtitle={translate(locale, "dashTodayLessonsSubtitle", {
@@ -954,17 +954,20 @@ export default async function DashboardPage() {
         locale={locale}
       />
 
-      <SectionHeading
-        title={dict.dashQrAttendanceTitle}
-        subtitle={dict.dashQrAttendanceSubtitle}
-      />
-      <CheckInForm />
-
-      <SectionHeading
-        title={dict.dashTodayStatusTitle}
-        subtitle={dict.dashTodayStatusSubtitle}
-      />
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <div>
+          <SectionHeading
+            title={dict.dashQrAttendanceTitle}
+            subtitle={dict.dashQrAttendanceSubtitle}
+          />
+          <CheckInForm />
+        </div>
+        <div>
+          <SectionHeading
+            title={dict.dashTodayStatusTitle}
+            subtitle={dict.dashTodayStatusSubtitle}
+          />
+          <div className="grid gap-4">
         <Reveal delay={60}>
           <StatTile
             href="/courses"
@@ -1009,11 +1012,13 @@ export default async function DashboardPage() {
             }
           />
         </Reveal>
+          </div>
+        </div>
       </div>
 
       <div className="mt-6 grid items-start gap-4 lg:grid-cols-2">
         <Reveal delay={240}>
-          <Card className="h-full transition-shadow duration-200 hover:shadow-lift">
+          <Card className="transition-shadow duration-200">
             <CardHeader
               title={dict.dashTodayLessons}
               subtitle={user.group?.name}
@@ -1074,9 +1079,8 @@ export default async function DashboardPage() {
           </Card>
         </Reveal>
 
-        <div className="space-y-6">
-          <Reveal delay={300}>
-            <Card className="transition-shadow duration-200 hover:shadow-lift">
+        <Reveal delay={300}>
+            <Card className="transition-shadow duration-200">
               <CardHeader
                 title={dict.dashUpcomingAssignments}
                 subtitle={dict.dashByDeadline}
@@ -1131,12 +1135,13 @@ export default async function DashboardPage() {
                 )}
               </CardBody>
             </Card>
-          </Reveal>
+        </Reveal>
+      </div>
 
-          <Reveal delay={360}>
-            <Card className="transition-shadow duration-200 hover:shadow-lift">
-              <CardHeader
-                title={dict.dashMyCourses}
+      <Reveal delay={360} className="mt-6">
+        <Card className="transition-shadow duration-200">
+          <CardHeader
+            title={dict.dashMyCourses}
                 subtitle={translate(locale, "dashCoursesCountSubtitle", {
                   count: enrollments.length,
                 })}
@@ -1146,17 +1151,19 @@ export default async function DashboardPage() {
                   </Badge>
                 }
               />
-              <CardBody className="space-y-2">
+              <CardBody className="grid gap-2 sm:grid-cols-2">
                 {enrollments.length === 0 ? (
-                  <EmptyState
-                    title={dict.dashNoCoursesTitle}
-                    description={dict.dashNoCoursesDesc}
-                    action={
-                      <ButtonLink href="/courses" size="sm" variant="secondary">
-                        {dict.dashViewCourses}
-                      </ButtonLink>
-                    }
-                  />
+                  <div className="sm:col-span-2">
+                    <EmptyState
+                      title={dict.dashNoCoursesTitle}
+                      description={dict.dashNoCoursesDesc}
+                      action={
+                        <ButtonLink href="/courses" size="sm" variant="secondary">
+                          {dict.dashViewCourses}
+                        </ButtonLink>
+                      }
+                    />
+                  </div>
                 ) : (
                   enrollments.map((e) => (
                     <Link
@@ -1187,8 +1194,6 @@ export default async function DashboardPage() {
               </CardBody>
             </Card>
           </Reveal>
-        </div>
-      </div>
 
       <StudentAnalyticsSection data={analytics} locale={locale} />
     </>
