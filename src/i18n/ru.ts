@@ -12,6 +12,10 @@ import { lab } from "./dict/ru/lab";
 import { stf } from "./dict/ru/stf";
 import { tsk } from "./dict/ru/tsk";
 import { acc } from "./dict/ru/acc";
+import { doc } from "./dict/ru/doc";
+import { prn } from "./dict/ru/prn";
+import { fin } from "./dict/ru/fin";
+import { dip } from "./dict/ru/dip";
 
 export const ru: Dictionary = {
   commonSave: "Сохранить",
@@ -140,4 +144,8 @@ export const ru: Dictionary = {
   ...stf,
   ...tsk,
   ...acc,
+  ...doc,
+  ...prn,
+  ...fin,
+  ...dip,
 };

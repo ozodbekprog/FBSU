@@ -1,0 +1,18 @@
+export const fin = {
+  finTitle: "Финансы",
+  finSubtitle: "Контроль контрактов и оплат",
+  finContract: "Контракт",
+  finAmount: "Сумма (сум)",
+  finPaid: "Оплачено",
+  finDebt: "Долг",
+  finPayments: "Платежи",
+  finAddPayment: "Добавить платёж",
+  finMethod: "Способ оплаты",
+  finYear: "Учебный год",
+  finAddContract: "Создать контракт",
+  finDebtors: "Должники",
+  finBalance: "Баланс",
+  finEmpty: "Нет данных",
+  finMyContract: "Мой контракт",
+  finSaved: "Сохранено",
+};

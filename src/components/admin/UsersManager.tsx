@@ -73,6 +73,7 @@ const ROLE_META: Record<
   TEACHER: { label: "admRoleTeacher", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
   STUDENT: { label: "admRoleStudent", tone: "slate", dot: "bg-slate-400", ring: "ring-slate-200" },
   XODIM: { label: "admRoleStaff", tone: "slate", dot: "bg-slate-500", ring: "ring-slate-200" },
+  OTA_ONA: { label: "admRoleParent", tone: "green", dot: "bg-teal-500", ring: "ring-teal-200/80" },
 };
 
 export default function UsersManager({
@@ -92,7 +93,7 @@ export default function UsersManager({
   const { t } = useI18n();
   const roleOptions: Role[] =
     allowedRoles ??
-    ["STUDENT", "TEACHER", "TYUTOR", "XODIM", "KAFEDRA_MUDIRI", "DEKAN", "PRO_RECTOR", "REKTOR", "REGISTRAR", "ADMIN"];
+    ["STUDENT", "TEACHER", "TYUTOR", "XODIM", "OTA_ONA", "KAFEDRA_MUDIRI", "DEKAN", "PRO_RECTOR", "REKTOR", "REGISTRAR", "ADMIN"];
   const [mode, setMode] = useState<FormMode | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);

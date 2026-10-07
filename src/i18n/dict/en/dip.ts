@@ -1,0 +1,17 @@
+export const dip = {
+  dipTitle: "Diplomas",
+  dipSubtitle: "Graduation documents registry",
+  dipNumber: "Diploma number",
+  dipProgram: "Program",
+  dipDegree: "Degree",
+  dipGpa: "GPA",
+  dipIssued: "Issued at",
+  dipVerify: "Verify",
+  dipCreate: "Issue diploma",
+  dipVerifyTitle: "Verify diploma",
+  dipValid: "AUTHENTIC — confirmed",
+  dipInvalid: "No such diploma found",
+  dipScan: "Scan the QR code or enter the code",
+  dipEmpty: "No diplomas",
+  dipStudent: "Graduate",
+};

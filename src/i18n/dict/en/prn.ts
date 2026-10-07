@@ -1,0 +1,14 @@
+export const prn = {
+  parentTitle: "My child",
+  parentSubtitle: "Your child's academic progress",
+  parentChild: "Child",
+  parentAttendance: "Attendance",
+  parentGpa: "GPA",
+  parentToday: "Today's lessons",
+  parentWarnings: "Warnings",
+  parentNoLink: "No child linked yet — contact the registrar's office",
+  parentEligible: "Exam eligibility",
+  parentEmpty: "No data found",
+  parentSwitch: "Select child",
+  parentRiskLow: "Low attendance — please pay attention",
+};

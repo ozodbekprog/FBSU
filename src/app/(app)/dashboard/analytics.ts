@@ -72,6 +72,7 @@ const ROLE_COLORS: Record<Role, string> = {
   REKTOR: "#c9a227",
   ADMIN: "#e11d48",
   XODIM: "#64748b",
+  OTA_ONA: "#0d9488",
 };
 
 const ROLE_LABELS: Record<Role, keyof Dictionary> = {
@@ -85,6 +86,7 @@ const ROLE_LABELS: Record<Role, keyof Dictionary> = {
   REKTOR: "dashRoleRector",
   ADMIN: "dashRoleAdmins",
   XODIM: "dashRoleStaff",
+  OTA_ONA: "dashRoleParents",
 };
 
 const ATTENDED: AttendanceStatus[] = ["PRESENT", "LATE", "EXCUSED", "SUSPICIOUS"];

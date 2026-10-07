@@ -1,0 +1,18 @@
+export const fin = {
+  finTitle: "Moliya",
+  finSubtitle: "Shartnomalar va to'lovlar nazorati",
+  finContract: "Shartnoma",
+  finAmount: "Summa (so'm)",
+  finPaid: "To'langan",
+  finDebt: "Qarz",
+  finPayments: "To'lovlar",
+  finAddPayment: "To'lov kiritish",
+  finMethod: "To'lov usuli",
+  finYear: "O'quv yili",
+  finAddContract: "Shartnoma yaratish",
+  finDebtors: "Qarzdorlar",
+  finBalance: "Balans",
+  finEmpty: "Ma'lumot yo'q",
+  finMyContract: "Mening shartnomam",
+  finSaved: "Saqlandi",
+};

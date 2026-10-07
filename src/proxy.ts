@@ -26,6 +26,7 @@ const PUBLIC_PATHS = new Set([
   "/register",
   "/forgot-password",
   "/reset-password",
+  "/verify",
 ]);
 
 /** Public prefixes: framework internals, API routes, uploaded files. */
@@ -110,6 +111,7 @@ function isPublicPath(pathname: string): boolean {
     pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
 
   if (PUBLIC_PATHS.has(path)) return true;
+  if (path.startsWith("/verify/")) return true;
   if (PUBLIC_PREFIXES.some((prefix) => path.startsWith(prefix))) return true;
   if (PUBLIC_FILES.has(path)) return true;
   return FILE_EXTENSION.test(path);

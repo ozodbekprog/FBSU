@@ -67,6 +67,9 @@ export default async function AppLayout({
       links: [
         ...(user.role !== "STUDENT" ? [{ href: "/staff", label: dictionary.stfTitle }] : []),
         ...(user.role !== "STUDENT" ? [{ href: "/tasks", label: dictionary.tskTitle }] : []),
+        ...(["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"].includes(user.role)
+          ? [{ href: "/documents", label: dictionary.docTitle }]
+          : []),
         { href: "/my-qr", label: dictionary.accMyQr },
         ...(["ADMIN", "REGISTRAR", "XODIM", "REKTOR", "PRO_RECTOR"].includes(user.role)
           ? [{ href: "/access", label: dictionary.accTitle }]
@@ -118,7 +121,9 @@ export default async function AppLayout({
                 ? dictionary.roleTutor
                 : user.role === "XODIM"
                   ? dictionary.roleStaff
-                  : user.role === "TEACHER"
+                  : user.role === "OTA_ONA"
+                    ? dictionary.roleParent
+                    : user.role === "TEACHER"
                   ? dictionary.roleTeacher
                   : user.group?.name ?? dictionary.roleStudent;
 

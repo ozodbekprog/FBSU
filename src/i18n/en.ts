@@ -12,6 +12,10 @@ import { lab } from "./dict/en/lab";
 import { stf } from "./dict/en/stf";
 import { tsk } from "./dict/en/tsk";
 import { acc } from "./dict/en/acc";
+import { doc } from "./dict/en/doc";
+import { prn } from "./dict/en/prn";
+import { fin } from "./dict/en/fin";
+import { dip } from "./dict/en/dip";
 
 export const en: Dictionary = {
   commonSave: "Save",
@@ -140,4 +144,8 @@ export const en: Dictionary = {
   ...stf,
   ...tsk,
   ...acc,
+  ...doc,
+  ...prn,
+  ...fin,
+  ...dip,
 };

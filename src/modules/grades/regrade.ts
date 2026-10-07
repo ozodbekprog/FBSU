@@ -8,7 +8,8 @@ export type RegradeRole =
   | "TYUTOR"
   | "TEACHER"
   | "STUDENT"
-  | "XODIM";
+  | "XODIM"
+  | "OTA_ONA";
 
 /**
  * Baho allaqachon qo'yilgan (GRADED) va o'qituvchi ballni o'zgartirmoqchi bo'lsa —

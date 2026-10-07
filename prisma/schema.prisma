@@ -18,6 +18,7 @@ enum Role {
   TEACHER
   STUDENT
   XODIM
+  OTA_ONA
 }
 
 enum MaterialType {
@@ -85,6 +86,15 @@ model User {
   attendance    Attendance[]
   staffAttendance StaffAttendance[]
   accessLogs    AccessLog[]
+  documentsCreated  Document[] @relation("DocumentCreator")
+  documentsToSign   Document[] @relation("DocumentSigner")
+  documentsSigned   Document[] @relation("DocumentSignedBy")
+  parentLinksAsParent  ParentLink[] @relation("ParentLinkParent")
+  parentLinksAsStudent ParentLink[] @relation("ParentLinkStudent")
+  contracts    Contract[]
+  payments     Payment[]
+  paymentsCreated Payment[] @relation("PaymentCreatedBy")
+  diplomas     Diploma[]
   tasksAssigned   WorkTask[] @relation("WorkTaskAssignee")
   tasksCreated    WorkTask[] @relation("WorkTaskCreator")
   quizAttempts  QuizAttempt[]
@@ -577,6 +587,115 @@ model AccessLog {
 
   @@index([userId, at])
   @@index([at])
+}
+
+enum DocumentKind {
+  ORDER
+  LETTER
+  REFERENCE
+  PROTOCOL
+  OTHER
+}
+
+enum DocumentStatus {
+  DRAFT
+  PENDING
+  SIGNED
+  REJECTED
+  ARCHIVED
+}
+
+model Document {
+  id          String         @id @default(cuid())
+  kind        DocumentKind
+  number      String?        @unique
+  title       String
+  body        String
+  status      DocumentStatus @default(DRAFT)
+  createdById String
+  signerId    String?
+  signedById  String?
+  signedAt    DateTime?
+  archivedAt  DateTime?
+  meta        Json?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  createdBy User  @relation("DocumentCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  signer    User? @relation("DocumentSigner", fields: [signerId], references: [id], onDelete: SetNull)
+  signedBy  User? @relation("DocumentSignedBy", fields: [signedById], references: [id], onDelete: SetNull)
+
+  @@index([kind, createdAt])
+  @@index([status])
+  @@index([createdById])
+}
+
+enum ParentRelation {
+  FATHER
+  MOTHER
+  GUARDIAN
+  OTHER
+}
+
+model ParentLink {
+  id        String         @id @default(cuid())
+  parentId  String
+  studentId String
+  relation  ParentRelation @default(OTHER)
+  createdAt DateTime       @default(now())
+
+  parent  User @relation("ParentLinkParent", fields: [parentId], references: [id], onDelete: Cascade)
+  student User @relation("ParentLinkStudent", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([parentId, studentId])
+  @@index([studentId])
+}
+
+model Contract {
+  id        String   @id @default(cuid())
+  studentId String
+  year      Int
+  amount    Int
+  note      String?
+  createdAt DateTime @default(now())
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, year])
+  @@index([year])
+}
+
+model Payment {
+  id           String   @id @default(cuid())
+  studentId    String
+  contractId   String?
+  amount       Int
+  method       String   @default("CASH")
+  note         String?
+  paidAt       DateTime @default(now())
+  createdById  String
+  createdAt    DateTime @default(now())
+
+  student   User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdBy User @relation("PaymentCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([studentId, paidAt])
+  @@index([createdById])
+}
+
+model Diploma {
+  id         String   @id @default(cuid())
+  number     String   @unique
+  studentId  String
+  program    String
+  degree     String   @default("Bakalavr")
+  gpa        Float?
+  issuedAt   DateTime @default(now())
+  verifyCode String   @unique
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
 }
 
 model StaffAttendance {

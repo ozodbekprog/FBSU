@@ -11,6 +11,10 @@ import { lab } from "./dict/uz/lab";
 import { stf } from "./dict/uz/stf";
 import { tsk } from "./dict/uz/tsk";
 import { acc } from "./dict/uz/acc";
+import { doc } from "./dict/uz/doc";
+import { prn } from "./dict/uz/prn";
+import { fin } from "./dict/uz/fin";
+import { dip } from "./dict/uz/dip";
 
 export const uz = {
   commonSave: "Saqlash",
@@ -139,6 +143,10 @@ export const uz = {
   ...stf,
   ...tsk,
   ...acc,
+  ...doc,
+  ...prn,
+  ...fin,
+  ...dip,
 };
 
 export type Dictionary = typeof uz;

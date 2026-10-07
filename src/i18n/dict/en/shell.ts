@@ -43,6 +43,7 @@ export const shell = {
   roleRector: "Rector",
   roleProRector: "Vice-Rector",
   roleStaff: "Staff",
+  roleParent: "Parent",
   roleDean: "Dean",
   roleHead: "Department head",
   roleRegistrar: "Registrar office",

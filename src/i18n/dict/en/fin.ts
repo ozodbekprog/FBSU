@@ -1,0 +1,18 @@
+export const fin = {
+  finTitle: "Finance",
+  finSubtitle: "Contracts and payments control",
+  finContract: "Contract",
+  finAmount: "Amount (UZS)",
+  finPaid: "Paid",
+  finDebt: "Debt",
+  finPayments: "Payments",
+  finAddPayment: "Add payment",
+  finMethod: "Payment method",
+  finYear: "Academic year",
+  finAddContract: "Create contract",
+  finDebtors: "Debtors",
+  finBalance: "Balance",
+  finEmpty: "No data",
+  finMyContract: "My contract",
+  finSaved: "Saved",
+};

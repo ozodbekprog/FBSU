@@ -129,6 +129,7 @@ export const dash = {
   dashRoleRector: "Rektor",
   dashRoleProRectors: "Prorektorlar",
   dashRoleStaff: "Xodimlar",
+  dashRoleParents: "Ota-onalar",
   dashRoleAdmins: "Adminlar",
   dashAcalSemester: "Semestr",
   dashAcalHoliday: "Ta'til",

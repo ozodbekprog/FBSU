@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
@@ -479,6 +480,7 @@ function AdminAnalyticsSection({ data, locale }: { data: AdminAnalytics; locale:
 
 export default async function DashboardPage() {
   const user = await requireUser();
+  if (user.role === "OTA_ONA") redirect("/parent");
   const locale = await getLocale();
   const dict = getDictionary(locale);
   const now = new Date();

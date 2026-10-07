@@ -1,0 +1,419 @@
+"use client";
+
+import { useMemo, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import type { DocumentKind, DocumentStatus } from "@prisma/client";
+import {
+  Badge,
+  Button,
+  ButtonLink,
+  Card,
+  CardBody,
+  CardHeader,
+  EmptyState,
+  Input,
+  Label,
+  Select,
+  Textarea,
+} from "@/components/ui";
+import { fmtDateTime } from "@/lib/utils";
+import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
+import type { Dictionary } from "@/i18n/uz";
+
+export type StaffOption = {
+  id: string;
+  name: string;
+};
+
+export type StudentOption = {
+  id: string;
+  name: string;
+  group: string | null;
+};
+
+export type DocumentItem = {
+  id: string;
+  kind: DocumentKind;
+  number: string | null;
+  title: string;
+  status: DocumentStatus;
+  createdAt: string;
+  createdById: string;
+  createdBy: { id: string; name: string };
+  signerId: string | null;
+  signer: { id: string; name: string } | null;
+  signedBy: { id: string; name: string } | null;
+  signedAt: string | null;
+  archivedAt: string | null;
+};
+
+type ApiResult<T> = { ok: true; data: T } | { ok: false; error?: string };
+type DocumentAction = "submit" | "sign" | "reject" | "archive" | "reopen";
+
+const KIND_LABELS: Record<DocumentKind, keyof Dictionary> = {
+  ORDER: "docKindOrder",
+  LETTER: "docKindLetter",
+  REFERENCE: "docKindReference",
+  PROTOCOL: "docKindProtocol",
+  OTHER: "docKindOther",
+};
+
+const STATUS_LABELS: Record<DocumentStatus, keyof Dictionary> = {
+  DRAFT: "docStatusDraft",
+  PENDING: "docStatusPending",
+  SIGNED: "docStatusSigned",
+  REJECTED: "docStatusRejected",
+  ARCHIVED: "docStatusArchived",
+};
+
+const STATUS_TONES: Record<DocumentStatus, "slate" | "amber" | "green" | "rose" | "blue"> = {
+  DRAFT: "slate",
+  PENDING: "amber",
+  SIGNED: "green",
+  REJECTED: "rose",
+  ARCHIVED: "blue",
+};
+
+const STATUS_ORDER: DocumentStatus[] = ["DRAFT", "PENDING", "SIGNED", "REJECTED", "ARCHIVED"];
+
+export default function DocumentBoard({
+  documents,
+  staff,
+  students,
+  currentUserId,
+  canCreate,
+  isManager,
+  isAdmin,
+}: {
+  documents: DocumentItem[];
+  staff: StaffOption[];
+  students: StudentOption[];
+  currentUserId: string;
+  canCreate: boolean;
+  isManager: boolean;
+  isAdmin: boolean;
+}) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const [kind, setKind] = useState<DocumentKind>("ORDER");
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [signerId, setSignerId] = useState("");
+  const [studentId, setStudentId] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const visibleDocuments = useMemo(
+    () => documents.filter((document) => (statusFilter ? document.status === statusFilter : true)),
+    [documents, statusFilter],
+  );
+
+  const canSave = signerId !== "" && title.trim().length >= 3 && body.trim().length >= 3;
+
+  function applyReferenceTemplate() {
+    const student = students.find((item) => item.id === studentId);
+    if (!student) return;
+    const group = student.group ? ` (${student.group} guruhi)` : "";
+    setBody(
+      `TTPU talabasi ${student.name}${group} haqiqatan ham Turin Politexnika Universitetida tahsil olmoqda. Ma'lumotnoma talaba so'rovi asosida o'qish joyidan talab qilingan holda berildi.`,
+    );
+    setNotice(t("docReferenceGenerated"));
+  }
+
+  async function createDocument(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy || !canSave) return;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await apiFetch("/api/documents", {
+        method: "POST",
+        body: JSON.stringify({
+          kind,
+          title: title.trim(),
+          body: body.trim(),
+          signerId,
+          meta: kind === "REFERENCE" && studentId ? { studentId } : undefined,
+        }),
+      });
+      const json = (await res.json().catch(() => null)) as ApiResult<DocumentItem> | null;
+      if (!res.ok || !json || !json.ok) {
+        setError(json && !json.ok ? json.error ?? null : null);
+        return;
+      }
+      setKind("ORDER");
+      setTitle("");
+      setBody("");
+      setSignerId("");
+      setStudentId("");
+      router.refresh();
+    } catch {
+      setError(null);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function runAction(document: DocumentItem, action: DocumentAction) {
+    if (busyId) return;
+    setBusyId(document.id);
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await apiFetch(`/api/documents/${document.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ action }),
+      });
+      const json = (await res.json().catch(() => null)) as ApiResult<DocumentItem> | null;
+      if (!res.ok || !json || !json.ok) {
+        setError(json && !json.ok ? json.error ?? null : null);
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError(null);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      {canCreate ? (
+        <Card>
+          <CardHeader title={t("docNew")} subtitle={t("docSignHint")} />
+          <CardBody>
+            <form className="grid gap-4 sm:grid-cols-2" onSubmit={createDocument}>
+              <div>
+                <Label>{t("docKind")}</Label>
+                <Select value={kind} onChange={(e) => setKind(e.target.value as DocumentKind)}>
+                  <option value="ORDER">{t("docKindOrder")}</option>
+                  <option value="LETTER">{t("docKindLetter")}</option>
+                  <option value="REFERENCE">{t("docKindReference")}</option>
+                  <option value="PROTOCOL">{t("docKindProtocol")}</option>
+                  <option value="OTHER">{t("docKindOther")}</option>
+                </Select>
+              </div>
+              <div>
+                <Label>{t("docSigner")}</Label>
+                <Select value={signerId} onChange={(e) => setSignerId(e.target.value)} required>
+                  <option value="">{t("docSignHint")}</option>
+                  {staff.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div className="sm:col-span-2">
+                <Label>{t("docFieldTitle")}</Label>
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                  minLength={3}
+                  maxLength={200}
+                />
+              </div>
+              {kind === "REFERENCE" ? (
+                <div className="flex flex-wrap items-end gap-3 sm:col-span-2">
+                  <div className="min-w-56 flex-1">
+                    <Label>{t("docForStudent")}</Label>
+                    <Select value={studentId} onChange={(e) => setStudentId(e.target.value)}>
+                      <option value="">—</option>
+                      {students.map((student) => (
+                        <option key={student.id} value={student.id}>
+                          {student.name}
+                          {student.group ? ` — ${student.group}` : ""}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={!studentId}
+                    onClick={applyReferenceTemplate}
+                  >
+                    {t("docReferenceGenerated")}
+                  </Button>
+                </div>
+              ) : null}
+              <div className="sm:col-span-2">
+                <Label>{t("docFieldBody")}</Label>
+                <Textarea
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  rows={5}
+                  required
+                  minLength={3}
+                  maxLength={8000}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <Button type="submit" disabled={busy || !canSave}>
+                  {t("tskSave")}
+                </Button>
+              </div>
+            </form>
+          </CardBody>
+        </Card>
+      ) : null}
+
+      {error ? (
+        <div className="rounded-xl bg-rose-50 px-4 py-2.5 text-sm font-medium text-rose-700">
+          {error}
+        </div>
+      ) : null}
+
+      {notice ? (
+        <div className="rounded-xl bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700">
+          {notice}
+        </div>
+      ) : null}
+
+      <Card>
+        <CardHeader
+          title={t("docRegistry")}
+          subtitle={documents.length}
+          action={
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">{t("docFilterStatus")}</span>
+              <Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-44"
+              >
+                <option value="">—</option>
+                {STATUS_ORDER.map((status) => (
+                  <option key={status} value={status}>
+                    {t(STATUS_LABELS[status])}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          }
+        />
+        <CardBody>
+          {visibleDocuments.length === 0 ? (
+            <EmptyState title={t("docEmpty")} />
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {visibleDocuments.map((document) => {
+                const isCreator = document.createdById === currentUserId;
+                const canDecide = document.signerId === currentUserId || isAdmin;
+                const canSubmit =
+                  (isCreator || isManager) &&
+                  (document.status === "DRAFT" || document.status === "REJECTED") &&
+                  document.signer !== null;
+                const canReopen =
+                  document.status === "REJECTED" && (isCreator || isManager);
+                return (
+                  <Card key={document.id} className="flex flex-col justify-between p-5">
+                    <div>
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <Badge tone="purple">{t(KIND_LABELS[document.kind])}</Badge>
+                          <Badge tone={STATUS_TONES[document.status]}>
+                            {t(STATUS_LABELS[document.status])}
+                          </Badge>
+                        </div>
+                        <span className="font-mono text-xs tracking-wider text-slate-500">
+                          {document.number ?? "—"}
+                        </span>
+                      </div>
+                      <h3 className="mt-2 font-semibold tracking-tight text-slate-900">
+                        {document.title}
+                      </h3>
+                      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                        <Badge tone="slate">
+                          {t("docCreatedBy")}: {document.createdBy.name}
+                        </Badge>
+                        {document.signer ? (
+                          <Badge tone="blue">
+                            {t("docSigner")}: {document.signer.name}
+                          </Badge>
+                        ) : (
+                          <Badge tone="rose">{t("docNoSigner")}</Badge>
+                        )}
+                      </div>
+                      <p className="mt-3 text-xs text-slate-500">{fmtDateTime(document.createdAt)}</p>
+                      {document.signedAt ? (
+                        <p className="mt-1 text-xs text-slate-500">
+                          {t("docSignedAt")}: {fmtDateTime(document.signedAt)}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      <ButtonLink href={`/documents/${document.id}`} size="sm" variant="secondary">
+                        {t("docView")}
+                      </ButtonLink>
+                      {canSubmit ? (
+                        <Button
+                          size="sm"
+                          disabled={busyId === document.id}
+                          onClick={() => runAction(document, "submit")}
+                        >
+                          {t("docSubmit")}
+                        </Button>
+                      ) : null}
+                      {document.status === "PENDING" && canDecide ? (
+                        <>
+                          <Button
+                            size="sm"
+                            disabled={busyId === document.id}
+                            onClick={() => runAction(document, "sign")}
+                          >
+                            {t("docSign")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            disabled={busyId === document.id}
+                            onClick={() => runAction(document, "reject")}
+                          >
+                            {t("docReject")}
+                          </Button>
+                        </>
+                      ) : null}
+                      {document.status === "SIGNED" && isManager ? (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={busyId === document.id}
+                          onClick={() => runAction(document, "archive")}
+                        >
+                          {t("docArchive")}
+                        </Button>
+                      ) : null}
+                      {canReopen ? (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={busyId === document.id}
+                          onClick={() => runAction(document, "reopen")}
+                        >
+                          {t("tskReopen")}
+                        </Button>
+                      ) : null}
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </CardBody>
+      </Card>
+    </div>
+  );
+}
+
+export function PrintButton() {
+  const { t } = useI18n();
+  return <Button onClick={() => window.print()}>{t("docPrint")}</Button>;
+}

@@ -1,0 +1,17 @@
+export const dip = {
+  dipTitle: "Дипломы",
+  dipSubtitle: "Реестр выпускных документов",
+  dipNumber: "Номер диплома",
+  dipProgram: "Направление",
+  dipDegree: "Степень",
+  dipGpa: "GPA",
+  dipIssued: "Дата выдачи",
+  dipVerify: "Проверить",
+  dipCreate: "Выдать диплом",
+  dipVerifyTitle: "Проверка диплома",
+  dipValid: "ПОДЛИННЫЙ — подтверждён",
+  dipInvalid: "Такой диплом не найден",
+  dipScan: "Отсканируйте QR или введите код",
+  dipEmpty: "Дипломов нет",
+  dipStudent: "Выпускник",
+};

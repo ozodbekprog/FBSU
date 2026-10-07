@@ -1,0 +1,17 @@
+export const dip = {
+  dipTitle: "Diplomlar",
+  dipSubtitle: "Bitiruv hujjatlari registri",
+  dipNumber: "Diplom raqami",
+  dipProgram: "Ta'lim yo'nalishi",
+  dipDegree: "Daraja",
+  dipGpa: "GPA",
+  dipIssued: "Berilgan sana",
+  dipVerify: "Tekshirish",
+  dipCreate: "Diplom berish",
+  dipVerifyTitle: "Diplomni tekshirish",
+  dipValid: "HAQIQIY — tasdiqlangan",
+  dipInvalid: "Bunday diplom topilmadi",
+  dipScan: "QR kodni skanerlang yoki kodni kiriting",
+  dipEmpty: "Diplom yo'q",
+  dipStudent: "Bitiruvchi",
+};

@@ -19,6 +19,7 @@ export const ROLE_TONE: Record<
   TEACHER: "purple",
   STUDENT: "slate",
   XODIM: "slate",
+  OTA_ONA: "green",
 };
 
 export const ROLE_LABEL_KEY: Record<Role, keyof Dictionary> = {
@@ -32,6 +33,7 @@ export const ROLE_LABEL_KEY: Record<Role, keyof Dictionary> = {
   TEACHER: "mscRoleTeacher",
   STUDENT: "mscRoleStudent",
   XODIM: "mscRoleStaff",
+  OTA_ONA: "mscRoleParent",
 };
 
 export function roleLabel(dictionary: Dictionary, role: Role): string {

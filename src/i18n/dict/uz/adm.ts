@@ -58,6 +58,7 @@ export const adm = {
   admRoleRector: "Rektor",
   admRoleProRector: "Prorektor",
   admRoleStaff: "Xodim",
+  admRoleParent: "Ota-ona",
   admRoleDean: "Dekan",
   admRoleHead: "Kafedra mudiri",
   admRoleRegistrar: "O'quv bo'limi",

@@ -58,6 +58,7 @@ export const adm = {
   admRoleRector: "Rector",
   admRoleProRector: "Vice-Rector",
   admRoleStaff: "Staff",
+  admRoleParent: "Parent",
   admRoleDean: "Dean",
   admRoleHead: "Head of department",
   admRoleRegistrar: "Registrar's office",
