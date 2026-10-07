@@ -131,7 +131,8 @@ export async function TranscriptDocument({ data }: { data: TranscriptData }) {
                 </p>
               </div>
 
-              <table className="w-full border-collapse text-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[560px] border-collapse text-sm">
                 <thead>
                   <tr className="divide-x divide-white/10 bg-brand-900 text-left text-white">
                     <th className="w-10 border-b-2 border-gold-400 px-2.5 py-3 text-center text-[11px] font-semibold">
@@ -210,7 +211,8 @@ export async function TranscriptDocument({ data }: { data: TranscriptData }) {
                     ))
                   )}
                 </tbody>
-              </table>
+                </table>
+              </div>
             </div>
 
             <div className="grid gap-5 border-t border-slate-200 px-6 py-6 sm:grid-cols-[1.5fr_1fr] sm:px-8">

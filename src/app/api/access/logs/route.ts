@@ -1,13 +1,11 @@
-import type { Role } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-
-const ALLOWED_ROLES: Role[] = ["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"];
+import { canViewAccessLogs } from "@/modules/roles/access";
 
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (!ALLOWED_ROLES.includes(user.role)) {
+  if (!canViewAccessLogs(user.role)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

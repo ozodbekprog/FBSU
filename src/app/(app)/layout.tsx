@@ -68,7 +68,7 @@ export default async function AppLayout({
         ...(user.role !== "STUDENT" ? [{ href: "/staff", label: dictionary.stfTitle }] : []),
         ...(user.role !== "STUDENT" ? [{ href: "/tasks", label: dictionary.tskTitle }] : []),
         { href: "/my-qr", label: dictionary.accMyQr },
-        ...(["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"].includes(user.role)
+        ...(["ADMIN", "REGISTRAR", "XODIM", "REKTOR", "PRO_RECTOR"].includes(user.role)
           ? [{ href: "/access", label: dictionary.accTitle }]
           : []),
         { href: "/search", label: dictionary.navSearch },

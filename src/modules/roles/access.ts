@@ -51,3 +51,11 @@ export function isLeadership(role: string): boolean {
 export function isTyutor(role: string): boolean {
   return role === "TYUTOR";
 }
+
+export function canScanAccess(role: string): boolean {
+  return ["ADMIN", "REGISTRAR", "XODIM"].includes(role);
+}
+
+export function canViewAccessLogs(role: string): boolean {
+  return ["ADMIN", "REGISTRAR", "XODIM", "REKTOR", "PRO_RECTOR"].includes(role);
+}

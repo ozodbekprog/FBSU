@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { verifyAccessToken } from "@/lib/access-token";
+import { canScanAccess } from "@/modules/roles/access";
 
 const scanSchema = z.object({
   token: z.string().min(10).max(300),
@@ -13,6 +14,9 @@ const scanSchema = z.object({
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  if (!canScanAccess(user.role)) {
+    return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
 
   const csrfValid = await verifyCsrfFromRequest(request);
   if (!csrfValid) {
