@@ -547,8 +547,7 @@ function Labs() {
 
 /** Tasdiqlash — hujjat va oltin muhr. */
 function Approvals() {
-  return (
-    <group>
+  return (    <group>
       <Tile a={[1.36, 1.72, 0.2]} m="paper" p={[-0.12, 0, 0]} radius={0.08} />
       {[0.5, 0.2, -0.1].map((y, i) => (
         <Cube key={y} a={[i === 2 ? 0.56 : 0.88, 0.08, 0.07]} m="brandDeep" p={[-0.18, y, 0.12]} />
@@ -667,9 +666,65 @@ function Access() {
   );
 }
 
+/** Ota-ona — ikki katta figura va kichik bola. */
+function Parent() {
+  return (
+    <group>
+      <Ball rad={0.34} m="brandLight" p={[-0.5, 0.44, 0.1]} />
+      <Cyl rt={0.42} rb={0.5} h={0.62} m="brand" p={[-0.5, -0.32, 0.1]} />
+      <Ball rad={0.34} m="goldLight" p={[0.5, 0.44, 0.1]} />
+      <Cyl rt={0.42} rb={0.5} h={0.62} m="gold" p={[0.5, -0.32, 0.1]} />
+      <Ball rad={0.24} m="paper" p={[0, -0.08, 0.26]} />
+      <Cyl rt={0.3} rb={0.36} h={0.44} m="brandDeep" p={[0, -0.68, 0.26]} />
+    </group>
+  );
+}
+
+/** Hujjatlar — varaqlar to'plami va oltin muhr. */
+function Documents() {
+  return (
+    <group>
+      <Tile a={[1.5, 1.9, 0.16]} m="paper" p={[-0.12, 0.06, -0.08]} radius={0.1} r={[0, 0, 0.14]} />
+      <Tile a={[1.5, 1.9, 0.16]} m="paper" p={[0.06, 0, 0.02]} radius={0.1} />
+      {[0.5, 0.18, -0.14].map((y, i) => (
+        <Cube key={y} a={[i === 2 ? 0.5 : 0.92, 0.07, 0.06]} m="brandDeep" p={[-0.16, y, 0.12]} />
+      ))}
+      <Cyl rt={0.3} rb={0.3} h={0.12} seg={24} m="gold" p={[0.56, -0.62, 0.24]} />
+      <Cyl rt={0.22} rb={0.22} h={0.05} seg={24} m="goldLight" p={[0.56, -0.54, 0.24]} />
+    </group>
+  );
+}
+
+/** Diplom — o'ralgan dasta va oltin bog'lam. */
+function Diplomas() {
+  return (
+    <group>
+      <Cyl rt={0.5} rb={0.5} h={1.9} m="paper" p={[0, 0.06, 0]} r={[0, 0, PI / 2]} seg={28} />
+      <Cyl rt={0.55} rb={0.55} h={0.32} m="gold" p={[-0.52, 0.06, 0]} r={[0, 0, PI / 2]} seg={28} />
+      <Cyl rt={0.55} rb={0.55} h={0.32} m="gold" p={[0.52, 0.06, 0]} r={[0, 0, PI / 2]} seg={28} />
+      <Ball rad={0.2} m="goldLight" p={[0, -0.72, 0.22]} />
+      <Cube a={[0.14, 0.42, 0.1]} m="brand" p={[-0.15, -0.94, 0.22]} r={[0, 0, 0.35]} />
+      <Cube a={[0.14, 0.42, 0.1]} m="brand" p={[0.15, -0.94, 0.22]} r={[0, 0, -0.35]} />
+    </group>
+  );
+}
+
+/** Moliya — oltin tangalar ustuni va hisob varaqasi. */
+function Finance() {
+  return (
+    <group>
+      {[-0.55, -0.3, -0.05].map((y) => (
+        <Cyl key={y} rt={0.62} rb={0.62} h={0.18} seg={28} m="gold" p={[0, y, 0]} />
+      ))}
+      <Cyl rt={0.62} rb={0.62} h={0.18} seg={28} m="goldLight" p={[0, 0.2, 0]} />
+      <Ball rad={0.3} m="paper" p={[0.52, 0.64, 0.28]} />
+      <Cube a={[0.42, 0.52, 0.09]} m="brand" p={[-0.6, 0.52, 0.22]} r={[0, 0, 0.2]} />
+    </group>
+  );
+}
+
 export const NAV3D_ICONS: Record<string, ComponentType> = {
-  "/dashboard": Gauge,
-  "/courses": Courses,
+  "/dashboard": Gauge,  "/courses": Courses,
   "/catalog": Catalog,
   "/electives": Electives,
   "/schedule": Schedule,
@@ -703,6 +758,10 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/tasks": Tasks,
   "/my-qr": MyQr,
   "/access": Access,
+  "/parent": Parent,
+  "/documents": Documents,
+  "/diplomas": Diplomas,
+  "/finance": Finance,
 };
 
 export const NAV3D_SPINNING = new Set([

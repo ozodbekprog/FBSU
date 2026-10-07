@@ -111,6 +111,64 @@ export default async function AppLayout({
     },
   ].filter((group) => group.links.length > 0);
 
+  const ROLE_MENU: Record<string, string[]> = {
+    REKTOR: [
+      "/dashboard", "/monitoring", "/reports", "/workload", "/documents", "/diplomas", "/finance",
+      "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar",
+      "/messages", "/search", "/help", "/settings", "/access",
+    ],
+    PRO_RECTOR: [
+      "/dashboard", "/monitoring", "/reports", "/workload", "/documents", "/diplomas", "/finance",
+      "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar",
+      "/messages", "/search", "/help", "/settings", "/access",
+    ],
+    DEKAN: [
+      "/dashboard", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
+      "/schedule", "/calendar", "/academic-calendar", "/messages", "/search", "/help", "/settings",
+    ],
+    KAFEDRA_MUDIRI: [
+      "/dashboard", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
+      "/schedule", "/calendar", "/academic-calendar", "/messages", "/search", "/help", "/settings",
+    ],
+    REGISTRAR: [
+      "/dashboard", "/monitoring", "/approvals", "/finance", "/documents", "/diplomas", "/staff",
+      "/tasks", "/admin/users", "/admin/groups", "/admin/import", "/admin/hemis", "/schedule",
+      "/calendar", "/academic-calendar", "/rooms", "/messages", "/search", "/help", "/settings",
+      "/my-qr", "/access",
+    ],
+    TYUTOR: [
+      "/dashboard", "/curator", "/attendance", "/schedule", "/calendar", "/academic-calendar",
+      "/tasks", "/staff", "/my-qr", "/messages", "/search", "/help", "/settings",
+    ],
+    TEACHER: [
+      "/dashboard", "/courses", "/labs", "/catalog", "/electives", "/journal", "/journals",
+      "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/attendance",
+      "/reports", "/workload", "/staff", "/tasks", "/my-qr", "/messages", "/bookings", "/rooms",
+      "/search", "/help", "/settings",
+    ],
+    STUDENT: [
+      "/dashboard", "/courses", "/labs", "/catalog", "/electives", "/schedule", "/calendar",
+      "/academic-calendar", "/exams", "/grades", "/gpa", "/transcript", "/attendance",
+      "/certificates", "/finance", "/my-qr", "/messages", "/orders", "/bookings", "/rooms",
+      "/search", "/help", "/settings",
+    ],
+    XODIM: [
+      "/dashboard", "/staff", "/tasks", "/my-qr", "/access", "/schedule", "/calendar",
+      "/academic-calendar", "/messages", "/rooms", "/bookings", "/search", "/help", "/settings",
+    ],
+    OTA_ONA: ["/parent", "/messages", "/help", "/settings"],
+  };
+
+  const allowedHrefs = ROLE_MENU[user.role];
+  const visibleGroups = allowedHrefs
+    ? groups
+        .map((group) => ({
+          ...group,
+          links: group.links.filter((link) => allowedHrefs.includes(link.href)),
+        }))
+        .filter((group) => group.links.length > 0)
+    : groups;
+
   const roleLabel =
     user.role === "ADMIN"
       ? dictionary.roleAdmin
@@ -148,6 +206,15 @@ export default async function AppLayout({
     tabs.push({ href: "/messages", label: dictionary.navMessages, icon: "chat", badge: <UnreadBadge /> });
   }
 
+  const visibleTabs: MobileTab[] =
+    user.role === "OTA_ONA"
+      ? [
+          { href: "/parent", label: dictionary.parentTitle, icon: "home" },
+          { href: "/messages", label: dictionary.navMessages, icon: "chat" },
+          { href: "/settings", label: dictionary.navSettings, icon: "list" },
+        ]
+      : tabs;
+
   return (
     <LocaleProvider locale={locale} dictionary={dictionary}>
       <div className="flex min-h-screen">
@@ -161,7 +228,7 @@ export default async function AppLayout({
             <ThemeToggle />
           </div>
         </div>
-        <NavLinks groups={groups} />
+        <NavLinks groups={visibleGroups} />
         <div className="border-t border-slate-100 p-3">
           <div className="mb-2 flex justify-center">
             <LanguageSwitcher locale={locale} />
@@ -182,7 +249,7 @@ export default async function AppLayout({
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-slate-200/70 bg-white/90 px-4 backdrop-blur md:hidden">
           <div className="flex min-w-0 items-center gap-1">
-            <MobileNav groups={groups} />
+            <MobileNav groups={visibleGroups} />
             <Link href="/dashboard" className="transition-opacity hover:opacity-80">
               <Logo size={28} withText={false} />
             </Link>
@@ -201,7 +268,7 @@ export default async function AppLayout({
         </header>
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 pt-6 pb-20 md:px-8 md:pt-8 md:pb-8">{children}</main>
       </div>
-      <MobileTabBar tabs={tabs} />
+      <MobileTabBar tabs={visibleTabs} />
       <BugAssistant />
     </div>
     </LocaleProvider>
