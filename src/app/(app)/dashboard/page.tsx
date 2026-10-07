@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { Avatar, Badge, ButtonLink, Card, CardBody, CardHeader, EmptyState } from "@/components/ui";
 import { BarChart, DonutChart, LineChart } from "@/components/charts";
 import { cn, dayName, fmtDate, initials } from "@/lib/utils";
@@ -526,19 +527,53 @@ export default async function DashboardPage() {
   }
 
   if (user.role !== "STUDENT") {
-    const where = user.role === "TEACHER" ? { teacherId: user.id } : {};
+    const isTeacherRole = user.role === "TEACHER";
+    const facultyScope = user.role === "DEKAN" ? user.facultyId ?? "__none__" : null;
+    const departmentScope = user.role === "KAFEDRA_MUDIRI" ? user.departmentId ?? "__none__" : null;
+    const courseWhere: Prisma.CourseWhereInput = isTeacherRole
+      ? { teacherId: user.id }
+      : facultyScope
+        ? { teacher: { facultyId: facultyScope } }
+        : departmentScope
+          ? { teacher: { departmentId: departmentScope } }
+          : {};
+    const quizWhere: Prisma.QuizWhereInput = isTeacherRole
+      ? { course: { teacherId: user.id } }
+      : facultyScope
+        ? { course: { teacher: { facultyId: facultyScope } } }
+        : departmentScope
+          ? { course: { teacher: { departmentId: departmentScope } } }
+          : {};
+    const studentWhere: Prisma.UserWhereInput = {
+      role: "STUDENT",
+      ...(facultyScope ? { facultyId: facultyScope } : {}),
+      ...(departmentScope
+        ? {
+            enrollments: {
+              some: { status: "ACTIVE", course: { teacher: { departmentId: departmentScope } } },
+            },
+          }
+        : {}),
+    };
+    const submissionWhere: Prisma.SubmissionWhereInput = isTeacherRole
+      ? { assignment: { course: { teacherId: user.id } } }
+      : facultyScope
+        ? { student: { facultyId: facultyScope } }
+        : departmentScope
+          ? { assignment: { course: { teacher: { departmentId: departmentScope } } } }
+          : {};
     const [courses, students, submissions, quizzes] = await Promise.all([
-      prisma.course.count({ where }),
-      prisma.user.count({ where: { role: "STUDENT" } }),
-      prisma.submission.count({
-        where: { assignment: user.role === "TEACHER" ? { course: { teacherId: user.id } } : {} },
-      }),
-      prisma.quiz.count({
-        where: user.role === "TEACHER" ? { course: { teacherId: user.id } } : {},
-      }),
+      prisma.course.count({ where: courseWhere }),
+      prisma.user.count({ where: studentWhere }),
+      prisma.submission.count({ where: submissionWhere }),
+      prisma.quiz.count({ where: quizWhere }),
     ]);
-    const analytics =
-      user.role === "TEACHER" ? await getTeacherAnalytics(user.id, locale) : await getAdminAnalytics(locale);
+    const analytics = isTeacherRole
+      ? await getTeacherAnalytics(user.id, locale)
+      : await getAdminAnalytics(locale, {
+          facultyId: facultyScope,
+          departmentId: departmentScope,
+        });
 
     const todayDow = now.getDay() === 0 ? 7 : now.getDay();
     const dateIso = todayIso();

@@ -1,8 +1,13 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import type { AttendanceStatus, Role, SubmissionStatus } from "@prisma/client";
+import type { AttendanceStatus, Prisma, Role, SubmissionStatus } from "@prisma/client";
 import type { BarChartDatum, DonutChartDatum, LineChartDatum } from "@/components/charts";
 import { t as translate, type Dictionary, type Locale } from "@/i18n";
+
+export type AnalyticsScope = {
+  facultyId?: string | null;
+  departmentId?: string | null;
+};
 
 export type StudentAnalytics = {
   attendance: DonutChartDatum[];
@@ -306,13 +311,36 @@ export async function getTeacherAnalytics(
   return { kind: "teacher", submissionsByDay, attendanceByDay, studentsByCourse, submissionStatus };
 }
 
-export async function getAdminAnalytics(locale: Locale): Promise<AdminAnalytics> {
+export async function getAdminAnalytics(locale: Locale, scope?: AnalyticsScope): Promise<AdminAnalytics> {
   const { start, days } = buildWindow(14);
+  const facultyScope = scope?.facultyId ?? null;
+  const departmentScope = scope?.departmentId ?? null;
+
+  const userWhere: Prisma.UserWhereInput = facultyScope
+    ? { facultyId: facultyScope }
+    : departmentScope
+      ? {
+          OR: [
+            { departmentId: departmentScope },
+            {
+              role: "STUDENT",
+              enrollments: {
+                some: { status: "ACTIVE", course: { teacher: { departmentId: departmentScope } } },
+              },
+            },
+          ],
+        }
+      : {};
+  const submissionWhere: Prisma.SubmissionWhereInput = facultyScope
+    ? { student: { facultyId: facultyScope } }
+    : departmentScope
+      ? { assignment: { course: { teacher: { departmentId: departmentScope } } } }
+      : {};
 
   const [roleCounts, submissions] = await Promise.all([
-    prisma.user.groupBy({ by: ["role"], _count: { _all: true } }),
+    prisma.user.groupBy({ by: ["role"], where: userWhere, _count: { _all: true } }),
     prisma.submission.findMany({
-      where: { submittedAt: { gte: start } },
+      where: { submittedAt: { gte: start }, ...submissionWhere },
       select: { submittedAt: true },
     }),
   ]);
