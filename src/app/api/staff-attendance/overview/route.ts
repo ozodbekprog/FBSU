@@ -36,6 +36,7 @@ export async function GET() {
             id: true,
             name: true,
             role: true,
+            isActive: true,
             department: { select: { name: true } },
           },
         },
@@ -44,6 +45,10 @@ export async function GET() {
     }),
     prisma.user.count({ where: { role: { in: STAFF_ROLES }, isActive: true } }),
   ]);
+
+  const activeRecords = records.filter(
+    (record) => record.user.isActive && STAFF_ROLES.includes(record.user.role),
+  );
 
   const rows = records.map((record) => ({
     id: record.id,
@@ -60,9 +65,9 @@ export async function GET() {
       date,
       rows,
       stats: {
-        present: records.filter((record) => record.checkInAt).length,
-        left: records.filter((record) => record.checkOutAt).length,
-        notCame: Math.max(0, staffCount - records.length),
+        present: activeRecords.filter((record) => record.checkInAt).length,
+        left: activeRecords.filter((record) => record.checkOutAt).length,
+        notCame: Math.max(0, staffCount - activeRecords.length),
       },
     },
   });
