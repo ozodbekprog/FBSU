@@ -5,9 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { ButtonLink } from "@/components/ui";
 import { ProfileDetails } from "@/components/profile/ProfileDetails";
 import { ProfileHero } from "@/components/profile/ProfileHero";
+import { getDictionary, getLocale } from "@/i18n";
 
 export default async function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const current = await requireUser();
+  const dictionary = getDictionary(await getLocale());
   const { id } = await params;
 
   const profile = await prisma.user.findUnique({ where: { id }, include: { group: true } });
@@ -27,11 +29,11 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
             <path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
             <path d="M9 22V12h6v10" />
           </svg>
-          Bosh sahifa
+          {dictionary.mscHomePage}
         </Link>
         <span className="text-slate-500">/</span>
         <span className="rounded-lg px-2 py-1 font-medium text-slate-700">
-          {isOwn ? "Mening profilim" : "Foydalanuvchi profili"}
+          {dictionary.mscProfileTitle}
         </span>
       </nav>
 
@@ -50,14 +52,14 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
                 <path d="M12 20h9" />
                 <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
               </svg>
-              Profilni tahrirlash
+              {dictionary.mscProfileEditTitle}
             </ButtonLink>
           ) : (
             <ButtonLink href={`/messages?user=${profile.id}`}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.8-.8L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4Z" />
               </svg>
-              Xabar yozish
+              {dictionary.msgSend}
             </ButtonLink>
           )
         }

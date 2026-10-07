@@ -1,23 +1,28 @@
+import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardBody, CardHeader, EmptyState, PageHeader } from "@/components/ui";
 import { BonusAwardForm } from "@/components/gpa/bonus-award-form";
 import { BonusLedger } from "@/components/gpa/bonus-ledger";
 import { fmtDateTime } from "@/lib/utils";
+import { getDictionary, getLocale } from "@/i18n";
 
-export const metadata = { title: "Bonus ballar" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dictionary = getDictionary(await getLocale());
+  return { title: dictionary.grdBonusPoints };
+}
 
 export default async function BonusPointsPage() {
   const user = await requireUser();
+  const dictionary = getDictionary(await getLocale());
 
-  // Talaba uchun bu sahifa emas — o'z ballari GPA bo'limida ko'rinadi.
   if (user.role === "STUDENT") {
     return (
       <>
-        <PageHeader title="Bonus ballar" eyebrow="Akademik natija" />
+        <PageHeader title={dictionary.grdBonusPoints} eyebrow={dictionary.grdAcademicResult} />
         <EmptyState
-          title="Bu sahifa o'qituvchilar uchun"
-          description="Sizning bonus ballaringiz GPA sahifasida, har bir fan kesimida ko'rsatiladi."
+          title={dictionary.grdTeacherPanel}
+          description={dictionary.grdStudentAccountDesc}
         />
       </>
     );
@@ -25,7 +30,6 @@ export default async function BonusPointsPage() {
 
   const isTeacher = user.role === "TEACHER";
 
-  // O'qituvchi faqat o'z fanlari, admin barchasi.
   const courses = await prisma.course.findMany({
     where: isTeacher ? { teacherId: user.id } : {},
     select: { id: true, title: true },
@@ -34,7 +38,6 @@ export default async function BonusPointsPage() {
 
   const courseIds = courses.map((course) => course.id);
 
-  // Talabalar: o'qituvchi uchun — o'z fanlariga yozilganlar.
   const students =
     courseIds.length > 0
       ? await prisma.user.findMany({
@@ -68,13 +71,9 @@ export default async function BonusPointsPage() {
   return (
     <>
       <PageHeader
-        title="Bonus ballar"
-        subtitle={
-          isTeacher
-            ? "O'z faningizdan o'quvchiga qo'shimcha GPA ball berish"
-            : "Barcha berilgan bonus balllar — faqat ko'rish"
-        }
-        eyebrow="Akademik natija"
+        title={dictionary.grdBonusPoints}
+        subtitle={isTeacher ? dictionary.grdGiveBonus : dictionary.grdGivenBonusPoints}
+        eyebrow={dictionary.grdAcademicResult}
       />
 
       <div className="grid items-start gap-6 lg:grid-cols-[22rem_1fr]">
@@ -89,11 +88,10 @@ export default async function BonusPointsPage() {
           />
         ) : (
           <Card>
-            <CardHeader title="Ko'rish rejimi" subtitle="Faqat o'qituvchi ball bera oladi" />
+            <CardHeader title={dictionary.grdView} subtitle={dictionary.grdGiveBonus} />
             <CardBody>
               <p className="text-sm text-slate-600">
-                Siz berilgan barcha bonus ballarni ko&apos;rib chiqishingiz mumkin.
-                Yangi ball qo&apos;shish huquqi faqat o&apos;qituvchilarda bor.
+                {dictionary.grdNoBonusPointsDesc}
               </p>
             </CardBody>
           </Card>

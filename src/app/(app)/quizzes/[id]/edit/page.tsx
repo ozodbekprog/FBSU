@@ -4,9 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { ButtonLink, PageHeader } from "@/components/ui";
 import { QuizEditor } from "@/components/quiz/quiz-editor";
 import { toQuestionFull } from "@/components/quiz/shared";
+import { getDictionary, getLocale } from "@/i18n";
 
 export default async function EditQuizPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireRole(["TEACHER", "ADMIN"]);
+  const dictionary = getDictionary(await getLocale());
   const { id } = await params;
 
   const quiz = await prisma.quiz.findUnique({
@@ -28,11 +30,11 @@ export default async function EditQuizPage({ params }: { params: Promise<{ id: s
   return (
     <>
       <PageHeader
-        title="Testni tahrirlash"
+        title={dictionary.grdExEdit}
         subtitle={quiz.title}
         action={
           <ButtonLink href={`/quizzes/${quiz.id}`} variant="secondary">
-            Ko&apos;rinish
+            {dictionary.grdView}
           </ButtonLink>
         }
       />

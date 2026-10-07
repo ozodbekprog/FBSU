@@ -5,6 +5,7 @@ import { cn, fmtDateTime, gradeColor, scorePercent } from "@/lib/utils";
 import { Badge, Card, CardBody, CardHeader, EmptyState, PageHeader, Progress, Stat, Table } from "@/components/ui";
 import { GradeForm } from "@/components/quiz/grade-form";
 import { ScoreRing } from "@/components/quiz/score-ring";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import {
   asAnswers,
   autoScore,
@@ -29,6 +30,8 @@ function letterOf(index: number): string {
 
 export default async function QuizResultsPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const { id } = await params;
 
   const quiz = await prisma.quiz.findUnique({
@@ -75,12 +78,12 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
 
   return (
     <>
-      <PageHeader title="Natijalar" subtitle={`${quiz.title} · ${quiz.course.title}`} />
+      <PageHeader title={dictionary.grdExResults} subtitle={`${quiz.title} · ${quiz.course.title}`} />
 
       {attempts.length === 0 ? (
         <EmptyState
-          title="Natijalar yo'q"
-          description={staff ? "Hozircha hech kim bu testni topshirmagan." : "Siz hali bu testni topshirmadingiz."}
+          title={dictionary.grdNoGrades}
+          description={staff ? dictionary.crsNoSubmissions : dictionary.crsNotSubmittedYet}
         />
       ) : (
         <>
@@ -91,7 +94,7 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
                 <ScoreRing score={heroScore} max={maxScore} size={148} strokeWidth={12} className="shrink-0" />
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-slate-500">
-                    {staff ? "O'rtacha natija" : "Eng yaxshi natija"}
+                    {staff ? dictionary.grdAverage : dictionary.grdGpaStatusExcellent}
                   </p>
                   <p
                     className={cn(
@@ -101,49 +104,51 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
                   >
                     {heroScore ?? "—"}
                   </p>
-                  <p className="mt-0.5 text-xs text-slate-600">{maxScore} balldan</p>
+                  <p className="mt-0.5 text-xs text-slate-600">
+                    {translate(locale, "grdScoreBall", { score: maxScore })}
+                  </p>
                   <div className="mt-3">
                     {heroPercent != null ? (
-                      <Badge tone={percentTone(heroPercent)}>{heroPercent}% o&apos;zlashtirish</Badge>
+                      <Badge tone={percentTone(heroPercent)}>
+                        {heroPercent}% {dictionary.grdMastery}
+                      </Badge>
                     ) : (
-                      <Badge tone="slate">Ball yo&apos;q</Badge>
+                      <Badge tone="slate">{dictionary.grdNoGrade}</Badge>
                     )}
                   </div>
                 </div>
               </div>
             </Card>
             <Stat
-              label="Topshirilgan urinishlar"
+              label={dictionary.grdSubmitted}
               value={finished.length}
-              hint={`Jami ${attempts.length} ta urinish`}
+              hint={translate(locale, "grdAttemptsCount", { count: attempts.length })}
             />
             <Stat
-              label={staff ? "Eng yuqori ball" : "Oxirgi natija"}
+              label={staff ? dictionary.grdScore : dictionary.grdResult}
               value={
                 <span className={gradeColor(secondScore, maxScore)}>{secondScore ?? "—"}</span>
               }
-              hint={
-                staff
-                  ? `Guruhdagi eng yaxshi · ${maxScore} balldan`
-                  : `Eng yaxshi: ${best ?? "—"} · ${maxScore} balldan`
-              }
+              hint={translate(locale, "crsQuizPoints", {
+                points: `${best ?? "—"}/${maxScore}`,
+              })}
             />
           </div>
 
           <Card>
             <CardHeader
-              title={staff ? "Barcha urinishlar" : "Urinishlar tarixi"}
-              subtitle={`Jami ball: ${maxScore} · ${attempts.length} ta urinish`}
+              title={dictionary.grdExAttempts}
+              subtitle={`${translate(locale, "grdScoreBall", { score: maxScore })} · ${translate(locale, "grdAttemptsCount", { count: attempts.length })}`}
             />
             <CardBody>
               <Table>
                 <thead>
                   <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-600">
-                    {staff ? <th className="pb-2.5 pr-3 font-medium">Talaba</th> : null}
-                    <th className="pb-2.5 pr-3 font-medium">Boshlangan</th>
-                    <th className="pb-2.5 pr-3 font-medium">Tugagan</th>
-                    <th className="pb-2.5 pr-3 font-medium">Holat</th>
-                    <th className="pb-2.5 font-medium">Ball</th>
+                    {staff ? <th className="pb-2.5 pr-3 font-medium">{dictionary.grdStudent}</th> : null}
+                    <th className="pb-2.5 pr-3 font-medium">{dictionary.grdExStartTime}</th>
+                    <th className="pb-2.5 pr-3 font-medium">{dictionary.grdExEndTime}</th>
+                    <th className="pb-2.5 pr-3 font-medium">{dictionary.grdStatus}</th>
+                    <th className="pb-2.5 font-medium">{dictionary.grdScore}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -168,10 +173,10 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
                         <td className="py-3 pr-3">
                           {attempt.finishedAt ? (
                             <Badge tone={percentTone(percent)}>
-                              {percent != null ? `${percent}%` : "Baholanmagan"}
+                              {percent != null ? `${percent}%` : dictionary.grdGradeNone}
                             </Badge>
                           ) : (
-                            <Badge tone="amber">Davom etmoqda</Badge>
+                            <Badge tone="amber">{dictionary.grdExInProgress}</Badge>
                           )}
                         </td>
                         <td className="py-3">
@@ -192,7 +197,7 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
                                 <Progress value={attempt.score} max={maxScore} className="hidden w-24 sm:block" />
                               ) : null}
                               {isBest && !staff ? (
-                                <Badge tone="gold" className="hidden sm:inline-flex">Eng yaxshi</Badge>
+                                <Badge tone="gold" className="hidden sm:inline-flex">{dictionary.grdGpaStatusExcellent}</Badge>
                               ) : null}
                             </div>
                           ) : (
@@ -220,7 +225,7 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
                 <Card key={attempt.id} className="mt-6">
                   <CardHeader
                     title={attempt.student.name}
-                    subtitle={`${fmtDateTime(attempt.startedAt)} · Avtomatik: ${auto}/${maxScore}`}
+                    subtitle={`${fmtDateTime(attempt.startedAt)} · ${dictionary.grdTipAutoCalc}: ${auto}/${maxScore}`}
                     action={
                       <GradeForm attemptId={attempt.id} maxScore={maxScore} initialScore={attempt.score} />
                     }
@@ -235,11 +240,13 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
                       >
                         {attempt.score ?? "—"}
                       </span>
-                      <span className="text-sm text-slate-600">/ {maxScore} ball</span>
+                      <span className="text-sm text-slate-600">
+                        {translate(locale, "crsScoreOutOf", { score: maxScore })}
+                      </span>
                       {percent != null ? (
                         <Badge tone={percentTone(percent)}>{percent}%</Badge>
                       ) : (
-                        <Badge tone="amber">Baholanmagan</Badge>
+                        <Badge tone="amber">{dictionary.grdGradeNone}</Badge>
                       )}
                     </div>
 
@@ -271,12 +278,14 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
                             </Badge>
                             {question.type !== "TEXT" ? (
                               <Badge tone={correct ? "green" : "rose"}>
-                                {correct ? "To'g'ri" : "Noto'g'ri"}
+                                {correct ? dictionary.grdStatusPassed : dictionary.grdStatusFailed}
                               </Badge>
                             ) : (
-                              <Badge tone="amber">Qo&apos;lda baholanadi</Badge>
+                              <Badge tone="amber">{dictionary.crsQuizTextManual}</Badge>
                             )}
-                            <span className="ml-auto text-xs text-slate-600">{question.points} ball</span>
+                            <span className="ml-auto text-xs text-slate-600">
+                              {translate(locale, "crsQuizPoints", { points: question.points })}
+                            </span>
                           </div>
 
                           {question.type === "TEXT" ? (
@@ -325,11 +334,11 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
                                     <span className="min-w-0 flex-1 truncate">{option}</span>
                                     {isCorrect ? (
                                       <span className="shrink-0 text-[11px] font-semibold text-emerald-700">
-                                        {isSelected ? "Tanlandi" : "To'g'ri javob"}
+                                        {isSelected ? dictionary.mscBookSummary : dictionary.grdStatusPassed}
                                       </span>
                                     ) : isSelected ? (
                                       <span className="shrink-0 text-[11px] font-semibold text-rose-600">
-                                        Xato tanlov
+                                        {dictionary.grdStatusFailed}
                                       </span>
                                     ) : null}
                                   </li>

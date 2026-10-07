@@ -5,6 +5,7 @@ import { cn, fmtDateTime } from "@/lib/utils";
 import { Badge, ButtonLink, Card, CardBody, CardHeader, EmptyState, PageHeader, Progress, Stat } from "@/components/ui";
 import { StartAttemptButton } from "@/components/quiz/start-button";
 import { ScoreRing } from "@/components/quiz/score-ring";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import {
   QUESTION_TYPE_ACCENT,
   QUESTION_TYPE_LABEL,
@@ -16,6 +17,8 @@ import {
 
 export default async function QuizPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const { id } = await params;
 
   const quiz = await prisma.quiz.findUnique({
@@ -46,31 +49,39 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
           action={
             <div className="flex gap-2">
               <ButtonLink href={`/quizzes/${quiz.id}/results`} variant="secondary">
-                Natijalar
+                {dictionary.grdExResults}
               </ButtonLink>
-              <ButtonLink href={`/quizzes/${quiz.id}/edit`}>Tahrirlash</ButtonLink>
+              <ButtonLink href={`/quizzes/${quiz.id}/edit`}>{dictionary.grdExEdit}</ButtonLink>
             </div>
           }
         />
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Savollar" value={questions.length} />
-          <Stat label="Jami ball" value={totalPoints(questions)} />
+          <Stat label={dictionary.grdExQuestions} value={questions.length} />
+          <Stat label={dictionary.grdScore} value={totalPoints(questions)} />
           <Stat
-            label="Vaqt chegarasi"
-            value={quiz.timeLimitMin ? `${quiz.timeLimitMin} daqiqa` : "Yo'q"}
+            label={dictionary.crsQuizTimeLimit}
+            value={
+              quiz.timeLimitMin
+                ? translate(locale, "grdExMinutes", { count: quiz.timeLimitMin })
+                : dictionary.grdExNoTimeLimit
+            }
           />
-          <Stat label="Urinishlar" value={attempts.length} hint={`Maks: ${quiz.maxAttempts}`} />
+          <Stat
+            label={dictionary.grdExAttempts}
+            value={attempts.length}
+            hint={translate(locale, "grdExMax", { count: quiz.maxAttempts })}
+          />
         </div>
         <div className="mb-6 flex items-center gap-2">
           <Badge tone={quiz.isPublished ? "green" : "amber"}>
-            {quiz.isPublished ? "E'lon qilingan" : "Qoralama"}
+            {quiz.isPublished ? dictionary.grdExPublished : dictionary.grdExDraft}
           </Badge>
           {quiz.description ? <p className="text-sm text-slate-500">{quiz.description}</p> : null}
         </div>
 
-        <h2 className="mb-3 text-lg font-semibold text-slate-900">Savollar</h2>
+        <h2 className="mb-3 text-lg font-semibold text-slate-900">{dictionary.grdExQuestions}</h2>
         <div className="space-y-3">
-          {questions.length === 0 ? <EmptyState title="Savollar yo'q" /> : null}
+          {questions.length === 0 ? <EmptyState title={dictionary.crsQuizNoQuestions} /> : null}
           {questions.map((question) => (
             <Card key={question.id} className="relative overflow-hidden">
               <span className={cn("absolute inset-y-0 left-0 w-1", QUESTION_TYPE_ACCENT[question.type])} />
@@ -89,14 +100,14 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
                     <Badge tone={QUESTION_TYPE_TONE[question.type]}>
                       {QUESTION_TYPE_LABEL[question.type]}
                     </Badge>
-                    <Badge tone="gold">{question.points} ball</Badge>
+                    <Badge tone="gold">{translate(locale, "crsQuizPoints", { points: question.points })}</Badge>
                   </span>
                 }
               />
               <CardBody className="pl-7">
                 {question.type === "TEXT" ? (
                   <p className="text-sm text-slate-500">
-                    Matnli javob — o&apos;qituvchi qo&apos;lda baholaydi.
+                    {dictionary.crsQuizTextManual}
                   </p>
                 ) : (
                   <ul className="grid gap-2 sm:grid-cols-2">
@@ -139,7 +150,7 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
 
         {attempts.length > 0 ? (
           <Card className="mt-6">
-            <CardHeader title="So'nggi urinishlar" />
+            <CardHeader title={dictionary.grdExAttempts} />
             <CardBody className="space-y-2">
               {attempts.map((attempt) => (
                 <div key={attempt.id} className="flex items-center justify-between gap-3 text-sm">
@@ -147,10 +158,12 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
                   <span className="text-xs text-slate-500">{fmtDateTime(attempt.startedAt)}</span>
                   {attempt.finishedAt ? (
                     <Badge tone={attempt.score != null ? "green" : "amber"}>
-                      {attempt.score != null ? `Ball: ${attempt.score}` : "Baholanmagan"}
+                      {attempt.score != null
+                        ? `${dictionary.grdScoreLabelColon} ${attempt.score}`
+                        : dictionary.grdGradeNone}
                     </Badge>
                   ) : (
-                    <Badge tone="blue">Davom etmoqda</Badge>
+                    <Badge tone="blue">{dictionary.grdExInProgress}</Badge>
                   )}
                 </div>
               ))}
@@ -186,36 +199,43 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
     <>
       <PageHeader title={quiz.title} subtitle={quiz.course.title} />
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Savollar" value={questions.length} />
-        <Stat label="Jami ball" value={totalPoints(questions)} />
+        <Stat label={dictionary.grdExQuestions} value={questions.length} />
+        <Stat label={dictionary.grdScore} value={totalPoints(questions)} />
         <Stat
-          label="Vaqt chegarasi"
-          value={quiz.timeLimitMin ? `${quiz.timeLimitMin} daqiqa` : "Yo'q"}
+          label={dictionary.crsQuizTimeLimit}
+          value={
+            quiz.timeLimitMin
+              ? translate(locale, "grdExMinutes", { count: quiz.timeLimitMin })
+              : dictionary.grdExNoTimeLimit
+          }
         />
-        <Stat label="Urinishlar" value={`${finished.length}/${quiz.maxAttempts}`} />
+        <Stat
+          label={dictionary.grdExAttempts}
+          value={`${finished.length}/${quiz.maxAttempts}`}
+        />
       </div>
 
       <Card className="mb-6">
         <CardBody className="flex flex-wrap items-center justify-between gap-5">
           <div className="min-w-0 flex-1 space-y-3">
-            <p className="text-sm font-semibold text-slate-800">Test haqida</p>
+            <p className="text-sm font-semibold text-slate-800">{dictionary.crsQuizMetaTitle}</p>
             {quiz.description ? (
               <p className="text-sm text-slate-600">{quiz.description}</p>
             ) : (
-              <p className="text-sm text-slate-500">Tavsif kiritilmagan.</p>
+              <p className="text-sm text-slate-500">{dictionary.crsNoDescription}</p>
             )}
             <div className="flex flex-wrap items-center gap-3">
               {active ? (
                 <ButtonLink href={`/quizzes/${quiz.id}/attempt?attemptId=${active.id}`}>
-                  Davom etish
+                  {dictionary.grdExInProgress}
                 </ButtonLink>
               ) : canStart ? (
                 <StartAttemptButton quizId={quiz.id} />
               ) : (
-                <Badge tone="slate">Urinishlar tugagan</Badge>
+                <Badge tone="slate">{dictionary.grdCompleted}</Badge>
               )}
               <ButtonLink href={`/quizzes/${quiz.id}/results`} variant="secondary">
-                Natijalarim
+                {dictionary.grdExResults}
               </ButtonLink>
             </div>
           </div>
@@ -224,8 +244,10 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
             max={maxPoints}
             size={116}
             strokeWidth={9}
-            caption="Eng yaxshi natijangiz"
-            hint={`${finished.length}/${quiz.maxAttempts} urinish`}
+            caption={dictionary.grdResult}
+            hint={translate(locale, "grdAttemptsCount", {
+              count: `${finished.length}/${quiz.maxAttempts}`,
+            })}
             className="shrink-0"
           />
         </CardBody>
@@ -233,7 +255,7 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
 
       {finished.length > 0 ? (
         <Card>
-          <CardHeader title="Urinishlarim" />
+          <CardHeader title={dictionary.grdQuizAttempts} />
           <CardBody className="space-y-2">
             {finished.map((attempt, index) => {
               const isBest = attempt.score != null && attempt.score === bestScore;
@@ -247,22 +269,26 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-slate-700">{fmtDateTime(attempt.startedAt)}</p>
-                    <p className="text-xs text-slate-600">Tugagan: {fmtDateTime(attempt.finishedAt)}</p>
+                    <p className="text-xs text-slate-600">
+                      {translate(locale, "crsSubmittedAt", { date: fmtDateTime(attempt.finishedAt) })}
+                    </p>
                   </div>
                   {attempt.score != null ? (
                     <Progress value={attempt.score} max={maxPoints} className="hidden w-24 sm:block" />
                   ) : null}
                   <Badge tone={attempt.score != null ? "green" : "amber"}>
-                    {attempt.score != null ? `Ball: ${attempt.score}` : "Baholanmagan"}
+                    {attempt.score != null
+                      ? `${dictionary.grdScoreLabelColon} ${attempt.score}`
+                      : dictionary.grdGradeNone}
                   </Badge>
-                  {isBest ? <Badge tone="gold">Eng yaxshi</Badge> : null}
+                  {isBest ? <Badge tone="gold">{dictionary.grdGpaStatusExcellent}</Badge> : null}
                 </div>
               );
             })}
           </CardBody>
         </Card>
       ) : (
-        <EmptyState title="Urinishlar yo'q" description="Testni boshlash uchun yuqoridagi tugmani bosing." />
+        <EmptyState title={dictionary.crsNotSubmittedYet} description={dictionary.dashGradeTrendEmpty} />
       )}
     </>
   );

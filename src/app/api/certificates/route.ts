@@ -101,10 +101,13 @@ export async function POST(request: Request) {
 
   const enrollment = await prisma.enrollment.findUnique({
     where: { courseId_userId: { courseId, userId: studentId } },
-    select: { id: true },
+    select: { id: true, status: true },
   });
   if (!enrollment) {
     return Response.json({ ok: false, error: "Talaba kursga yozilmagan" }, { status: 400 });
+  }
+  if (enrollment.status !== "ACTIVE") {
+    return Response.json({ ok: false, error: "Talaba kursda faol emas" }, { status: 400 });
   }
 
   const existing = await prisma.certificate.findUnique({
