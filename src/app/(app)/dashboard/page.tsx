@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireUser, isStaff } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Avatar, Badge, ButtonLink, Card, CardBody, CardHeader, EmptyState } from "@/components/ui";
 import { BarChart, DonutChart, LineChart } from "@/components/charts";
@@ -485,11 +485,47 @@ export default async function DashboardPage() {
   const roleLabel =
     user.role === "ADMIN"
       ? dict.dashRoleAdminPanel
-      : user.role === "TEACHER"
-        ? dict.dashRoleTeacherPanel
-        : translate(locale, "dashRoleGroup", { group: user.group?.name ?? dict.dashRoleStudent });
+      : user.role === "REKTOR"
+        ? dict.roleRector
+        : user.role === "PRO_RECTOR"
+          ? dict.roleProRector
+          : user.role === "DEKAN"
+            ? dict.roleDean
+            : user.role === "KAFEDRA_MUDIRI"
+              ? dict.roleHead
+              : user.role === "REGISTRAR"
+                ? dict.roleRegistrar
+                : user.role === "TYUTOR"
+                  ? dict.roleTutor
+                  : user.role === "XODIM"
+                    ? dict.roleStaff
+                    : user.role === "TEACHER"
+                      ? dict.dashRoleTeacherPanel
+                      : translate(locale, "dashRoleGroup", {
+                          group: user.group?.name ?? dict.dashRoleStudent,
+                        });
 
-  if (isStaff(user.role)) {
+  if (user.role === "XODIM") {
+    return (
+      <>
+        <Hero
+          name={user.name}
+          firstName={firstName}
+          roleLabel={roleLabel}
+          now={now}
+          actions={[
+            { href: "/schedule", label: dict.navSchedule, icon: <CalendarIcon /> },
+            { href: "/rooms", label: dict.navRooms, icon: <HelpCircleIcon /> },
+            { href: "/settings", label: dict.navSettings, icon: <ClipboardIcon /> },
+            { href: "/help", label: dict.navHelp, icon: <FileTextIcon /> },
+          ]}
+          locale={locale}
+        />
+      </>
+    );
+  }
+
+  if (user.role !== "STUDENT") {
     const where = user.role === "TEACHER" ? { teacherId: user.id } : {};
     const [courses, students, submissions, quizzes] = await Promise.all([
       prisma.course.count({ where }),
@@ -577,12 +613,33 @@ export default async function DashboardPage() {
             { href: "/grades", label: dict.dashActionAssignments, icon: <ClipboardIcon /> },
             { href: "/quizzes", label: dict.dashActionQuizzes, icon: <HelpCircleIcon /> },
           ]
-        : [
-            { href: "/admin", label: dict.dashActionStats, icon: <BarChartIcon /> },
-            { href: "/admin/users", label: dict.dashActionUsers, icon: <UsersIcon /> },
-            { href: "/schedule", label: dict.dashActionSchedule, icon: <CalendarIcon /> },
-            { href: "/reports", label: dict.dashActionReports, icon: <FileTextIcon /> },
-          ];
+        : user.role === "ADMIN"
+          ? [
+              { href: "/admin", label: dict.dashActionStats, icon: <BarChartIcon /> },
+              { href: "/admin/users", label: dict.dashActionUsers, icon: <UsersIcon /> },
+              { href: "/schedule", label: dict.dashActionSchedule, icon: <CalendarIcon /> },
+              { href: "/reports", label: dict.dashActionReports, icon: <FileTextIcon /> },
+            ]
+          : user.role === "REGISTRAR"
+            ? [
+                { href: "/monitoring", label: dict.navMonitoring, icon: <BarChartIcon /> },
+                { href: "/approvals", label: dict.navApprovals, icon: <CheckCircleIcon /> },
+                { href: "/admin/users", label: dict.admNavUsers, icon: <UsersIcon /> },
+                { href: "/schedule", label: dict.navSchedule, icon: <CalendarIcon /> },
+              ]
+            : user.role === "TYUTOR"
+              ? [
+                  { href: "/curator", label: dict.navCurator, icon: <UsersIcon /> },
+                  { href: "/attendance", label: dict.dashActionAttendance, icon: <CheckCircleIcon /> },
+                  { href: "/schedule", label: dict.navSchedule, icon: <CalendarIcon /> },
+                  { href: "/help", label: dict.navHelp, icon: <FileTextIcon /> },
+                ]
+              : [
+                  { href: "/monitoring", label: dict.navMonitoring, icon: <BarChartIcon /> },
+                  { href: "/reports", label: dict.navReports, icon: <FileTextIcon /> },
+                  { href: "/workload", label: dict.navWorkload, icon: <ClipboardIcon /> },
+                  { href: "/schedule", label: dict.navSchedule, icon: <CalendarIcon /> },
+                ];
 
     return (
       <>
