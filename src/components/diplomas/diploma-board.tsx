@@ -224,7 +224,11 @@ export default function DiplomaBoard({
           {diplomas.length === 0 ? (
             <EmptyState title={t("dipEmpty")} description={t("dipScan")} />
           ) : (
-            <Table>
+            // 9 ta ustun: mobil ekranda `w-full` ularni siqib yuboradi
+            // (QR ustuni deka kengligga tushib qoladi). Ichki jadvalga
+            // minimal enlik berib, gorizontal skrollga o'tkazamiz.
+            <div className="[&_table]:min-w-[64rem]">
+              <Table>
               <thead>
                 <tr className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-600">
                   <th className="py-2.5 pr-3 text-left font-medium">QR</th>
@@ -291,7 +295,8 @@ export default function DiplomaBoard({
                   </tr>
                 ))}
               </tbody>
-            </Table>
+              </Table>
+            </div>
           )}
         </CardBody>
       </Card>
