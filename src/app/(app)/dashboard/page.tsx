@@ -945,7 +945,9 @@ export default async function DashboardPage() {
                           </span>
                         </span>
                       </div>
-                      <div className="flex shrink-0 items-center gap-3">
+                      {/* `shrink-0` mobil'da sig'maydi (Badge + tugma ~209px),
+                          shuning uchun kichik ekranda o'ralishga ruxsat beramiz. */}
+                      <div className="flex flex-wrap items-center gap-3 sm:shrink-0">
                         <Badge tone={lesson.marked ? "green" : "slate"}>{lesson.statusText}</Badge>
                         {lesson.href ? (
                           <ButtonLink href={lesson.href} size="sm">
@@ -1037,7 +1039,7 @@ export default async function DashboardPage() {
         <GradeTrendHero data={analytics} locale={locale} />
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-2">
         <div>
           <SectionHeading
             title={dict.dashQrAttendanceTitle}
@@ -1086,8 +1088,11 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="mt-6 grid items-start gap-4 lg:grid-cols-2">
-        <div className="space-y-4">
+<div className="mt-6 grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-2">
+        {/* Grid elementlarida `min-width: auto` — ular kontentdan kichik
+            bo'lmaydi va mobil'da kartа kengayib gorizontal scroll hosil
+            qilardi. `min-w-0` ularni siqilishga majbur qiladi. */}
+        <div className="min-w-0 space-y-4">
           <Reveal delay={240} tour="dash-lessons">
             <Card className="transition-shadow duration-200">
               <CardHeader
@@ -1236,7 +1241,7 @@ export default async function DashboardPage() {
                           <p className="truncate text-sm font-medium text-slate-800">{a.title}</p>
                           <p className="mt-0.5 truncate text-xs text-slate-500">{a.course.title}</p>
                         </div>
-                        <div className="flex shrink-0 flex-col items-end gap-1.5">
+                        <div className="flex shrink-0 flex-col items-end gap-1.5 max-sm:shrink">
                           <DateChip overdue={overdue && !submitted} soon={soon && !submitted}>
                             <Icon className="size-3">
                               <circle cx="12" cy="12" r="9" />

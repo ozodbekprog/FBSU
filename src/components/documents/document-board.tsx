@@ -412,22 +412,27 @@ export default function DocumentBoard({
       ) : null}
 
       <Card>
-        <CardHeader
-          title={t("docRegistry")}
-          subtitle={documents.length}
-          action={
-            // Matn uzun ("Hujjatlar bo'yicha") va `CardHeader` ichidagi `flex`
-            // konteyner ham qisqaradi — mobil'da ikki qatorga bo'linib ustma-ust
-            // tushib qolardi. `shrink-0` + `whitespace-nowrap` bilan bir qatorda
-            // ushlab turamiz, `flex-wrap` bilan keng ekranda o'ramiz.
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="shrink-0 whitespace-nowrap text-xs text-slate-500">
-                {t("docFilterStatus")}
-              </span>
+        {/* Filtr `CardHeader` dan chiqarildi: header `flex justify-between` va
+            sarlavha `min-w-0` bo'lgani uchun mobil'da sarlavha 23px gacha
+            siqilib, so'zlari filtr ustiga chiqib ustma-ust tushardi.
+            Endi filtr to'liq enli `CardBody` da — sarlavhaga xamashlashmaydi. */}
+        <CardHeader title={t("docRegistry")} subtitle={documents.length} />
+        <CardBody>
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <label
+              htmlFor="doc-status-filter"
+              className="shrink-0 text-xs font-medium text-slate-600"
+            >
+              {t("docFilterStatus")}
+            </label>
+            {/* `Select` ichida `w-full` bor va `cn` — oddiy `join(" ")`, ya'ni
+                twMerge emas; shuning uchun `w-44` klassi ishlamaidi. Shu sabab
+                kenglikni tashqi konteyner beramiz. */}
+            <div className="w-full sm:w-44">
               <Select
+                id="doc-status-filter"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-44 shrink-0"
               >
                 <option value="">—</option>
                 {STATUS_ORDER.map((status) => (
@@ -437,9 +442,7 @@ export default function DocumentBoard({
                 ))}
               </Select>
             </div>
-          }
-        />
-        <CardBody>
+          </div>
           {visibleDocuments.length === 0 ? (
             <EmptyState title={t("docEmpty")} />
           ) : (

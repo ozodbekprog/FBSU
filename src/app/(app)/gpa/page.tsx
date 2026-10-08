@@ -58,7 +58,7 @@ export default async function GpaPage() {
         action={<ButtonLink href="/bonus-points">{dictionary.grdMyBonusPoints}</ButtonLink>}
       />
       <GpaHero data={data} />
-      <div className="mt-6 grid items-start gap-6 lg:grid-cols-[1fr_21rem]">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
         <GpaCourseTable data={data} delay={80} />
         <GpaScale delay={160} />
       </div>
