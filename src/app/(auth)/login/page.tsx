@@ -320,7 +320,7 @@ export default function LoginPage() {
                     aria-label={showPassword ? t("authHidePassword") : t("authShowPassword")}
                     aria-pressed={showPassword}
                     title={showPassword ? t("authHidePassword") : t("authShowPassword")}
-                    className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-xl text-slate-500 transition-colors duration-150 hover:text-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+                    className="absolute -inset-y-1.5 right-0 flex w-11 items-center justify-center rounded-xl text-slate-500 transition-colors duration-150 hover:text-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
                   >
                     <svg
                       viewBox="0 0 24 24"
