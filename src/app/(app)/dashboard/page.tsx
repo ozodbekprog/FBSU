@@ -381,6 +381,66 @@ function AnalyticsCard({
   );
 }
 
+function GradeTrendHero({ data, locale }: { data: StudentAnalytics; locale: Locale }) {
+  const values = data.gradeTrend.map((point) => point.value);
+  const average = values.length
+    ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
+    : null;
+  const last = values.length > 0 ? values[values.length - 1] : null;
+  const previous = values.length > 1 ? values[values.length - 2] : null;
+  const delta = last != null && previous != null ? last - previous : null;
+
+  return (
+    <Reveal delay={60}>
+      <Card className="flex flex-col overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 pb-3 pt-3.5 sm:px-5">
+          <div className="min-w-0">
+            <h3 className="text-base font-semibold tracking-tight text-brand-950">
+              {translate(locale, "dashGradeTrendTitle")}
+            </h3>
+            <p className="mt-0.5 text-xs text-slate-500">
+              {translate(locale, "dashGradeTrendSubtitle")}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {average != null ? (
+              <span className="inline-flex items-center gap-1.5 rounded-xl bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">
+                {translate(locale, "grdAverage")}
+                <span className="tabular-nums">{average}%</span>
+              </span>
+            ) : null}
+            {delta != null ? (
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-semibold tabular-nums",
+                  delta >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-600",
+                )}
+              >
+                {delta >= 0 ? "▲" : "▼"} {Math.abs(delta)}%
+              </span>
+            ) : null}
+          </div>
+        </div>
+        <div className="px-4 pb-3.5 pt-3 sm:px-5">
+          {data.gradeTrend.length === 0 ? (
+            <EmptyState
+              title={translate(locale, "dashNoDataTitle")}
+              description={translate(locale, "dashGradeTrendEmpty")}
+            />
+          ) : (
+            <>
+              <LineChart data={data.gradeTrend} height={260} />
+              <p className="mt-3 border-t border-slate-100 pt-2.5 text-[11px] leading-relaxed text-slate-500">
+                {translate(locale, "dashGradeTrendNote")}
+              </p>
+            </>
+          )}
+        </div>
+      </Card>
+    </Reveal>
+  );
+}
+
 function StudentAnalyticsSection({ data, locale }: { data: StudentAnalytics; locale: Locale }) {
   return (
     <section className="mt-6">
@@ -391,22 +451,10 @@ function StudentAnalyticsSection({ data, locale }: { data: StudentAnalytics; loc
       />
       <div className="grid gap-4 lg:grid-cols-2">
         <AnalyticsCard
-          title={translate(locale, "dashGradeTrendTitle")}
-          subtitle={translate(locale, "dashGradeTrendSubtitle")}
-          note={translate(locale, "dashGradeTrendNote")}
-          delay={60}
-          empty={data.gradeTrend.length === 0}
-          emptyDescription={translate(locale, "dashGradeTrendEmpty")}
-          locale={locale}
-          className="lg:col-span-2"
-        >
-          <LineChart data={data.gradeTrend} height={240} />
-        </AnalyticsCard>
-        <AnalyticsCard
           title={translate(locale, "dashAttendanceDistTitle")}
           subtitle={translate(locale, "dashAttendanceDistSubtitle")}
           note={translate(locale, "dashAttendanceDistNote")}
-          delay={120}
+          delay={60}
           empty={data.attendanceTotal === 0}
           emptyDescription={translate(locale, "dashAttendanceDistEmpty")}
           locale={locale}
@@ -417,7 +465,7 @@ function StudentAnalyticsSection({ data, locale }: { data: StudentAnalytics; loc
           title={translate(locale, "dashCourseAttendanceTitle")}
           subtitle={translate(locale, "dashCourseAttendanceSubtitle")}
           note={translate(locale, "dashCourseAttendanceNote")}
-          delay={180}
+          delay={120}
           empty={data.courseAttendance.length === 0}
           emptyDescription={translate(locale, "dashCourseAttendanceEmpty")}
           locale={locale}
@@ -982,6 +1030,10 @@ export default async function DashboardPage() {
         actions={actions}
         locale={locale}
       />
+
+      <div className="mb-6">
+        <GradeTrendHero data={analytics} locale={locale} />
+      </div>
 
       <div className="grid items-start gap-4 lg:grid-cols-2">
         <div>
