@@ -6,7 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { Avatar, Badge, ButtonLink, Card, CardBody, CardHeader, PageHeader } from "@/components/ui";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { cn, fmtDate } from "@/lib/utils";
-import { SLOT_TIMES, dateFromIso, matchCourseSlug, todayIso } from "@/components/attendance/lesson-utils";
+import { SLOT_TIMES, dateFromIso, matchCourseSlug, slotRange, todayIso } from "@/components/attendance/lesson-utils";
+import { LessonCountdown } from "@/components/schedule/lesson-countdown";
 
 const MATERIAL_TYPE_KEYS = {
   TEXT: "crsText",
@@ -220,7 +221,15 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ i
   const dayKey = DAY_KEYS[entry.dayOfWeek % 7];
   const pairNumber = translate(locale, "dashPairNumber", { slot: entry.slot });
   const timeRange = SLOT_TIMES[entry.slot] ?? null;
+  const range = slotRange(entry.slot);
   const canMark = user.role === "TEACHER" && entry.teacherId === user.id && matchedCourse;
+
+  const roomInfo = entry.room
+    ? await prisma.room.findUnique({
+        where: { name: entry.room },
+        select: { building: true, capacity: true, equipment: true },
+      })
+    : null;
 
   return (
     <>
@@ -229,6 +238,16 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ i
         title={subjectName}
         subtitle={`${entry.group.name} · ${dictionary[dayKey]} · ${pairNumber}`}
       />
+      {range ? (
+        <div className="mb-4">
+          <LessonCountdown
+            dayOfWeek={entry.dayOfWeek}
+            start={range.start}
+            end={range.end}
+            variant="banner"
+          />
+        </div>
+      ) : null}
       <div className="grid items-start gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <Card>
@@ -436,6 +455,39 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ i
         </div>
 
         <div className="space-y-4">
+          <Card>
+            <CardHeader title={dictionary.schLessonLocation} />
+            <CardBody className="space-y-3">
+              <p className="text-lg font-semibold tracking-tight text-brand-950">
+                {entry.room ?? dictionary.schNoRoom}
+              </p>
+              {roomInfo ? (
+                <div className="space-y-2 text-sm">
+                  {roomInfo.building ? (
+                    <p className="text-slate-700">
+                      <span className="text-slate-400">{dictionary.schLessonBuilding}: </span>
+                      {roomInfo.building}
+                    </p>
+                  ) : null}
+                  {roomInfo.capacity ? (
+                    <p className="text-slate-700">
+                      <span className="text-slate-400">{dictionary.schLessonCapacity}: </span>
+                      {translate(locale, "mscRoomCapacity", { count: roomInfo.capacity })}
+                    </p>
+                  ) : null}
+                  {roomInfo.equipment ? (
+                    <p className="text-slate-700">
+                      <span className="text-slate-400">{dictionary.schLessonEquipment}: </span>
+                      {roomInfo.equipment}
+                    </p>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500">{dictionary.schLessonNoRoomInfo}</p>
+              )}
+            </CardBody>
+          </Card>
+
           <Card>
             <CardHeader title={dictionary.schLessonTeacherSection} />
             <CardBody className="space-y-4">

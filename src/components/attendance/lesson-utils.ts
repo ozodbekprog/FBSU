@@ -11,6 +11,14 @@ export const SLOT_TIMES: Record<number, string> = {
   8: "20:20–21:40",
 };
 
+export function slotRange(slot: number): { start: string; end: string } | null {
+  const raw = SLOT_TIMES[slot];
+  if (!raw) return null;
+  const [start, end] = raw.split("–");
+  if (!start || !end) return null;
+  return { start: start.trim(), end: end.trim() };
+}
+
 export function normalizeTeacherName(name: string) {
   return name.replace(/\./g, " ").replace(/\s+/g, " ").trim().toLowerCase();
 }

@@ -16,19 +16,12 @@ import {
   dateFromIso,
   matchCourseSlug,
   normalizeTeacherName,
+  slotRange,
   todayIso,
 } from "@/components/attendance/lesson-utils";
+import { LessonCountdown } from "@/components/schedule/lesson-countdown";
 import type { CourseOption } from "@/components/attendance/lesson-utils";
 import type { ReactNode } from "react";
-
-const PAIR_TIMES: Record<number, string> = {
-  1: "08:30",
-  2: "10:00",
-  3: "11:30",
-  4: "13:30",
-  5: "15:00",
-  6: "16:30",
-};
 
 const ATTENDANCE_BADGES: Record<
   string,
@@ -1068,12 +1061,18 @@ export default async function DashboardPage() {
                     const courseId = slug ? courseIdBySlug.get(slug) : undefined;
                     const status = courseId ? attendanceByCourse.get(courseId) : undefined;
                     const badge = status ? ATTENDANCE_BADGES[status] : undefined;
+                    const range = slotRange(s.slot);
                     const rowClass =
                       "group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150 hover:bg-slate-50";
                     const content = (
                       <>
-                        <span className="w-11 shrink-0 pt-px text-right text-xs font-semibold tabular-nums text-brand-800">
-                          {PAIR_TIMES[s.slot] ?? translate(locale, "dashPairShort", { slot: s.slot })}
+                        <span className="flex w-20 shrink-0 flex-col pt-px text-right">
+                          <span className="text-xs font-semibold tabular-nums text-brand-800">
+                            {range?.start ?? translate(locale, "dashPairShort", { slot: s.slot })}
+                          </span>
+                          {range ? (
+                            <span className="text-[10px] tabular-nums text-slate-400">{range.end}</span>
+                          ) : null}
                         </span>
                         <span className="relative flex w-3 shrink-0 justify-center">
                           {index < scheduleToday.length - 1 ? (
@@ -1097,9 +1096,13 @@ export default async function DashboardPage() {
                             </Icon>
                             <span className="truncate">{s.room}</span>
                             <span className="text-slate-500">·</span>
-                            <span className="text-slate-600">
-                              {translate(locale, "dashPairShort", { slot: s.slot })}
-                            </span>
+                            {range ? (
+                              <LessonCountdown dayOfWeek={today} start={range.start} end={range.end} />
+                            ) : (
+                              <span className="text-slate-600">
+                                {translate(locale, "dashPairShort", { slot: s.slot })}
+                              </span>
+                            )}
                           </span>
                         </span>
                         {badge ? (
@@ -1168,8 +1171,9 @@ export default async function DashboardPage() {
                     );
                     const submitted = a.submissions.length > 0;
                     return (
-                      <div
+                      <Link
                         key={a.id}
+                        href={`/courses/${a.course.slug}/assignments/${a.id}`}
                         className="flex items-start justify-between gap-3 rounded-xl border border-slate-100 p-3 transition-colors duration-150 hover:bg-slate-50"
                       >
                         <div className="min-w-0 flex-1">
@@ -1192,7 +1196,7 @@ export default async function DashboardPage() {
                             <Badge tone="amber">{dict.dashDueSoon}</Badge>
                           ) : null}
                         </div>
-                      </div>
+                      </Link>
                     );
                   })
                 )}

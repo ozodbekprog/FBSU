@@ -257,7 +257,7 @@ export default async function CourseAssignmentsPage({
                 className="animate-fade-up"
                 style={{ animationDelay: `${Math.min(index, 8) * 50 + 120}ms` }}
               >
-              <Card className="group transition-all duration-200">
+              <Card className="group relative transition-all duration-200">
                 <CardBody className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2.5">
@@ -280,7 +280,7 @@ export default async function CourseAssignmentsPage({
                       <div className="min-w-0">
                         <Link
                           href={`/courses/${course.slug}/assignments/${assignment.id}`}
-                          className="font-semibold text-slate-900 transition-colors duration-150 hover:text-brand-700"
+                          className="font-semibold text-slate-900 transition-colors duration-150 after:absolute after:inset-0 after:content-[''] hover:text-brand-700"
                         >
                           {assignment.title}
                         </Link>
@@ -316,15 +316,17 @@ export default async function CourseAssignmentsPage({
                       </span>
                     </div>
                   </div>
-                  <AssignmentsActions
-                    assignment={{
-                      id: assignment.id,
-                      title: assignment.title,
-                      description: assignment.description,
-                      dueAt: assignment.dueAt ? assignment.dueAt.toISOString() : null,
-                      maxScore: assignment.maxScore,
-                    }}
-                  />
+                  <div className="relative z-10">
+                    <AssignmentsActions
+                      assignment={{
+                        id: assignment.id,
+                        title: assignment.title,
+                        description: assignment.description,
+                        dueAt: assignment.dueAt ? assignment.dueAt.toISOString() : null,
+                        maxScore: assignment.maxScore,
+                      }}
+                    />
+                  </div>
                 </CardBody>
               </Card>
               </div>

@@ -461,4 +461,15 @@ export const sch = {
   schLessonAssignmentEmpty: "Заданий пока нет",
 
   schLessonTopic: "Тема занятия",
+
+  schLessonStartsIn: "До начала: {time}",
+  schLessonHourUnit: "ч",
+  schLessonMinuteUnit: "мин",
+  schLessonOngoing: "Сейчас идёт",
+  schLessonEnded: "Занятие завершено",
+  schLessonLocation: "Расположение",
+  schLessonBuilding: "Корпус",
+  schLessonCapacity: "Вместимость",
+  schLessonEquipment: "Оборудование",
+  schLessonNoRoomInfo: "Информация о корпусе не добавлена",
 };

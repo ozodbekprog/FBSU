@@ -460,4 +460,15 @@ export const sch = {
   schLessonAssignmentEmpty: "No assignments yet",
 
   schLessonTopic: "Lesson topic",
+
+  schLessonStartsIn: "Starts in: {time}",
+  schLessonHourUnit: "h",
+  schLessonMinuteUnit: "min",
+  schLessonOngoing: "Ongoing now",
+  schLessonEnded: "Lesson ended",
+  schLessonLocation: "Location",
+  schLessonBuilding: "Building",
+  schLessonCapacity: "Capacity",
+  schLessonEquipment: "Equipment",
+  schLessonNoRoomInfo: "No building info added",
 };

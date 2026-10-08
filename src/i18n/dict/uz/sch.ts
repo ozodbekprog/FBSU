@@ -461,4 +461,15 @@ export const sch = {
   schLessonAssignmentEmpty: "Topshiriqlar hali yo'q",
 
   schLessonTopic: "Dars mavzusi",
+
+  schLessonStartsIn: "Boshlanishiga: {time}",
+  schLessonHourUnit: "soat",
+  schLessonMinuteUnit: "daqiqa",
+  schLessonOngoing: "Hozir davom etmoqda",
+  schLessonEnded: "Dars tugadi",
+  schLessonLocation: "Joylashuv",
+  schLessonBuilding: "Bino",
+  schLessonCapacity: "Sig'imi",
+  schLessonEquipment: "Jihozlar",
+  schLessonNoRoomInfo: "Bino haqida ma'lumot kiritilmagan",
 };
