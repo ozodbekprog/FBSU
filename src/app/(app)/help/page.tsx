@@ -11,6 +11,8 @@ import { BotCommands } from "@/components/help/bot-commands";
 import type { BotCommand } from "@/components/help/bot-commands";
 import { ContactCards } from "@/components/help/contact";
 import { RichText } from "@/components/help/rich-text";
+import { TourRestart } from "@/components/tour/tour-restart";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -24,6 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function HelpPage() {
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
+  const user = await getCurrentUser();
 
   const QUICK_LINKS: { href: string; label: string; hint: string; icon: HelpIconName }[] = [
     {
@@ -242,6 +245,7 @@ export default async function HelpPage() {
 
       <div className="space-y-14">
         <QuickStart steps={STEPS} />
+        {user?.role === "STUDENT" ? <TourRestart /> : null}
         <FaqList items={FAQ} />
         <BotCommands commands={BOT_COMMANDS} />
         <ContactCards />

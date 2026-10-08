@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
-import { Card, CardBody, EmptyState, PageHeader } from "@/components/ui";
+import { Card, CardBody, EmptyState } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
 import { canManageCourse } from "@/components/courses/course-access";
 import { AssignmentsActions } from "@/components/courses/assignments-actions";
@@ -111,21 +111,6 @@ export default async function CourseAssignmentsPage({
     notFound();
   }
 
-  const header = (
-    <PageHeader
-      title={dictionary.crsAssignments}
-      subtitle={course.title}
-      action={
-        <Link
-          href={`/courses/${course.slug}/attendance`}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-50"
-        >
-          {dictionary.crsAttendance}
-        </Link>
-      }
-    />
-  );
-
   if (!management) {
     const assignments = await prisma.assignment.findMany({
       where: { courseId: course.id },
@@ -143,7 +128,6 @@ export default async function CourseAssignmentsPage({
 
     return (
       <>
-        {header}
         {assignments.length === 0 ? (
           <EmptyState
             title={dictionary.crsNoAssignments}
@@ -177,7 +161,7 @@ export default async function CourseAssignmentsPage({
                       <div className="min-w-0 flex-1">
                         <Link
                           href={`/courses/${course.slug}/assignments/${assignment.id}`}
-                          className="font-semibold text-slate-900 transition-colors duration-150 hover:text-brand-700"
+                          className="font-semibold text-slate-900 transition-colors duration-150 after:absolute after:inset-0 after:content-[''] hover:text-brand-700"
                         >
                           {assignment.title}
                         </Link>
@@ -229,7 +213,6 @@ export default async function CourseAssignmentsPage({
 
   return (
     <>
-      {header}
       <AssignmentsCreate courseId={course.id} />
       {assignments.length === 0 ? (
         <EmptyState
@@ -255,7 +238,7 @@ export default async function CourseAssignmentsPage({
                 className="animate-fade-up"
                 style={{ animationDelay: `${Math.min(index, 8) * 50 + 120}ms` }}
               >
-              <Card className="group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+              <Card className="group relative transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
                 <CardBody className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2.5">
@@ -278,7 +261,7 @@ export default async function CourseAssignmentsPage({
                       <div className="min-w-0">
                         <Link
                           href={`/courses/${course.slug}/assignments/${assignment.id}`}
-                          className="font-semibold text-slate-900 transition-colors duration-150 hover:text-brand-700"
+                          className="font-semibold text-slate-900 transition-colors duration-150 after:absolute after:inset-0 after:content-[''] hover:text-brand-700"
                         >
                           {assignment.title}
                         </Link>
@@ -314,15 +297,17 @@ export default async function CourseAssignmentsPage({
                       </span>
                     </div>
                   </div>
-                  <AssignmentsActions
-                    assignment={{
-                      id: assignment.id,
-                      title: assignment.title,
-                      description: assignment.description,
-                      dueAt: assignment.dueAt ? assignment.dueAt.toISOString() : null,
-                      maxScore: assignment.maxScore,
-                    }}
-                  />
+                  <div className="relative z-10">
+                    <AssignmentsActions
+                      assignment={{
+                        id: assignment.id,
+                        title: assignment.title,
+                        description: assignment.description,
+                        dueAt: assignment.dueAt ? assignment.dueAt.toISOString() : null,
+                        maxScore: assignment.maxScore,
+                      }}
+                    />
+                  </div>
                 </CardBody>
               </Card>
               </div>

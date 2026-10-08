@@ -9,21 +9,24 @@ type CalendarItem = {
   type: "assignment" | "quiz";
   courseId: string;
   courseTitle: string;
+  courseSlug: string;
   dueAt: string;
 };
 
 function buildItem(
   source: { id: string; title: string; courseId: string; dueAt: Date | null },
   type: CalendarItem["type"],
-  courseTitles: Map<string, string>,
+  courses: Map<string, { title: string; slug: string }>,
 ): CalendarItem | null {
   if (!source.dueAt) return null;
+  const course = courses.get(source.courseId);
   return {
     id: source.id,
     title: source.title,
     type,
     courseId: source.courseId,
-    courseTitle: courseTitles.get(source.courseId) ?? "",
+    courseTitle: course?.title ?? "",
+    courseSlug: course?.slug ?? "",
     dueAt: source.dueAt.toISOString(),
   };
 }
@@ -51,14 +54,16 @@ export async function GET(request: Request) {
     const courses = await prisma.course.findMany({
       where:
         user.role === "STUDENT"
-          ? { enrollments: { some: { userId: user.id } } }
+          ? { enrollments: { some: { userId: user.id, status: "ACTIVE" } } }
           : user.role === "TEACHER"
             ? { teacherId: user.id }
-            : {},
-      select: { id: true, title: true },
+            : user.role === "ADMIN" || user.role === "REGISTRAR"
+              ? {}
+              : { id: "__none__" },
+      select: { id: true, title: true, slug: true },
     });
     const courseIds = courses.map((course) => course.id);
-    const courseTitles = new Map(courses.map((course) => [course.id, course.title]));
+    const courseMap = new Map(courses.map((course) => [course.id, { title: course.title, slug: course.slug }]));
 
     const [assignments, quizzes] = await Promise.all([
       prisma.assignment.findMany({
@@ -78,8 +83,8 @@ export async function GET(request: Request) {
     ]);
 
     const items = [
-      ...assignments.map((assignment) => buildItem(assignment, "assignment", courseTitles)),
-      ...quizzes.map((quiz) => buildItem(quiz, "quiz", courseTitles)),
+      ...assignments.map((assignment) => buildItem(assignment, "assignment", courseMap)),
+      ...quizzes.map((quiz) => buildItem(quiz, "quiz", courseMap)),
     ]
       .filter((item): item is CalendarItem => item !== null)
       .sort((a, b) => a.dueAt.localeCompare(b.dueAt));

@@ -106,8 +106,8 @@ export const dash = {
   dashUserRolesEmpty: "No users available.",
 
   dashCalendarTitle: "Calendar",
-  dashCalendarSubtitleStaff: "Assignment and quiz deadlines for your courses",
-  dashCalendarSubtitleStudent: "Assignment and quiz deadlines",
+  dashCalendarSubtitleStaff: "Course deadlines and academic events in one place",
+  dashCalendarSubtitleStudent: "Deadlines and academic events in one place",
   dashAcademicEyebrow: "Academic process",
   dashAcademicTitle: "Academic calendar",
   dashAcademicSubtitleStaff: "Academic year events — add, edit and delete as needed",
@@ -191,6 +191,8 @@ export const dash = {
   dashCalPickDay:
     "Pick a day in the calendar — that day's deadlines will appear here.",
   dashCalNoDeadline: "No deadlines on this day",
+  dashCalDayItems: "{count} items",
+  dashCalNothingOnDay: "Nothing on this day",
   dashCalTypeQuiz: "Quiz",
   dashCalTypeAssignment: "Assignment",
   dashCalLoadError: "Failed to load data",

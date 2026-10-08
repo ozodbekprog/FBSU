@@ -2,12 +2,31 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { Card, CardBody, Input } from "@/components/ui";
+import { Input } from "@/components/ui";
 import { CatalogCourseCard, type CatalogCourse } from "@/components/catalog/catalog-course-card";
 import { ElectiveCourseCard } from "@/components/electives/elective-course-card";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 
 type CourseFilter = "all" | "enrolled" | "open";
+
+function SearchIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  );
+}
 
 export function CourseBrowser({
   items,
@@ -62,92 +81,66 @@ export function CourseBrowser({
 
   return (
     <>
-      <Card className="mb-6">
-        <CardBody className="flex flex-col gap-3">
-          {search ? (
-            search
-          ) : searchable ? (
-            <div className="relative w-full sm:w-96">
-              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-600">
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="m20 20-3.5-3.5" />
-                </svg>
-              </span>
-              <Input
-                value={term}
-                onChange={(event) => setTerm(event.target.value)}
-                placeholder={t("crsSearchPlaceholder")}
-                aria-label={t("crsSearchElectivesLabel")}
-                className="pl-9"
-              />
-            </div>
-          ) : null}
-
-          <div className="flex flex-wrap items-center gap-2">
-            {!staff && items.length > 0
-              ? filters.map((item) => {
-                  const active = filter === item.key;
-                  return (
-                    <button
-                      key={item.key}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() => setFilter(item.key)}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150",
-                        active
-                          ? "bg-brand-900 text-white shadow-sm"
-                          : "bg-white text-slate-600 ring-1 ring-inset ring-slate-200 hover:bg-slate-50 hover:text-slate-900",
-                      )}
-                    >
-                      {item.label}
-                      <span
-                        className={cn(
-                          "rounded-full px-1.5 text-[10px] font-bold",
-                          active ? "bg-white/15 text-white" : "bg-slate-100 text-slate-500",
-                        )}
-                      >
-                        {counts[item.key]}
-                      </span>
-                    </button>
-                  );
-                })
-              : null}
-            <span className="ml-auto text-xs font-medium text-slate-500">
-              {t("crsCoursesCount", { count: visible.length })}
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        {search ? (
+          <div className="min-w-72 flex-1">{search}</div>
+        ) : searchable ? (
+          <div className="relative min-w-64 flex-1">
+            <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-slate-500">
+              <SearchIcon />
             </span>
+            <Input
+              value={term}
+              onChange={(event) => setTerm(event.target.value)}
+              placeholder={t("crsSearchPlaceholder")}
+              aria-label={t("crsSearchElectivesLabel")}
+              className="h-11 rounded-2xl pl-10 pr-4"
+            />
           </div>
-        </CardBody>
-      </Card>
+        ) : null}
+        <span className="inline-flex items-center rounded-full bg-white px-3.5 py-1.5 text-sm font-medium text-slate-600 shadow-[0_1px_2px_rgba(16,24,40,0.04)] ring-1 ring-inset ring-slate-200/70">
+          {t("crsCoursesCount", { count: visible.length })}
+        </span>
+      </div>
+
+      {!staff && items.length > 0 ? (
+        <div className="mb-5 flex flex-wrap items-center gap-2">
+          {filters.map((item) => {
+            const active = filter === item.key;
+            return (
+              <button
+                key={item.key}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setFilter(item.key)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150",
+                  active
+                    ? "bg-brand-900 text-white shadow-sm"
+                    : "bg-white text-slate-600 ring-1 ring-inset ring-slate-200 hover:bg-slate-50 hover:text-slate-900",
+                )}
+              >
+                {item.label}
+                <span
+                  className={cn(
+                    "rounded-full px-1.5 text-[10px] font-bold",
+                    active ? "bg-white/15 text-white" : "bg-slate-100 text-slate-500",
+                  )}
+                >
+                  {counts[item.key]}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
 
       {items.length === 0 && empty ? (
         empty
       ) : visible.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 bg-white/60 px-6 py-12 text-center">
           <span className="mb-1 inline-flex size-10 items-center justify-center rounded-full bg-brand-50 text-brand-700">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
+            <SearchIcon />
           </span>
           <p className="font-medium text-slate-800">{t("crsFilterNoResults")}</p>
           <p className="max-w-md text-sm text-slate-500">
@@ -163,12 +156,8 @@ export function CourseBrowser({
         </div>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {visible.map((course, index) => (
-            <div
-              key={course.id}
-              className="h-full animate-fade-up"
-              style={{ animationDelay: `${Math.min(index * 60, 360)}ms` }}
-            >
+          {visible.map((course) => (
+            <div key={course.id} className="h-full">
               {variant === "elective" ? (
                 <ElectiveCourseCard course={course} staff={staff} />
               ) : (

@@ -55,11 +55,11 @@ export default async function CatalogPage({
 
   const searchForm = (
     <form action="/catalog" method="get" className="flex w-full flex-wrap items-center gap-2">
-      <div className="relative w-full sm:w-96">
-        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-600">
+      <div className="relative min-w-0 flex-1">
+        <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-slate-500">
           <svg
-            width="15"
-            height="15"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -76,10 +76,10 @@ export default async function CatalogPage({
           defaultValue={query}
           placeholder={dictionary.crsSearchPlaceholder}
           aria-label={dictionary.crsSearchCoursesLabel}
-          className="pl-9"
+          className="h-11 rounded-2xl pl-10"
         />
       </div>
-      <Button type="submit" variant="secondary">
+      <Button type="submit" variant="secondary" className="h-11 rounded-xl">
         <svg
           width="14"
           height="14"

@@ -9,7 +9,6 @@ import {
   CardBody,
   CardHeader,
   EmptyState,
-  PageHeader,
   Stat,
   Table,
 } from "@/components/ui";
@@ -56,13 +55,8 @@ export default async function CourseAttendancePage({
   if (!course) notFound();
 
   const management = canManageCourse(user, course);
-  const back = (
-    <ButtonLink href={`/courses/${course.slug}/assignments`} variant="secondary" size="sm">
-      {dictionary.crsAssignments}
-    </ButtonLink>
-  );
   const journal = (
-    <ButtonLink href={`/courses/${course.slug}/attendance/journal`} size="sm">
+    <ButtonLink href={`/courses/${course.slug}/attendance/journal`} variant="secondary" size="sm">
       {dictionary.crsGroupJournal}
     </ButtonLink>
   );
@@ -87,16 +81,7 @@ export default async function CourseAttendancePage({
 
     return (
       <>
-        <PageHeader
-          title={dictionary.crsAttendance}
-          subtitle={course.title}
-          action={
-            <>
-              {journal}
-              {back}
-            </>
-          }
-        />
+        <div className="mb-5 flex items-center justify-end gap-2">{journal}</div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label={dictionary.crsAttendancePercent} value={`${percent}%`} hint={translate(locale, "crsLessonsCount", { count: total })} />
           <Stat label={dictionary.crsPresent} value={present} />
@@ -170,16 +155,7 @@ export default async function CourseAttendancePage({
 
   return (
     <>
-      <PageHeader
-        title={dictionary.crsAttendance}
-        subtitle={translate(locale, "crsCourseStudentsSubtitle", { course: course.title, count: students.length })}
-        action={
-          <>
-            {journal}
-            {back}
-          </>
-        }
-      />
+      <div className="mb-5 flex items-center justify-end gap-2">{journal}</div>
       <SessionPanel courseId={course.id} courseTitle={course.title} studentCount={students.length} autoStart={start === "1"} />
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[1.2fr_1fr]">
         <AttendanceBulk

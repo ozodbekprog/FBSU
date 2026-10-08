@@ -2,10 +2,9 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getDictionary, getLocale } from "@/i18n";
-import { Avatar, ButtonLink, Card, CardBody, EmptyState, PageHeader } from "@/components/ui";
+import { Avatar, Card, CardBody, EmptyState } from "@/components/ui";
 import { fmtDateTime } from "@/lib/utils";
 import { canManageCourse } from "@/components/courses/course-access";
-import { CourseTabs } from "@/components/forum/course-tabs";
 import { AnnouncementsCreate } from "@/components/forum/announcements-create";
 import { AnnouncementsActions } from "@/components/forum/announcements-actions";
 
@@ -40,17 +39,6 @@ export default async function CourseAnnouncementsPage({
 
   return (
     <>
-      <PageHeader
-        title={dictionary.crsAnnouncements}
-        subtitle={course.title}
-        action={
-          <ButtonLink href={`/courses/${course.slug}`} variant="secondary" size="sm">
-            {dictionary.crsCoursePage}
-          </ButtonLink>
-        }
-      />
-      <CourseTabs slug={course.slug} active="announcements" canManage={management} />
-
       {management ? <AnnouncementsCreate courseId={course.id} /> : null}
 
       {announcements.length === 0 ? (

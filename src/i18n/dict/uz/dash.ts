@@ -106,8 +106,8 @@ export const dash = {
   dashUserRolesEmpty: "Foydalanuvchilar mavjud emas.",
 
   dashCalendarTitle: "Kalendar",
-  dashCalendarSubtitleStaff: "Kurslaringiz bo'yicha topshiriq va test muddatlari",
-  dashCalendarSubtitleStudent: "Topshiriq va testlar muddatlari",
+  dashCalendarSubtitleStaff: "Topshiriqlar muddati va o'quv tadbirlari — bir joyda",
+  dashCalendarSubtitleStudent: "Muddatlar va o'quv tadbirlari — bir joyda",
   dashAcademicEyebrow: "O'quv jarayoni",
   dashAcademicTitle: "O'quv kalendari",
   dashAcademicSubtitleStaff: "O'quv yili tadbirlari — qo'shish, tahrirlash va o'chirish mumkin",
@@ -191,6 +191,8 @@ export const dash = {
   dashCalPickDay:
     "Kalendardan kunni tanlang — o'sha kundagi muddatlar shu yerda ko'rinadi.",
   dashCalNoDeadline: "Bu kunda deadline yo'q",
+  dashCalDayItems: "{count} ta yozuv",
+  dashCalNothingOnDay: "Bu kunda hech narsa yo'q",
   dashCalTypeQuiz: "Test",
   dashCalTypeAssignment: "Topshiriq",
   dashCalLoadError: "Ma'lumotlarni yuklab bo'lmadi",

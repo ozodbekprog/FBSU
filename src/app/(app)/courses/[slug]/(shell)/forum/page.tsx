@@ -3,10 +3,9 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
-import { Avatar, Badge, ButtonLink, Card, CardBody, EmptyState, PageHeader } from "@/components/ui";
+import { Avatar, Badge, Card, CardBody, EmptyState } from "@/components/ui";
 import { cn, fmtDateTime } from "@/lib/utils";
 import { canManageCourse } from "@/components/courses/course-access";
-import { CourseTabs } from "@/components/forum/course-tabs";
 import { ForumTopicCreate } from "@/components/forum/forum-topic-create";
 import { ForumTopicActions } from "@/components/forum/forum-topic-actions";
 
@@ -44,17 +43,6 @@ export default async function CourseForumPage({
 
   return (
     <>
-      <PageHeader
-        title={dictionary.crsForum}
-        subtitle={course.title}
-        action={
-          <ButtonLink href={`/courses/${course.slug}`} variant="secondary" size="sm">
-            {dictionary.crsCoursePage}
-          </ButtonLink>
-        }
-      />
-      <CourseTabs slug={course.slug} active="forum" canManage={management} />
-
       <ForumTopicCreate courseId={course.id} />
 
       {topics.length === 0 ? (

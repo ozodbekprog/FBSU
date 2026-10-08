@@ -12,6 +12,7 @@ import { Logo } from "@/components/brand/logo";
 import { MobileTabBar, NavLinks, type MobileTab, type MobileTabIcon } from "./nav-links";
 import { MobileNav } from "@/components/nav/mobile-nav";
 import { BugAssistant } from "@/components/bugs/bug-assistant";
+import { TourGuide } from "@/components/tour/tour-guide";
 import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 
 export default async function AppLayout({
@@ -34,8 +35,8 @@ export default async function AppLayout({
         ...(modules.catalog ? [{ href: "/catalog", label: dictionary.navCatalog }] : []),
         { href: "/electives", label: dictionary.navElectives },
         { href: "/schedule", label: dictionary.navSchedule },
-        ...(modules.calendar ? [{ href: "/calendar", label: dictionary.navCalendar }] : []),
-        { href: "/academic-calendar", label: dictionary.navAcademicCalendar },
+        { href: "/schedule", label: dictionary.navSchedule },
+        { href: "/calendar", label: dictionary.navCalendar },
       ],
     },
     {
@@ -174,6 +175,7 @@ export default async function AppLayout({
       </div>
       <MobileTabBar tabs={tabs} />
       <BugAssistant />
+      <TourGuide role={user.role} />
     </div>
     </LocaleProvider>
   );

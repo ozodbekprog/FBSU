@@ -15,6 +15,7 @@ import { cn, fmtDate, fmtDateTime, gradeColor, scorePercent } from "@/lib/utils"
 import { canManageCourse } from "@/components/courses/course-access";
 import { AssignmentsGrade } from "@/components/courses/assignments-grade";
 import { AssignmentsSubmit } from "@/components/courses/assignments-submit";
+import { AssignmentAi } from "@/components/courses/assignment-ai";
 import { OralDefenseCard } from "@/components/courses/oral-defense-card";
 import { OralDefensePanel } from "@/components/courses/oral-defense-panel";
 import { DueChip, SubmissionBadge } from "@/components/courses/assignments-status";
@@ -36,6 +37,10 @@ function DownloadIcon() {
       <path d="M5 21h14" />
     </svg>
   );
+}
+
+function isImageUrl(url: string) {
+  return /\.(png|jpe?g)(\?.*)?$/i.test(url);
 }
 
 export default async function AssignmentDetailPage({
@@ -303,20 +308,35 @@ export default async function AssignmentDetailPage({
                   </div>
                 ) : null}
                 {submission.fileUrl ? (
-                  <a
-                    href={submission.fileUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 transition-colors hover:border-brand-200 hover:bg-brand-50/60"
-                  >
-                    <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-brand-700 ring-1 ring-slate-200">
-                      <DownloadIcon />
-                    </span>
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">
-                      {submission.fileUrl.split("?")[0]?.split("/").pop() || dictionary.crsUploadedFile}
-                    </span>
-                    <span className="shrink-0 text-xs text-slate-600">{dictionary.crsOpen}</span>
-                  </a>
+                  isImageUrl(submission.fileUrl) ? (
+                    <a
+                      href={submission.fileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block overflow-hidden rounded-xl ring-1 ring-slate-200 transition-opacity hover:opacity-90"
+                    >
+                      <img
+                        src={submission.fileUrl}
+                        alt={dictionary.crsImagePreview}
+                        className="max-h-80 w-full bg-slate-50 object-contain"
+                      />
+                    </a>
+                  ) : (
+                    <a
+                      href={submission.fileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 transition-colors hover:border-brand-200 hover:bg-brand-50/60"
+                    >
+                      <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-brand-700 ring-1 ring-slate-200">
+                        <DownloadIcon />
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">
+                        {submission.fileUrl.split("?")[0]?.split("/").pop() || dictionary.crsUploadedFile}
+                      </span>
+                      <span className="shrink-0 text-xs text-slate-600">{dictionary.crsOpen}</span>
+                    </a>
+                  )
                 ) : null}
                 <p className="text-xs text-slate-600">
                   {translate(locale, "crsGradedAt", { date: fmtDateTime(submission.gradedAt) })}
@@ -327,6 +347,9 @@ export default async function AssignmentDetailPage({
             )}
           </CardBody>
         </Card>
+        <div className="lg:col-span-2">
+          <AssignmentAi assignmentId={id} />
+        </div>
         <OralDefenseCard assignmentId={id} />
       </div>
     </>

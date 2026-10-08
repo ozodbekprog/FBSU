@@ -9,6 +9,7 @@ import { adm } from "./dict/en/adm";
 import { msc } from "./dict/en/msc";
 import { brd } from "./dict/en/brd";
 import { lab } from "./dict/en/lab";
+import { tour } from "./dict/en/tour";
 
 export const en: Dictionary = {
   commonSave: "Save",
@@ -134,4 +135,5 @@ export const en: Dictionary = {
   ...msc,
   ...brd,
   ...lab,
+  ...tour,
 };

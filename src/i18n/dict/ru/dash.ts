@@ -106,8 +106,8 @@ export const dash = {
   dashUserRolesEmpty: "Пользователей нет.",
 
   dashCalendarTitle: "Календарь",
-  dashCalendarSubtitleStaff: "Сроки заданий и тестов по вашим курсам",
-  dashCalendarSubtitleStudent: "Сроки заданий и тестов",
+  dashCalendarSubtitleStaff: "Сроки и учебные события в одном месте",
+  dashCalendarSubtitleStudent: "Сроки и учебные события в одном месте",
   dashAcademicEyebrow: "Учебный процесс",
   dashAcademicTitle: "Учебный календарь",
   dashAcademicSubtitleStaff: "События учебного года — можно добавлять, редактировать и удалять",
@@ -191,6 +191,8 @@ export const dash = {
   dashCalPickDay:
     "Выберите день в календаре — дедлайны этого дня появятся здесь.",
   dashCalNoDeadline: "В этот день нет дедлайнов",
+  dashCalDayItems: "{count} записей",
+  dashCalNothingOnDay: "На этот день ничего нет",
   dashCalTypeQuiz: "Тест",
   dashCalTypeAssignment: "Задание",
   dashCalLoadError: "Не удалось загрузить данные",

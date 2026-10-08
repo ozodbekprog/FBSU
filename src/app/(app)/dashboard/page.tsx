@@ -143,14 +143,20 @@ function FileTextIcon() {
 function Reveal({
   delay = 0,
   className,
+  tour,
   children,
 }: {
   delay?: number;
   className?: string;
+  tour?: string;
   children: ReactNode;
 }) {
   return (
-    <div className={cn("animate-fade-up", className)} style={{ animationDelay: `${delay}ms` }}>
+    <div
+      data-tour={tour}
+      className={cn("animate-fade-up", className)}
+      style={{ animationDelay: `${delay}ms` }}
+    >
       {children}
     </div>
   );
@@ -213,7 +219,7 @@ function Hero({
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-200/80">
             {translate(locale, "dashQuickActions")}
           </p>
-          <div className="mt-2.5 flex flex-wrap gap-2">
+          <div className="mt-2.5 flex flex-wrap gap-2" data-tour="dash-actions">
             {actions.map((action) => (
               <QuickActionLink key={action.href} {...action} />
             ))}
@@ -807,13 +813,15 @@ export default async function DashboardPage() {
         title={dict.dashQrAttendanceTitle}
         subtitle={dict.dashQrAttendanceSubtitle}
       />
-      <CheckInForm />
+      <div data-tour="dash-checkin">
+        <CheckInForm />
+      </div>
 
       <SectionHeading
         title={dict.dashTodayStatusTitle}
         subtitle={dict.dashTodayStatusSubtitle}
       />
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3" data-tour="dash-stats">
         <Reveal delay={60}>
           <StatTile
             label={dict.dashMyCourses}
@@ -858,7 +866,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
-        <Reveal delay={240}>
+        <Reveal delay={240} tour="dash-lessons">
           <Card className="h-full transition-shadow duration-200 hover:shadow-lift">
             <CardHeader
               title={dict.dashTodayLessons}
@@ -947,8 +955,9 @@ export default async function DashboardPage() {
                     );
                     const submitted = a.submissions.length > 0;
                     return (
-                      <div
+                      <Link
                         key={a.id}
+                        href={`/courses/${a.course.slug}/assignments/${a.id}`}
                         className="flex items-start justify-between gap-3 rounded-xl border border-slate-100 p-3 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-sm"
                       >
                         <div className="min-w-0 flex-1">
@@ -971,7 +980,7 @@ export default async function DashboardPage() {
                             <Badge tone="amber">{dict.dashDueSoon}</Badge>
                           ) : null}
                         </div>
-                      </div>
+                      </Link>
                     );
                   })
                 )}
