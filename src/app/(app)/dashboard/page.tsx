@@ -30,6 +30,28 @@ const PAIR_TIMES: Record<number, string> = {
   6: "16:30",
 };
 
+const ATTENDANCE_BADGES: Record<
+  string,
+  {
+    key:
+      | "dashAttendancePresent"
+      | "dashAttendanceLate"
+      | "dashAttendanceExcused"
+      | "dashAttendanceAbsent"
+      | "dashAttendanceSuspicious"
+      | "dashAttendanceLeftEarly";
+    tone: "green" | "amber" | "blue" | "rose" | "slate";
+    dot: string;
+  }
+> = {
+  PRESENT: { key: "dashAttendancePresent", tone: "green", dot: "bg-emerald-500 ring-emerald-100" },
+  LATE: { key: "dashAttendanceLate", tone: "amber", dot: "bg-amber-500 ring-amber-100" },
+  EXCUSED: { key: "dashAttendanceExcused", tone: "blue", dot: "bg-blue-500 ring-blue-100" },
+  ABSENT: { key: "dashAttendanceAbsent", tone: "rose", dot: "bg-rose-500 ring-rose-100" },
+  SUSPICIOUS: { key: "dashAttendanceSuspicious", tone: "amber", dot: "bg-amber-500 ring-amber-100" },
+  LEFT_EARLY: { key: "dashAttendanceLeftEarly", tone: "slate", dot: "bg-slate-400 ring-slate-100" },
+};
+
 const STAT_TONES = {
   brand: "bg-brand-50 text-brand-700 ring-brand-100",
   gold: "bg-gold-300/20 text-gold-800 ring-gold-300/40",
@@ -863,9 +885,12 @@ export default async function DashboardPage() {
                           </span>
                         </span>
                         <span className="min-w-0">
-                          <span className="block truncate text-sm font-medium text-slate-900">
+                          <Link
+                            href={`/schedule/lesson/${lesson.id}`}
+                            className="block truncate text-sm font-medium text-slate-900 underline-offset-2 hover:text-brand-700 hover:underline"
+                          >
                             {lesson.subject}
-                          </span>
+                          </Link>
                           <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
                             {lesson.room ? (
                               <>
@@ -919,7 +944,7 @@ export default async function DashboardPage() {
       : Promise.resolve([]),
   ]);
 
-  const [upcoming, analytics] = await Promise.all([
+  const [upcoming, analytics, todayAttendance] = await Promise.all([
     prisma.assignment.findMany({
       where: { courseId: { in: enrollments.map((e) => e.courseId) } },
       orderBy: { dueAt: "asc" },
@@ -930,7 +955,18 @@ export default async function DashboardPage() {
       },
     }),
     getStudentAnalytics(user.id, locale),
+    prisma.attendance.findMany({
+      where: { studentId: user.id, date: dateFromIso(todayIso()) },
+      select: { courseId: true, status: true },
+    }),
   ]);
+
+  const courseOptions: CourseOption[] = enrollments.map((e) => ({
+    slug: e.course.slug,
+    title: e.course.title,
+  }));
+  const courseIdBySlug = new Map(enrollments.map((e) => [e.course.slug, e.courseId]));
+  const attendanceByCourse = new Map(todayAttendance.map((row) => [row.courseId, row.status]));
 
   const assignmentsHref = enrollments[0]
     ? `/courses/${enrollments[0].course.slug}/assignments`
@@ -1027,38 +1063,63 @@ export default async function DashboardPage() {
                 />
               ) : (
                 <ol>
-                  {scheduleToday.map((s, index) => (
-                    <li
-                      key={s.id}
-                      className="group flex gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150 hover:bg-slate-50"
-                    >
-                      <span className="w-11 shrink-0 pt-px text-right text-xs font-semibold tabular-nums text-brand-800">
-                        {PAIR_TIMES[s.slot] ?? translate(locale, "dashPairShort", { slot: s.slot })}
-                      </span>
-                      <span className="relative flex w-3 shrink-0 justify-center">
-                        {index < scheduleToday.length - 1 ? (
-                          <span className="absolute top-3 h-full w-px bg-slate-200" />
-                        ) : null}
-                        <span className="relative z-10 mt-1 size-2.5 rounded-full bg-gold-400 ring-4 ring-gold-300/25 transition-colors duration-150 group-hover:bg-brand-700 group-hover:ring-brand-100" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-slate-800">
-                          {s.subject}
+                  {scheduleToday.map((s, index) => {
+                    const slug = matchCourseSlug(s.subject, courseOptions);
+                    const courseId = slug ? courseIdBySlug.get(slug) : undefined;
+                    const status = courseId ? attendanceByCourse.get(courseId) : undefined;
+                    const badge = status ? ATTENDANCE_BADGES[status] : undefined;
+                    const rowClass =
+                      "group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150 hover:bg-slate-50";
+                    const content = (
+                      <>
+                        <span className="w-11 shrink-0 pt-px text-right text-xs font-semibold tabular-nums text-brand-800">
+                          {PAIR_TIMES[s.slot] ?? translate(locale, "dashPairShort", { slot: s.slot })}
                         </span>
-                        <span className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
-                          <Icon className="size-3 shrink-0 text-slate-600">
-                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />
-                            <circle cx="12" cy="10" r="2.5" />
-                          </Icon>
-                          <span className="truncate">{s.room}</span>
-                          <span className="text-slate-500">·</span>
-                          <span className="text-slate-600">
-                            {translate(locale, "dashPairShort", { slot: s.slot })}
+                        <span className="relative flex w-3 shrink-0 justify-center">
+                          {index < scheduleToday.length - 1 ? (
+                            <span className="absolute top-3 h-full w-px bg-slate-200" />
+                          ) : null}
+                          <span
+                            className={cn(
+                              "relative z-10 mt-1 size-2.5 rounded-full ring-4 transition-colors duration-150",
+                              badge ? badge.dot : "bg-gold-400 ring-gold-300/25",
+                            )}
+                          />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium text-slate-800">
+                            {s.subject}
+                          </span>
+                          <span className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
+                            <Icon className="size-3 shrink-0 text-slate-600">
+                              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />
+                              <circle cx="12" cy="10" r="2.5" />
+                            </Icon>
+                            <span className="truncate">{s.room}</span>
+                            <span className="text-slate-500">·</span>
+                            <span className="text-slate-600">
+                              {translate(locale, "dashPairShort", { slot: s.slot })}
+                            </span>
                           </span>
                         </span>
-                      </span>
-                    </li>
-                  ))}
+                        {badge ? (
+                          <Badge tone={badge.tone}>{translate(locale, badge.key)}</Badge>
+                        ) : (
+                          <Badge tone="slate">{dict.dashNotMarked}</Badge>
+                        )}
+                        <Icon className="size-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-brand-600">
+                          <path d="m9 18 6-6-6-6" />
+                        </Icon>
+                      </>
+                    );
+                    return (
+                      <li key={s.id}>
+                        <Link href={`/schedule/lesson/${s.id}`} className={rowClass}>
+                          {content}
+                        </Link>
+                      </li>
+                    );
+                  })}
                 </ol>
               )}
             </CardBody>

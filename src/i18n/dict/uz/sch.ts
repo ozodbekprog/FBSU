@@ -438,4 +438,20 @@ export const sch = {
   schCheckoutSuccess: "Chiqish belgilandi — darsda qatnashdingiz ✓",
   schCheckoutHint:
     "Dars oxirida «Chiqish QR»ni oching. Skanerlamaganlar avtomatik «vaqtli tark etdi» bo'ladi.",
+
+  schLessonAbout: "Dars haqida",
+  schLessonDetailSubtitle: "Dars, o'qituvchi va qatnashish haqida",
+  schLessonWhen: "Qachon",
+  schLessonTeacherSection: "O'qituvchi",
+  schLessonConsultation: "Konsultatsiya",
+  schLessonConsultationHint: "Savollaringiz bo'lsa, darsdan oldin yoki keyin o'qituvchiga murojaat qiling.",
+  schLessonYourStatus: "Bugungi holatingiz",
+  schLessonToday: "Bugun",
+  schLessonNotTodayHint: "Bu dars bugun emas — ma'lumotlar haftalik jadvaldan olingan.",
+  schLessonGoCourse: "Kurs sahifasiga o'tish",
+  schLessonJournal: "Davomat belgilash",
+  schLessonProfile: "Profilni ko'rish",
+  schLessonNote: "Izoh",
+  schLessonPendingApproval: "Tasdiqlanmagan",
+  schLessonEmail: "Email",
 };

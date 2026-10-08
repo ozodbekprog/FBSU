@@ -437,4 +437,20 @@ export const sch = {
   schCheckoutSuccess: "Check-out recorded — you attended the lesson ✓",
   schCheckoutHint:
     "At the end of the lesson open the “Check-out QR”. Those who don't scan are automatically marked “left early”.",
+
+  schLessonAbout: "About the lesson",
+  schLessonDetailSubtitle: "About the lesson, teacher and attendance",
+  schLessonWhen: "When",
+  schLessonTeacherSection: "Teacher",
+  schLessonConsultation: "Consultation",
+  schLessonConsultationHint: "If you have questions, contact the teacher before or after the lesson.",
+  schLessonYourStatus: "Your status today",
+  schLessonToday: "Today",
+  schLessonNotTodayHint: "This lesson is not today — data is from the weekly schedule.",
+  schLessonGoCourse: "Go to course",
+  schLessonJournal: "Mark attendance",
+  schLessonProfile: "View profile",
+  schLessonNote: "Note",
+  schLessonPendingApproval: "Not approved",
+  schLessonEmail: "Email",
 };

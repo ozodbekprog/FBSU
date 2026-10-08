@@ -438,4 +438,20 @@ export const sch = {
   schCheckoutSuccess: "Выход отмечен — вы участвовали в занятии ✓",
   schCheckoutHint:
     "В конце занятия откройте «QR выхода». Кто не отметится — автоматически получит «ушёл раньше».",
+
+  schLessonAbout: "О занятии",
+  schLessonDetailSubtitle: "О занятии, преподавателе и посещении",
+  schLessonWhen: "Когда",
+  schLessonTeacherSection: "Преподаватель",
+  schLessonConsultation: "Консультация",
+  schLessonConsultationHint: "Если есть вопросы, обратитесь к преподавателю до или после занятия.",
+  schLessonYourStatus: "Ваш статус сегодня",
+  schLessonToday: "Сегодня",
+  schLessonNotTodayHint: "Это занятие не сегодня — данные из недельного расписания.",
+  schLessonGoCourse: "Перейти к курсу",
+  schLessonJournal: "Отметить посещаемость",
+  schLessonProfile: "Открыть профиль",
+  schLessonNote: "Примечание",
+  schLessonPendingApproval: "Не подтверждено",
+  schLessonEmail: "Email",
 };
