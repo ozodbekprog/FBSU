@@ -453,4 +453,9 @@ export const sch = {
   schLessonNote: "Note",
   schLessonPendingApproval: "Not approved",
   schLessonEmail: "Email",
+
+  schLessonMaterials: "Lesson materials",
+  schLessonMaterialsEmpty: "No materials yet",
+  schLessonAssignmentsHint: "Assignments for this course",
+  schLessonAssignmentEmpty: "No assignments yet",
 };

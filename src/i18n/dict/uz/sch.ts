@@ -454,4 +454,9 @@ export const sch = {
   schLessonNote: "Izoh",
   schLessonPendingApproval: "Tasdiqlanmagan",
   schLessonEmail: "Email",
+
+  schLessonMaterials: "Dars materiallari",
+  schLessonMaterialsEmpty: "Materiallar hali yuklanmagan",
+  schLessonAssignmentsHint: "Shu kurs bo'yicha topshiriqlar",
+  schLessonAssignmentEmpty: "Topshiriqlar hali yo'q",
 };
