@@ -32,7 +32,6 @@ export default async function AppLayout({
         { href: "/dashboard", label: dictionary.navDashboard },
         ...(user.role === "OTA_ONA" ? [{ href: "/parent", label: dictionary.parentTitle }] : []),
         { href: "/courses", label: dictionary.navCourses },
-        { href: "/labs", label: dictionary.labTitle },
         ...(modules.catalog ? [{ href: "/catalog", label: dictionary.navCatalog }] : []),
         { href: "/electives", label: dictionary.navElectives },
         { href: "/schedule", label: dictionary.navSchedule },
@@ -141,13 +140,13 @@ export default async function AppLayout({
       "/tasks", "/staff", "/my-qr", "/messages", "/search", "/help", "/settings",
     ],
     TEACHER: [
-      "/dashboard", "/courses", "/labs", "/catalog", "/electives", "/journal", "/journals",
+      "/dashboard", "/courses", "/catalog", "/electives", "/journal", "/journals",
       "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/attendance",
       "/reports", "/workload", "/staff", "/tasks", "/my-qr", "/messages", "/bookings", "/rooms",
       "/search", "/help", "/settings",
     ],
     STUDENT: [
-      "/dashboard", "/courses", "/labs", "/catalog", "/electives", "/schedule", "/calendar",
+      "/dashboard", "/courses", "/catalog", "/electives", "/schedule", "/calendar",
       "/academic-calendar", "/exams", "/grades", "/gpa", "/transcript", "/attendance",
       "/certificates", "/finance", "/my-qr", "/messages", "/orders", "/bookings", "/rooms",
       "/search", "/help", "/settings",
