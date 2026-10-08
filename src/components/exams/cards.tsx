@@ -153,7 +153,7 @@ export async function StudentExamCard({ exam }: { exam: StudentExamItem }) {
         <div className="mt-4">
           <ExamMeta exam={exam} locale={locale} />
         </div>
-        <EligibilityBanner exam={exam} locale={locale} />
+        {exam.attendance.eligible ? null : <EligibilityBanner exam={exam} locale={locale} />}
         <div className="mb-4 mt-4 space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="text-slate-500">{dictionary.grdExAttempts}</span>

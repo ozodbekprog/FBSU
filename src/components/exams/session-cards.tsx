@@ -158,7 +158,7 @@ export async function StudentSessionCard({ session }: { session: StudentSessionI
         </div>
         <Progress value={session.attendance.percent} />
       </div>
-      <AttendanceBanner attendance={session.attendance} compact />
+      {session.attendance.eligible ? null : <AttendanceBanner attendance={session.attendance} compact />}
     </Card>
   );
 }

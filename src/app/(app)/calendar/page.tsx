@@ -1,22 +1,24 @@
-import { isStaff, requireUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { PageHeader } from "@/components/ui";
-import { CalendarView } from "@/components/calendar/calendar-view";
+import { UniversalCalendar } from "@/components/calendar/universal-calendar";
 import { getLocale, t } from "@/i18n";
 
 export default async function CalendarPage() {
   const user = await requireUser();
   const locale = await getLocale();
+  const canManage = user.role === "TEACHER" || user.role === "ADMIN";
   return (
     <>
       <PageHeader
+        eyebrow={t(locale, "dashAcademicEyebrow")}
         title={t(locale, "dashCalendarTitle")}
         subtitle={
-          isStaff(user.role)
+          canManage
             ? t(locale, "dashCalendarSubtitleStaff")
             : t(locale, "dashCalendarSubtitleStudent")
         }
       />
-      <CalendarView />
+      <UniversalCalendar canManage={canManage} />
     </>
   );
 }

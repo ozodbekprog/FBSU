@@ -33,8 +33,7 @@ export default async function AppLayout({
         ...(user.role === "OTA_ONA" ? [{ href: "/parent", label: dictionary.parentTitle }] : []),
         { href: "/courses", label: dictionary.navCourses },
         { href: "/schedule", label: dictionary.navSchedule },
-        ...(modules.calendar ? [{ href: "/calendar", label: dictionary.navCalendar }] : []),
-        { href: "/academic-calendar", label: dictionary.navAcademicCalendar },
+        { href: "/calendar", label: dictionary.navCalendar },
       ],
     },
     {
