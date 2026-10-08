@@ -205,4 +205,9 @@ export const dash = {
   dashCalDaySat: "Sh",
   dashCalDaySun: "Ya",
   dashAttendanceLeftEarly: "Vaqtli tark etdi",
+
+  dashGradeDetailHint: "Grafik nuqtasini bosing — baho tafsiloti shu yerda ko'rinadi",
+  dashGradeDrop: "Oldingi natijadan {delta}% past",
+  dashGradeRise: "Oldingi natijadan {delta}% yuqori",
+  dashGradeFeedback: "Ustoz izohi",
 };

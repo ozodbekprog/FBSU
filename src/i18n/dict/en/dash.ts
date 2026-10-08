@@ -205,4 +205,9 @@ export const dash = {
   dashCalDaySat: "Sat",
   dashCalDaySun: "Sun",
   dashAttendanceLeftEarly: "Left early",
+
+  dashGradeDetailHint: "Tap a point on the chart — the grade details will appear here",
+  dashGradeDrop: "{delta}% below the previous result",
+  dashGradeRise: "{delta}% above the previous result",
+  dashGradeFeedback: "Teacher feedback",
 };

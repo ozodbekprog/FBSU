@@ -79,6 +79,8 @@ export const crs = {
   crsMaterialsCount: "{count} materials",
   crsMaterialsSuffix: "materials",
   crsStudentsCount: "{count} students",
+  crsStatsMaterials: "Materials",
+  crsStatsTeachers: "Teachers",
   crsNoDescription: "No description provided.",
   crsManage: "Manage",
   crsEnrolledBadge: "Enrolled",

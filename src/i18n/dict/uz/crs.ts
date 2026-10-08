@@ -79,6 +79,8 @@ export const crs = {
   crsMaterialsCount: "{count} ta material",
   crsMaterialsSuffix: "ta material",
   crsStudentsCount: "{count} ta talaba",
+  crsStatsMaterials: "Materiallar",
+  crsStatsTeachers: "O'qituvchilar",
   crsNoDescription: "Tavsif kiritilmagan.",
   crsManage: "Boshqarish",
   crsEnrolledBadge: "Yozilgansiz",

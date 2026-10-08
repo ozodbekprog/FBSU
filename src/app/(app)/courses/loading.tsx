@@ -16,19 +16,38 @@ export default function CoursesLoading() {
         <Bar className="h-9 w-28 rounded-xl" />
       </div>
 
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Card key={index} className="flex items-center gap-3.5 p-4">
+            <Bar className="size-11 shrink-0 rounded-xl" />
+            <div className="flex-1">
+              <Bar className="h-6 w-14" />
+              <Bar className="mt-2 h-3 w-24" />
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <div className="mb-5 flex items-center gap-3">
+        <Bar className="h-11 flex-1 rounded-2xl" />
+        <Bar className="h-8 w-24 rounded-full" />
+      </div>
+
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 6 }).map((_, index) => (
           <Card key={index} className="overflow-hidden">
-            <div className="relative h-28 animate-pulse bg-slate-200">
-              <div className="absolute bottom-4 left-4 size-11 animate-pulse rounded-2xl bg-slate-300/70" />
+            <div className="relative h-24 animate-pulse bg-slate-200">
+              <div className="absolute left-4 top-3.5 h-6 w-16 animate-pulse rounded-full bg-slate-300/70" />
             </div>
             <div className="p-5">
-              <Bar className="h-4 w-3/4" />
-              <div className="mt-3 flex items-center gap-2">
-                <div className="size-8 animate-pulse rounded-full bg-slate-200" />
-                <Bar className="h-3 w-1/3" />
+              <div className="flex items-start gap-3">
+                <div className="-mt-11 size-11 shrink-0 animate-pulse rounded-full bg-slate-200 ring-4 ring-white" />
+                <div className="flex-1">
+                  <Bar className="h-4 w-3/4" />
+                  <Bar className="mt-2 h-3 w-1/3" />
+                </div>
               </div>
-              <Bar className="mt-3 h-3 w-full" />
+              <Bar className="mt-4 h-3 w-full" />
               <Bar className="mt-1.5 h-3 w-2/3" />
               <div className="mt-5 flex gap-2">
                 <Bar className="h-6 w-28 rounded-full" />

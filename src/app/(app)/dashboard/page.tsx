@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { Avatar, Badge, ButtonLink, Card, CardBody, CardHeader, EmptyState } from "@/components/ui";
 import { BarChart, DonutChart, LineChart } from "@/components/charts";
+import { GradeTrendChart } from "@/components/charts/GradeTrendChart";
 import { cn, dayName, fmtDate, initials } from "@/lib/utils";
 import { getAdminAnalytics, getStudentAnalytics, getTeacherAnalytics } from "./analytics";
 import type { AdminAnalytics, StudentAnalytics, TeacherAnalytics } from "./analytics";
@@ -421,19 +422,14 @@ function GradeTrendHero({ data, locale }: { data: StudentAnalytics; locale: Loca
             ) : null}
           </div>
         </div>
-        <div className="px-4 pb-3.5 pt-3 sm:px-5">
+        <div className="px-4 pb-3.5 pt-2.5 sm:px-5">
           {data.gradeTrend.length === 0 ? (
             <EmptyState
               title={translate(locale, "dashNoDataTitle")}
               description={translate(locale, "dashGradeTrendEmpty")}
             />
           ) : (
-            <>
-              <LineChart data={data.gradeTrend} height={260} />
-              <p className="mt-3 border-t border-slate-100 pt-2.5 text-[11px] leading-relaxed text-slate-500">
-                {translate(locale, "dashGradeTrendNote")}
-              </p>
-            </>
+            <GradeTrendChart data={data.gradeTrend} height={170} />
           )}
         </div>
       </Card>

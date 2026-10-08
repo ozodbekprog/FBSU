@@ -9,11 +9,23 @@ export type AnalyticsScope = {
   departmentId?: string | null;
 };
 
+export type GradeTrendPoint = LineChartDatum & {
+  detail: {
+    title: string;
+    course: string;
+    kind: "assignment" | "quiz";
+    score: number;
+    max: number;
+    at: string;
+    feedback: string | null;
+  };
+};
+
 export type StudentAnalytics = {
   attendance: DonutChartDatum[];
   attendanceTotal: number;
   courseAttendance: BarChartDatum[];
-  gradeTrend: LineChartDatum[];
+  gradeTrend: GradeTrendPoint[];
   gradeTotal: number;
 };
 
@@ -148,9 +160,16 @@ export async function getStudentAnalytics(
       },
       select: {
         score: true,
+        feedback: true,
         gradedAt: true,
         submittedAt: true,
-        assignment: { select: { maxScore: true } },
+        assignment: {
+          select: {
+            title: true,
+            maxScore: true,
+            course: { select: { title: true } },
+          },
+        },
       },
     }),
     prisma.quizAttempt.findMany({
@@ -163,7 +182,13 @@ export async function getStudentAnalytics(
         score: true,
         finishedAt: true,
         startedAt: true,
-        quiz: { select: { questions: { select: { points: true } } } },
+        quiz: {
+          select: {
+            title: true,
+            course: { select: { title: true } },
+            questions: { select: { points: true } },
+          },
+        },
       },
     }),
   ]);
@@ -207,12 +232,27 @@ export async function getStudentAnalytics(
     })
     .filter((item): item is BarChartDatum => item !== null);
 
-  const points: { at: Date; value: number }[] = [];
+  const points: {
+    at: Date;
+    value: number;
+    title: string;
+    course: string;
+    kind: "assignment" | "quiz";
+    score: number;
+    max: number;
+    feedback: string | null;
+  }[] = [];
   for (const submission of submissions) {
     if (submission.score === null || submission.assignment.maxScore <= 0) continue;
     points.push({
       at: submission.gradedAt ?? submission.submittedAt,
       value: percent(submission.score, submission.assignment.maxScore),
+      title: submission.assignment.title,
+      course: submission.assignment.course.title,
+      kind: "assignment",
+      score: submission.score,
+      max: submission.assignment.maxScore,
+      feedback: submission.feedback,
     });
   }
   for (const attempt of attempts) {
@@ -222,6 +262,12 @@ export async function getStudentAnalytics(
     points.push({
       at: attempt.finishedAt ?? attempt.startedAt,
       value: percent(attempt.score, maxScore),
+      title: attempt.quiz.title,
+      course: attempt.quiz.course.title,
+      kind: "quiz",
+      score: attempt.score,
+      max: maxScore,
+      feedback: null,
     });
   }
   points.sort((a, b) => a.at.getTime() - b.at.getTime());
@@ -233,6 +279,15 @@ export async function getStudentAnalytics(
     gradeTrend: points.slice(-10).map((point) => ({
       label: dayLabel(point.at),
       value: point.value,
+      detail: {
+        title: point.title,
+        course: point.course,
+        kind: point.kind,
+        score: point.score,
+        max: point.max,
+        at: point.at.toISOString(),
+        feedback: point.feedback,
+      },
     })),
     gradeTotal: points.length,
   };

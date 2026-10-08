@@ -79,6 +79,8 @@ export const crs = {
   crsMaterialsCount: "{count} материалов",
   crsMaterialsSuffix: "материалов",
   crsStudentsCount: "{count} студентов",
+  crsStatsMaterials: "Материалы",
+  crsStatsTeachers: "Преподаватели",
   crsNoDescription: "Описание не указано.",
   crsManage: "Управлять",
   crsEnrolledBadge: "Вы записаны",

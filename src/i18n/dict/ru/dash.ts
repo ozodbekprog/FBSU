@@ -205,4 +205,9 @@ export const dash = {
   dashCalDaySat: "Сб",
   dashCalDaySun: "Вс",
   dashAttendanceLeftEarly: "Ушёл раньше",
+
+  dashGradeDetailHint: "Нажмите на точку графика — здесь появятся детали оценки",
+  dashGradeDrop: "На {delta}% ниже предыдущего результата",
+  dashGradeRise: "На {delta}% выше предыдущего результата",
+  dashGradeFeedback: "Комментарий преподавателя",
 };
