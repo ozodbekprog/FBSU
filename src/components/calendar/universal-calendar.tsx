@@ -767,11 +767,13 @@ export function UniversalCalendar({ canManage }: { canManage: boolean }) {
                 </div>
                 <div>
                   <Label>{t("dashAcalStartLabel")}</Label>
-                  <Input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} required />
+                  {/* Native kalendar brauzer tiliga emas, inputning `lang`iga
+                      qaraydi — o'zbek interfeysida ruscha chiqmasligi uchun. */}
+                  <Input type="date" lang={locale} value={startDate} onChange={(event) => setStartDate(event.target.value)} required />
                 </div>
                 <div>
                   <Label>{t("dashAcalEndLabel")}</Label>
-                  <Input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
+                  <Input type="date" lang={locale} value={endDate} onChange={(event) => setEndDate(event.target.value)} />
                 </div>
                 <div className="sm:col-span-2">
                   {startDate ? (

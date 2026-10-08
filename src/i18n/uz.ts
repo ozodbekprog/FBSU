@@ -31,6 +31,8 @@ export const uz = {
   authLoginLink: "Kirish",
   authEmailPlaceholder: "email@ttpu.uz",
   authPasswordPlaceholder: "••••••••",
+  authShowPassword: "Parolni ko'rsatish",
+  authHidePassword: "Parolni yashirish",
   authDemoTitle: "Demo hisoblar",
   authDemoHint: "Bosilganda demo email avtomatik to'ldiriladi",
   authRoleStudent: "Talaba",

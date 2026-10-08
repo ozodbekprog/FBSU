@@ -177,6 +177,7 @@ export default function LoginPage() {
   const { locale, t } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -303,14 +304,52 @@ export default function LoginPage() {
               </div>
               <div>
                 <Label>{t("authPassword")}</Label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t("authPasswordPlaceholder")}
-                  autoComplete="current-password"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={t("authPasswordPlaceholder")}
+                    autoComplete="current-password"
+                    className="pr-11"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? t("authHidePassword") : t("authShowPassword")}
+                    aria-pressed={showPassword}
+                    title={showPassword ? t("authHidePassword") : t("authShowPassword")}
+                    className="absolute -inset-y-1.5 right-0 flex w-11 items-center justify-center rounded-xl text-slate-500 transition-colors duration-150 hover:text-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="size-5"
+                      aria-hidden="true"
+                    >
+                      {showPassword ? (
+                        <>
+                          <path d="M3 3l18 18" />
+                          <path d="M10.6 5.2A9.8 9.8 0 0 1 12 5c5 0 9 4.5 9 7 0 .9-.4 1.9-1.1 2.9" />
+                          <path d="M6.6 6.7C4.3 8.1 2.7 10.1 2.7 12c0 2.5 4 7 9.3 7 1.4 0 2.7-.4 3.8-1" />
+                          <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+                        </>
+                      ) : (
+                        <>
+                          <path d="M2.5 12S6 5.5 12 5.5c1.6 0 3 .4 4.2 1.1" />
+                          <path d="M21.5 12s-1 1.8-2.8 3.3" />
+                          <path d="M12 18.5c-5 0-9.5-6.5-9.5-6.5" />
+                          <circle cx="12" cy="12" r="3" />
+                        </>
+                      )}
+                    </svg>
+                  </button>
+                </div>
                 <div className="mt-2 flex justify-end">
                   <Link
                     href="/forgot-password"
