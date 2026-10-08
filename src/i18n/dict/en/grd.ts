@@ -337,7 +337,7 @@ export const grd = {
   grdTrStamp: "Place of seal",
   grdTrSignature: "Signature",
   grdTrFooter:
-    "This transcript is generated automatically from FBSU LMS data. It is valid only when confirmed with a signature and seal.",
+    "This transcript is generated automatically from FBSU data. It is valid only when confirmed with a signature and seal.",
   grdTrCountry: "Tashkent · Uzbekistan",
   grdTrLogoAlt: "FBSU emblem",
   grdExMinutes: "{count} min",

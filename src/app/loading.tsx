@@ -33,7 +33,7 @@ export default async function Loading() {
         </div>
 
         <h1 className="mt-7 animate-shimmer text-xl font-bold tracking-tight text-brand-950">
-          FBSU LMS
+          FBSU
         </h1>
         <p className="mt-1 animate-shimmer text-sm font-medium text-slate-500">
           {dictionary.commonLoading}

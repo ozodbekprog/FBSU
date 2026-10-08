@@ -35,7 +35,7 @@ health_check() {
   die "server ko'tarilmadi — journalctl -u $SERVICE_WEB"
 }
 
-log "TTPU LMS production deploy (domen: $DOMAIN, papka: $APP_DIR)"
+log "FBSU production deploy (domen: $DOMAIN, papka: $APP_DIR)"
 export DEBIAN_FRONTEND=noninteractive
 
 log "1/7 Tizim paketlari"

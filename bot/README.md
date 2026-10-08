@@ -1,4 +1,4 @@
-# TTPU LMS Telegram bot
+# FBSU Telegram bot
 
 Mustaqil Node skript: long polling, tashqi kutubxonasiz (Node `fetch` + loyihadagi Prisma).
 

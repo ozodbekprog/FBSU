@@ -289,11 +289,11 @@ export const msc = {
 
   mscHelpMetaTitle: "Yordam markazi",
   mscHelpMetaDescription:
-    "FBSU LMS bo'yicha qo'llanmalar, savol-javoblar, bot buyruqlari va aloqa ma'lumotlari",
+    "FBSU bo'yicha qo'llanmalar, savol-javoblar, bot buyruqlari va aloqa ma'lumotlari",
   mscHelpEyebrow: "Yordam",
   mscHelpTitle: "Yordam markazi",
-  mscHelpSubtitle: "FBSU LMS bo'yicha qo'llanmalar, savol-javoblar va aloqa ma'lumotlari",
-  mscHelpHeroEyebrow: "FBSU LMS qo'llanmasi",
+  mscHelpSubtitle: "FBSU bo'yicha qo'llanmalar, savol-javoblar va aloqa ma'lumotlari",
+  mscHelpHeroEyebrow: "FBSU qo'llanmasi",
   mscHelpHeroTitle: "Kerakli javob bir necha bosishda",
   mscHelpHeroText:
     "Qo'llanmalar, ko'p so'raladigan savollar, bot buyruqlari va aloqa ma'lumotlari — barchasi shu sahifada.",
@@ -374,7 +374,7 @@ export const msc = {
     "Har bir kod faqat shu dars uchun amal qiladi va davomat bir marta belgilanadi. Kodni kechiktirmasdan kiriting.",
   mscHelpFaqTelegramQ: "Telegram botga qanday ulanaman?",
   mscHelpFaqTelegramA1:
-    "Telegramda LMS botini toping va **/start** buyrug'ini yuboring. Bot akkauntni tizimdagi ma'lumotlaringiz bilan bog'laydi.",
+    "Telegramda botni toping va **/start** buyrug'ini yuboring. Bot akkauntni tizimdagi ma'lumotlaringiz bilan bog'laydi.",
   mscHelpFaqTelegramA2:
     "Shundan so'ng jadval va davomat bo'yicha buyruqlar ishlaydi. Batafsil ro'yxat quyida — [Bot buyruqlari](#bot).",
   mscHelpFaqCertQ: "Sertifikat/transkript qanday olinadi?",
@@ -398,7 +398,7 @@ export const msc = {
   mscHelpBotAttendanceResult: "80% qoidasi bo'yicha holat",
 
   mscBugGreeting:
-    "Salom! 😊 Men AI yordamchiman. FBSU LMS saytida qanday yordam bera olaman? Muammo yoki savolingizni yozing — birgalikda hal qilamiz.",
+    "Salom! 😊 Men AI yordamchiman. FBSU saytida qanday yordam bera olaman? Muammo yoki savolingizni yozing — birgalikda hal qilamiz.",
   mscBugTitle: "AI yordamchi",
   mscBugSubtitle: "DeepSeek · adminga yuboradi",
   mscBugClose: "Yopish",

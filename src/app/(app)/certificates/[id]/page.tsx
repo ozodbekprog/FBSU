@@ -178,7 +178,7 @@ export default async function CertificatePage({
                     Turin Politexnika Universiteti
                   </p>
                   <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.4em] text-gold-300">
-                    FBSU LMS
+                    FBSU
                   </p>
                 </div>
               </div>

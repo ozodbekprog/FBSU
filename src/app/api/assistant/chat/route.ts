@@ -202,7 +202,7 @@ export async function POST(request: Request) {
       {
         role: "system",
         content:
-          `Sen "AI yordamchi" — FBSU LMS saytining aqlli yordamchisisan.\n` +
+          `Sen "AI yordamchi" — FBSU saytining aqlli yordamchisisan.\n` +
           `Foydalanuvchi: ${user.name} (${user.role}). Vaziyat: ${situation}\n\n` +
           `FOYDALANUVCHI MA'LUMOTLARI (faqat shu foydalanuvchiga tegishli — boshqalarniki emas):\n${userContext}\n\n` +
           "Qoidalar:\n" +

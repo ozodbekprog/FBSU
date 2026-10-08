@@ -128,7 +128,7 @@ export async function analyzeBug(input: {
       {
         role: "system",
         content:
-          "Sen FBSU LMS saytining texnik yordamchisisan. Xatolik haqidagi ma'lumotni tahlil qil va FAQAT JSON qaytar: " +
+          "Sen FBSU saytining texnik yordamchisisan. Xatolik haqidagi ma'lumotni tahlil qil va FAQAT JSON qaytar: " +
           '{"summary":"qisqa izoh","cause":"ehtimoliy sabab","fixHint":"tuzatish yo\'l-yo\'riq","severity":"low|medium|high"}. ' +
           "Javob o'zbek tilida va qisqa bo'lsin.",
       },

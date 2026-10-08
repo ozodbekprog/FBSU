@@ -1,6 +1,6 @@
 # ONBOARDING.md — Jamoaga qo'shilish va repo'da ishlash
 
-Bu qo'llanma TTPU LMS ustida ishlaydigan har bir jamoa a'zosi uchun.
+Bu qo'llanma FBSU ustida ishlaydigan har bir jamoa a'zosi uchun.
 5 qadamda ishni boshlasa bo'ladi.
 
 ---

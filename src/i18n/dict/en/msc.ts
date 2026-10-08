@@ -292,11 +292,11 @@ export const msc = {
 
   mscHelpMetaTitle: "Help center",
   mscHelpMetaDescription:
-    "Guides, questions and answers, bot commands and contact details for FBSU LMS",
+    "Guides, questions and answers, bot commands and contact details for FBSU",
   mscHelpEyebrow: "Help",
   mscHelpTitle: "Help center",
-  mscHelpSubtitle: "Guides, questions and answers and contact details for FBSU LMS",
-  mscHelpHeroEyebrow: "FBSU LMS guide",
+  mscHelpSubtitle: "Guides, questions and answers and contact details for FBSU",
+  mscHelpHeroEyebrow: "FBSU guide",
   mscHelpHeroTitle: "The answer you need in a few clicks",
   mscHelpHeroText:
     "Guides, frequently asked questions, bot commands and contact details — all on this page.",
@@ -377,7 +377,7 @@ export const msc = {
     "Each code is valid only for that class, and attendance is marked once. Enter the code without delay.",
   mscHelpFaqTelegramQ: "How do I connect to the Telegram bot?",
   mscHelpFaqTelegramA1:
-    "Find the LMS bot in Telegram and send the **/start** command. The bot links the account to your data in the system.",
+    "Find the bot in Telegram and send the **/start** command. The bot links the account to your data in the system.",
   mscHelpFaqTelegramA2:
     "After that, schedule and attendance commands work. The full list is below — [Bot commands](#bot).",
   mscHelpFaqCertQ: "How do I get a certificate/transcript?",
@@ -401,7 +401,7 @@ export const msc = {
   mscHelpBotAttendanceResult: "Status under the 80% rule",
 
   mscBugGreeting:
-    "Hello! 😊 I'm the AI assistant. How can I help you on the FBSU LMS site? Write your problem or question — we'll solve it together.",
+    "Hello! 😊 I'm the AI assistant. How can I help you on the FBSU site? Write your problem or question — we'll solve it together.",
   mscBugTitle: "AI assistant",
   mscBugSubtitle: "DeepSeek · sends to admin",
   mscBugClose: "Close",

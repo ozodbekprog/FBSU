@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     try {
       await sendMail({
         to: user.email,
-        subject: "FBSU LMS — parolni tiklash",
+        subject: "FBSU — parolni tiklash",
         text: `Parolni tiklash uchun havola: ${link}\n\nHavola 30 daqiqa amal qiladi. Agar siz so'ramagan bo'lsangiz, bu xatni e'tiborsiz qoldiring.`,
       });
     } catch (error) {

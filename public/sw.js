@@ -6,7 +6,7 @@ const OFFLINE_HTML = `<!doctype html>
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TTPU LMS — Oflayn</title>
+<title>FBSU — Oflayn</title>
 <style>
 body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f6f7fa;color:#1d3460;display:flex;min-height:100vh;align-items:center;justify-content:center}
 main{max-width:22rem;padding:2rem;text-align:center}
@@ -19,7 +19,7 @@ button{border:0;border-radius:.65rem;background:#1d3460;color:#fff;font-size:.9r
 <body>
 <main>
 <img src="/logo.svg" alt="TTPU" width="72" height="72" />
-<h1>TTPU LMS</h1>
+<h1>FBSU</h1>
 <p>Internet aloqasi yo'q. Ulanish tiklangach sahifani qayta yuklang.</p>
 <button onclick="location.reload()">Qayta urinish</button>
 </main>

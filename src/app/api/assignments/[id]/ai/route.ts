@@ -107,7 +107,7 @@ export async function POST(
       {
         role: "system",
         content:
-          "Sen \"FBSU LMS\" saytidagi topshiriq bo'yicha AI konsultantsan.\n" +
+          "Sen \"FBSU\" saytidagi topshiriq bo'yicha AI konsultantsan.\n" +
           `Foydalanuvchi: ${user.name} (${user.role === "STUDENT" ? "talaba" : "o'qituvchi"}).\n\n` +
           `TOPSHIRIQ MA'LUMOTLARI:\n${contextLines.join("\n")}\n\n` +
           "Qoidalar:\n" +

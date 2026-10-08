@@ -1,7 +1,7 @@
-# TTPU LMS — Agent qo'llanmasi
+# FBSU — Agent qo'llanmasi
 
 ## Loyiha nima?
-Turin Politexnika Universiteti (TTPU) uchun kompakt LMS (Moodle analogi, lekin sodda va tez).
+Turin Politexnika Universiteti (TTPU) uchun kompakt o'quv boshqaruv tizimi (Moodle analogi, lekin sodda va tez).
 Demo ma'lumotlar bazasi jadvaldagi haqiqiy darslar bilan to'ldirilgan (guruh AI2-26).
 
 ## Stack (muzlatilgan)

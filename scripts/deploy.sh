@@ -6,7 +6,7 @@ LOG="/tmp/ttpu-prod.log"
 PID_FILE="/tmp/ttpu-prod.pid"
 PORT="${PORT:-3000}"
 
-echo "== TTPU LMS deploy =="
+echo "== FBSU deploy =="
 
 echo ">> 1/5 PostgreSQL ishga tushirilmoqda"
 bash scripts/db.sh
@@ -36,7 +36,7 @@ done
 
 echo ">> 5/5 Natija"
 if printf '%s' "$HEALTH" | grep -q '"db":true'; then
-  echo "== MUVAFFAQIYAT: TTPU LMS production ishlamoqda — http://localhost:$PORT =="
+  echo "== MUVAFFAQIYAT: FBSU production ishlamoqda — http://localhost:$PORT =="
 else
   echo "== XATO: server ko'tarilmadi yoki DB javob bermadi =="
   echo "   Log (oxirgi 20 qator):"

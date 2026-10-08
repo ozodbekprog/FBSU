@@ -249,7 +249,7 @@ export default async function SchedulePage({
   return (
     <>
       <PageHeader
-        eyebrow="FBSU LMS"
+        eyebrow="FBSU"
         title={dictionary.schScheduleTitle}
         subtitle={
           selectedGroup

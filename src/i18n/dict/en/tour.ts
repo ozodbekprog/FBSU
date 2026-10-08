@@ -1,5 +1,5 @@
 export const tour = {
-  tourWelcomeTitle: "Welcome to FBSU LMS!",
+  tourWelcomeTitle: "Welcome to FBSU!",
   tourWelcomeText:
     "A one-minute tour shows the essentials: navigation, attendance, schedule, grades and the AI assistant. You can skip it anytime.",
   tourStart: "Start the tour",

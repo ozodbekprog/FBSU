@@ -12,19 +12,19 @@ const DISMISS_KEY = "ttpu-pwa-install-dismissed";
 const PWA_TEXT: Record<string, { title: string; subtitle: string; install: string; close: string }> = {
   uz: {
     title: "Ilovani o'rnatish",
-    subtitle: "FBSU LMS ni ilova sifatida ochish",
+    subtitle: "FBSU'ni ilova sifatida ochish",
     install: "O'rnatish",
     close: "Yopish",
   },
   ru: {
     title: "Установить приложение",
-    subtitle: "Открыть FBSU LMS как приложение",
+    subtitle: "Открыть FBSU как приложение",
     install: "Установить",
     close: "Закрыть",
   },
   en: {
     title: "Install app",
-    subtitle: "Open FBSU LMS as an app",
+    subtitle: "Open FBSU as an app",
     install: "Install",
     close: "Close",
   },

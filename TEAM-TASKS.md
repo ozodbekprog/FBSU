@@ -55,7 +55,7 @@ gh pr create --title "T01: Sessiya bekor qilish" --body "Maqsad: ... DoD: ..."
 ### Agent prompt namunasi (har bir topshiriq uchun)
 
 ```
-Sen TTPU LMS loyihasida ishlaysan. Repo: <yo'l>.
+Sen FBSU loyihasida ishlaysan. Repo: <yo'l>.
 Avval AGENTS.md, CONTRACT.md va TEAM-TASKS.md dagi T<ID> kartasini o'qi.
 Faqat o'z fayl hududingda ishla. tsc + build yashil bo'lsin.
 ```

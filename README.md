@@ -1,6 +1,6 @@
-# FBSU LMS
+# FBSU
 
-Turin Politexnika Universiteti uchun kompakt o'quv boshqaruv tizimi (LMS).
+Turin Politexnika Universiteti uchun kompakt o'quv boshqaruv tizimi.
 Moodle'ga alternativa: sodda, tez, mobil-qulay.
 
 ## Ferma auto-fix (test)

@@ -53,7 +53,7 @@ export default async function CertificatesPage({
     return (
       <>
         <PageHeader
-          eyebrow="FBSU LMS"
+          eyebrow="FBSU"
           title={dictionary.grdMyCertificates}
           subtitle={translate(locale, "grdCertificateCount", { count: certificates.length })}
         />
@@ -90,7 +90,7 @@ export default async function CertificatesPage({
     return (
       <>
         <PageHeader
-          eyebrow="FBSU LMS"
+          eyebrow="FBSU"
           title={dictionary.grdCertificates}
           subtitle={dictionary.grdTeacherPanel}
         />
@@ -135,7 +135,7 @@ export default async function CertificatesPage({
   return (
     <>
       <PageHeader
-        eyebrow="FBSU LMS"
+        eyebrow="FBSU"
         title={dictionary.grdCertificates}
         subtitle={selected.title}
         action={

@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-echo "== TTPU LMS setup =="
+echo "== FBSU setup =="
 
 echo ">> 1/4 Kutubxonalar o'rnatilmoqda (npm install)"
 npm install

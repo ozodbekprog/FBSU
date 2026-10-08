@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/",
       title: dictionary.metaTitle,
       description: dictionary.metaDescription,
-      siteName: "FBSU LMS",
+      siteName: "FBSU",
       locale: OG_LOCALES[locale],
     },
     twitter: {
@@ -41,7 +41,7 @@ export default async function HomePage() {
         "@type": "Organization",
         "@id": `${SITE_URL}/#organization`,
         name: "Turin Polytechnic University",
-        alternateName: "FBSU LMS",
+        alternateName: "FBSU",
         url: SITE_URL,
         email: "info@ttpu.uz",
         telephone: "+998 71 289 99 00",
@@ -54,7 +54,7 @@ export default async function HomePage() {
       {
         "@type": "WebSite",
         "@id": `${SITE_URL}/#website`,
-        name: "FBSU LMS",
+        name: "FBSU",
         url: SITE_URL,
         inLanguage: locale,
         publisher: { "@id": `${SITE_URL}/#organization` },

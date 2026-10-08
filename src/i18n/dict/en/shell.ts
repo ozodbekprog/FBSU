@@ -1,5 +1,5 @@
 export const shell = {
-  metaTitle: "FBSU LMS — Learning Management System",
+  metaTitle: "FBSU — Learning Management System",
   metaDescription: "A modern learning platform for Turin Polytechnic University",
 
   navGroupMain: "Main",

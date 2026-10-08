@@ -54,7 +54,7 @@ export default async function VerifyDiplomaPage({
               Turin Politexnika Universiteti
             </p>
             <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.35em] text-gold-300">
-              FBSU LMS
+              FBSU
             </p>
           </div>
         </div>
@@ -109,7 +109,7 @@ export default async function VerifyDiplomaPage({
         </div>
 
         <p className="mt-6 text-center text-xs text-white/60">
-          Turin Politexnika Universiteti · FBSU LMS
+          Turin Politexnika Universiteti · FBSU
         </p>
       </div>
     </main>

@@ -1,5 +1,5 @@
 export const tour = {
-  tourWelcomeTitle: "FBSU LMS ga xush kelibsiz!",
+  tourWelcomeTitle: "FBSU'ga xush kelibsiz!",
   tourWelcomeText:
     "Bir daqiqalik qisqa tur asosiy imkoniyatlarni ko'rsatadi: menyu, davomat, jadval, baholar va AI yordamchi. Xohlasangiz, o'tkazib yuborishingiz mumkin.",
   tourStart: "Tur boshlash",

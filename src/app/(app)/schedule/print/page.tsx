@@ -107,7 +107,7 @@ export default async function SchedulePrintPage({
               <img src="/logo.svg" alt="FBSU" width={44} height={44} className="h-full w-full" />
             </span>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-600">FBSU LMS</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-600">FBSU</p>
               <p className="text-lg font-semibold tracking-tight text-brand-950">{dictionary.schScheduleTitle}</p>
               <p className="mt-0.5 text-sm text-slate-500">
                 {translate(locale, "schBuilderGroupSubtitle", { group: group.name, range: weekLabel(monday) })}

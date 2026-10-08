@@ -480,7 +480,7 @@ const HELP_TEXT = [
 
 function startText(name) {
   return [
-    `👋 Salom${name ? `, ${name}` : ""}! Men TTPU LMS jadval botiman.`,
+    `👋 Salom${name ? `, ${name}` : ""}! Men FBSU jadval botiman.`,
     "📚 Guruh jadvali, haftalik darslar va o'qituvchilar uchun davomat — hammasi shu yerda.",
     "",
     "Nimalar qila olaman:",

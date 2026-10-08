@@ -3,7 +3,7 @@ import type { Locale } from "./config";
 import { getDictionary } from "./index";
 import type { Dictionary } from "./uz";
 
-const SITE_NAME = "FBSU LMS";
+const SITE_NAME = "FBSU";
 
 const OG_LOCALES: Record<Locale, string> = {
   uz: "uz_UZ",

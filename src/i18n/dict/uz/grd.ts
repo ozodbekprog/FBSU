@@ -336,7 +336,7 @@ export const grd = {
   grdTrStamp: "Muhr o'rni",
   grdTrSignature: "Imzo",
   grdTrFooter:
-    "Ushbu transkript FBSU LMS tizimi ma'lumotlari asosida avtomatik shakllantirilgan. Faqat imzo va muhr bilan tasdiqlanganda haqiqiy hisoblanadi.",
+    "Ushbu transkript FBSU tizimi ma'lumotlari asosida avtomatik shakllantirilgan. Faqat imzo va muhr bilan tasdiqlanganda haqiqiy hisoblanadi.",
   grdTrCountry: "Toshkent · O'zbekiston",
   grdTrLogoAlt: "FBSU gerbi",
   grdExMinutes: "{count} daqiqa",

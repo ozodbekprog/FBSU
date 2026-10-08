@@ -39,18 +39,18 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: resolveSiteUrl(),
     title: {
       default: title,
-      template: "%s — FBSU LMS",
+      template: "%s — FBSU",
     },
     description,
     manifest: "/manifest.webmanifest",
     appleWebApp: {
       capable: true,
-      title: "FBSU LMS",
+      title: "FBSU",
       statusBarStyle: "default",
     },
     openGraph: {
       type: "website",
-      siteName: "FBSU LMS",
+      siteName: "FBSU",
       locale: OG_LOCALES[locale],
       title,
       description,
