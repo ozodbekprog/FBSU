@@ -161,14 +161,20 @@ function FileTextIcon() {
 function Reveal({
   delay = 0,
   className,
+  tour,
   children,
 }: {
   delay?: number;
   className?: string;
+  tour?: string;
   children: ReactNode;
 }) {
   return (
-    <div className={cn("animate-fade-up", className)} style={{ animationDelay: `${delay}ms` }}>
+    <div
+      data-tour={tour}
+      className={cn("animate-fade-up", className)}
+      style={{ animationDelay: `${delay}ms` }}
+    >
       {children}
     </div>
   );
@@ -231,7 +237,7 @@ function Hero({
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-200/80">
             {translate(locale, "dashQuickActions")}
           </p>
-          <div className="mt-2.5 flex flex-wrap gap-2">
+          <div className="mt-2.5 flex flex-wrap gap-2" data-tour="dash-actions">
             {actions.map((action) => (
               <QuickActionLink key={action.href} {...action} />
             ))}
@@ -1037,14 +1043,16 @@ export default async function DashboardPage() {
             title={dict.dashQrAttendanceTitle}
             subtitle={dict.dashQrAttendanceSubtitle}
           />
-          <CheckInForm />
+          <div data-tour="dash-checkin">
+            <CheckInForm />
+          </div>
         </div>
         <div>
           <SectionHeading
             title={dict.dashTodayStatusTitle}
             subtitle={dict.dashTodayStatusSubtitle}
           />
-          <div className="grid gap-4">
+          <div className="grid gap-4" data-tour="dash-stats">
         <Reveal delay={60}>
           <StatTile
             href="/courses"
@@ -1080,7 +1088,7 @@ export default async function DashboardPage() {
 
       <div className="mt-6 grid items-start gap-4 lg:grid-cols-2">
         <div className="space-y-4">
-          <Reveal delay={240}>
+          <Reveal delay={240} tour="dash-lessons">
             <Card className="transition-shadow duration-200">
               <CardHeader
                 title={dict.dashTodayLessons}

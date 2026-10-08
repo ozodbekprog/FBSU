@@ -1,50 +1,30 @@
-import { notFound } from "next/navigation";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { Avatar, Badge, ButtonLink } from "@/components/ui";
-import { CourseMaterials } from "@/components/courses/course-materials";
-import { CourseReviews } from "@/components/courses/course-reviews";
-import { CourseStudents } from "@/components/courses/course-students";
 import { CourseTabs } from "@/components/forum/course-tabs";
 import { getCourseAttendance } from "@/app/api/attendance/summary/data";
 
-export default async function CoursePage({
+export default async function CourseShellLayout({
+  children,
   params,
-  searchParams,
 }: {
+  children: React.ReactNode;
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ tab?: string }>;
 }) {
   const user = await requireUser();
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
   const { slug } = await params;
-  const { tab } = await searchParams;
 
   const course = await prisma.course.findUnique({
     where: { slug },
     include: {
       teacher: { select: { id: true, name: true } },
-      sections: {
-        orderBy: { position: "asc" },
-        include: { materials: { orderBy: { position: "asc" } } },
-      },
-      enrollments: {
-        where: { status: "ACTIVE" },
-        orderBy: { createdAt: "asc" },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              group: { select: { name: true } },
-            },
-          },
-        },
-      },
+      sections: { select: { _count: { select: { materials: true } } } },
+      enrollments: { where: { status: "ACTIVE" }, select: { userId: true } },
     },
   });
 
@@ -52,12 +32,15 @@ export default async function CoursePage({
 
   const canManage =
     user.role === "ADMIN" || (user.role === "TEACHER" && course.teacherId === user.id);
-  const isEnrolled = course.enrollments.some((e) => e.user.id === user.id);
+  const isEnrolled = course.enrollments.some((entry) => entry.userId === user.id);
   if (!canManage && !course.isPublished && !isEnrolled) notFound();
 
-  const activeTab = tab === "students" && canManage ? "students" : "materials";
-  const materialsCount = course.sections.reduce((sum, section) => sum + section.materials.length, 0);
-  const attendance = !canManage && isEnrolled ? await getCourseAttendance(course.id, user.id) : null;
+  const materialsCount = course.sections.reduce(
+    (sum, section) => sum + section._count.materials,
+    0,
+  );
+  const attendance =
+    !canManage && isEnrolled ? await getCourseAttendance(course.id, user.id) : null;
 
   return (
     <>
@@ -181,19 +164,9 @@ export default async function CoursePage({
         </div>
       </section>
 
-      <CourseTabs slug={course.slug} active={activeTab} canManage={canManage} />
+      <CourseTabs slug={course.slug} canManage={canManage} />
 
-      {activeTab === "students" ? (
-        <CourseStudents enrollments={course.enrollments} />
-      ) : (
-        <CourseMaterials courseId={course.id} sections={course.sections} canManage={canManage} />
-      )}
-
-      {canManage || isEnrolled ? (
-        <div className="mt-6">
-          <CourseReviews courseId={course.id} isEnrolled={isEnrolled} canManage={canManage} />
-        </div>
-      ) : null}
+      {children}
     </>
   );
 }

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
-import { Card, CardBody, EmptyState, PageHeader } from "@/components/ui";
+import { Card, CardBody, EmptyState } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
 import { canManageCourse } from "@/components/courses/course-access";
 import { AssignmentsActions } from "@/components/courses/assignments-actions";
@@ -111,21 +111,6 @@ export default async function CourseAssignmentsPage({
     notFound();
   }
 
-  const header = (
-    <PageHeader
-      title={dictionary.crsAssignments}
-      subtitle={course.title}
-      action={
-        <Link
-          href={`/courses/${course.slug}/attendance`}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-50"
-        >
-          {dictionary.crsAttendance}
-        </Link>
-      }
-    />
-  );
-
   if (!management) {
     const assignments = await prisma.assignment.findMany({
       where: { courseId: course.id },
@@ -143,7 +128,6 @@ export default async function CourseAssignmentsPage({
 
     return (
       <>
-        {header}
         {assignments.length === 0 ? (
           <EmptyState
             title={dictionary.crsNoAssignments}
@@ -231,7 +215,6 @@ export default async function CourseAssignmentsPage({
 
   return (
     <>
-      {header}
       <AssignmentsCreate courseId={course.id} />
       {assignments.length === 0 ? (
         <EmptyState

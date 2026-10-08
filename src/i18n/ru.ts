@@ -16,6 +16,7 @@ import { doc } from "./dict/ru/doc";
 import { prn } from "./dict/ru/prn";
 import { fin } from "./dict/ru/fin";
 import { dip } from "./dict/ru/dip";
+import { tour } from "./dict/ru/tour";
 
 export const ru: Dictionary = {
   commonSave: "Сохранить",
@@ -148,4 +149,5 @@ export const ru: Dictionary = {
   ...prn,
   ...fin,
   ...dip,
+  ...tour,
 };

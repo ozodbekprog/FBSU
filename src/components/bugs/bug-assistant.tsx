@@ -277,6 +277,7 @@ export function BugAssistant() {
       {!open ? (
         <button
           type="button"
+          data-tour="ai-assistant"
           onClick={openManually}
           className="fixed bottom-24 right-3 z-40 flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-700 shadow-lift transition-transform duration-150 hover:scale-105 active:scale-95 md:bottom-6 md:right-6"
         >
