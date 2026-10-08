@@ -391,10 +391,22 @@ function StudentAnalyticsSection({ data, locale }: { data: StudentAnalytics; loc
       />
       <div className="grid gap-4 lg:grid-cols-2">
         <AnalyticsCard
+          title={translate(locale, "dashGradeTrendTitle")}
+          subtitle={translate(locale, "dashGradeTrendSubtitle")}
+          note={translate(locale, "dashGradeTrendNote")}
+          delay={60}
+          empty={data.gradeTrend.length === 0}
+          emptyDescription={translate(locale, "dashGradeTrendEmpty")}
+          locale={locale}
+          className="lg:col-span-2"
+        >
+          <LineChart data={data.gradeTrend} height={240} />
+        </AnalyticsCard>
+        <AnalyticsCard
           title={translate(locale, "dashAttendanceDistTitle")}
           subtitle={translate(locale, "dashAttendanceDistSubtitle")}
           note={translate(locale, "dashAttendanceDistNote")}
-          delay={60}
+          delay={120}
           empty={data.attendanceTotal === 0}
           emptyDescription={translate(locale, "dashAttendanceDistEmpty")}
           locale={locale}
@@ -405,24 +417,12 @@ function StudentAnalyticsSection({ data, locale }: { data: StudentAnalytics; loc
           title={translate(locale, "dashCourseAttendanceTitle")}
           subtitle={translate(locale, "dashCourseAttendanceSubtitle")}
           note={translate(locale, "dashCourseAttendanceNote")}
-          delay={120}
+          delay={180}
           empty={data.courseAttendance.length === 0}
           emptyDescription={translate(locale, "dashCourseAttendanceEmpty")}
           locale={locale}
         >
           <BarChart data={data.courseAttendance} />
-        </AnalyticsCard>
-        <AnalyticsCard
-          title={translate(locale, "dashGradeTrendTitle")}
-          subtitle={translate(locale, "dashGradeTrendSubtitle")}
-          note={translate(locale, "dashGradeTrendNote")}
-          delay={180}
-          empty={data.gradeTrend.length === 0}
-          emptyDescription={translate(locale, "dashGradeTrendEmpty")}
-          locale={locale}
-          className="lg:col-span-2"
-        >
-          <LineChart data={data.gradeTrend} />
         </AnalyticsCard>
       </div>
     </section>

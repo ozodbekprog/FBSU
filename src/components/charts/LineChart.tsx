@@ -10,8 +10,7 @@ const NO_DATA: Record<string, string> = {
 export type LineChartDatum = { label: string; value: number };
 
 const WIDTH = 560;
-const HEIGHT = 200;
-const PAD = { top: 14, right: 16, bottom: 26, left: 30 };
+const PAD = { top: 18, right: 22, bottom: 28, left: 32 };
 
 function clamp(value: number) {
   return Math.max(0, Math.min(100, value));
@@ -35,9 +34,10 @@ function smoothPath(points: { x: number; y: number }[]) {
   return path;
 }
 
-export function LineChart({ data }: { data: LineChartDatum[] }) {
+export function LineChart({ data, height = 200 }: { data: LineChartDatum[]; height?: number }) {
   const areaId = useId();
   const lineId = useId();
+  const glowId = useId();
   if (data.length === 0) {
     return (
       <p className="py-10 text-center text-sm text-slate-500">
@@ -47,7 +47,7 @@ export function LineChart({ data }: { data: LineChartDatum[] }) {
   }
 
   const innerWidth = WIDTH - PAD.left - PAD.right;
-  const innerHeight = HEIGHT - PAD.top - PAD.bottom;
+  const innerHeight = height - PAD.top - PAD.bottom;
   const baseY = PAD.top + innerHeight;
   const denominator = Math.max(1, data.length - 1);
 
@@ -63,19 +63,40 @@ export function LineChart({ data }: { data: LineChartDatum[] }) {
   const line = smoothPath(points);
   const area = `${line} L ${points[points.length - 1].x} ${baseY} L ${points[0].x} ${baseY} Z`;
   const labelInterval = Math.max(1, Math.ceil(data.length / 8));
+  const lastPoint = points[points.length - 1];
+
+  let previousLabel = "";
+  const labelIndices = new Set<number>();
+  points.forEach((point, index) => {
+    const forceShow = index === 0 || index === points.length - 1;
+    const intervalOk = index % labelInterval === 0;
+    if (forceShow || intervalOk) {
+      if (point.label !== previousLabel || forceShow) {
+        labelIndices.add(index);
+        previousLabel = point.label;
+      }
+    }
+  });
 
   return (
-    <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="h-auto w-full" role="img">
+    <svg viewBox={`0 0 ${WIDTH} ${height}`} className="h-auto w-full" role="img">
       <defs>
         <linearGradient id={areaId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#5373b8" stopOpacity="0.24" />
+          <stop offset="0%" stopColor="#5373b8" stopOpacity="0.28" />
+          <stop offset="70%" stopColor="#5373b8" stopOpacity="0.06" />
           <stop offset="100%" stopColor="#5373b8" stopOpacity="0" />
         </linearGradient>
         <linearGradient id={lineId} x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%" stopColor="#1d3460" />
+          <stop offset="55%" stopColor="#5373b8" />
           <stop offset="100%" stopColor="#d4af37" />
         </linearGradient>
+        <radialGradient id={glowId}>
+          <stop offset="0%" stopColor="#d4af37" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#d4af37" stopOpacity="0" />
+        </radialGradient>
       </defs>
+
       {[0, 25, 50, 75, 100].map((tick, tickIndex) => (
         <g key={tick}>
           <line
@@ -101,17 +122,23 @@ export function LineChart({ data }: { data: LineChartDatum[] }) {
         </g>
       ))}
 
-      <path d={area} fill={`url(#${areaId})`} className="animate-fade-in" style={{ animationDelay: "150ms" }} />
+      <path
+        d={area}
+        fill={`url(#${areaId})`}
+        className="animate-fade-in"
+        style={{ animationDelay: "260ms", animationDuration: "0.9s" }}
+      />
       <path
         d={line}
         stroke={`url(#${lineId})`}
-        strokeWidth={2.5}
+        strokeWidth={3}
         fill="none"
         strokeLinecap="round"
         strokeLinejoin="round"
         className="animate-draw"
         pathLength={1}
         strokeDasharray={1}
+        style={{ animationDelay: "120ms", animationDuration: "1.5s" }}
       />
 
       {points.map((point, index) => {
@@ -119,36 +146,51 @@ export function LineChart({ data }: { data: LineChartDatum[] }) {
         return (
           <g key={`${point.label}-${index}`}>
             {isLast ? (
-              <circle
-                cx={point.x}
-                cy={point.y}
-                r={8.5}
-                className="animate-fade-in fill-gold-300"
-                fillOpacity={0.25}
-                style={{ animationDelay: `${index * 50}ms` }}
-              />
+              <>
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r={16}
+                  fill={`url(#${glowId})`}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${300 + index * 40}ms` }}
+                />
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r={9}
+                  className="animate-fade-in fill-gold-300"
+                  fillOpacity={0.25}
+                  style={{ animationDelay: `${300 + index * 40}ms` }}
+                />
+              </>
             ) : null}
             <circle
               cx={point.x}
               cy={point.y}
-              r={isLast ? 4.5 : 3}
+              r={isLast ? 5 : 3.5}
               className={
                 isLast
-                  ? "animate-fade-in fill-gold-500 stroke-white"
-                  : "animate-fade-in fill-white stroke-brand-700"
+                  ? "animate-pop-in fill-gold-500 stroke-white transition-transform duration-150 hover:scale-125"
+                  : "animate-pop-in fill-white stroke-brand-700 transition-transform duration-150 hover:scale-150"
               }
-              strokeWidth={2}
-              style={{ animationDelay: `${index * 50}ms` }}
+              strokeWidth={2.2}
+              style={{
+                animationDelay: `${280 + index * 55}ms`,
+                transformBox: "fill-box",
+                transformOrigin: "center",
+              }}
             >
               <title>{`${point.label}: ${point.value}%`}</title>
             </circle>
-            {index % labelInterval === 0 || isLast ? (
+            {labelIndices.has(index) ? (
               <text
                 x={point.x}
-                y={HEIGHT - 9}
+                y={height - 9}
                 textAnchor="middle"
-                className="fill-slate-400"
+                className="animate-fade-in fill-slate-400"
                 fontSize={8.5}
+                style={{ animationDelay: `${320 + index * 40}ms` }}
               >
                 {point.label}
               </text>
@@ -156,6 +198,20 @@ export function LineChart({ data }: { data: LineChartDatum[] }) {
           </g>
         );
       })}
+
+      {lastPoint ? (
+        <text
+          x={Math.min(Math.max(lastPoint.x, PAD.left + 16), WIDTH - PAD.right - 16)}
+          y={Math.max(lastPoint.y - 14, PAD.top + 8)}
+          textAnchor="middle"
+          className="animate-pop-in fill-brand-950"
+          fontSize={11}
+          fontWeight={700}
+          style={{ animationDelay: `${340 + data.length * 55}ms` }}
+        >
+          {`${lastPoint.value}%`}
+        </text>
+      ) : null}
     </svg>
   );
 }
