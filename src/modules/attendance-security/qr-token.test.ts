@@ -32,8 +32,11 @@ describe("qr-token", () => {
 
   it("buzilgan token null qaytaradi", async () => {
     const token = await signQrToken({ sessionId: SESSION_ID, courseId: COURSE_ID });
-    const last = token.slice(-1);
-    const broken = token.slice(0, -1) + (last === "A" ? "B" : "A");
+    const position = 10;
+    const broken =
+      token.slice(0, position) +
+      (token[position] === "A" ? "B" : "A") +
+      token.slice(position + 1);
     expect(await verifyQrToken(broken)).toBeNull();
     expect(await verifyQrToken("not-a-token")).toBeNull();
     expect(await verifyQrToken("v1.only-two")).toBeNull();
