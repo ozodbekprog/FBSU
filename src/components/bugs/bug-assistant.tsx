@@ -54,13 +54,39 @@ export function BugAssistant() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, open, busy]);
 
+  // iOS Safari `body { overflow: hidden }` ni e'tiborsiz qoldiradi — orqa fon
+  // scroll bo'lib ketadi. Shuning uchun body ni `position: fixed` qilib,
+  // joylashuvni saqlab qo'yamiz va yopilganda qaytaramiz.
   useEffect(() => {
     if (!open) return;
     if (!window.matchMedia("(max-width: 767px)").matches) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+
+    const body = document.body;
+    const scrollY = window.scrollY;
+    const previous = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow,
+    };
+
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+
     return () => {
-      document.body.style.overflow = previous;
+      body.style.position = previous.position;
+      body.style.top = previous.top;
+      body.style.left = previous.left;
+      body.style.right = previous.right;
+      body.style.width = previous.width;
+      body.style.overflow = previous.overflow;
+      window.scrollTo(0, scrollY);
     };
   }, [open]);
 
@@ -288,7 +314,7 @@ export function BugAssistant() {
       ) : null}
 
       {open ? (
-        <div className="fixed inset-x-0 top-0 z-50 flex h-dvh w-full flex-col overflow-hidden bg-white md:inset-auto md:bottom-6 md:right-6 md:h-auto md:w-[23rem] md:rounded-3xl md:border md:border-slate-200 md:shadow-2xl md:ring-1 md:ring-slate-900/5">
+        <div className="fixed inset-x-0 top-0 z-50 flex h-dvh w-full flex-col overflow-hidden overscroll-contain bg-white md:inset-auto md:bottom-6 md:right-6 md:h-auto md:w-[23rem] md:rounded-3xl md:border md:border-slate-200 md:shadow-2xl md:ring-1 md:ring-slate-900/5">
           <div className="flex items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/80 px-4 py-3">
             <div className="flex items-center gap-2">
               <span className="flex size-7 items-center justify-center rounded-full bg-brand-900 text-[10px] font-semibold text-white">

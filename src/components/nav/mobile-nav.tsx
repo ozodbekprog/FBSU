@@ -8,6 +8,7 @@ import type { NavGroup } from "@/app/(app)/nav-links";
 import { Logo } from "@/components/brand/logo";
 import { LogoutForm } from "@/components/auth/logout-form";
 import { useI18n } from "@/components/i18n/LocaleProvider";
+import { drawerIcon } from "@/components/nav/nav-drawer-icons";
 import { cn } from "@/lib/utils";
 
 function MenuIcon() {
@@ -128,6 +129,7 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
               <div className="space-y-0.5">
                 {group.links.map((l) => {
                   const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
+                  const icon = drawerIcon(l.href);
                   return (
                     <Link
                       key={l.href}
@@ -140,12 +142,32 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
                           : "text-slate-600 hover:bg-brand-50 hover:text-brand-900",
                       )}
                     >
-                      <span
-                        className={cn(
-                          "size-1.5 shrink-0 rounded-full",
-                          active ? "bg-gold-400" : "bg-slate-300",
-                        )}
-                      />
+                      {/* Avval `size-1.5` nuqta chizilardi — telefon ekranida
+                          ko'rinmasdi. Endi haqiqiy ikonka (2D chiziqli). */}
+                      {icon ? (
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.7"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                          className={cn(
+                            "size-5 shrink-0",
+                            active ? "text-gold-300" : "text-slate-400",
+                          )}
+                        >
+                          {icon}
+                        </svg>
+                      ) : (
+                        <span
+                          className={cn(
+                            "size-1.5 shrink-0 rounded-full",
+                            active ? "bg-gold-400" : "bg-slate-300",
+                          )}
+                        />
+                      )}
                       <span className="whitespace-nowrap">{l.label}</span>
                       {l.badge ? <span className="ml-auto flex items-center">{l.badge}</span> : null}
                     </Link>

@@ -416,12 +416,18 @@ export default function DocumentBoard({
           title={t("docRegistry")}
           subtitle={documents.length}
           action={
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">{t("docFilterStatus")}</span>
+            // Matn uzun ("Hujjatlar bo'yicha") va `CardHeader` ichidagi `flex`
+            // konteyner ham qisqaradi — mobil'da ikki qatorga bo'linib ustma-ust
+            // tushib qolardi. `shrink-0` + `whitespace-nowrap` bilan bir qatorda
+            // ushlab turamiz, `flex-wrap` bilan keng ekranda o'ramiz.
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="shrink-0 whitespace-nowrap text-xs text-slate-500">
+                {t("docFilterStatus")}
+              </span>
               <Select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-44"
+                className="w-44 shrink-0"
               >
                 <option value="">—</option>
                 {STATUS_ORDER.map((status) => (
