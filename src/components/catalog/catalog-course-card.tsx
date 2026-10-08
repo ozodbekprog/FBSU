@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn, initials } from "@/lib/utils";
 import { Avatar, Badge, ButtonLink, Card, CardBody } from "@/components/ui";
 import { EnrollButton } from "@/components/catalog/enroll-button";
 import { useI18n } from "@/components/i18n/LocaleProvider";
@@ -17,6 +17,7 @@ export type CatalogCourse = {
   studentsCount: number;
   isEnrolled: boolean;
   enrollmentStatus?: "PENDING" | "ACTIVE" | "REJECTED" | null;
+  isElective?: boolean;
 };
 
 function BookIcon() {
@@ -113,7 +114,7 @@ export function CatalogCourseCard({
   variant?: "catalog" | "elective";
 }) {
   const { t } = useI18n();
-  const isElective = variant === "elective";
+  const isElective = variant === "elective" || course.isElective === true;
 
   return (
     <Card
@@ -127,10 +128,21 @@ export function CatalogCourseCard({
         style={{ background: `linear-gradient(125deg, ${course.coverColor} 0%, #131f3c 94%)` }}
       >
         <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_-10%,rgba(255,255,255,0.28),transparent_55%)]" />
+        <span
+          className="pointer-events-none absolute inset-0 opacity-[0.16]"
+          style={{
+            backgroundImage: "radial-gradient(rgba(255,255,255,0.95) 1px, transparent 1.4px)",
+            backgroundSize: "16px 16px",
+          }}
+        />
         <span className="pointer-events-none absolute -right-10 -top-16 size-36 rounded-full bg-white/10 blur-2xl transition-transform duration-500 group-hover:scale-125" />
         <span className="pointer-events-none absolute -bottom-16 left-1/3 size-32 rounded-full bg-gold-400/10 blur-2xl" />
+        <span className="pointer-events-none absolute -bottom-6 -right-1 select-none text-[80px] font-black leading-none tracking-tighter text-white/10 transition-transform duration-500 group-hover:-translate-y-1.5 group-hover:scale-105">
+          {initials(course.title)}
+        </span>
         <span className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/20 to-transparent" />
         <span className="absolute inset-x-0 bottom-0 h-px bg-gold-400/70" />
+        <span className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[420%]" />
         <span className="absolute left-4 top-3.5 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80 ring-1 ring-inset ring-white/20 backdrop-blur">
           {t("crsBadgeCourse")}
         </span>

@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { ButtonLink, Card, EmptyState, PageHeader } from "@/components/ui";
 import type { CourseCardData } from "@/components/courses/course-card";
 import { CourseGallery } from "@/components/courses/course-gallery";
+import { CourseBrowser } from "@/components/catalog/course-browser";
+import type { CatalogCourse } from "@/components/catalog/catalog-course-card";
 
 const STAT_TONES = {
   brand: "bg-brand-50 text-brand-700 ring-brand-100",
@@ -48,15 +50,16 @@ export default async function CoursesPage() {
       ? {}
       : user.role === "TEACHER"
         ? { teacherId: user.id }
-        : { enrollments: { some: { userId: user.id, status: "ACTIVE" } } };
+        : { isPublished: true };
 
   const courses = await prisma.course.findMany({
     where,
-    orderBy: { createdAt: "asc" },
+    orderBy: { title: "asc" },
     include: {
       teacher: { select: { name: true } },
       sections: { select: { _count: { select: { materials: true } } } },
       _count: { select: { enrollments: { where: { status: "ACTIVE" } } } },
+      enrollments: { where: { userId: user.id }, select: { status: true } },
     },
   });
 
@@ -74,12 +77,26 @@ export default async function CoursesPage() {
     studentsCount: course._count.enrollments,
   }));
 
+  const catalogItems: CatalogCourse[] = courses.map((course) => ({
+    id: course.id,
+    slug: course.slug,
+    title: course.title,
+    description: course.description,
+    coverColor: course.coverColor,
+    teacherName: course.teacher.name,
+    materialsCount: course.sections.reduce((sum, s) => sum + s._count.materials, 0),
+    studentsCount: course._count.enrollments,
+    isEnrolled: course.enrollments.some((enrollment) => enrollment.status === "ACTIVE"),
+    enrollmentStatus: course.enrollments[0]?.status ?? null,
+    isElective: course.isElective,
+  }));
+
   const subtitle =
     user.role === "ADMIN"
       ? translate(locale, "crsAllCoursesCount", { count: items.length })
       : user.role === "TEACHER"
         ? translate(locale, "crsTeachingCoursesCount", { count: items.length })
-        : translate(locale, "crsEnrolledCoursesCount", { count: items.length });
+        : translate(locale, "crsAllCoursesCount", { count: items.length });
 
   const materialsTotal = items.reduce((sum, item) => sum + item.materialsCount, 0);
   const teachersTotal = new Set(items.map((item) => item.teacherName)).size;
@@ -183,7 +200,11 @@ export default async function CoursesPage() {
             ))}
           </div>
 
-          <CourseGallery items={items} staff={staff} />
+          {staff ? (
+            <CourseGallery items={items} staff={staff} />
+          ) : (
+            <CourseBrowser items={catalogItems} staff={false} variant="catalog" searchable />
+          )}
         </>
       )}
     </>
