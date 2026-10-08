@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { NavGroup } from "@/app/(app)/nav-links";
 import { Logo } from "@/components/brand/logo";
+import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 import { LogoutForm } from "@/components/auth/logout-form";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { drawerIcon } from "@/components/nav/nav-drawer-icons";
@@ -49,7 +50,7 @@ function CloseIcon() {
 }
 
 export function MobileNav({ groups }: { groups: NavGroup[] }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
@@ -178,6 +179,12 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
           ))}
         </nav>
         <div className="shrink-0 border-t border-slate-100 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          {/* Telefonda til almashtirish imkoniyati yo'q edi: desktop'da til
+              tugmasi sidebar poyida, mobil'da esa drawer'da umuman
+              ko'rsatilmagan. Endi chiqish tugmasi ustida joylashadi. */}
+          <div className="mb-3 flex justify-center">
+            <LanguageSwitcher locale={locale} />
+          </div>
           <LogoutForm />
         </div>
       </div>
