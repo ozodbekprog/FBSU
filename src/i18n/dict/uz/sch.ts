@@ -459,4 +459,6 @@ export const sch = {
   schLessonMaterialsEmpty: "Materiallar hali yuklanmagan",
   schLessonAssignmentsHint: "Shu kurs bo'yicha topshiriqlar",
   schLessonAssignmentEmpty: "Topshiriqlar hali yo'q",
+
+  schLessonTopic: "Dars mavzusi",
 };

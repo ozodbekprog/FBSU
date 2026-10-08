@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { MaterialType, SubmissionStatus } from "@prisma/client";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Avatar, Badge, ButtonLink, Card, CardBody, CardHeader, PageHeader } from "@/components/ui";
@@ -61,6 +62,24 @@ function DetailRow({ label, children }: { label: string; children: React.ReactNo
   );
 }
 
+type LessonMaterial = {
+  id: string;
+  title: string;
+  type: MaterialType;
+  content: string | null;
+  fileUrl: string | null;
+};
+
+type LessonSection = { id: string; title: string; materials: LessonMaterial[] };
+
+type LessonAssignment = {
+  id: string;
+  title: string;
+  dueAt: Date | null;
+  maxScore: number;
+  submissions: { status: SubmissionStatus; score: number | null }[];
+};
+
 export default async function LessonDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
   const locale = await getLocale();
@@ -72,6 +91,7 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ i
     include: {
       group: { select: { id: true, name: true } },
       subjectRef: { select: { name: true, code: true, department: { select: { name: true } } } },
+      sectionRef: { select: { id: true, title: true } },
       teacherRef: {
         select: {
           id: true,
@@ -130,11 +150,14 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ i
       : null;
   const badge = attendance ? ATTENDANCE_BADGES[attendance.status] : undefined;
 
-  const [courseSections, courseAssignments] = matchedCourse
-    ? await Promise.all([
-        prisma.section.findMany({
-          where: { courseId: matchedCourse.id },
-          orderBy: { position: "asc" },
+  const [courseSections, courseAssignments] = await (async (): Promise<
+    [LessonSection[], LessonAssignment[]]
+  > => {
+    if (!matchedCourse) return [[], []];
+    if (entry.sectionId) {
+      const [section, assignments] = await Promise.all([
+        prisma.section.findUnique({
+          where: { id: entry.sectionId },
           include: {
             materials: {
               orderBy: { position: "asc" },
@@ -143,7 +166,7 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ i
           },
         }),
         prisma.assignment.findMany({
-          where: { courseId: matchedCourse.id },
+          where: { courseId: matchedCourse.id, sectionId: entry.sectionId },
           orderBy: { dueAt: "asc" },
           select: {
             id: true,
@@ -153,8 +176,34 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ i
             submissions: { where: { studentId: user.id }, select: { status: true, score: true } },
           },
         }),
-      ])
-    : [[], []];
+      ]);
+      return [section ? [section] : [], assignments];
+    }
+    const [sections, assignments] = await Promise.all([
+      prisma.section.findMany({
+        where: { courseId: matchedCourse.id },
+        orderBy: { position: "asc" },
+        include: {
+          materials: {
+            orderBy: { position: "asc" },
+            select: { id: true, title: true, type: true, content: true, fileUrl: true },
+          },
+        },
+      }),
+      prisma.assignment.findMany({
+        where: { courseId: matchedCourse.id },
+        orderBy: { dueAt: "asc" },
+        select: {
+          id: true,
+          title: true,
+          dueAt: true,
+          maxScore: true,
+          submissions: { where: { studentId: user.id }, select: { status: true, score: true } },
+        },
+      }),
+    ]);
+    return [sections, assignments];
+  })();
 
   const course = matchedCourse
     ? await prisma.course.findUnique({
@@ -189,6 +238,9 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ i
                 {dictionary[dayKey]}
                 {timeRange ? `, ${timeRange}` : ""} · {pairNumber}
               </DetailRow>
+              {entry.sectionRef ? (
+                <DetailRow label={dictionary.schLessonTopic}>{entry.sectionRef.title}</DetailRow>
+              ) : null}
               <DetailRow label={dictionary.schRoom}>{entry.room ?? dictionary.schNoRoom}</DetailRow>
               <DetailRow label={dictionary.schGroup}>
                 {entry.group.name}
@@ -264,7 +316,7 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ i
             <Card>
               <CardHeader
                 title={dictionary.schLessonMaterials}
-                subtitle={dictionary[dayKey]}
+                subtitle={entry.sectionRef?.title ?? matchedCourse.title}
                 action={materialCount > 0 ? <Badge tone="slate">{materialCount}</Badge> : null}
               />
               <CardBody className="space-y-4">
@@ -273,9 +325,11 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ i
                 ) : (
                   courseSections.map((section) => (
                     <div key={section.id} className="space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                        {section.title}
-                      </p>
+                      {courseSections.length > 1 ? (
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                          {section.title}
+                        </p>
+                      ) : null}
                       {section.materials.map((material) => (
                         <div
                           key={material.id}
@@ -322,7 +376,7 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ i
             <Card>
               <CardHeader
                 title={dictionary.dashActionAssignments}
-                subtitle={dictionary.schLessonAssignmentsHint}
+                subtitle={entry.sectionRef?.title ?? dictionary.schLessonAssignmentsHint}
                 action={
                   courseAssignments.length > 0 ? (
                     <Badge tone="amber">{courseAssignments.length}</Badge>

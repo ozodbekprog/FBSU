@@ -211,8 +211,10 @@ model Section {
   title    String
   position Int    @default(0)
 
-  course    Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  materials Material[]
+  course      Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  materials   Material[]
+  assignments Assignment[]
+  entries     ScheduleEntry[]
 }
 
 model Material {
@@ -231,6 +233,7 @@ model Material {
 model Assignment {
   id          String    @id @default(cuid())
   courseId    String
+  sectionId   String?
   title       String
   description String?
   dueAt       DateTime?
@@ -238,9 +241,12 @@ model Assignment {
   createdAt   DateTime  @default(now())
 
   course       Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  sectionRef   Section?       @relation(fields: [sectionId], references: [id], onDelete: SetNull)
   submissions  Submission[]
   oralDefenses OralDefense[]
   boards       Board[]
+
+  @@index([sectionId])
 }
 
 model Board {
@@ -412,17 +418,20 @@ model ScheduleEntry {
   status     ScheduleStatus @default(NORMAL)
   approval   ScheduleApproval @default(APPROVED)
   note       String?
+  sectionId  String?
   updatedAt  DateTime       @default(now()) @updatedAt
 
   group      Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   subjectRef Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   teacherRef User?    @relation("ScheduleTeacher", fields: [teacherId], references: [id], onDelete: SetNull)
+  sectionRef Section? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
 
   subGroup String?
 
   @@index([groupId, dayOfWeek])
   @@index([subjectId])
   @@index([teacherId])
+  @@index([sectionId])
 }
 
 enum ScheduleStatus {

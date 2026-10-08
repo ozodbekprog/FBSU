@@ -459,4 +459,6 @@ export const sch = {
   schLessonMaterialsEmpty: "Материалы пока не добавлены",
   schLessonAssignmentsHint: "Задания по этому курсу",
   schLessonAssignmentEmpty: "Заданий пока нет",
+
+  schLessonTopic: "Тема занятия",
 };
