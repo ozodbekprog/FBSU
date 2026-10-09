@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
@@ -42,6 +43,7 @@ function StatIcon({ children }: { children: ReactNode }) {
 
 export default async function CoursesPage() {
   const user = await requireUser();
+  if (user.role === "OTA_ONA" || user.role === "XODIM") redirect("/dashboard");
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
 
