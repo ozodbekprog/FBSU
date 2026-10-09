@@ -89,6 +89,9 @@ export default async function AppLayout({
         ...(["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR"].includes(user.role)
           ? [{ href: "/monitoring", label: dictionary.navMonitoring }]
           : []),
+        ...(["ADMIN", "REKTOR", "PRO_RECTOR", "REGISTRAR"].includes(user.role)
+          ? [{ href: "/admissions", label: dictionary.qblTitle }]
+          : []),
         ...(user.role === "ADMIN" || user.role === "REGISTRAR"
           ? [{ href: "/approvals", label: dictionary.navApprovals }]
           : []),
@@ -110,12 +113,12 @@ export default async function AppLayout({
 
   const ROLE_MENU: Record<string, string[]> = {
     REKTOR: [
-      "/dashboard", "/monitoring", "/reports", "/workload", "/documents", "/diplomas", "/finance",
+      "/dashboard", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
       "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar",
       "/messages", "/search", "/help", "/settings", "/access",
     ],
     PRO_RECTOR: [
-      "/dashboard", "/monitoring", "/reports", "/workload", "/documents", "/diplomas", "/finance",
+      "/dashboard", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
       "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar",
       "/messages", "/search", "/help", "/settings", "/access",
     ],
@@ -128,7 +131,7 @@ export default async function AppLayout({
       "/schedule", "/calendar", "/academic-calendar", "/messages", "/search", "/help", "/settings",
     ],
     REGISTRAR: [
-      "/dashboard", "/monitoring", "/approvals", "/finance", "/documents", "/diplomas", "/staff",
+      "/dashboard", "/monitoring", "/admissions", "/approvals", "/finance", "/documents", "/diplomas", "/staff",
       "/tasks", "/admin/users", "/admin/groups", "/admin/import", "/admin/hemis", "/schedule",
       "/calendar", "/academic-calendar", "/rooms", "/messages", "/search", "/help", "/settings",
       "/my-qr", "/access",

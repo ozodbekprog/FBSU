@@ -17,6 +17,7 @@ import { prn } from "./dict/en/prn";
 import { fin } from "./dict/en/fin";
 import { dip } from "./dict/en/dip";
 import { tour } from "./dict/en/tour";
+import { admission } from "./dict/en/admission";
 
 export const en: Dictionary = {
   commonSave: "Save",
@@ -152,4 +153,5 @@ export const en: Dictionary = {
   ...fin,
   ...dip,
   ...tour,
+  ...admission,
 };

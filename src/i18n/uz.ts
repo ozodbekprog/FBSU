@@ -16,6 +16,7 @@ import { prn } from "./dict/uz/prn";
 import { fin } from "./dict/uz/fin";
 import { dip } from "./dict/uz/dip";
 import { tour } from "./dict/uz/tour";
+import { admission } from "./dict/uz/admission";
 
 export const uz = {
   commonSave: "Saqlash",
@@ -151,6 +152,7 @@ export const uz = {
   ...fin,
   ...dip,
   ...tour,
+  ...admission,
 };
 
 export type Dictionary = typeof uz;

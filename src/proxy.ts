@@ -27,6 +27,7 @@ const PUBLIC_PATHS = new Set([
   "/forgot-password",
   "/reset-password",
   "/verify",
+  "/apply",
 ]);
 
 /** Public prefixes: framework internals, API routes, uploaded files. */

@@ -89,6 +89,7 @@ model User {
   documentsCreated  Document[] @relation("DocumentCreator")
   documentsToSign   Document[] @relation("DocumentSigner")
   documentsSigned   Document[] @relation("DocumentSignedBy")
+  admissionApplication AdmissionApplication?
   parentLinksAsParent  ParentLink[] @relation("ParentLinkParent")
   parentLinksAsStudent ParentLink[] @relation("ParentLinkStudent")
   contracts    Contract[]
@@ -1038,4 +1039,53 @@ model UpdateLog {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+enum AdmissionStatus {
+  NEW
+  DOCUMENTS
+  EXAM
+  PASSED
+  REJECTED
+  ENROLLED
+}
+
+model AdmissionProgram {
+  id            String   @id @default(cuid())
+  name          String
+  code          String?
+  degree        String   @default("BAKALAVR")
+  educationForm String   @default("KUNDUZGI")
+  quota         Int      @default(25)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  applications AdmissionApplication[]
+
+  @@index([isActive])
+}
+
+model AdmissionApplication {
+  id             String          @id @default(cuid())
+  programId      String
+  applicantName  String
+  phone          String
+  email          String?
+  passport       String?
+  school         String?
+  note           String?
+  status         AdmissionStatus @default(NEW)
+  examScore1     Int?
+  examScore2     Int?
+  interviewScore Int?
+  decisionNote   String?
+  studentId      String?         @unique
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  program AdmissionProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  student User?            @relation(fields: [studentId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([programId])
 }
