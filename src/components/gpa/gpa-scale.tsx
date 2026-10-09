@@ -36,7 +36,7 @@ export async function GpaScale({ delay = 0 }: { delay?: number }) {
         <CardBody className="space-y-3">
           <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-3">
             <div className="h-2 rounded-full bg-[linear-gradient(90deg,#fb7185_0%,#f59e0b_30%,#d4af37_55%,#5373b8_78%,#10b981_100%)]" />
-            <div className="mt-2 flex items-center justify-between text-[10px] font-medium uppercase tracking-[0.12em] text-slate-600">
+            <div className="mt-2 flex items-center justify-between text-[11px] font-medium uppercase tracking-[0.12em] text-slate-600">
               <span>0.0</span>
               <span>2.0</span>
               <span>3.0</span>
@@ -64,7 +64,7 @@ export async function GpaScale({ delay = 0 }: { delay?: number }) {
                   </span>
                 </span>
                 <span className="flex shrink-0 items-center gap-2">
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-slate-600">
+                  <span className="text-[11px] font-medium uppercase tracking-wide text-slate-600">
                     {dictionary.grdBall}
                   </span>
                   <GpaPointsBadge points={row.points} size="sm" />

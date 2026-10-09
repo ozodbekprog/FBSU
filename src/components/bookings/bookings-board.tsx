@@ -334,7 +334,7 @@ export function BookingsBoard({
                           <span className="text-sm font-semibold leading-none">{t("mscRoomUsageSlot", { slot: value })}</span>
                           <span
                             className={cn(
-                              "mt-1 text-[10px] leading-none",
+                              "mt-1 text-[11px] leading-none",
                               active ? "text-brand-600" : "text-slate-600",
                             )}
                           >

@@ -93,7 +93,7 @@ export async function GradeRing({
         <span className="text-3xl font-semibold tracking-tight text-brand-900 tabular-nums sm:text-4xl">
           {percent != null ? `${percent}%` : "—"}
         </span>
-        <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+        <span className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
           {dictionary.grdAverage}
         </span>
       </div>

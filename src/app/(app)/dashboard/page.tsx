@@ -1132,7 +1132,7 @@ export default async function DashboardPage() {
                             {range?.start ?? translate(locale, "dashPairShort", { slot: s.slot })}
                           </span>
                           {range ? (
-                            <span className="text-[10px] tabular-nums text-slate-400">{range.end}</span>
+                            <span className="text-[11px] tabular-nums text-slate-400">{range.end}</span>
                           ) : null}
                         </span>
                         <span className="relative flex w-3 shrink-0 justify-center">

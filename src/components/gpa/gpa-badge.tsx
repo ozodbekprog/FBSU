@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import type { GpaLetter } from "@/app/api/gpa/data";
 
 const BADGE_SIZES = {
-  sm: "size-7 text-[10px]",
+  sm: "size-7 text-[11px]",
   md: "size-10 text-sm",
   lg: "size-12 text-base",
 };

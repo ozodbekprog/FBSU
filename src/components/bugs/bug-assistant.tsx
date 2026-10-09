@@ -318,7 +318,7 @@ export function BugAssistant() {
         <div className="fixed inset-x-0 top-0 z-50 flex h-dvh w-full flex-col overflow-hidden overscroll-contain bg-white md:inset-auto md:bottom-6 md:right-6 md:h-auto md:w-[23rem] md:rounded-3xl md:border md:border-slate-200 md:shadow-2xl md:ring-1 md:ring-slate-900/5">
           <div className="flex items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/80 px-4 py-3">
             <div className="flex items-center gap-2">
-              <span className="flex size-7 items-center justify-center rounded-full bg-brand-900 text-[10px] font-semibold text-white">
+              <span className="flex size-7 items-center justify-center rounded-full bg-brand-900 text-[11px] font-semibold text-white">
                 AI
               </span>
               <div>
@@ -357,7 +357,7 @@ export function BugAssistant() {
                 ) : null}
                 <span
                   className={cn(
-                    "mt-0.5 block text-right text-[10px]",
+                    "mt-0.5 block text-right text-[11px]",
                     message.role === "ai" ? "text-slate-400" : "text-brand-200",
                   )}
                 >
@@ -459,7 +459,7 @@ export function BugAssistant() {
                     ? t("mscBugSendReportShot")
                     : t("mscBugSendReport")}
               </button>
-              <span className="text-[10px] text-slate-600">{t("mscBugDetailsAdmin")}</span>
+              <span className="text-[11px] text-slate-600">{t("mscBugDetailsAdmin")}</span>
             </div>
           </div>
         </div>

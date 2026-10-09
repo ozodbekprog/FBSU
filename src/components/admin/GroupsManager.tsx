@@ -433,7 +433,7 @@ export default function GroupsManager({ groups }: { groups: AdminGroup[] }) {
                                           >
                                             {item.name}
                                           </button>
-                                          <span className="text-[10px] tabular-nums text-slate-600">
+                                          <span className="text-[11px] tabular-nums text-slate-600">
                                             {item.userCount}
                                           </span>
                                           <button

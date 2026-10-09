@@ -22,7 +22,7 @@ import { fmtDate } from "@/lib/utils";
 function InfoTile({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-slate-50 px-3.5 py-3">
-      <p className="text-[10px] font-semibold tracking-wider text-slate-600 uppercase">{label}</p>
+      <p className="text-[11px] font-semibold tracking-wider text-slate-600 uppercase">{label}</p>
       <p className="mt-1 text-sm font-medium text-slate-700">{value}</p>
     </div>
   );

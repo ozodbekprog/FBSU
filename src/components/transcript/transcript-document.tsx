@@ -18,7 +18,7 @@ function letterTone(letter: string) {
 function Info({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
     <div className={className}>
-      <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-600">{label}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600">{label}</p>
       <p className="mt-1 font-serif text-[15px] font-semibold leading-snug text-slate-800">{value}</p>
     </div>
   );
@@ -29,7 +29,7 @@ function Signature({ role, label }: { role: string; label: string }) {
     <div className="flex flex-col items-center">
       <p className="font-serif text-sm italic text-slate-600">{role}</p>
       <div className="mt-10 h-px w-44 bg-slate-500" />
-      <p className="mt-1.5 text-[9px] uppercase tracking-[0.24em] text-slate-600">{label}</p>
+      <p className="mt-1.5 text-[10px] uppercase tracking-[0.24em] text-slate-600">{label}</p>
     </div>
   );
 }
@@ -82,10 +82,10 @@ export async function TranscriptDocument({ data }: { data: TranscriptData }) {
                   <p className="font-serif text-lg font-semibold leading-tight tracking-wide sm:text-xl">
                     Turin Politexnika Universiteti
                   </p>
-                  <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.28em] text-gold-300">
+                  <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-gold-300">
                     Turin Polytechnic University in Tashkent
                   </p>
-                  <p className="mt-1 text-[9px] uppercase tracking-[0.22em] text-white/55">
+                  <p className="mt-1 text-[10px] uppercase tracking-[0.22em] text-white/55">
                     {dictionary.grdTrCountry}
                   </p>
                 </div>
@@ -96,7 +96,7 @@ export async function TranscriptDocument({ data }: { data: TranscriptData }) {
                 </p>
                 <div className="mt-2 flex items-center gap-2 sm:justify-end">
                   <span className="h-px w-8 bg-gold-400/60" />
-                  <p className="font-mono text-[10px] tracking-[0.16em] text-white/75">
+                  <p className="font-mono text-[11px] tracking-[0.16em] text-white/75">
                     {data.serial}
                   </p>
                 </div>
@@ -122,11 +122,11 @@ export async function TranscriptDocument({ data }: { data: TranscriptData }) {
                   <h2 className="font-serif text-base font-semibold text-brand-950">
                     {dictionary.grdTrResults}
                   </h2>
-                  <p className="mt-0.5 text-[10px] uppercase tracking-[0.18em] text-slate-600">
+                  <p className="mt-0.5 text-[11px] uppercase tracking-[0.18em] text-slate-600">
                     {dictionary.grdTrResultsSubtitle}
                   </p>
                 </div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
                   {translate(locale, "grdTrCourseCount", { count: data.courses.length })}
                 </p>
               </div>
@@ -219,7 +219,7 @@ export async function TranscriptDocument({ data }: { data: TranscriptData }) {
               <div className="rounded-lg border border-l-4 border-slate-200 border-l-gold-400 bg-slate-50 px-5 py-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-600">
                       {dictionary.grdTrTotalGpa}
                     </p>
                     <p className="mt-1 font-serif text-4xl font-bold tracking-tight text-brand-950">
@@ -228,7 +228,7 @@ export async function TranscriptDocument({ data }: { data: TranscriptData }) {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600">
                       {dictionary.grdTrGradedCourses}
                     </p>
                     <p className="mt-1 font-serif text-2xl font-semibold text-brand-900">
@@ -242,7 +242,7 @@ export async function TranscriptDocument({ data }: { data: TranscriptData }) {
                     style={{ width: `${gpaPercent}%` }}
                   />
                 </div>
-                <div className="mt-1.5 flex justify-between text-[9px] uppercase tracking-[0.16em] text-slate-600">
+                <div className="mt-1.5 flex justify-between text-[10px] uppercase tracking-[0.16em] text-slate-600">
                   <span>0.00</span>
                   <span>2.00</span>
                   <span>4.00</span>
@@ -250,13 +250,13 @@ export async function TranscriptDocument({ data }: { data: TranscriptData }) {
               </div>
 
               <div className="rounded-lg border border-slate-200 px-5 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-600">
                   {dictionary.grdTrScale}
                 </p>
-                <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
+                <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
                   {dictionary.grdTrScaleText}
                 </p>
-                <p className="mt-1.5 text-[10px] leading-relaxed text-slate-500">
+                <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
                   {dictionary.grdTrLetterText}
                 </p>
               </div>
@@ -269,10 +269,10 @@ export async function TranscriptDocument({ data }: { data: TranscriptData }) {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-6 py-3.5 sm:px-8">
-              <p className="max-w-xl text-[10px] leading-relaxed text-slate-600">
+              <p className="max-w-xl text-[11px] leading-relaxed text-slate-600">
                 {dictionary.grdTrFooter}
               </p>
-              <p className="font-mono text-[10px] tracking-[0.14em] text-slate-600">
+              <p className="font-mono text-[11px] tracking-[0.14em] text-slate-600">
                 {data.serial} · {fmtDate(issuedAt)}
               </p>
             </div>

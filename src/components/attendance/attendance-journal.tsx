@@ -413,7 +413,7 @@ export function AttendanceJournal({
                           </span>
                           <span
                             className={cn(
-                              "block text-[10px] font-normal text-slate-600",
+                              "block text-[11px] font-normal text-slate-600",
                               isToday && "font-semibold text-brand-500",
                             )}
                           >
@@ -445,7 +445,7 @@ export function AttendanceJournal({
                             <Avatar
                               name={student.name}
                               src={student.avatarUrl}
-                              className="size-7! text-[10px]"
+                              className="size-7! text-[11px]"
                             />
                              <span
                               className={cn(
@@ -457,7 +457,7 @@ export function AttendanceJournal({
                               <span className="hidden sm:inline">{student.name}</span>
                             </span>
                             {isMe ? (
-                              <span className="shrink-0 text-[10px] font-semibold text-brand-600">
+                              <span className="shrink-0 text-[11px] font-semibold text-brand-600">
                                 {t("schYou")}
                               </span>
                             ) : null}
@@ -481,7 +481,7 @@ export function AttendanceJournal({
                                 title={meta ? meta.label : t("schNotMarked")}
                                 onClick={(event) => openEditor(event, student.id, date)}
                                 className={cn(
-                                  "mx-auto flex size-8 items-center justify-center rounded-full text-[9px] font-semibold leading-none transition-all duration-150",
+                                  "mx-auto flex size-8 items-center justify-center rounded-full text-[10px] font-semibold leading-none transition-all duration-150",
                                   meta ? meta.badge : "bg-slate-100 shadow-inner",
                                   canEdit
                                     ? "cursor-pointer hover:scale-110 hover:shadow-md hover:ring-2 hover:ring-brand-300/70 hover:ring-offset-1 active:scale-95"
@@ -509,7 +509,7 @@ export function AttendanceJournal({
                             </span>
                             <Badge
                               tone={rowSummary.eligible ? "green" : "rose"}
-                              className="hidden px-1.5 py-0.5 text-[10px] sm:inline-flex"
+                              className="hidden px-1.5 py-0.5 text-[11px] sm:inline-flex"
                             >
                               {rowSummary.eligible ? t("schEligible") : t("schNotEligible")}
                             </Badge>
@@ -530,7 +530,7 @@ export function AttendanceJournal({
                         <td
                           key={date}
                           className={cn(
-                            "bg-slate-50/80 px-1 py-2 text-center text-[10px] font-medium tabular-nums text-slate-500",
+                            "bg-slate-50/80 px-1 py-2 text-center text-[11px] font-medium tabular-nums text-slate-500",
                             date === today &&
                               "border-x border-brand-100/70 bg-brand-50/80 font-semibold text-brand-700",
                           )}
@@ -539,7 +539,7 @@ export function AttendanceJournal({
                         </td>
                       );
                     })}
-                    <td className="sticky right-0 z-10 border-l border-slate-100 bg-slate-50 px-2 py-2.5 text-right text-[10px] font-semibold tabular-nums text-slate-500 shadow-[-2px_0_10px_-8px_rgba(15,23,42,0.35)] sm:px-3">
+                    <td className="sticky right-0 z-10 border-l border-slate-100 bg-slate-50 px-2 py-2.5 text-right text-[11px] font-semibold tabular-nums text-slate-500 shadow-[-2px_0_10px_-8px_rgba(15,23,42,0.35)] sm:px-3">
                       {overall.attended}/{overall.total}
                     </td>
                   </tr>
@@ -554,7 +554,7 @@ export function AttendanceJournal({
                   <span key={status} className="inline-flex items-center gap-1.5">
                     <span
                       className={cn(
-                        "flex size-6 items-center justify-center rounded-full text-[10px] font-semibold leading-none",
+                        "flex size-6 items-center justify-center rounded-full text-[11px] font-semibold leading-none",
                         meta.badge,
                       )}
                     >
@@ -604,7 +604,7 @@ export function AttendanceJournal({
                       void saveStatus(status);
                     }}
                     className={cn(
-                      "flex size-10 items-center justify-center rounded-full text-[10px] font-semibold leading-none transition-all duration-150 hover:scale-105 hover:brightness-95 active:scale-95",
+                      "flex size-10 items-center justify-center rounded-full text-[11px] font-semibold leading-none transition-all duration-150 hover:scale-105 hover:brightness-95 active:scale-95",
                       meta.badge,
                       editingStatus === status && "ring-2 ring-brand-500 ring-offset-2",
                     )}

@@ -67,7 +67,7 @@ export function CourseForm({ course }: { course?: CourseFormData }) {
         >
           <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_-20%,rgba(255,255,255,0.25),transparent_55%)]" />
           <span className="pointer-events-none absolute -right-8 -top-12 size-32 rounded-full bg-white/10 blur-2xl" />
-          <p className="relative text-[10px] font-semibold uppercase tracking-[0.18em] text-white/65">
+          <p className="relative text-[11px] font-semibold uppercase tracking-[0.18em] text-white/65">
             {t("crsAppearance")}
           </p>
           <p className="relative mt-1 font-semibold tracking-tight">

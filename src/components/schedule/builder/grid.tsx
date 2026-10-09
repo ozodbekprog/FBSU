@@ -29,7 +29,7 @@ function BlockBadge({
   children: string;
 }) {
   return (
-    <Badge tone={tone} className="px-1.5 py-0 text-[10px] leading-4">
+    <Badge tone={tone} className="px-1.5 py-0 text-[11px] leading-4">
       {children}
     </Badge>
   );
@@ -116,12 +116,12 @@ function BuilderBlock({
               event.stopPropagation();
               onApprove(entry);
             }}
-            className="mt-1.5 inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white transition-colors hover:bg-emerald-700"
+            className="mt-1.5 inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2 py-0.5 text-[11px] font-semibold text-white transition-colors hover:bg-emerald-700"
           >
             {t("schApprove")}
           </button>
         ) : null}
-        <p className="mt-1 text-[10px] opacity-50">
+        <p className="mt-1 text-[11px] opacity-50">
           {`${t(DAY_KEYS[entry.dayOfWeek % 7]).slice(0, 3)} ${formatDayShort(dayIsoInWeek(weekStart, entry.dayOfWeek))}`}
         </p>
       </LegoSurface>
@@ -191,7 +191,7 @@ export function BuilderGrid({
               <Fragment key={slot}>
                 <div className="flex flex-col items-end justify-center rounded-xl bg-slate-50 px-2 py-2 text-right">
                   <p className="text-xs font-semibold text-slate-700">{t("schSlotLabel", { slot })}</p>
-                  <p className="text-[10px] text-slate-600">{SLOT_TIMES[slot]}</p>
+                  <p className="text-[11px] text-slate-600">{SLOT_TIMES[slot]}</p>
                 </div>
                 {DAYS.map((day) => {
                   const cell = { day, slot };

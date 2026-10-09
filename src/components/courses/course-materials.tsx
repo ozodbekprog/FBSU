@@ -279,7 +279,7 @@ export function CourseMaterials({
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold text-slate-900">{section.title}</span>
                   <span className="mt-0.5 inline-flex items-center gap-1.5 text-xs text-slate-600">
-                    <span className="inline-flex size-4 items-center justify-center rounded-md bg-slate-100 text-[9px] font-semibold tabular-nums text-slate-500">
+                    <span className="inline-flex size-4 items-center justify-center rounded-md bg-slate-100 text-[10px] font-semibold tabular-nums text-slate-500">
                       {section.materials.length}
                     </span>
                     {t("crsMaterialsSuffix")}

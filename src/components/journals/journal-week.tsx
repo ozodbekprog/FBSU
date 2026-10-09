@@ -71,7 +71,7 @@ function LessonRow({
           )}
         >
           <span className="text-xs font-semibold">{translate(locale, "schJrnSlot", { slot: lesson.slot })}</span>
-          <span className={cn("text-[10px]", cancelled ? "text-rose-500" : "text-brand-600")}>
+          <span className={cn("text-[11px]", cancelled ? "text-rose-500" : "text-brand-600")}>
             {lesson.time}
           </span>
         </span>
@@ -195,7 +195,7 @@ export async function JournalWeek({ lessons, today }: { lessons: JournalLesson[]
             <div className="mb-3 flex items-center gap-3">
               <span
                 className={cn(
-                  "inline-flex size-11 shrink-0 flex-col items-center justify-center rounded-xl text-[10px] font-bold uppercase tracking-wide",
+                  "inline-flex size-11 shrink-0 flex-col items-center justify-center rounded-xl text-[11px] font-bold uppercase tracking-wide",
                   isToday
                     ? "bg-brand-900 text-white shadow-sm"
                     : isPast
@@ -204,7 +204,7 @@ export async function JournalWeek({ lessons, today }: { lessons: JournalLesson[]
                 )}
               >
                 <span>{dayShorts[first.dayOfWeek - 1] ?? ""}</span>
-                <span className="text-[9px] font-medium normal-case">
+                <span className="text-[10px] font-medium normal-case">
                   {formatShortIso(group.date).slice(0, 5)}
                 </span>
               </span>

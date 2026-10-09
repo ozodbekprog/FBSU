@@ -27,7 +27,7 @@ export default async function BoardPage({
       {assignment ? (
         <Card className="mb-4">
           <CardBody className="space-y-1">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
               {dictionary.brdAssignment}
             </p>
             <p className="text-sm font-semibold text-slate-800">{assignment.title}</p>

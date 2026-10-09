@@ -242,7 +242,7 @@ export default function CoursesManager({
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2.5">
-                        <Avatar name={course.teacher.name} className="size-7 text-[10px]" />
+                        <Avatar name={course.teacher.name} className="size-7 text-[11px]" />
                         <Select
                           value={course.teacher.id}
                           disabled={busyId === course.id}

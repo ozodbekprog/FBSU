@@ -123,7 +123,7 @@ export function CourseBrowser({
                 {item.label}
                 <span
                   className={cn(
-                    "rounded-full px-1.5 text-[10px] font-bold",
+                    "rounded-full px-1.5 text-[11px] font-bold",
                     active ? "bg-white/15 text-white" : "bg-slate-100 text-slate-500",
                   )}
                 >

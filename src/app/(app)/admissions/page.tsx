@@ -199,7 +199,7 @@ export default async function AdmissionsPage({
               )}
             >
               {dictionary.qblAllStatuses}
-              <span className={cn("rounded-full px-1.5 text-[10px] font-bold", !statusFilter ? "bg-white/15" : "bg-white")}>
+              <span className={cn("rounded-full px-1.5 text-[11px] font-bold", !statusFilter ? "bg-white/15" : "bg-white")}>
                 {total}
               </span>
             </Link>
@@ -216,7 +216,7 @@ export default async function AdmissionsPage({
                   )}
                 >
                   {dictionary[STATUS_KEYS[key]]}
-                  <span className={cn("rounded-full px-1.5 text-[10px] font-bold", active ? "bg-white/15" : "bg-white")}>
+                  <span className={cn("rounded-full px-1.5 text-[11px] font-bold", active ? "bg-white/15" : "bg-white")}>
                     {countOf(key)}
                   </span>
                 </Link>

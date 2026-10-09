@@ -738,7 +738,7 @@ export default function StructureManager({
                   {t("admAssignGroups")}
                 </p>
                 <p className="mt-1 flex items-center gap-1.5 truncate text-xs text-slate-500">
-                  <span className="inline-flex size-5 items-center justify-center rounded-md bg-gradient-to-br from-brand-800 to-brand-600 text-[9px] font-semibold uppercase text-white">
+                  <span className="inline-flex size-5 items-center justify-center rounded-md bg-gradient-to-br from-brand-800 to-brand-600 text-[10px] font-semibold uppercase text-white">
                     {initials(assignment.name)}
                   </span>
                   {assignment.name}

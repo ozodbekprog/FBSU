@@ -111,7 +111,7 @@ export default function AuditLogTable({
                   <td className="px-5 py-3">
                     {log.actor ? (
                       <div className="flex items-center gap-2.5">
-                        <Avatar name={log.actor.name} className="size-8 text-[10px] ring-1 ring-slate-900/10" />
+                        <Avatar name={log.actor.name} className="size-8 text-[11px] ring-1 ring-slate-900/10" />
                         <div className="min-w-0">
                           <span className="block truncate text-sm font-medium text-slate-900">{log.actor.name}</span>
                           <span className="block truncate text-xs text-slate-500">{log.actor.email}</span>

@@ -239,7 +239,7 @@ export function CourseReviews({
                     <span className="text-3xl font-semibold tracking-tight">
                       {(data.average ?? 0).toFixed(1)}
                     </span>
-                    <span className="text-[10px] uppercase tracking-[0.14em] text-white/60">/ 5</span>
+                    <span className="text-[11px] uppercase tracking-[0.14em] text-white/60">/ 5</span>
                   </span>
                 </div>
                 <div>

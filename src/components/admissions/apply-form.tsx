@@ -111,6 +111,7 @@ export function ApplyForm({ programs }: { programs: ProgramOption[] }) {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 maxLength={160}
+                aria-label={t("qblApplyEmail")}
               />
             </div>
           </div>
@@ -125,7 +126,12 @@ export function ApplyForm({ programs }: { programs: ProgramOption[] }) {
           </div>
           <div>
             <Label>{t("qblApplyProgram")}</Label>
-            <Select value={programId} onChange={(event) => setProgramId(event.target.value)} required>
+            <Select
+              value={programId}
+              onChange={(event) => setProgramId(event.target.value)}
+              required
+              aria-label={t("qblApplyProgram")}
+            >
               <option value="">{t("qblApplyProgramPlaceholder")}</option>
               {programs.map((program) => (
                 <option key={program.id} value={program.id}>
@@ -137,7 +143,13 @@ export function ApplyForm({ programs }: { programs: ProgramOption[] }) {
           </div>
           <div>
             <Label>{t("qblApplyNote")}</Label>
-            <Textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} maxLength={1000} />
+            <Textarea
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              rows={3}
+              maxLength={1000}
+              aria-label={t("qblApplyNote")}
+            />
           </div>
           {error ? (
             <p className="rounded-xl bg-rose-50 px-3.5 py-2 text-sm font-medium text-rose-700">{error}</p>

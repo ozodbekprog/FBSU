@@ -274,7 +274,7 @@ export function LessonAttendance({
                     className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-3 py-3 transition-colors duration-150 last:border-0 hover:bg-slate-50/70 sm:px-4"
                   >
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <Avatar name={student.name} src={student.avatarUrl} className="size-8! text-[10px]" />
+                      <Avatar name={student.name} src={student.avatarUrl} className="size-8! text-[11px]" />
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-slate-800">{student.name}</p>
                         <p className="flex items-center gap-1.5 text-xs text-slate-600">

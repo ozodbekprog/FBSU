@@ -207,7 +207,7 @@ export function ConversationList({
                           {previewText(conversation, currentUserId, t)}
                         </span>
                         {unread ? (
-                          <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-brand-900 text-[10px] font-semibold text-white">
+                          <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-brand-900 text-[11px] font-semibold text-white">
                             {conversation.unreadCount > 99 ? "99+" : conversation.unreadCount}
                           </span>
                         ) : null}

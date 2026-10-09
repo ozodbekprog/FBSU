@@ -391,7 +391,7 @@ export function CourseStudents({
                   </td>
                   <td className="px-5 py-3">
                     <span className="flex items-center gap-2.5">
-                      <Avatar name={enrollment.user.name} className="size-8! text-[10px]" />
+                      <Avatar name={enrollment.user.name} className="size-8! text-[11px]" />
                       <span className="font-medium text-slate-800">{enrollment.user.name}</span>
                     </span>
                   </td>

@@ -637,7 +637,7 @@ export default async function GradesPage({
                       className="flex items-center gap-3 px-4 py-3 transition-colors duration-150 animate-fade-up hover:bg-slate-50/70 sm:px-6"
                       style={{ animationDelay: `${index * 45}ms` }}
                     >
-                      <Avatar name={student} className="size-9! text-[10px]" />
+                      <Avatar name={student} className="size-9! text-[11px]" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-slate-800">{student}</p>
                         <p className="truncate text-xs text-slate-500">

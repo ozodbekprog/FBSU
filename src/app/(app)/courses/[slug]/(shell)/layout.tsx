@@ -90,7 +90,7 @@ export default async function CourseShellLayout({
                 </div>
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-medium text-white/85">
                   <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-inset ring-white/15 backdrop-blur">
-                    <Avatar name={course.teacher.name} className="size-6! text-[9px] ring-1 ring-white/25" />
+                    <Avatar name={course.teacher.name} className="size-6! text-[10px] ring-1 ring-white/25" />
                     {course.teacher.name}
                   </span>
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-inset ring-white/15 backdrop-blur">

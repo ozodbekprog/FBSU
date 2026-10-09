@@ -377,7 +377,7 @@ export default function LoginPage() {
                   <p>{error}</p>
                 </div>
               ) : null}
-              <Button type="submit" disabled={loading || !hydrated} size="lg" className="w-full">
+              <Button type="submit" disabled={loading || !hydrated} size="lg" className="h-11 w-full">
                 {loading ? t("authLoginSubmitting") : t("authLoginSubmit")}
               </Button>
             </form>

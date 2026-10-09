@@ -72,7 +72,7 @@ export async function CertificateCard({ certificate }: { certificate: Certificat
             {grade.label}
           </Badge>
         </span>
-        <span className="absolute bottom-2.5 left-4 text-[9px] font-semibold uppercase tracking-[0.3em] text-gold-300/90">
+        <span className="absolute bottom-2.5 left-4 text-[10px] font-semibold uppercase tracking-[0.3em] text-gold-300/90">
           {dictionary.grdCertificate}
         </span>
       </div>

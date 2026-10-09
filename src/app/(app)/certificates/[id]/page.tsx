@@ -177,13 +177,13 @@ export default async function CertificatePage({
                   <p className="font-serif text-base font-semibold leading-tight sm:text-lg">
                     Turin Politexnika Universiteti
                   </p>
-                  <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.4em] text-gold-300">
+                  <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.4em] text-gold-300">
                     FBSU
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <p className="hidden text-[10px] font-semibold uppercase tracking-[0.35em] text-white/60 sm:block">
+                <p className="hidden text-[11px] font-semibold uppercase tracking-[0.35em] text-white/60 sm:block">
                   {dict.certOfficial}
                 </p>
                 <GoldSeal />
@@ -199,7 +199,7 @@ export default async function CertificatePage({
                 <span className="size-1.5 rotate-45 bg-gold-500" />
                 <span className="h-px w-10 bg-gold-400/70" />
               </div>
-              <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-gold-800">
+              <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-gold-800">
                 {dict.certSubtitle}
               </p>
 
@@ -233,14 +233,14 @@ export default async function CertificatePage({
               <div className="text-left">
                 <p className="font-semibold text-slate-700">{dict.certDate}</p>
                 <p className="mt-1 text-slate-500">{fmtDate(certificate.issuedAt)}</p>
-                <p className="mt-0.5 text-[10px] text-slate-600">{dict.certCity}</p>
+                <p className="mt-0.5 text-[11px] text-slate-600">{dict.certCity}</p>
               </div>
               <div className="flex flex-col items-center">
                 <p className="font-serif text-base italic text-brand-900">
                   {certificate.issuedBy.name}
                 </p>
                 <div className="mt-1.5 h-px w-32 bg-gold-400/80 sm:w-40" />
-                <p className="mt-1 text-[10px] uppercase tracking-widest text-slate-600">
+                <p className="mt-1 text-[11px] uppercase tracking-widest text-slate-600">
                   {dict.certSignature}
                 </p>
               </div>
@@ -249,7 +249,7 @@ export default async function CertificatePage({
                 <p className="mt-1 font-mono text-[11px] tracking-wider text-slate-500">
                   {serial}
                 </p>
-                <p className="mt-0.5 text-[10px] text-slate-600">{dict.certIssuedVia}</p>
+                <p className="mt-0.5 text-[11px] text-slate-600">{dict.certIssuedVia}</p>
               </div>
             </div>
           </div>

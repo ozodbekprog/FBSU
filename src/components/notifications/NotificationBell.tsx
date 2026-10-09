@@ -104,7 +104,7 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
         aria-label={t("shellNotifications")}
         aria-expanded={open}
         className={cn(
-          "relative inline-flex size-9 items-center justify-center rounded-xl transition-colors duration-150",
+          "relative inline-flex size-9 items-center justify-center rounded-xl transition-colors duration-150 after:absolute after:-inset-1 after:content-['']",
           open
             ? "bg-brand-50 text-brand-900"
             : "text-slate-500 hover:bg-brand-50 hover:text-brand-900",
@@ -123,7 +123,7 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
           <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
         </svg>
         {unreadCount > 0 ? (
-          <span className="absolute -top-1 -right-1 inline-flex min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] leading-4 font-semibold text-white ring-2 ring-white">
+          <span className="absolute -top-1 -right-1 inline-flex min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[11px] leading-4 font-semibold text-white ring-2 ring-white">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         ) : null}
@@ -166,7 +166,7 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
             <div className="max-h-[min(20rem,50dvh)] overflow-x-hidden overflow-y-auto overscroll-contain">
               {sections.map((section, sectionIndex) => (
                 <div key={section.key} className={cn(sectionIndex > 0 && "border-t border-slate-100")}>
-                  <p className="px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                  <p className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
                     {section.label}
                   </p>
                   <ul className="divide-y divide-slate-100">

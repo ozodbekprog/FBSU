@@ -113,13 +113,13 @@ export function LegoPalette({
                       {resolveTeacher(block) ?? t("schWithoutTeacher")}
                     </p>
                     <div className="mt-1.5 flex flex-wrap items-center gap-1">
-                      <span className="rounded-full bg-white/75 px-2 py-0.5 text-[10px] font-medium ring-1 ring-black/5">
+                      <span className="rounded-full bg-white/75 px-2 py-0.5 text-[11px] font-medium ring-1 ring-black/5">
                         {block.lessonType}
                       </span>
-                      <span className="rounded-full bg-white/75 px-2 py-0.5 text-[10px] font-medium ring-1 ring-black/5">
+                      <span className="rounded-full bg-white/75 px-2 py-0.5 text-[11px] font-medium ring-1 ring-black/5">
                         {block.room ?? t("schNoRoom")}
                       </span>
-                      <span className="rounded-full bg-brand-900/85 px-2 py-0.5 text-[10px] font-semibold text-white">
+                      <span className="rounded-full bg-brand-900/85 px-2 py-0.5 text-[11px] font-semibold text-white">
                         {t("schPlacedCount", { count: block.placedCount })}
                       </span>
                     </div>

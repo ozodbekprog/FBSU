@@ -87,7 +87,7 @@ function RatingRow({
       >
         {row.rank}
       </span>
-      <Avatar name={row.name} src={row.avatarUrl} className="size-9! text-[10px]" />
+      <Avatar name={row.name} src={row.avatarUrl} className="size-9! text-[11px]" />
       <span
         className={cn(
           "min-w-0 flex-1 truncate text-sm font-medium text-slate-800",
@@ -96,7 +96,7 @@ function RatingRow({
       >
         {row.name}
         {row.isMe ? (
-          <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide text-brand-600">
+          <span className="ml-1.5 text-[11px] font-semibold uppercase tracking-wide text-brand-600">
             {youLabel}
           </span>
         ) : null}
@@ -159,11 +159,11 @@ function Podium({
                 {row.percent}%
               </p>
               {row.isMe ? (
-                <span className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-brand-600">
+                <span className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-brand-600">
                   {youLabel}
                 </span>
               ) : (
-                <span className="mt-1 hidden text-[10px] uppercase tracking-wide text-slate-500 sm:block">
+                <span className="mt-1 hidden text-[11px] uppercase tracking-wide text-slate-500 sm:block">
                   {labels[place]}
                 </span>
               )}

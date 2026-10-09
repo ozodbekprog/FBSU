@@ -30,7 +30,7 @@ function SessionDateTile({ date, month }: { date: Date; month: string }) {
       )}
     >
       <span className="text-lg leading-none font-bold">{date.getDate()}</span>
-      <span className="mt-1 text-[10px] font-semibold tracking-wider uppercase">
+      <span className="mt-1 text-[11px] font-semibold tracking-wider uppercase">
         {month}
       </span>
     </div>
@@ -55,7 +55,7 @@ function MiniStat({ label, value, tone }: { label: string; value: number; tone: 
   return (
     <div className={cn("rounded-xl px-3 py-2.5", tone)}>
       <p className="text-lg leading-none font-semibold">{value}</p>
-      <p className="mt-1.5 text-[10px] font-semibold tracking-wider uppercase opacity-70">{label}</p>
+      <p className="mt-1.5 text-[11px] font-semibold tracking-wider uppercase opacity-70">{label}</p>
     </div>
   );
 }
@@ -131,19 +131,19 @@ export async function StudentSessionCard({ session }: { session: StudentSessionI
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-xl bg-slate-50 px-3 py-2.5">
-          <p className="text-[10px] font-semibold tracking-wider text-slate-600 uppercase">{dictionary.grdTime}</p>
+          <p className="text-[11px] font-semibold tracking-wider text-slate-600 uppercase">{dictionary.grdTime}</p>
           <p className="mt-1 font-medium text-slate-700">{sessionTime(session, locale)}</p>
         </div>
         <div className="rounded-xl bg-slate-50 px-3 py-2.5">
-          <p className="text-[10px] font-semibold tracking-wider text-slate-600 uppercase">{dictionary.grdRoom}</p>
+          <p className="text-[11px] font-semibold tracking-wider text-slate-600 uppercase">{dictionary.grdRoom}</p>
           <p className="mt-1 font-medium text-slate-700">{session.room ?? "—"}</p>
         </div>
         <div className="rounded-xl bg-slate-50 px-3 py-2.5">
-          <p className="text-[10px] font-semibold tracking-wider text-slate-600 uppercase">{dictionary.grdSeat}</p>
+          <p className="text-[11px] font-semibold tracking-wider text-slate-600 uppercase">{dictionary.grdSeat}</p>
           <p className="mt-1 font-semibold text-slate-700">{session.sheet?.seat ?? "—"}</p>
         </div>
         <div className="rounded-xl bg-slate-50 px-3 py-2.5">
-          <p className="text-[10px] font-semibold tracking-wider text-slate-600 uppercase">{dictionary.grdResult}</p>
+          <p className="text-[11px] font-semibold tracking-wider text-slate-600 uppercase">{dictionary.grdResult}</p>
           <p className="mt-1 font-medium text-slate-700">
             {statusLabel}
           </p>

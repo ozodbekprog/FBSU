@@ -429,7 +429,7 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
                             >
                               <span
                                 className={cn(
-                                  "inline-flex size-5 shrink-0 items-center justify-center rounded-md text-[10px] font-bold",
+                                  "inline-flex size-5 shrink-0 items-center justify-center rounded-md text-[11px] font-bold",
                                   isCorrect ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-500",
                                 )}
                               >

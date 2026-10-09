@@ -112,7 +112,7 @@ export default async function RoomUsagePage({
               </p>
             </div>
             <div className="grid grid-cols-[76px_repeat(6,minmax(0,1fr))] gap-1.5">
-              <div className="flex items-center justify-center rounded-xl bg-slate-100/70 px-1 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+              <div className="flex items-center justify-center rounded-xl bg-slate-100/70 px-1 py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-600">
                 {dictionary.mscRoomUsageSlotHeader}
               </div>
               {DAYS.map((day) => (
@@ -121,7 +121,7 @@ export default async function RoomUsagePage({
                   className="rounded-xl bg-slate-50 px-2 py-2 text-center ring-1 ring-slate-100"
                 >
                   <p className="text-xs font-semibold text-slate-700">{dayName(day)}</p>
-                  <p className="text-[10px] text-slate-600">{formatDayShort(dayIsoInWeek(week, day))}</p>
+                  <p className="text-[11px] text-slate-600">{formatDayShort(dayIsoInWeek(week, day))}</p>
                 </div>
               ))}
 
@@ -131,7 +131,7 @@ export default async function RoomUsagePage({
                     <span className="text-xs font-semibold text-slate-700">
                       {dictionary.mscRoomUsageSlot.replace("{slot}", String(slot))}
                     </span>
-                    <span className="mt-0.5 text-[10px] leading-tight text-slate-600">
+                    <span className="mt-0.5 text-[11px] leading-tight text-slate-600">
                       {SLOT_TIMES[slot]}
                     </span>
                   </div>
@@ -159,7 +159,7 @@ export default async function RoomUsagePage({
                             <p className="truncate text-[11px] font-semibold text-brand-900">
                               {lesson.subject}
                             </p>
-                            <p className="truncate text-[10px] text-brand-700">
+                            <p className="truncate text-[11px] text-brand-700">
                               {lesson.groupName}
                               {lesson.teacher ? ` · ${lesson.teacher}` : ""}
                             </p>
@@ -173,17 +173,17 @@ export default async function RoomUsagePage({
                             <p className="truncate text-[11px] font-semibold text-gold-800">
                               {booking.purpose ?? dictionary.mscRoomBookingDefault}
                             </p>
-                            <p className="truncate text-[10px] text-gold-800">{booking.userName}</p>
+                            <p className="truncate text-[11px] text-gold-800">{booking.userName}</p>
                           </div>
                         ))}
                         {!occupied ? (
                           <div className="flex flex-1 flex-col items-center justify-center gap-1">
-                            <span className="text-[10px] font-medium uppercase tracking-wider text-slate-600">
+                            <span className="text-[11px] font-medium uppercase tracking-wider text-slate-600">
                               {dictionary.mscRoomUsageFree}
                             </span>
                             <Link
                               href={`/bookings?room=${encodeURIComponent(room.name)}&date=${dayIso}&slot=${slot}`}
-                              className="rounded-lg bg-brand-900 px-2 py-1 text-[10px] font-medium text-white transition-colors duration-150 hover:bg-brand-800"
+                              className="rounded-lg bg-brand-900 px-2 py-1 text-[11px] font-medium text-white transition-colors duration-150 hover:bg-brand-800"
                             >
                               {dictionary.mscRoomBook}
                             </Link>

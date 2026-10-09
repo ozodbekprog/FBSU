@@ -1019,7 +1019,7 @@ export function ScheduleBoard({
                     {isToday ? <span className="absolute inset-x-0 top-0 h-0.5 bg-gold-400" /> : null}
                     {`${t(DAY_KEYS[day % 7])} ${formatDayShort(dayIsoInWeek(weekStart, day))}`}
                     {isToday ? (
-                      <span className="ml-2 rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-semibold normal-case text-brand-700">
+                      <span className="ml-2 rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-semibold normal-case text-brand-700">
                         {t("schToday")}
                       </span>
                     ) : null}
@@ -1291,7 +1291,7 @@ export function ScheduleBoard({
                           <p className="text-xs font-semibold text-slate-600">
                             {from ?? t("schSlotLabel", { slot: entry.slot })}
                           </p>
-                          {to ? <p className="text-[10px] text-slate-600">{to}</p> : null}
+                          {to ? <p className="text-[11px] text-slate-600">{to}</p> : null}
                         </div>
                         <div
                           className={cn(

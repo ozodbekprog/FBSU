@@ -277,7 +277,7 @@ export function QuestionBankManager({
                       >
                         <span
                           className={cn(
-                            "inline-flex size-4 shrink-0 items-center justify-center rounded text-[9px] font-bold",
+                            "inline-flex size-4 shrink-0 items-center justify-center rounded text-[10px] font-bold",
                             isCorrect ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-500",
                           )}
                         >

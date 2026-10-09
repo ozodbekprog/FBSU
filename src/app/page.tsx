@@ -461,7 +461,7 @@ export default async function HomePage() {
                   <span className="size-2.5 rounded-full bg-rose-300" />
                   <span className="size-2.5 rounded-full bg-gold-300" />
                   <span className="size-2.5 rounded-full bg-emerald-300" />
-                  <span className="ml-2 hidden h-5 flex-1 items-center rounded-md bg-slate-100 px-2.5 text-[10px] font-medium text-slate-600 sm:flex">
+                  <span className="ml-2 hidden h-5 flex-1 items-center rounded-md bg-slate-100 px-2.5 text-[11px] font-medium text-slate-600 sm:flex">
                     lms.ttpu.uz/dashboard
                   </span>
                   <span className="size-5 rounded-md bg-brand-50" />
@@ -491,19 +491,19 @@ export default async function HomePage() {
                   <div className="min-w-0 flex-1 space-y-2.5">
                     <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-white px-3.5 py-2.5">
                       <div className="flex min-w-0 items-center gap-2.5">
-                        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-800 to-brand-600 text-[10px] font-semibold text-white">
+                        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-800 to-brand-600 text-[11px] font-semibold text-white">
                           OZ
                         </span>
                         <div className="min-w-0">
                           <p className="truncate text-[11px] font-semibold text-slate-800">
                             {dictionary.landDashGreeting}
                           </p>
-                          <p className="truncate text-[10px] text-slate-600">
+                          <p className="truncate text-[11px] text-slate-600">
                             {dictionary.landDashSemester}
                           </p>
                         </div>
                       </div>
-                      <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                      <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
                         {dictionary.landDashActive}
                       </span>
                     </div>
@@ -513,7 +513,7 @@ export default async function HomePage() {
                           key={stat.label}
                           className="rounded-xl border border-slate-100 bg-white px-3 py-2.5"
                         >
-                          <p className="text-[10px] font-medium text-slate-600">{stat.label}</p>
+                          <p className="text-[11px] font-medium text-slate-600">{stat.label}</p>
                           <p className="mt-0.5 text-sm font-semibold tracking-tight text-brand-900">
                             {stat.value}
                           </p>
@@ -525,7 +525,7 @@ export default async function HomePage() {
                         <p className="text-[11px] font-semibold text-slate-700">
                           {dictionary.landWeeklyActivity}
                         </p>
-                        <span className="text-[10px] font-medium text-slate-600">
+                        <span className="text-[11px] font-medium text-slate-600">
                           {dictionary.landSixOfSeven}
                         </span>
                       </div>
@@ -543,7 +543,7 @@ export default async function HomePage() {
                               }
                               style={{ height: `${bar.value}%` }}
                             />
-                            <span className="text-[9px] font-medium text-slate-600">
+                            <span className="text-[10px] font-medium text-slate-600">
                               {bar.day}
                             </span>
                           </div>
@@ -556,7 +556,7 @@ export default async function HomePage() {
                           key={item.time}
                           className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white px-3.5 py-2.5"
                         >
-                          <span className="w-9 shrink-0 text-[10px] font-semibold text-brand-700">
+                          <span className="w-9 shrink-0 text-[11px] font-semibold text-brand-700">
                             {item.time}
                           </span>
                           <span className={`h-7 w-1 shrink-0 rounded-full ${item.tone}`} />
@@ -564,7 +564,7 @@ export default async function HomePage() {
                             <p className="truncate text-[11px] font-semibold text-slate-800">
                               {item.title}
                             </p>
-                            <p className="text-[10px] text-slate-600">{item.room}</p>
+                            <p className="text-[11px] text-slate-600">{item.room}</p>
                           </div>
                           <span className="size-1.5 shrink-0 rounded-full bg-slate-200" />
                         </div>
@@ -590,7 +590,7 @@ export default async function HomePage() {
                 </span>
                 <div>
                   <p className="text-xs font-semibold text-slate-800">{dictionary.landGpaShort}</p>
-                  <p className="text-[10px] text-slate-600">{dictionary.landSemesterRating}</p>
+                  <p className="text-[11px] text-slate-600">{dictionary.landSemesterRating}</p>
                 </div>
               </div>
 
@@ -612,7 +612,7 @@ export default async function HomePage() {
                   <p className="text-xs font-semibold text-slate-800">
                     {dictionary.landAssignmentGraded}
                   </p>
-                  <p className="text-[10px] text-slate-600">{dictionary.landMathScore}</p>
+                  <p className="text-[11px] text-slate-600">{dictionary.landMathScore}</p>
                 </div>
               </div>
             </div>

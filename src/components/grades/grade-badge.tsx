@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 const BADGE_SIZES = {
-  sm: "size-8 text-[9px]",
+  sm: "size-8 text-[10px]",
   md: "size-10 text-xs",
   lg: "size-12 text-sm",
   xl: "size-24 text-2xl",

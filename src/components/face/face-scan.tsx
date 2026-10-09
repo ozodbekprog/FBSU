@@ -496,8 +496,8 @@ export function FaceScan({
                     key={step.label}
                     className={
                       step.done
-                        ? "flex items-center gap-1 rounded-full bg-emerald-400/20 px-2.5 py-1 text-[10px] font-medium text-emerald-100 transition-colors duration-300"
-                        : "flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-medium text-white/60 transition-colors duration-300"
+                        ? "flex items-center gap-1 rounded-full bg-emerald-400/20 px-2.5 py-1 text-[11px] font-medium text-emerald-100 transition-colors duration-300"
+                        : "flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/60 transition-colors duration-300"
                     }
                   >
                     {step.done ? (
@@ -560,8 +560,8 @@ export function FaceScan({
                   key={cue.key}
                   className={
                     cueHint === cue.key
-                      ? "flex items-center gap-1 rounded-full bg-amber-400/95 px-2.5 py-1 text-[10px] font-semibold text-amber-950 shadow-lg transition-all duration-200"
-                      : "flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-medium text-white/75 backdrop-blur-sm transition-all duration-200"
+                      ? "flex items-center gap-1 rounded-full bg-amber-400/95 px-2.5 py-1 text-[11px] font-semibold text-amber-950 shadow-lg transition-all duration-200"
+                      : "flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/75 backdrop-blur-sm transition-all duration-200"
                   }
                 >
                   {cue.icon}

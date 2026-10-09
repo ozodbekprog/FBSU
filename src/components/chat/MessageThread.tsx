@@ -161,7 +161,7 @@ export function MessageThread({
                         </p>
                         <span
                           className={cn(
-                            "mt-1 flex items-center justify-end gap-1 text-[10px]",
+                            "mt-1 flex items-center justify-end gap-1 text-[11px]",
                             own ? "text-brand-200" : "text-slate-600",
                           )}
                         >

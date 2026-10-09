@@ -128,7 +128,7 @@ export default async function SchedulePrintPage({
           <table className="print-table w-full min-w-[900px] border-collapse text-[11px]">
             <thead>
               <tr>
-                <th className="w-24 border border-slate-300 bg-slate-100 px-2 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                <th className="w-24 border border-slate-300 bg-slate-100 px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                   {dictionary.schPar}
                 </th>
                 {DAYS.map((day) => {
@@ -145,12 +145,12 @@ export default async function SchedulePrintPage({
                       <span className="flex items-center gap-1.5">
                         <span className="font-semibold text-slate-800">{dictionary[DAY_KEYS[day % 7]]}</span>
                         {isToday ? (
-                          <span className="rounded-full bg-amber-200/70 px-1.5 py-px text-[9px] font-semibold text-amber-800">
+                          <span className="rounded-full bg-amber-200/70 px-1.5 py-px text-[10px] font-semibold text-amber-800">
                             {dictionary.schToday}
                           </span>
                         ) : null}
                       </span>
-                      <span className="block text-[10px] font-normal text-slate-500">
+                      <span className="block text-[11px] font-normal text-slate-500">
                         {dayMonth(dayIso)}
                       </span>
                     </th>
@@ -165,7 +165,7 @@ export default async function SchedulePrintPage({
                     <span className="block font-semibold text-slate-800">
                       {translate(locale, "schSlotLabel", { slot })}
                     </span>
-                    <span className="block text-[10px] text-slate-500">{SLOT_TIMES[slot]}</span>
+                    <span className="block text-[11px] text-slate-500">{SLOT_TIMES[slot]}</span>
                   </td>
                   {DAYS.map((day) => {
                     const dayIso = addDays(monday, day - 1);
@@ -203,16 +203,16 @@ export default async function SchedulePrintPage({
                                   {entry.subject}
                                 </p>
                                 {entry.teacher ? (
-                                  <p className="text-[10px] text-slate-500">{entry.teacher}</p>
+                                  <p className="text-[11px] text-slate-500">{entry.teacher}</p>
                                 ) : null}
                                 <div className="mt-1 flex flex-wrap items-center gap-1">
                                   {entry.room ? (
-                                    <span className="rounded border border-slate-200 bg-white px-1 py-px text-[9px] text-slate-600">
+                                    <span className="rounded border border-slate-200 bg-white px-1 py-px text-[10px] text-slate-600">
                                       {entry.room}
                                     </span>
                                   ) : null}
                                   {entryParity ? (
-                                    <span className="rounded border border-amber-300 bg-amber-50 px-1 py-px text-[9px] text-amber-700">
+                                    <span className="rounded border border-amber-300 bg-amber-50 px-1 py-px text-[10px] text-amber-700">
                                       {entryParity}
                                     </span>
                                   ) : null}
@@ -220,10 +220,10 @@ export default async function SchedulePrintPage({
                                     <span
                                       className={
                                         cancelled
-                                          ? "rounded border border-rose-300 bg-rose-50 px-1 py-px text-[9px] font-semibold text-rose-700"
+                                          ? "rounded border border-rose-300 bg-rose-50 px-1 py-px text-[10px] font-semibold text-rose-700"
                                           : entry.status === "MOVED"
-                                            ? "rounded border border-sky-300 bg-sky-50 px-1 py-px text-[9px] text-sky-700"
-                                            : "rounded border border-amber-300 bg-amber-50 px-1 py-px text-[9px] text-amber-700"
+                                            ? "rounded border border-sky-300 bg-sky-50 px-1 py-px text-[10px] text-sky-700"
+                                            : "rounded border border-amber-300 bg-amber-50 px-1 py-px text-[10px] text-amber-700"
                                       }
                                     >
                                       {statusLabel}

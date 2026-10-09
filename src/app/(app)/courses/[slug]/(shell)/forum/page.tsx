@@ -91,7 +91,7 @@ export default async function CourseForumPage({
                     </Link>
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-                    <Avatar name={topic.author.name} className="size-5! text-[9px]" />
+                    <Avatar name={topic.author.name} className="size-5! text-[10px]" />
                     <span>{topic.author.name}</span>
                     <span className="text-slate-500">·</span>
                     <span>{fmtDateTime(topic.createdAt)}</span>

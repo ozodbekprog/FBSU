@@ -82,7 +82,7 @@ export function MobileTabBar({ tabs }: { tabs: MobileTab[] }) {
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-1 pt-2 pb-1.5 text-[10px] font-medium transition-colors duration-150",
+                  "flex flex-col items-center gap-1 pt-2 pb-1.5 text-[11px] font-medium transition-colors duration-150",
                   active ? "text-brand-900" : "text-slate-500 hover:text-brand-700",
                 )}
               >
@@ -230,7 +230,7 @@ export function NavLinks({ groups }: { groups: NavGroup[] }) {
       >
         {groups.map((group, groupIndex) => (
           <div key={group.label} className={cn("nav-group", groupIndex > 0 && "nav-group-sep")}>
-            <p className="nav-group-label px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600">
+            <p className="nav-group-label px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
               {group.label}
             </p>
             <div className="space-y-0.5">
@@ -245,7 +245,7 @@ export function NavLinks({ groups }: { groups: NavGroup[] }) {
                     data-active={active ? "true" : undefined}
                     aria-label={l.label}
                     className={cn(
-                      "nav-link group flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium",
+                      "nav-link group flex min-h-11 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium",
                       active
                         ? "bg-brand-900 text-white shadow-[0_6px_16px_-8px_rgba(29,52,96,0.7)]"
                         : "text-slate-600 hover:bg-brand-50 hover:text-brand-900",

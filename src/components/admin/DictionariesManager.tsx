@@ -754,7 +754,7 @@ export default function DictionariesManager({
                                 key={teacher.id}
                                 className="inline-flex items-center gap-1.5 rounded-full border border-brand-100 bg-brand-50/80 px-2 py-0.5 text-xs font-medium text-brand-800"
                               >
-                                <span className="inline-flex size-4 items-center justify-center rounded-full bg-brand-800/10 text-[9px] font-bold uppercase text-brand-800">
+                                <span className="inline-flex size-4 items-center justify-center rounded-full bg-brand-800/10 text-[10px] font-bold uppercase text-brand-800">
                                   {teacher.name.trim().charAt(0)}
                                 </span>
                                 {teacher.name}

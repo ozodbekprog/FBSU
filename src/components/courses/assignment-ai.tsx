@@ -177,7 +177,7 @@ export function AssignmentAi({ assignmentId }: { assignmentId: string }) {
               {t("crsAiClear")}
             </button>
           ) : (
-            <span className="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-brand-700 uppercase ring-1 ring-brand-100">
+            <span className="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-brand-700 uppercase ring-1 ring-brand-100">
               AI
             </span>
           )

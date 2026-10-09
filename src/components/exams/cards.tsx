@@ -39,7 +39,7 @@ function DateTile({ date, bucket, month }: { date: Date; bucket: ExamBucket; mon
       )}
     >
       <span className="text-lg font-bold leading-none">{date.getDate()}</span>
-      <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider">
+      <span className="mt-1 text-[11px] font-semibold uppercase tracking-wider">
         {month}
       </span>
     </div>
@@ -73,7 +73,7 @@ function MiniStat({ label, value, tone }: { label: string; value: number; tone: 
   return (
     <div className={cn("rounded-xl px-3 py-2.5", MINI_TONES[tone])}>
       <p className="text-lg font-semibold leading-none">{value}</p>
-      <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-wider opacity-70">{label}</p>
+      <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-70">{label}</p>
     </div>
   );
 }

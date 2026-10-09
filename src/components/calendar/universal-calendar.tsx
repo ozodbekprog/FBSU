@@ -949,7 +949,7 @@ export function UniversalCalendar({ canManage }: { canManage: boolean }) {
                           />
                         ))}
                         {marks.length > 4 ? (
-                          <span className="text-[10px] font-medium text-slate-600">+{marks.length - 4}</span>
+                          <span className="text-[11px] font-medium text-slate-600">+{marks.length - 4}</span>
                         ) : null}
                       </span>
                     ) : null}
@@ -959,7 +959,7 @@ export function UniversalCalendar({ canManage }: { canManage: boolean }) {
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-5 text-xs text-slate-500">
               <span className="flex items-center gap-1.5">
-                <span className="inline-flex size-4 items-center justify-center rounded-full bg-brand-900 text-[9px] font-semibold text-white">
+                <span className="inline-flex size-4 items-center justify-center rounded-full bg-brand-900 text-[10px] font-semibold text-white">
                   {today.getDate()}
                 </span>
                 {t("dashCalToday")}

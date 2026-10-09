@@ -61,7 +61,7 @@ export async function LessonBanner({ teacherId }: { teacherId: string }) {
             </svg>
           </span>
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold-300">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-300">
               {dictionary.schLessonBannerEyebrow}
             </p>
             <p className="mt-0.5 text-base font-semibold">{title}</p>
