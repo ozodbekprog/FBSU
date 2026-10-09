@@ -222,7 +222,7 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
                       setStudentsPerGroup(preset.students);
                     }}
                     className={cn(
-                      "rounded-lg px-2.5 py-1 text-xs font-medium transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-50",
+                      "rounded-lg px-2.5 py-1 text-xs font-medium transition-[background-color,border-color,color,box-shadow,opacity] duration-150 disabled:cursor-not-allowed disabled:opacity-50",
                       active
                         ? "bg-brand-900 text-white shadow-sm"
                         : "border border-slate-200 bg-white text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800",
@@ -301,7 +301,7 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
               <div className="h-1 w-full overflow-hidden rounded-full bg-slate-100">
                 <div
                   className={cn(
-                    "h-full rounded-full bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400 transition-all duration-700",
+                    "h-full rounded-full bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400 transition-[width] duration-700",
                     busy ? "w-2/3 animate-pulse" : result ? "w-full" : "w-0",
                   )}
                 />
@@ -365,7 +365,7 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
       {result ? (
         <section
           className={cn(
-            "transition-all duration-500",
+            "transition-[transform,translate,opacity] duration-500",
             revealed ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0",
           )}
         >
@@ -428,7 +428,7 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
               <div
                 key={item.key}
                 className={cn(
-                  "transition-all duration-500",
+                  "transition-[transform,translate,opacity] duration-500",
                   revealed ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0",
                 )}
                 style={{ transitionDelay: `${index * 45}ms` }}
@@ -452,7 +452,7 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
                   <p className="text-xs text-slate-600">{t(item.hint)}</p>
                   <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
                     <div
-                      className={cn("h-full rounded-full bg-gradient-to-r transition-all duration-700", item.tone)}
+                      className={cn("h-full rounded-full bg-gradient-to-r transition-[width] duration-700", item.tone)}
                       style={{ width: revealed ? `${item.share}%` : "0%" }}
                     />
                   </div>

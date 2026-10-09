@@ -228,7 +228,7 @@ export default async function HelpPage() {
               <a
                 key={link.href}
                 href={link.href}
-                className="group flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3.5 ring-1 ring-white/10 transition-all duration-200 hover:bg-white/10 hover:ring-white/20"
+                className="group flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3.5 ring-1 ring-white/10 transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-200 hover:bg-white/10 hover:ring-white/20"
               >
                 <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-brand-100 ring-1 ring-white/10 transition-colors group-hover:text-gold-300">
                   <HelpIcon name={link.icon} size={17} />

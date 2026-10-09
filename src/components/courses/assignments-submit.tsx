@@ -358,7 +358,7 @@ export function AssignmentsSubmit({
             onDragLeave={() => setDragActive(false)}
             onDrop={handleDrop}
             className={cn(
-              "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-6 text-center transition-all duration-200",
+              "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-6 text-center transition-[background-color,border-color,box-shadow] duration-200",
               dragActive
                 ? "border-brand-400 bg-brand-50 shadow-[0_0_0_4px_rgba(83,115,184,0.12)]"
                 : "border-slate-300 bg-slate-50/60 hover:border-brand-300 hover:bg-brand-50/40",

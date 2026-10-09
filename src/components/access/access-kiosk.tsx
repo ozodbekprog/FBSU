@@ -44,7 +44,7 @@ const ROLE_LABEL_KEY: Record<Role, keyof Dictionary> = {
 };
 
 const TAB_BASE =
-  "flex items-center justify-center gap-2 rounded-2xl border px-4 py-5 text-base font-semibold transition-all duration-150";
+  "flex items-center justify-center gap-2 rounded-2xl border px-4 py-5 text-base font-semibold transition-[background-color,border-color,color,box-shadow] duration-150";
 
 export function AccessKiosk() {
   const { t } = useI18n();

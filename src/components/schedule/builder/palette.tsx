@@ -12,7 +12,7 @@ const GRIP_DOTS = [0, 1, 2, 3, 4, 5];
 
 function chipClass(active: boolean) {
   return cn(
-    "rounded-full border px-2.5 py-1 text-xs font-medium transition-all duration-150",
+    "rounded-full border px-2.5 py-1 text-xs font-medium transition-[background-color,border-color,color,box-shadow] duration-150",
     active
       ? "border-brand-500 bg-brand-50 text-brand-700 ring-1 ring-brand-300"
       : "border-slate-200 bg-white text-slate-600 hover:border-brand-300 hover:bg-brand-50/60",

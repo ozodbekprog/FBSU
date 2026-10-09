@@ -90,7 +90,7 @@ export async function GpaHero({ data, delay = 0 }: { data: StudentGpa; delay?: n
               </div>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-brand-400 via-gold-400 to-emerald-400 transition-all duration-700"
+                  className="h-full rounded-full bg-gradient-to-r from-brand-400 via-gold-400 to-emerald-400 transition-[width] duration-700"
                   style={{ width: `${scalePercent}%` }}
                 />
               </div>

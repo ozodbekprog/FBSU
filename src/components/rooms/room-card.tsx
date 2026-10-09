@@ -63,7 +63,7 @@ export function RoomCard({
     <Card
       className={cn(
         "group relative flex h-full flex-col overflow-hidden",
-        wrapped && "transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200/80 hover:shadow-lift",
+        wrapped && "transition-[transform,translate,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-brand-200/80 hover:shadow-lift",
       )}
     >
       <span className={cn("absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r", meta.stripe)} />

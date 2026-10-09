@@ -115,16 +115,58 @@ export function EmptyState({
   );
 }
 
+function relativeLuminance(color: string): number | null {
+  const value = color.trim();
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(value);
+  const rgb = /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/i.exec(value);
+  let channels: [number, number, number] | null = null;
+  if (hex) {
+    const body =
+      hex[1].length === 3
+        ? hex[1]
+            .split("")
+            .map((char) => char + char)
+            .join("")
+        : hex[1];
+    channels = [
+      parseInt(body.slice(0, 2), 16),
+      parseInt(body.slice(2, 4), 16),
+      parseInt(body.slice(4, 6), 16),
+    ];
+  } else if (rgb) {
+    channels = [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])];
+  }
+  if (!channels) return null;
+  const linear = (channel: number) => {
+    const normalized = channel / 255;
+    return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+  };
+  const [r, g, b] = channels;
+  return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+}
+
+const BRAND_950_LUMINANCE = relativeLuminance("#131f3c") ?? 0.0144;
+
+function avatarTextTone(background: string): string {
+  const luminance = relativeLuminance(background);
+  if (luminance === null) return "text-white";
+  const lightContrast = 1.05 / (luminance + 0.05);
+  const darkContrast = (luminance + 0.05) / (BRAND_950_LUMINANCE + 0.05);
+  return lightContrast >= darkContrast ? "text-white" : "text-brand-950";
+}
+
 export function Avatar({
   name,
   src,
   size,
   className,
+  color,
 }: {
   name: string;
   src?: string | null;
   size?: number;
   className?: string;
+  color?: string;
 }) {
   const letters = name
     .split(" ")
@@ -145,10 +187,14 @@ export function Avatar({
   return (
     <span
       className={cn(
-        "inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-800 to-brand-600 text-xs font-semibold text-white shadow-sm",
+        "inline-flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold shadow-sm",
+        color ? avatarTextTone(color) : "bg-gradient-to-br from-brand-800 to-brand-600 text-white",
         className,
       )}
-      style={size ? { width: size, height: size } : undefined}
+      style={{
+        ...(size ? { width: size, height: size } : {}),
+        ...(color ? { backgroundColor: color } : {}),
+      }}
     >
       {letters}
     </span>
@@ -196,7 +242,7 @@ export function Progress({
     <div className={cn("h-1.5 w-full overflow-hidden rounded-full bg-slate-100", className)}>
       <div
         className={cn(
-          "h-full rounded-full transition-all duration-500",
+          "h-full rounded-full transition-[width] duration-300 ease-out",
           pct >= 80 ? "bg-emerald-500" : pct >= 60 ? "bg-gold-400" : "bg-rose-400",
         )}
         style={{ width: `${pct}%` }}
@@ -246,7 +292,7 @@ export function Button({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "inline-flex items-center justify-center gap-1.5 rounded-xl font-medium transition-[transform,background-color,border-color,color,box-shadow] duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex items-center justify-center gap-1.5 rounded-xl font-medium transition-[transform,translate,scale,rotate,background-color,border-color,color,box-shadow] duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50",
         BUTTON_VARIANTS[variant],
         BUTTON_SIZES[size],
         className,
@@ -274,7 +320,7 @@ export function ButtonLink({
     <Link
       href={href}
       className={cn(
-        "inline-flex items-center justify-center gap-1.5 rounded-xl font-medium transition-[transform,background-color,border-color,color,box-shadow] duration-150 active:scale-[0.98]",
+        "inline-flex items-center justify-center gap-1.5 rounded-xl font-medium transition-[transform,translate,scale,rotate,background-color,border-color,color,box-shadow] duration-150 active:scale-[0.98]",
         BUTTON_VARIANTS[variant],
         BUTTON_SIZES[size],
         className,

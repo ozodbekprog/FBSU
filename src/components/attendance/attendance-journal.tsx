@@ -339,7 +339,7 @@ export function AttendanceJournal({
               type="button"
               onClick={() => setSubGroupFilter(null)}
               className={cn(
-                "rounded-full border px-2.5 py-1 text-xs font-medium transition-all duration-150",
+                "rounded-full border px-2.5 py-1 text-xs font-medium transition-[background-color,border-color,color,box-shadow] duration-150",
                 subGroupFilter === null
                   ? "border-brand-500 bg-brand-50 text-brand-700 ring-1 ring-brand-300"
                   : "border-slate-200 bg-white text-slate-600 hover:border-brand-300 hover:bg-brand-50/60",
@@ -353,7 +353,7 @@ export function AttendanceJournal({
                 type="button"
                 onClick={() => setSubGroupFilter(name)}
                 className={cn(
-                  "rounded-full border px-2.5 py-1 text-xs font-medium transition-all duration-150",
+                  "rounded-full border px-2.5 py-1 text-xs font-medium transition-[background-color,border-color,color,box-shadow] duration-150",
                   subGroupFilter === name
                     ? "border-brand-500 bg-brand-50 text-brand-700 ring-1 ring-brand-300"
                     : "border-slate-200 bg-white text-slate-600 hover:border-brand-300 hover:bg-brand-50/60",
@@ -481,7 +481,7 @@ export function AttendanceJournal({
                                 title={meta ? meta.label : t("schNotMarked")}
                                 onClick={(event) => openEditor(event, student.id, date)}
                                 className={cn(
-                                  "mx-auto flex size-8 items-center justify-center rounded-full text-[10px] font-semibold leading-none transition-all duration-150",
+                                  "mx-auto flex size-8 items-center justify-center rounded-full text-[10px] font-semibold leading-none transition-[transform,translate,scale,background-color,box-shadow] duration-150",
                                   meta ? meta.badge : "bg-slate-100 shadow-inner",
                                   canEdit
                                     ? "cursor-pointer hover:scale-110 hover:shadow-md hover:ring-2 hover:ring-brand-300/70 hover:ring-offset-1 active:scale-95"
@@ -604,7 +604,7 @@ export function AttendanceJournal({
                       void saveStatus(status);
                     }}
                     className={cn(
-                      "flex size-10 items-center justify-center rounded-full text-[11px] font-semibold leading-none transition-all duration-150 hover:scale-105 hover:brightness-95 active:scale-95",
+                      "flex size-10 items-center justify-center rounded-full text-[11px] font-semibold leading-none transition-[transform,translate,scale,filter,background-color,box-shadow] duration-150 hover:scale-105 hover:brightness-95 active:scale-95",
                       meta.badge,
                       editingStatus === status && "ring-2 ring-brand-500 ring-offset-2",
                     )}

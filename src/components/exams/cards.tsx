@@ -138,7 +138,7 @@ export async function StudentExamCard({ exam }: { exam: StudentExamItem }) {
   const bucket = examBucket(exam.dueAt);
   return (
     <Link href={`/quizzes/${exam.id}`} className="block h-full">
-      <Card className="group flex h-full flex-col p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift">
+      <Card className="group flex h-full flex-col p-5 transition-[transform,translate,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift">
         <div className="flex items-start gap-3">
           <DateTile date={exam.dueAt} bucket={bucket} month={dictionary[MONTH_KEYS[exam.dueAt.getMonth()]].slice(0, 3)} />
           <div className="min-w-0 flex-1">
@@ -184,7 +184,7 @@ export async function StaffExamCard({ exam }: { exam: StaffExamItem }) {
   const bucket = examBucket(exam.dueAt);
   const submitRate = exam.attemptCount > 0 ? Math.round((exam.submittedCount / exam.attemptCount) * 100) : 0;
   return (
-    <Card className="relative flex h-full flex-col p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+    <Card className="relative flex h-full flex-col p-5 transition-[transform,translate,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lift">
       <Link href={`/quizzes/${exam.id}`} aria-label={exam.title} className="absolute inset-0 rounded-2xl" />
       <div className="flex items-start gap-3">
         <DateTile date={exam.dueAt} bucket={bucket} month={dictionary[MONTH_KEYS[exam.dueAt.getMonth()]].slice(0, 3)} />

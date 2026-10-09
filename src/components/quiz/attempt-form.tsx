@@ -178,7 +178,7 @@ export function AttemptForm({
                     onClick={() => goTo(index)}
                     aria-label={t("crsQuizQuestionAria", { number: index + 1 })}
                     className={cn(
-                      "h-1.5 flex-1 rounded-full transition-all duration-300",
+                      "h-1.5 flex-1 rounded-full transition-[background-color] duration-300",
                       index === activeIndex
                         ? "bg-brand-700"
                         : answers[question.id] !== undefined
@@ -262,7 +262,7 @@ export function AttemptForm({
                     <label
                       key={optionIndex}
                       className={cn(
-                        "flex cursor-pointer items-center gap-3.5 rounded-2xl border px-4 py-3.5 text-base transition-all duration-150 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500/30 sm:px-5 sm:py-4",
+                        "flex cursor-pointer items-center gap-3.5 rounded-2xl border px-4 py-3.5 text-base transition-[background-color,border-color,color,box-shadow] duration-150 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500/30 sm:px-5 sm:py-4",
                         selected
                           ? "border-brand-500 bg-brand-50/70 font-medium text-brand-950 shadow-sm"
                           : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50",
@@ -314,7 +314,7 @@ export function AttemptForm({
           <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
             <div
               className={cn(
-                "h-full rounded-full transition-all duration-500",
+                "h-full rounded-full transition-[width] duration-500",
                 progress === 100 ? "bg-emerald-500" : "bg-brand-600",
               )}
               style={{ width: `${progress}%` }}

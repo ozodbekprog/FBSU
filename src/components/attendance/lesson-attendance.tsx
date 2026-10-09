@@ -292,7 +292,7 @@ export function LessonAttendance({
                           onClick={() => setStatus(student.id, option.value)}
                           disabled={cancelled}
                           className={cn(
-                            "inline-flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-xs font-semibold transition-all duration-150 sm:px-2.5",
+                            "inline-flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-xs font-semibold transition-[background-color,color,box-shadow] duration-150 sm:px-2.5",
                             status === option.value
                               ? option.active
                               : cn("hover:shadow-sm", option.idle),

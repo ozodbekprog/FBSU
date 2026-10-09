@@ -395,7 +395,7 @@ export default function LoginPage() {
                     key={account.email}
                     type="button"
                     onClick={() => fillDemo(account.email)}
-                    className="group flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-3 transition-all duration-150 hover:border-brand-300 hover:bg-brand-50"
+                    className="group flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-3 transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-150 hover:border-brand-300 hover:bg-brand-50"
                   >
                     <span className="inline-flex size-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700 transition-colors duration-150 group-hover:bg-brand-100">
                       {account.icon}

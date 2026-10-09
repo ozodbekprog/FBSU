@@ -165,7 +165,7 @@ export default function SettingsManager({
             <div key={item.key} className="animate-fade-up" style={{ animationDelay: `${Math.min(index, 8) * 50}ms` }}>
               <Card
                 className={cn(
-                  "group relative h-full overflow-hidden transition-all duration-300",
+                  "group relative h-full overflow-hidden transition-[border-color,background-color] duration-300",
                   enabled
                     ? "border-brand-200/70"
                     : "border-slate-200/70 bg-slate-50/40",
@@ -180,7 +180,7 @@ export default function SettingsManager({
                 <CardBody className="flex items-center gap-4">
                   <span
                     className={cn(
-                      "inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg transition-all duration-300",
+                      "inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg transition-[transform,translate,scale,rotate,opacity,filter] duration-300",
                       ICON_TONES[item.key],
                       enabled
                         ? "scale-100"
@@ -210,7 +210,7 @@ export default function SettingsManager({
                     disabled={busy}
                     onClick={() => toggle(item)}
                     className={cn(
-                      "relative inline-flex h-7 w-12 shrink-0 items-center rounded-full ring-1 ring-inset transition-all duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20",
+                      "relative inline-flex h-7 w-12 shrink-0 items-center rounded-full ring-1 ring-inset transition-[background-color,box-shadow,opacity] duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20",
                       enabled
                         ? "bg-emerald-500 ring-emerald-600/30 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]"
                         : "bg-slate-300 ring-slate-400/20",

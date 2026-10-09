@@ -347,7 +347,7 @@ export function CourseReviews({
             {data.reviews.map((review) => (
               <li
                 key={review.id}
-                className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-4 transition-all duration-150 hover:border-brand-100 hover:shadow-sm"
+                className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-4 transition-[border-color,box-shadow] duration-150 hover:border-brand-100 hover:shadow-sm"
               >
                 <Avatar name={review.user.name} src={review.user.avatarUrl} />
                 <div className="min-w-0 flex-1">

@@ -114,7 +114,7 @@ export function CourseBrowser({
                 aria-pressed={active}
                 onClick={() => setFilter(item.key)}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150",
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-[background-color,color,box-shadow] duration-150",
                   active
                     ? "bg-brand-900 text-white shadow-sm"
                     : "bg-white text-slate-600 ring-1 ring-inset ring-slate-200 hover:bg-slate-50 hover:text-slate-900",
@@ -149,7 +149,7 @@ export function CourseBrowser({
           <button
             type="button"
             onClick={reset}
-            className="mt-2 inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition-all duration-150 hover:border-slate-400 hover:bg-slate-50"
+            className="mt-2 inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition-[background-color,border-color] duration-150 hover:border-slate-400 hover:bg-slate-50"
           >
             {t("crsResetFilters")}
           </button>

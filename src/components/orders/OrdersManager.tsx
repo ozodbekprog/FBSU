@@ -254,7 +254,7 @@ export default function OrdersManager({
                       onClick={() => setType(value)}
                       aria-pressed={active}
                       className={cn(
-                        "flex items-start gap-3 rounded-2xl border p-4 text-left transition-all duration-150",
+                        "flex items-start gap-3 rounded-2xl border p-4 text-left transition-[background-color,border-color,box-shadow] duration-150",
                         active
                           ? "border-brand-500 bg-brand-50/70 shadow-sm ring-2 ring-brand-500/15"
                           : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",

@@ -19,7 +19,7 @@ export async function ExportButtons({ courseId }: { courseId: string }) {
           key={item.href}
           href={item.href}
           download
-          className="group inline-flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white py-2 pl-2 pr-4 text-sm font-medium text-slate-700 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-300 hover:text-brand-900 hover:shadow-md active:translate-y-0"
+          className="group inline-flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white py-2 pl-2 pr-4 text-sm font-medium text-slate-700 shadow-sm transition-[transform,translate,border-color,color,box-shadow] duration-150 hover:-translate-y-0.5 hover:border-brand-300 hover:text-brand-900 hover:shadow-md active:translate-y-0"
         >
           <span className="inline-flex size-7 items-center justify-center rounded-lg bg-brand-50 text-brand-700 transition-colors duration-150 group-hover:bg-brand-100">
             <svg

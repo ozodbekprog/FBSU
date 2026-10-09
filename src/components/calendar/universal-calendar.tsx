@@ -750,7 +750,7 @@ export function UniversalCalendar({ canManage }: { canManage: boolean }) {
                           type="button"
                           onClick={() => setType(option)}
                           className={cn(
-                            "flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-all duration-150",
+                            "flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-[background-color,border-color,color,box-shadow] duration-150",
                             active
                               ? meta.chipActive
                               : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50",
@@ -926,7 +926,7 @@ export function UniversalCalendar({ canManage }: { canManage: boolean }) {
                     type="button"
                     onClick={() => setSelected(key)}
                     className={cn(
-                      "flex min-h-16 flex-col items-start gap-1.5 rounded-xl border border-slate-100 bg-white p-1.5 text-left transition-all duration-150 hover:border-brand-200 hover:bg-brand-50/40 sm:min-h-20 sm:p-2",
+                      "flex min-h-16 flex-col items-start gap-1.5 rounded-xl border border-slate-100 bg-white p-1.5 text-left transition-[background-color,border-color,box-shadow] duration-150 hover:border-brand-200 hover:bg-brand-50/40 sm:min-h-20 sm:p-2",
                       isSelected && "border-brand-200 bg-brand-50/70 ring-1 ring-brand-200",
                     )}
                   >

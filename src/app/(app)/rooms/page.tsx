@@ -201,7 +201,7 @@ export default async function RoomsPage({
                     <Link
                       key={room.id}
                       href={`/rooms/${room.id}${findWeek ? `?week=${findWeek}` : ""}`}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition-all duration-150 hover:border-brand-300 hover:text-brand-800"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-150 hover:border-brand-300 hover:text-brand-800"
                     >
                       <span className="size-1.5 rounded-full bg-emerald-400" />
                       {room.name}

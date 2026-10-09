@@ -47,7 +47,7 @@ function ChevronIcon() {
       strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="text-slate-300 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-brand-600"
+      className="text-slate-300 transition-[transform,color] duration-200 group-hover:translate-x-0.5 group-hover:text-brand-600"
     >
       <path d="m9 6 6 6-6 6" />
     </svg>
@@ -159,7 +159,7 @@ export default async function CourseAssignmentsPage({
                       href={`/courses/${course.slug}/assignments/${assignment.id}`}
                       className="block"
                     >
-                    <Card className="group relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+                    <Card className="group relative overflow-hidden transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:shadow-lift">
                       <span className={cn("absolute inset-y-0 left-0 w-1", accent)} />
                     <CardBody className="flex flex-wrap items-center justify-between gap-4 pl-6">
                       <div className="min-w-0 flex-1">
@@ -240,7 +240,7 @@ export default async function CourseAssignmentsPage({
                 className="animate-fade-up"
                 style={{ animationDelay: `${Math.min(index, 8) * 50 + 120}ms` }}
               >
-              <Card className="group relative transition-all duration-200">
+              <Card className="group relative transition-[transform,opacity,background-color,border-color,color,box-shadow,width,height,grid-template-rows] duration-200">
                 <CardBody className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2.5">

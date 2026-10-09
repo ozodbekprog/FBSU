@@ -205,7 +205,7 @@ export function BuilderGrid({
                       onDrop={(event) => onDropCell(event, cell)}
                       onClick={() => onSelectCell(cell)}
                       className={cn(
-                        "group min-h-24 rounded-2xl border p-1.5 transition-all duration-150",
+                        "group min-h-24 rounded-2xl border p-1.5 transition-[background-color,border-color,box-shadow] duration-150",
                         isHover
                           ? "border-brand-400 bg-brand-50 ring-2 ring-brand-200"
                           : "border-slate-200/80 bg-slate-50/40",
@@ -233,7 +233,7 @@ export function BuilderGrid({
                         {cellEntries.length === 0 ? (
                           <div
                             className={cn(
-                              "flex min-h-20 items-center justify-center rounded-xl border border-dashed text-[11px] font-medium transition-all duration-150",
+                              "flex min-h-20 items-center justify-center rounded-xl border border-dashed text-[11px] font-medium transition-[opacity,background-color,border-color,color] duration-150",
                               hasSelection
                                 ? "border-brand-300 bg-brand-50/50 text-brand-500"
                                 : "border-slate-200/80 text-slate-500 opacity-0 group-hover:opacity-100 group-hover:border-brand-300 group-hover:bg-brand-50/50 group-hover:text-brand-400",

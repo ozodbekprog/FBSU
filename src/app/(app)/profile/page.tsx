@@ -132,7 +132,7 @@ export default async function ProfilePage() {
       </div>
       <Link
         href="/face"
-        className="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-slate-200/70 bg-white p-5 transition-all duration-150 hover:border-brand-200 hover:shadow-lift"
+        className="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-slate-200/70 bg-white p-5 transition-[transform,box-shadow,border-color,background-color] duration-150 hover:border-brand-200 hover:shadow-lift"
       >
         <span className="flex items-center gap-3">
           <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">

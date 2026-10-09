@@ -287,7 +287,7 @@ export function CourseMaterials({
                 </span>
                 <span
                   className={cn(
-                    "inline-flex size-7 shrink-0 items-center justify-center rounded-full transition-all duration-200",
+                    "inline-flex size-7 shrink-0 items-center justify-center rounded-full transition-[background-color,color] duration-200",
                     open[section.id]
                       ? "bg-brand-50 text-brand-700"
                       : "bg-slate-100/70 text-slate-600 group-hover:bg-slate-100",

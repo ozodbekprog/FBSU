@@ -53,7 +53,7 @@ export async function CertificateCard({ certificate }: { certificate: Certificat
 
   return (
     <Link href={`/certificates/${certificate.id}`} className="block h-full">
-    <Card className="group flex h-full flex-col overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+    <Card className="group flex h-full flex-col overflow-hidden transition-[transform,translate,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lift">
       <div className="relative h-[74px] shrink-0 overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-brand-800">
         <div
           className="absolute inset-0 opacity-30"

@@ -134,7 +134,7 @@ export function ProfileForm({
             <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-100">
               <div
                 className={cn(
-                  "h-full rounded-full transition-all duration-300",
+                  "h-full rounded-full transition-[width] duration-300",
                   bioNearLimit ? "bg-amber-400" : "bg-gradient-to-r from-brand-600 to-brand-400",
                 )}
                 style={{ width: `${bioPercent}%` }}

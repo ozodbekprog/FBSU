@@ -144,7 +144,7 @@ export function QuestionForm({
                     type="button"
                     onClick={() => changeType(value)}
                     className={cn(
-                      "flex flex-col items-start gap-1.5 rounded-xl border px-3 py-2.5 text-left text-xs font-medium transition-all duration-150",
+                      "flex flex-col items-start gap-1.5 rounded-xl border px-3 py-2.5 text-left text-xs font-medium transition-[background-color,border-color,color,box-shadow] duration-150",
                       active
                         ? cn("border-transparent text-white shadow-sm", TYPE_ACTIVE[value])
                         : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50",
@@ -196,7 +196,7 @@ export function QuestionForm({
                 <div
                   key={index}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-all duration-150",
+                    "flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-[background-color,border-color,box-shadow] duration-150",
                     checked
                       ? "border-emerald-300 bg-emerald-50/70 ring-2 ring-emerald-400/40"
                       : "border-slate-200 bg-white hover:border-slate-300",

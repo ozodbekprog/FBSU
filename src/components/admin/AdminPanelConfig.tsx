@@ -91,8 +91,8 @@ export function AdminPanelConfig({ hidden }: { hidden: AdminWidget[] }) {
                     <span
                       className={
                         visible
-                          ? "absolute top-0.5 left-5.5 size-5 rounded-full bg-white shadow transition-all"
-                          : "absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition-all"
+                          ? "absolute top-0.5 left-5.5 size-5 rounded-full bg-white shadow transition-[left]"
+                          : "absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition-[left]"
                       }
                     />
                   </button>

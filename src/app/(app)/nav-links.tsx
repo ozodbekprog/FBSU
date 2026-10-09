@@ -71,7 +71,7 @@ export function MobileTabBar({ tabs }: { tabs: MobileTab[] }) {
     <nav
       aria-label={t("shellMobileNav")}
       data-tour="mobile-nav"
-      className="fixed bottom-0 left-0 z-30 w-full border-t border-slate-200/70 bg-white/90 pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_-18px_rgba(29,52,96,0.45)] backdrop-blur md:hidden"
+      className="app-shell-tabbar fixed bottom-0 left-0 z-30 w-full border-t border-slate-200/70 bg-white/90 pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_-18px_rgba(29,52,96,0.45)] backdrop-blur md:hidden"
     >
       <div className="mx-auto flex max-w-md items-stretch px-1.5">
         {tabs.map((tab) => {

@@ -95,7 +95,7 @@ export async function ScoreRing({
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={`${dash} ${circumference}`}
-            className={cn("fill-none transition-all duration-700", tone.stroke)}
+            className={cn("fill-none transition-[stroke-dasharray] duration-700", tone.stroke)}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">

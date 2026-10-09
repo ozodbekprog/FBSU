@@ -58,7 +58,7 @@ export function CoverUpload({ className }: { className?: string }) {
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={busy}
-        className="group flex w-full items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-white/70 px-4 py-3 text-left transition-all duration-200 hover:border-brand-300 hover:bg-brand-50/40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20 disabled:cursor-not-allowed disabled:opacity-70"
+        className="group flex w-full items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-white/70 px-4 py-3 text-left transition-[background-color,border-color,box-shadow,opacity] duration-200 hover:border-brand-300 hover:bg-brand-50/40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20 disabled:cursor-not-allowed disabled:opacity-70"
       >
         <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-50 to-brand-100/70 text-brand-700 ring-1 ring-inset ring-brand-100 transition-transform duration-200 group-hover:scale-105">
           {busy ? (

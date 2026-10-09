@@ -56,7 +56,7 @@ function LessonRow({
   const card = (
     <Card
       className={cn(
-        "flex flex-wrap items-center gap-3 p-3.5 transition-all duration-200",
+        "flex flex-wrap items-center gap-3 p-3.5 transition-[transform,translate,background-color,border-color,box-shadow] duration-200",
         cancelled
           ? "border-dashed border-rose-200 bg-rose-50/50 opacity-80"
           : lessonHref

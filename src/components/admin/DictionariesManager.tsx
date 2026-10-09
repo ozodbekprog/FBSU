@@ -424,7 +424,7 @@ export default function DictionariesManager({
               type="button"
               onClick={() => switchTab(item.key)}
               className={cn(
-                "group inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-sm font-medium transition-all duration-200",
+                "group inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-sm font-medium transition-[transform,translate,background-color,color,box-shadow] duration-200",
                 active
                   ? `bg-gradient-to-b text-white shadow-md ${TAB_ACTIVE[item.key]}`
                   : "text-slate-600 hover:-translate-y-px hover:bg-slate-100 hover:text-brand-900",
@@ -815,7 +815,7 @@ export default function DictionariesManager({
                             <div className="flex items-center gap-2.5">
                               <div className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-100">
                                 <div
-                                  className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-900 transition-all duration-500"
+                                  className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-900 transition-[width] duration-500"
                                   style={{ width: `${Math.min(100, Math.round((duration / 180) * 100))}%` }}
                                 />
                               </div>
@@ -978,7 +978,7 @@ export default function DictionariesManager({
                       <label
                         key={teacher.id}
                         className={cn(
-                          "flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition-all duration-150",
+                          "flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition-[background-color,border-color,box-shadow] duration-150",
                           checked
                             ? "border-brand-200 bg-brand-50/70 shadow-[0_1px_2px_rgba(29,52,96,0.06)]"
                             : "border-transparent hover:bg-slate-50",

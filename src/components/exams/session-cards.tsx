@@ -64,7 +64,7 @@ export async function StaffSessionCard({ session }: { session: StaffSessionItem 
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
   return (
-    <Card className="relative flex h-full flex-col p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+    <Card className="relative flex h-full flex-col p-5 transition-[transform,translate,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lift">
       <Link href={`/exams/sessions/${session.id}`} aria-label={session.title} className="absolute inset-0 rounded-2xl" />
       <div className="flex items-start gap-3">
         <SessionDateTile date={session.date} month={dictionary[MONTH_KEYS[session.date.getMonth()]].slice(0, 3)} />
@@ -115,7 +115,7 @@ export async function StudentSessionCard({ session }: { session: StudentSessionI
       }`
     : "—";
   return (
-    <Card className="relative flex h-full flex-col p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+    <Card className="relative flex h-full flex-col p-5 transition-[transform,translate,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lift">
       <Link href={`/exams/sessions/${session.id}`} aria-label={session.title} className="absolute inset-0 rounded-2xl" />
       <div className="flex items-start gap-3">
         <SessionDateTile date={session.date} month={dictionary[MONTH_KEYS[session.date.getMonth()]].slice(0, 3)} />

@@ -213,7 +213,7 @@ export function NowLesson({
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
             <div
               className={cn(
-                "h-full rounded-full transition-all duration-700 ease-out",
+                "h-full rounded-full transition-[width] duration-700 ease-out",
                 current
                   ? "bg-gradient-to-r from-emerald-400 to-emerald-500"
                   : "w-1/4 animate-pulse bg-gradient-to-r from-brand-300 to-brand-400",

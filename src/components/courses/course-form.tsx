@@ -149,7 +149,7 @@ export function CourseForm({ course }: { course?: CourseFormData }) {
                     aria-label={color}
                     onClick={() => setCoverColor(color)}
                     className={cn(
-                      "relative inline-flex size-9 items-center justify-center rounded-full shadow-sm ring-2 ring-offset-2 transition-all duration-150",
+                      "relative inline-flex size-9 items-center justify-center rounded-full shadow-sm ring-2 ring-offset-2 transition-[transform,translate,scale,box-shadow] duration-150",
                       coverColor === color
                         ? "scale-105 ring-brand-900"
                         : "ring-transparent hover:scale-105 hover:ring-slate-300",
@@ -204,7 +204,7 @@ export function CourseForm({ course }: { course?: CourseFormData }) {
               </span>
               <h3 className="text-sm font-semibold text-brand-950">{t("crsStatus")}</h3>
             </div>
-            <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50/60 p-4 transition-all duration-150 hover:border-brand-200 hover:bg-white">
+            <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50/60 p-4 transition-[background-color,border-color] duration-150 hover:border-brand-200 hover:bg-white">
               <span className="flex items-start gap-3">
                 <span className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-brand-700 ring-1 ring-inset ring-slate-200">
                   <svg

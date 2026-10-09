@@ -184,7 +184,7 @@ function QuickActionLink({ href, label, icon }: QuickAction) {
   return (
     <Link
       href={href}
-      className="group inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3.5 py-2 text-sm font-medium text-white backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/20"
+      className="group inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3.5 py-2 text-sm font-medium text-white backdrop-blur transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-200 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/20"
     >
       <span className="text-gold-300 transition-transform duration-200 group-hover:scale-110">{icon}</span>
       {label}
@@ -264,7 +264,7 @@ function StatTile({
   href?: string;
 }) {
   const tile = (
-    <Card className="group relative h-full overflow-hidden p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+    <Card className="group relative h-full overflow-hidden p-5 transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:shadow-lift">
       <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400 opacity-60 transition-opacity duration-200 group-hover:opacity-100" />
       {href ? (
         <svg
@@ -274,7 +274,7 @@ function StatTile({
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="absolute right-3 top-3 size-4 text-slate-300 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-brand-600"
+          className="absolute right-3 top-3 size-4 text-slate-300 transition-[transform,color] duration-200 group-hover:translate-x-0.5 group-hover:text-brand-600"
         >
           <path d="M7 17 17 7" />
           <path d="m8 7 9 0 0 9" />
@@ -914,7 +914,7 @@ export default async function DashboardPage() {
                     <div
                       key={lesson.id}
                       className={cn(
-                        "flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-card",
+                        "flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-card",
                         lesson.marked ? "border-emerald-100 bg-emerald-50/40" : "border-slate-100",
                       )}
                     >
@@ -1297,7 +1297,7 @@ export default async function DashboardPage() {
                     <Link
                       key={e.id}
                       href={`/courses/${e.course.slug}`}
-                      className="group flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/40 p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:bg-white hover:shadow-card"
+                      className="group flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/40 p-3 transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:bg-white hover:shadow-card"
                     >
                       <span
                         className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl text-xs font-semibold text-white shadow-sm"

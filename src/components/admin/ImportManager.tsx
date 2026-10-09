@@ -169,7 +169,7 @@ export default function ImportManager() {
               onClick={() => selectType(item.id)}
               style={{ animationDelay: `${index * 60}ms` }}
               className={cn(
-                "animate-fade-up group relative rounded-2xl border p-4 text-left transition-all duration-200",
+                "animate-fade-up group relative rounded-2xl border p-4 text-left transition-[transform,translate,background-color,border-color,box-shadow] duration-200",
                 active
                   ? "border-brand-300 bg-gradient-to-b from-brand-50/80 to-white shadow-lift ring-2 ring-brand-500/15"
                   : "border-slate-200/70 bg-white hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift",

@@ -139,7 +139,7 @@ export function AttendanceBulk({
                             setDraft((prev) => ({ ...prev, [student.id]: option.value }))
                           }
                           className={cn(
-                            "rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all duration-150 sm:px-3",
+                            "rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-[background-color,color,box-shadow] duration-150 sm:px-3",
                             status === option.value
                               ? option.active
                               : "text-slate-500 hover:bg-white hover:text-slate-700",

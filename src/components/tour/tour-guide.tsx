@@ -288,7 +288,7 @@ export function TourGuide({ role }: { role: string }) {
       {spotlightStyle ? (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute rounded-2xl ring-1 ring-white/40 transition-all duration-300 ease-out"
+          className="pointer-events-none absolute rounded-2xl ring-1 ring-white/40 transition-[top,left,width,height] duration-300 ease-out"
           style={{ ...spotlightStyle, boxShadow: "0 0 0 9999px rgba(2, 6, 23, 0.65)" }}
         />
       ) : null}

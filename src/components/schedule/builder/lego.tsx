@@ -57,7 +57,7 @@ export function LegoSurface({
     <div
       style={surfaceStyle}
       className={cn(
-        "relative overflow-hidden rounded-2xl border-2 transition-all duration-200",
+        "relative overflow-hidden rounded-2xl border-2 transition-[transform,translate,scale,box-shadow,border-color,background-color,opacity] duration-200",
         tone.card,
         selected ? "ring-2 ring-brand-500 ring-offset-1" : "",
         snapping ? "-translate-y-1 scale-[1.03]" : "hover:-translate-y-0.5",

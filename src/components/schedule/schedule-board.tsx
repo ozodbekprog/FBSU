@@ -93,7 +93,7 @@ const BLOCK_SHADOW = "shadow-[0_1px_2px_rgba(16,24,40,0.05),0_10px_22px_-14px_rg
 const ATTENDANCE_CLASS = "border border-slate-200 text-brand-700! hover:border-brand-300! hover:bg-brand-50!";
 const DELETE_CLASS = "text-slate-600! hover:bg-rose-50! hover:text-rose-600!";
 const EXPORT_CLASS =
-  "inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-600 shadow-sm transition-all duration-150 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900";
+  "inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-600 shadow-sm transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900";
 const FILTER_CLASS =
   "h-9 w-full appearance-none rounded-xl border border-slate-200 bg-white pl-9 pr-8 text-xs font-medium text-slate-700 shadow-sm transition focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10 disabled:bg-slate-50 disabled:text-slate-400";
 const FILTER_ICON_CLASS = "pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-slate-600";
@@ -1179,7 +1179,7 @@ export function ScheduleBoard({
                                 key={entry.id}
                                 title={entry.note ?? undefined}
                                 className={cn(
-                                  "group relative overflow-hidden rounded-xl border border-slate-200/70 p-3 pl-4 transition-all duration-200 ease-out",
+                                  "group relative overflow-hidden rounded-xl border border-slate-200/70 p-3 pl-4 transition-[opacity] duration-200 ease-out",
                                   BLOCK_SHADOW,
                                   cancelled
                                     ? "opacity-70"
@@ -1195,7 +1195,7 @@ export function ScheduleBoard({
                           {canDrop && cellEntries.length === 0 ? (
                             <div
                               className={cn(
-                                "flex min-h-[72px] items-center justify-center rounded-xl border border-dashed text-lg font-semibold transition-all duration-150",
+                                "flex min-h-[72px] items-center justify-center rounded-xl border border-dashed text-lg font-semibold transition-[background-color,border-color,color,opacity] duration-150",
                                 isHover || selectedBlockId
                                   ? "border-brand-300 bg-brand-50/70 text-brand-500"
                                   : "border-slate-200/80 text-slate-500 opacity-60",
@@ -1309,7 +1309,7 @@ export function ScheduleBoard({
                             title={entry.note ?? undefined}
                             onClick={manageable ? (event) => handleEntryClick(event, entry) : undefined}
                             className={cn(
-                              "relative overflow-hidden rounded-xl border p-3 pl-4 transition-all duration-200 ease-out",
+                              "relative overflow-hidden rounded-xl border p-3 pl-4 transition-[transform,translate,box-shadow,border-color,opacity] duration-200 ease-out",
                               BLOCK_SHADOW,
                               cancelled
                                 ? "border-rose-200/70 opacity-70"
@@ -1551,7 +1551,7 @@ export function ScheduleBoard({
                   onClick={() => changeView("grid")}
                   aria-pressed={view === "grid"}
                   className={cn(
-                    "inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-all duration-150",
+                    "inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-[background-color,color,box-shadow] duration-150",
                     view === "grid" ? "bg-white text-brand-800 shadow-sm" : "text-slate-500 hover:text-slate-700",
                   )}
                 >
@@ -1563,7 +1563,7 @@ export function ScheduleBoard({
                   onClick={() => changeView("list")}
                   aria-pressed={view === "list"}
                   className={cn(
-                    "inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-all duration-150",
+                    "inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-[background-color,color,box-shadow] duration-150",
                     view === "list" ? "bg-white text-brand-800 shadow-sm" : "text-slate-500 hover:text-slate-700",
                   )}
                 >

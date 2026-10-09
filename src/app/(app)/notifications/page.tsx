@@ -91,7 +91,7 @@ export default async function NotificationsPage() {
                   </span>
                   <div
                     className={cn(
-                      "relative overflow-hidden rounded-2xl border px-5 py-4 transition-all duration-200",
+                      "relative overflow-hidden rounded-2xl border px-5 py-4 transition-[transform,box-shadow,border-color,background-color] duration-200",
                       n.isRead
                         ? "border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)] hover:border-slate-300"
                         : "border-brand-100 bg-brand-50/40 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_10px_28px_-18px_rgba(29,52,96,0.4)] hover:border-brand-200",

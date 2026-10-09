@@ -325,7 +325,7 @@ export function BookingsBoard({
                           type="button"
                           onClick={() => setSlot(value)}
                           className={cn(
-                            "flex flex-col items-center rounded-xl border px-1 py-2 text-center transition-all duration-150",
+                            "flex flex-col items-center rounded-xl border px-1 py-2 text-center transition-[background-color,border-color,color,box-shadow] duration-150",
                             active
                               ? "border-brand-500 bg-brand-50 text-brand-800 shadow-sm ring-2 ring-brand-500/15"
                               : "border-slate-200 bg-white text-slate-500 hover:border-brand-300 hover:text-slate-700",
@@ -510,7 +510,7 @@ export function BookingsBoard({
                       <li
                         key={booking.id}
                         className={cn(
-                          "relative overflow-hidden rounded-xl border p-4 transition-all duration-200",
+                          "relative overflow-hidden rounded-xl border p-4 transition-[background-color,border-color] duration-200",
                           active
                             ? "border-slate-200 bg-white hover:border-brand-200"
                             : "border-slate-200/70 bg-slate-50/70",

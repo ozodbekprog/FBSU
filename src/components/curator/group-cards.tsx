@@ -28,7 +28,7 @@ export async function CuratorGroupCards({
           href={`/curator/${group.id}`}
           className="group rounded-2xl focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20"
         >
-          <Card className="h-full transition-all duration-150 group-hover:-translate-y-0.5 group-hover:border-brand-200 group-hover:shadow-md">
+          <Card className="h-full transition-[transform,translate,box-shadow,border-color] duration-150 group-hover:-translate-y-0.5 group-hover:border-brand-200 group-hover:shadow-md">
             <CardBody>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

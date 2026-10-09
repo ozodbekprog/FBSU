@@ -211,7 +211,7 @@ export default function AdminNav({ role }: { role?: string }) {
             href={link.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "group relative inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-sm font-medium transition-all duration-200",
+              "group relative inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-sm font-medium transition-[transform,translate,background-color,color,box-shadow] duration-200",
               active
                 ? "bg-gradient-to-b from-brand-800 to-brand-950 text-white shadow-md shadow-brand-900/25"
                 : "text-slate-600 hover:-translate-y-px hover:bg-slate-100 hover:text-brand-900",
@@ -219,7 +219,7 @@ export default function AdminNav({ role }: { role?: string }) {
           >
             <span
               className={cn(
-                "transition-all duration-200",
+                "transition-[transform,translate,scale,rotate,color] duration-200",
                 active ? "text-gold-300" : "text-slate-600 group-hover:scale-110 group-hover:text-brand-600",
               )}
             >

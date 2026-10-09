@@ -257,7 +257,7 @@ function StatTile({
     <Card
       className={cn(
         "group relative h-full overflow-hidden p-5",
-        href && "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift",
+        href && "transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:shadow-lift",
       )}
     >
       <span className={cn("absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r", bar)} />
@@ -401,9 +401,9 @@ export default async function AdminPage() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="group flex flex-col gap-3 rounded-xl border border-slate-200/70 bg-slate-50/60 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:bg-brand-50/60 hover:shadow-sm"
+                    className="group flex flex-col gap-3 rounded-xl border border-slate-200/70 bg-slate-50/60 p-4 transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:bg-brand-50/60 hover:shadow-sm"
                   >
-                    <span className="inline-flex size-9 items-center justify-center rounded-xl bg-white text-brand-700 shadow-sm ring-1 ring-slate-200/70 transition-all duration-200 group-hover:bg-brand-900 group-hover:text-white group-hover:ring-brand-900">
+                    <span className="inline-flex size-9 items-center justify-center rounded-xl bg-white text-brand-700 shadow-sm ring-1 ring-slate-200/70 transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-200 group-hover:bg-brand-900 group-hover:text-white group-hover:ring-brand-900">
                       {link.icon}
                     </span>
                     <span className="min-w-0">

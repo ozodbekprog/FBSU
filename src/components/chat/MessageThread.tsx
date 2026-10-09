@@ -191,7 +191,7 @@ export function MessageThread({
 
       <div className="border-t border-slate-100 bg-white p-3 sm:p-4">
         {error ? <p className="mb-2 px-1 text-xs text-rose-600">{error}</p> : null}
-        <div className="flex items-end gap-1.5 rounded-3xl border border-slate-200 bg-white p-1.5 pl-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-all duration-150 focus-within:border-brand-300 focus-within:ring-4 focus-within:ring-brand-500/10">
+        <div className="flex items-end gap-1.5 rounded-3xl border border-slate-200 bg-white p-1.5 pl-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-[border-color,box-shadow] duration-150 focus-within:border-brand-300 focus-within:ring-4 focus-within:ring-brand-500/10">
           <textarea
             rows={1}
             value={draft}
@@ -206,7 +206,7 @@ export function MessageThread({
             onClick={() => void submit()}
             disabled={sending || draft.trim().length === 0}
             aria-label={t("msgSend")}
-            className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-800 to-brand-950 text-white shadow-sm transition-all duration-150 hover:from-brand-700 hover:to-brand-900 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-800 to-brand-950 text-white shadow-sm transition-[--tw-gradient-from,--tw-gradient-to,opacity] duration-150 hover:from-brand-700 hover:to-brand-900 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="m22 2-7 20-4-9-9-4Z" />

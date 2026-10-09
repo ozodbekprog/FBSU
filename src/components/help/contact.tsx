@@ -69,7 +69,7 @@ export async function ContactCards() {
                 <HelpIcon
                   name="arrowRight"
                   size={14}
-                  className="shrink-0 -translate-x-1 opacity-0 transition-all duration-200 group-hover/link:translate-x-0 group-hover/link:opacity-100"
+                  className="shrink-0 -translate-x-1 opacity-0 transition-[transform,translate,opacity] duration-200 group-hover/link:translate-x-0 group-hover/link:opacity-100"
                 />
               </a>
             ) : (

@@ -256,7 +256,7 @@ export default function SettingsManager({
       <Card
         key={item.key}
         className={cn(
-          "group relative overflow-hidden transition-all duration-200",
+          "group relative overflow-hidden transition-[border-color,background-color] duration-200",
           enabled ? "border-brand-200/70" : "border-slate-200/70 bg-slate-50/40",
         )}
       >
@@ -266,7 +266,7 @@ export default function SettingsManager({
         <CardBody className="flex items-center gap-4">
           <span
             className={cn(
-              "relative inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white transition-all duration-300",
+              "relative inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white transition-[transform,translate,scale,rotate,opacity,filter,box-shadow] duration-300",
               TOGGLE_TONES[item.key],
               enabled ? "scale-100 shadow-lg" : "scale-95 opacity-75 saturate-0",
             )}
@@ -293,7 +293,7 @@ export default function SettingsManager({
             disabled={busy}
             onClick={() => toggle(item)}
             className={cn(
-              "relative inline-flex h-8 w-14 shrink-0 items-center rounded-full p-1 transition-all duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20",
+              "relative inline-flex h-8 w-14 shrink-0 items-center rounded-full p-1 transition-[background-color,box-shadow,opacity] duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20",
               enabled ? "bg-gradient-to-r from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/20" : "bg-slate-200",
               busy ? "cursor-wait opacity-70" : "cursor-pointer",
             )}
@@ -357,7 +357,7 @@ export default function SettingsManager({
         />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {REMINDER_ITEMS.map(renderToggle)}
-          <Card className="group relative overflow-hidden border-brand-200/70 transition-all duration-200">
+          <Card className="group relative overflow-hidden border-brand-200/70 transition-[border-color,box-shadow] duration-200">
             <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
             <CardBody className="flex flex-col gap-3">
               <div className="flex items-center gap-4">
@@ -413,7 +413,7 @@ export default function SettingsManager({
         />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {VIEW_ITEMS.map(renderToggle)}
-          <Card className="group relative overflow-hidden border-brand-200/70 transition-all duration-200">
+          <Card className="group relative overflow-hidden border-brand-200/70 transition-[border-color,box-shadow] duration-200">
             <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
             <CardBody className="flex flex-col gap-3">
               <div className="flex items-center gap-4">
@@ -448,7 +448,7 @@ export default function SettingsManager({
         />
         <Card
           className={cn(
-            "relative overflow-hidden transition-all duration-200",
+            "relative overflow-hidden transition-[border-color,box-shadow] duration-200",
             telegramLinked ? "border-brand-200/70" : "border-slate-200/70",
           )}
         >

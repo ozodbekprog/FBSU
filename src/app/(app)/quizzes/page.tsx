@@ -101,7 +101,7 @@ export default async function QuizzesPage() {
               return (
                 <Card
                   key={quiz.id}
-                  className="group relative flex h-full flex-col overflow-hidden p-5 transition-all duration-200 hover:border-brand-200 hover:shadow-lift"
+                  className="group relative flex h-full flex-col overflow-hidden p-5 transition-[transform,box-shadow,border-color,background-color] duration-200 hover:border-brand-200 hover:shadow-lift"
                 >
                   <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                   <Link
@@ -225,7 +225,7 @@ export default async function QuizzesPage() {
                   : { tone: "brand" as const, label: dictionary.mscOrderStatusNew };
             return (
               <Link key={quiz.id} href={`/quizzes/${quiz.id}`} className="block h-full">
-                <Card className="group relative flex h-full flex-col overflow-hidden p-5 transition-all duration-200 hover:border-brand-200 hover:shadow-lift">
+                <Card className="group relative flex h-full flex-col overflow-hidden p-5 transition-[transform,box-shadow,border-color,background-color] duration-200 hover:border-brand-200 hover:shadow-lift">
                   <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">

@@ -83,7 +83,7 @@ const USERS_ICON = (
 );
 
 const CHEVRON_ICON = (
-  <svg className="shrink-0 text-slate-300 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-brand-600" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg className="shrink-0 text-slate-300 transition-[transform,translate,color] duration-200 group-hover:translate-x-0.5 group-hover:text-brand-600" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="m9 18 6-6-6-6" />
   </svg>
 );
@@ -134,7 +134,7 @@ function ResultRow({
   return (
     <Link
       href={href}
-      className="group flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 px-4 py-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-100 hover:bg-white hover:shadow-card"
+      className="group flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 px-4 py-3.5 transition-[transform,translate,background-color,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-brand-100 hover:bg-white hover:shadow-card"
     >
       {avatar ?? icon}
       <span className="min-w-0 flex-1">

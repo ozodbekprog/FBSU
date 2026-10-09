@@ -179,7 +179,7 @@ export default async function CoursesPage() {
             {stats.map((stat) => (
               <Card
                 key={stat.label}
-                className="relative flex items-center gap-3.5 overflow-hidden p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift"
+                className="relative flex items-center gap-3.5 overflow-hidden p-4 transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:shadow-lift"
               >
                 <span className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
                 <span

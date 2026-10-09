@@ -86,7 +86,7 @@ export default async function HemisExportPage() {
               <p className="text-sm text-slate-600">{item.description}</p>
               <a
                 href={`/api/admin/hemis-export?type=${item.type}`}
-                className="inline-flex w-fit items-center justify-center gap-1.5 rounded-xl bg-brand-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-brand-800 active:bg-brand-950"
+                className="inline-flex w-fit items-center justify-center gap-1.5 rounded-xl bg-brand-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-150 hover:bg-brand-800 active:bg-brand-950"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />

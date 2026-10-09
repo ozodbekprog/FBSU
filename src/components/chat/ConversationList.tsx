@@ -313,7 +313,7 @@ export function ConversationList({
                               type="button"
                               disabled={starting}
                               onClick={() => void pick(person.id)}
-                              className="group flex w-full items-center gap-3 rounded-2xl border border-transparent px-2.5 py-2 text-left transition-all duration-150 hover:border-slate-200 hover:bg-slate-50 disabled:opacity-60"
+                              className="group flex w-full items-center gap-3 rounded-2xl border border-transparent px-2.5 py-2 text-left transition-[background-color,border-color,opacity] duration-150 hover:border-slate-200 hover:bg-slate-50 disabled:opacity-60"
                             >
                               <Avatar name={person.name} src={person.avatarUrl} size={40} />
                               <span className="min-w-0 flex-1">

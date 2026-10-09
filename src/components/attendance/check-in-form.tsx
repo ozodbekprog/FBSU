@@ -204,7 +204,7 @@ export function CheckInForm({
             <span className="absolute inset-0 animate-pulse-ring rounded-full bg-emerald-400/25" />
             <span
               className={cn(
-                "relative flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/40 ring-8 ring-emerald-50 transition-all duration-500 ease-out",
+                "relative flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/40 ring-8 ring-emerald-50 transition-[transform,translate,scale,rotate,opacity] duration-500 ease-out",
                 pop ? "scale-100 opacity-100" : "scale-50 opacity-0",
               )}
             >
@@ -257,7 +257,7 @@ export function CheckInForm({
             <span className="absolute inset-0 animate-pulse-ring rounded-full bg-amber-400/25" />
             <span
               className={cn(
-                "relative flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg shadow-amber-500/40 ring-8 ring-amber-50 transition-all duration-500 ease-out",
+                "relative flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg shadow-amber-500/40 ring-8 ring-amber-50 transition-[transform,translate,scale,rotate,opacity] duration-500 ease-out",
                 pop ? "scale-100 opacity-100" : "scale-50 opacity-0",
               )}
             >
