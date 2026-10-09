@@ -20,7 +20,10 @@ const METHOD_LABELS: Record<string, string> = {
 };
 
 function money(value: number) {
-  return value.toLocaleString("uz-UZ");
+  const rounded = Math.round(value);
+  const digits = String(Math.abs(rounded));
+  const grouped = digits.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return rounded < 0 ? `-${grouped}` : grouped;
 }
 
 async function paidSumsByContract(contractIds: string[]) {
