@@ -21,7 +21,14 @@ export type AuditAction =
   | "FILE_DOWNLOAD"
   | "SETTINGS_CHANGE"
   | "BUG_REPORTED"
-  | "BUG_UPDATED";
+  | "BUG_UPDATED"
+  // Oylik moduli: moliyaviy harakatlar har doim iz qoldiradi.
+  | "SALARY_CREATE"
+  | "SALARY_UPDATE"
+  | "SALARY_STATUS_CHANGE"
+  | "SALARY_DELETE"
+  | "SALARY_GRANT"
+  | "SALARY_GRANT_REVOKE";
 
 type JsonValue = string | number | boolean | { [key: string]: JsonValue } | JsonValue[] | null;
 

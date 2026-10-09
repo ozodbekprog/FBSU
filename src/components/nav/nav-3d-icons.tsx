@@ -723,6 +723,32 @@ function Finance() {
   );
 }
 
+/** Oylik boshqaruvi — kalkulyator: korpus, ekran va tugmalar. */
+function Payroll() {
+  return (
+    <group>
+      {/* korpus — tik turgan kalkulyator */}
+      <Tile a={[1.36, 1.9, 0.26]} m="brandDeep" p={[0, 0, 0]} radius={0.14} />
+      {/* ekran */}
+      <Tile a={[1.04, 0.5, 0.1]} m="paper" p={[0, 0.6, 0.18]} radius={0.05} />
+      <Cube a={[0.68, 0.1, 0.06]} m="brandLight" p={[0, 0.62, 0.25]} />
+      {/* tugmalar — 3x2 */}
+      {[0.24, 0, -0.24].map((y, row) =>
+        [-0.42, 0, 0.42].map((x, col) => (
+          <Cube
+            key={`${row}-${col}`}
+            a={[0.26, 0.18, 0.08]}
+            m={row === 0 && col === 2 ? "gold" : "brandLight"}
+            p={[x, y, 0.2]}
+          />
+        )),
+      )}
+      {/* tasdiqlash belgisi — o'ng yuqoridagi oltin tugma ustidagi ring */}
+      <Ring rad={0.3} tube={0.045} arc={PI * 1.35} m="goldLight" p={[0, 0.24, 0.34]} r={[0, 0, 0.6]} />
+    </group>
+  );
+}
+
 export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/dashboard": Gauge,  "/courses": Courses,
   "/catalog": Catalog,
@@ -762,6 +788,7 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/documents": Documents,
   "/diplomas": Diplomas,
   "/finance": Finance,
+  "/payroll": Payroll,
 };
 
 export const NAV3D_SPINNING = new Set([

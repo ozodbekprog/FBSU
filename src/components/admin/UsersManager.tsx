@@ -69,6 +69,7 @@ const ROLE_META: Record<
   DEKAN: { label: "admRoleDean", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
   KAFEDRA_MUDIRI: { label: "admRoleHead", tone: "blue", dot: "bg-sky-500", ring: "ring-sky-200/80" },
   REGISTRAR: { label: "admRoleRegistrar", tone: "brand", dot: "bg-sky-500", ring: "ring-sky-200/80" },
+  BUXGALTER: { label: "payRoleBuxgalter", tone: "gold", dot: "bg-amber-600", ring: "ring-amber-200/80" },
   TYUTOR: { label: "admRoleTutor", tone: "green", dot: "bg-emerald-500", ring: "ring-emerald-200/80" },
   TEACHER: { label: "admRoleTeacher", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
   STUDENT: { label: "admRoleStudent", tone: "slate", dot: "bg-slate-400", ring: "ring-slate-200" },

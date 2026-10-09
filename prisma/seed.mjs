@@ -87,7 +87,14 @@ async function main() {
     { email: "dekan@ttpu.uz", name: "Dekan", role: "DEKAN", groupId: null },
     { email: "kafedra@ttpu.uz", name: "Kafedra mudiri", role: "KAFEDRA_MUDIRI", groupId: null },
     { email: "registrar@ttpu.uz", name: "O'quv bo'limi", role: "REGISTRAR", groupId: null },
+    // Oylik bo'yicha birinchi bo'lib mas'ul rol: oylik kiritadi, tasdiqlaydi
+    // va boshqa rollarga ko'rish ruxsati beradi.
+    { email: "buxgalter@ttpu.uz", name: "Buxgalter", role: "BUXGALTER", groupId: null },
+    { email: "prorektor@ttpu.uz", name: "Prorektor", role: "PRO_RECTOR", groupId: null },
     { email: "tyutor@ttpu.uz", name: "Tyutor", role: "TYUTOR", groupId: null },
+    // Login sahifasidagi demo tugmalar shu hisoblarga ulanadi.
+    { email: "xodim@ttpu.uz", name: "Xodim", role: "XODIM", groupId: null },
+    { email: "ota-ona@ttpu.uz", name: "Ota-ona", role: "OTA_ONA", groupId: null },
     { email: "n.mahamatov@ttpu.uz", name: "N. Mahamatov", role: "TEACHER", groupId: null },
     { email: "a.mamanazarov@ttpu.uz", name: "A. Mamanazarov", role: "TEACHER", groupId: null },
     { email: "o.ismoilova@ttpu.uz", name: "O. Ismoilova", role: "TEACHER", groupId: null },

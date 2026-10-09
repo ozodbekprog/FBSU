@@ -119,3 +119,31 @@ export function isStaff(role: Role) {
 export function isRegistrar(role: Role) {
   return role === "REGISTRAR";
 }
+
+/// Oylik bo'yicha birinchi bo'lib mas'ul rol — buxgalter.
+/// U yozuv yaratadi, tasdiqlaydi va boshqa rollarga ko'rish ruxsati beradi.
+export function isBuxgalter(role: Role) {
+  return role === "BUXGALTER";
+}
+
+/**
+ * Oylik moduli ko'rinishi mumkin bo'lgan rollar.
+ *
+ * BUXGALTER hamma narsani ko'radi va boshqaradi. ADMIN o'z moliyaviy
+ * ma'lumotini ko'radi. Qolgan rollar faqat BUXGALTER ularga `SalaryGrant`
+ * orqali ruxsat bergan bo'lsa ko'radi — ya'ni bu funksiya **faqat**
+ * `SalaryGrant`ni tekshiradi, o'z-o'zidan hech kimga ruxsat bermaydi.
+ */
+export async function canViewSalary(role: Role): Promise<boolean> {
+  if (isBuxgalter(role) || role === "ADMIN") return true;
+  const grant = await prisma.salaryGrant.findUnique({
+    where: { role },
+    select: { canView: true, revokedAt: true },
+  });
+  return Boolean(grant && grant.canView && !grant.revokedAt);
+}
+
+/** Oylikni o'zgartirishi mumkin (yozuv kiritish, tasdiqlash) — faqat buxgalter. */
+export function canManageSalary(role: Role) {
+  return isBuxgalter(role);
+}

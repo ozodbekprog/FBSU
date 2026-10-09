@@ -20,6 +20,7 @@ const ROLE_META: Record<Role, { label: string; color: string }> = {
   STUDENT: { label: "Talabalar", color: "#5373b8" },
   TEACHER: { label: "O'qituvchilar", color: "#34497f" },
   REGISTRAR: { label: "O'quv bo'limi", color: "#0284c7" },
+  BUXGALTER: { label: "Buxgalterlar", color: "#b45309" },
   TYUTOR: { label: "Tyutorlar", color: "#059669" },
   KAFEDRA_MUDIRI: { label: "Kafedra mudirlari", color: "#0ea5e9" },
   DEKAN: { label: "Dekanlar", color: "#7c3aed" },

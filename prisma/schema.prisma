@@ -14,11 +14,24 @@ enum Role {
   DEKAN
   KAFEDRA_MUDIRI
   REGISTRAR
+  BUXGALTER
   TYUTOR
   TEACHER
   STUDENT
   XODIM
   OTA_ONA
+}
+
+/// Oylik to'lovining bosqichlar.
+/// `DRAFT` — buxgalter kiritayotgan, hech kimga ko'rinmaydi.
+/// `PENDING` — ko'rib chiqishga yuborilgan.
+/// `APPROVED` — tasdiqlangan, to'lovga tayyor.
+/// `PAID` — to'langan.
+enum SalaryStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  PAID
 }
 
 enum MaterialType {
@@ -62,78 +75,87 @@ enum QuestionType {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  role         Role     @default(STUDENT)
-  avatarUrl    String?
-  coverUrl     String?
-  bio          String?
-  preferences  Json?
-  isActive     Boolean  @default(true)
-  sessionEpoch Int      @default(0)
+  id             String    @id @default(cuid())
+  email          String    @unique
+  passwordHash   String
+  name           String
+  role           Role      @default(STUDENT)
+  avatarUrl      String?
+  coverUrl       String?
+  bio            String?
+  preferences    Json?
+  isActive       Boolean   @default(true)
+  sessionEpoch   Int       @default(0)
   faceDescriptor Json?
   faceEnrolledAt DateTime?
-  createdAt    DateTime @default(now())
+  createdAt      DateTime  @default(now())
 
   groupId String?
   group   Group?  @relation(fields: [groupId], references: [id])
 
-  taughtCourses Course[]       @relation("CourseTeacher")
-  enrollments   Enrollment[]
-  submissions   Submission[]
-  attendance    Attendance[]
-  staffAttendance StaffAttendance[]
-  accessLogs    AccessLog[]
-  documentsCreated  Document[] @relation("DocumentCreator")
-  documentsToSign   Document[] @relation("DocumentSigner")
-  documentsSigned   Document[] @relation("DocumentSignedBy")
+taughtCourses        Course[]          @relation("CourseTeacher")
+  enrollments          Enrollment[]
+  submissions          Submission[]
+  attendance           Attendance[]
+  staffAttendance      StaffAttendance[]
+  accessLogs           AccessLog[]
+  documentsCreated     Document[]        @relation("DocumentCreator")
+  documentsToSign      Document[]        @relation("DocumentSigner")
+  documentsSigned      Document[]        @relation("DocumentSignedBy")
   admissionApplication AdmissionApplication?
-  parentLinksAsParent  ParentLink[] @relation("ParentLinkParent")
-  parentLinksAsStudent ParentLink[] @relation("ParentLinkStudent")
-  contracts    Contract[]
-  payments     Payment[]
-  paymentsCreated Payment[] @relation("PaymentCreatedBy")
-  diplomas     Diploma[]
-  tasksAssigned   WorkTask[] @relation("WorkTaskAssignee")
-  tasksCreated    WorkTask[] @relation("WorkTaskCreator")
-  quizAttempts  QuizAttempt[]
-  notifications Notification[]
+  parentLinksAsParent  ParentLink[]      @relation("ParentLinkParent")
+  parentLinksAsStudent ParentLink[]      @relation("ParentLinkStudent")
+  contracts            Contract[]
+  payments             Payment[]
+  paymentsCreated      Payment[]         @relation("PaymentCreatedBy")
+  diplomas             Diploma[]
+  tasksAssigned        WorkTask[]        @relation("WorkTaskAssignee")
+  tasksCreated         WorkTask[]        @relation("WorkTaskCreator")
+  quizAttempts         QuizAttempt[]
+  notifications        Notification[]
 
   announcements        Announcement[]
   forumTopics          ForumTopic[]
   forumReplies         ForumReply[]
-  certificatesIssued   Certificate[]      @relation("CertificateIssuedBy")
-  certificatesReceived Certificate[]      @relation("CertificateStudent")
-  bonusPointsReceived  BonusPoint[]       @relation("BonusPointStudent")
-  bonusPointsAwarded   BonusPoint[]       @relation("BonusPointAwardedBy")
-  gradeChangeRequests  GradeChangeRequest[] @relation("GradeChangeRequester")
-  gradeChangeReviews   GradeChangeRequest[] @relation("GradeChangeReviewer")
-  oralDefenses         OralDefense[]        @relation("OralDefenseStudent")
-  oralDefenseRequests  OralDefense[]        @relation("OralDefenseRequester")
-  boards               Board[]
-  departmentId         String?
-  department           Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  attendanceSessions   AttendanceSession[]
-  conversationsA       Conversation[]     @relation("ConversationA")
-  conversationsB       Conversation[]     @relation("ConversationB")
-  messagesSent         Message[]          @relation("MessageSender")
-  roomBookings         RoomBooking[]
-  orders               Order[]
-  courseReviews        CourseReview[]
-  subjectsTaught       TeacherSubject[]
-  scheduleEntriesTaught ScheduleEntry[]   @relation("ScheduleTeacher")
-  examSheets           ExamSheet[]
-  auditLogs            AuditLog[]
-  passwordResets       PasswordResetToken[]
-  bugReports           BugReport[]
+  certificatesIssued   Certificate[]  @relation("CertificateIssuedBy")
+  certificatesReceived Certificate[]  @relation("CertificateStudent")
+  bonusPointsReceived  BonusPoint[]   @relation("BonusPointStudent")
+  bonusPointsAwarded   BonusPoint[]   @relation("BonusPointAwardedBy")
 
-  subGroupId String?
-  subGroup   SubGroup? @relation(fields: [subGroupId], references: [id], onDelete: SetNull)
-  facultyId  String?
-  faculty    Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
-  curatedGroups Group[] @relation("GroupCurator")
+  // Oylik moduli: lavozim, haftalik navbar va oylik yozuvlari
+  staffPositionId       String?
+  staffPosition         StaffPosition?         @relation(fields: [staffPositionId], references: [id], onDelete: SetNull)
+  shiftAssignments      StaffShiftAssignment[]
+  salaryRecords         SalaryRecord[]         @relation("SalaryRecordUser")
+  salaryCreated         SalaryRecord[]         @relation("SalaryRecordCreatedBy")
+  salaryReviewed        SalaryRecord[]         @relation("SalaryRecordReviewedBy")
+  salaryGrants          SalaryGrant[]          @relation("SalaryGrantGrantedBy")
+  gradeChangeRequests   GradeChangeRequest[]   @relation("GradeChangeRequester")
+  gradeChangeReviews    GradeChangeRequest[]   @relation("GradeChangeReviewer")
+  oralDefenses          OralDefense[]          @relation("OralDefenseStudent")
+  oralDefenseRequests   OralDefense[]          @relation("OralDefenseRequester")
+  boards                Board[]
+  departmentId          String?
+  department            Department?            @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  attendanceSessions    AttendanceSession[]
+  conversationsA        Conversation[]         @relation("ConversationA")
+  conversationsB        Conversation[]         @relation("ConversationB")
+  messagesSent          Message[]              @relation("MessageSender")
+  roomBookings          RoomBooking[]
+  orders                Order[]
+  courseReviews         CourseReview[]
+  subjectsTaught        TeacherSubject[]
+  scheduleEntriesTaught ScheduleEntry[]        @relation("ScheduleTeacher")
+  examSheets            ExamSheet[]
+  auditLogs             AuditLog[]
+  passwordResets        PasswordResetToken[]
+  bugReports            BugReport[]
+
+  subGroupId    String?
+  subGroup      SubGroup? @relation(fields: [subGroupId], references: [id], onDelete: SetNull)
+  facultyId     String?
+  faculty       Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  curatedGroups Group[]   @relation("GroupCurator")
 
   @@index([groupId])
   @@index([subGroupId])
@@ -192,11 +214,11 @@ model Course {
 }
 
 model Enrollment {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   courseId  String
   userId    String
   status    EnrollmentStatus @default(ACTIVE)
-  createdAt DateTime @default(now())
+  createdAt DateTime         @default(now())
 
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -241,8 +263,8 @@ model Assignment {
   maxScore    Int       @default(100)
   createdAt   DateTime  @default(now())
 
-  course       Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  sectionRef   Section?       @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  course       Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  sectionRef   Section?      @relation(fields: [sectionId], references: [id], onDelete: SetNull)
   submissions  Submission[]
   oralDefenses OralDefense[]
   boards       Board[]
@@ -311,8 +333,8 @@ model Submission {
   feedback     String?
   gradedAt     DateTime?
 
-  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  student    User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assignment   Assignment           @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student      User                 @relation(fields: [studentId], references: [id], onDelete: Cascade)
   gradeChanges GradeChangeRequest[]
 
   @@unique([assignmentId, studentId])
@@ -360,15 +382,15 @@ model Attendance {
 }
 
 model Quiz {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   courseId     String
   title        String
   description  String?
   dueAt        DateTime?
   timeLimitMin Int?
-  maxAttempts  Int      @default(1)
-  isPublished  Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  maxAttempts  Int       @default(1)
+  isPublished  Boolean   @default(false)
+  createdAt    DateTime  @default(now())
 
   course    Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
   questions Question[]
@@ -405,7 +427,7 @@ model QuizAttempt {
 }
 
 model ScheduleEntry {
-  id         String  @id @default(cuid())
+  id         String           @id @default(cuid())
   groupId    String
   dayOfWeek  Int
   slot       Int
@@ -416,11 +438,11 @@ model ScheduleEntry {
   teacherId  String?
   room       String?
   parity     String?
-  status     ScheduleStatus @default(NORMAL)
+  status     ScheduleStatus   @default(NORMAL)
   approval   ScheduleApproval @default(APPROVED)
   note       String?
   sectionId  String?
-  updatedAt  DateTime       @default(now()) @updatedAt
+  updatedAt  DateTime         @default(now()) @updatedAt
 
   group      Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   subjectRef Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
@@ -546,25 +568,131 @@ model BonusPoint {
   reason      String
   createdAt   DateTime @default(now())
 
-  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  student  User   @relation("BonusPointStudent", fields: [studentId], references: [id], onDelete: Cascade)
-  awardedBy User  @relation("BonusPointAwardedBy", fields: [awardedById], references: [id], onDelete: Cascade)
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student   User   @relation("BonusPointStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  awardedBy User   @relation("BonusPointAwardedBy", fields: [awardedById], references: [id], onDelete: Cascade)
 
   @@unique([courseId, studentId, awardedById])
   @@index([studentId])
   @@index([courseId])
 }
 
-model AttendanceSession {
+/// Xodimning lavozimi.
+///
+/// BUXGALTER roli oylik bo'yicha birinchi bo'lib shu yerdan foydalanadi:
+/// lavozimga bazaviy oylik (`baseSalary`) biriktiriladi, xodim esa
+/// `User.staffPositionId` orqali bog'lanadi. Summa — butun so'm (`Int`).
+model StaffPosition {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  code         String?  @unique
+  /// Bazaviy oylik, so'm.
+  baseSalary   Int      @default(0)
+  departmentId String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  users      User[]
+
+  @@index([departmentId])
+}
+
+/// Navbar turi (smena). Xodim haftaning bir kuni uchun bittagina
+/// navbarga biriktiriladi. Vaqti daqiqada (`startMinutes`, 0..1439)
+/// saqlanadi — masalan 08:00 → 480.
+model Shift {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  code         String?  @unique
+  startMinutes Int
+  endMinutes   Int
+  isNight      Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assignments StaffShiftAssignment[]
+}
+
+/// Xodimning haftalik navbari: qaysi hafta kuni, qaysi navbardan.
+model StaffShiftAssignment {
+  id        String    @id @default(cuid())
+  userId    String
+  shiftId   String
+  /// 0 = Yakshanba ... 6 = Shanba
+  weekday   Int
+  startsOn  DateTime  @default(now())
+  endsOn    DateTime?
+  createdAt DateTime  @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shift Shift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekday, startsOn])
+  @@index([weekday])
+  @@index([shiftId])
+}
+
+/// Bir xodimning bir oy uchun oylik yozuvi.
+///
+/// `total` maydoni saqlanadi (base + bonus − deduction), shuning uchun
+/// hisobot o'qishda qayta hisoblash kerak bo'lmaydi. Barcha summalar
+/// butun so'm.
+model SalaryRecord {
+  id           String       @id @default(cuid())
+  userId       String
+  /// Oy boshi (JS `Date` doim UTC 00:00). UNIQUE shu qiymat bo'yicha.
+  month        DateTime
+  baseAmount   Int          @default(0)
+  bonusAmount  Int          @default(0)
+  /// `base + bonus`. Usaqlar (deduction) moduli yo'q — kerak bo'lsa
+  /// keyin alohida qo'shiladi.
+  total        Int          @default(0)
+  status       SalaryStatus @default(DRAFT)
+  note         String?
+  createdById  String
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  user       User  @relation("SalaryRecordUser", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy  User  @relation("SalaryRecordCreatedBy", fields: [createdById], references: [id])
+  reviewedBy User? @relation("SalaryRecordReviewedBy", fields: [reviewedById], references: [id])
+
+  @@unique([userId, month])
+  @@index([month])
+  @@index([status])
+}
+
+/// BUXGALTER kimlarga oylikni ko'rish ruxsatini bergani.
+///
+/// Ruxsat **rol** bo'yicha beriladi, shuning uchun yangi xodim ishga
+/// kirsa ham o'sha lavozimdagilari avtomatik ko'radi. `revokedAt` —
+/// bekor qilinganini saqlash uchun (yozuv o'chirilmaydi).
+model SalaryGrant {
   id          String    @id @default(cuid())
+  role        Role      @unique
+  canView     Boolean   @default(true)
+  grantedById String
+  createdAt   DateTime  @default(now())
+  revokedAt   DateTime?
+
+  grantedBy User @relation("SalaryGrantGrantedBy", fields: [grantedById], references: [id])
+}
+
+model AttendanceSession {
+  id          String                @id @default(cuid())
   courseId    String
   date        DateTime
-  code        String    @unique
+  code        String                @unique
   expiresAt   DateTime
   createdById String
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime              @default(now())
   finalizedAt DateTime?
-  isException Boolean   @default(false)
+  isException Boolean               @default(false)
   kind        AttendanceSessionKind @default(CHECK_IN)
 
   course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -676,15 +804,15 @@ model Contract {
 }
 
 model Payment {
-  id           String   @id @default(cuid())
-  studentId    String
-  contractId   String?
-  amount       Int
-  method       String   @default("CASH")
-  note         String?
-  paidAt       DateTime @default(now())
-  createdById  String
-  createdAt    DateTime @default(now())
+  id          String   @id @default(cuid())
+  studentId   String
+  contractId  String?
+  amount      Int
+  method      String   @default("CASH")
+  note        String?
+  paidAt      DateTime @default(now())
+  createdById String
+  createdAt   DateTime @default(now())
 
   student   User @relation(fields: [studentId], references: [id], onDelete: Cascade)
   createdBy User @relation("PaymentCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
@@ -754,12 +882,12 @@ model Subject {
   color     String   @default("#3f5a9d")
   createdAt DateTime @default(now())
 
-  entries     ScheduleEntry[]
-  courses     Course[]
-  teachers    TeacherSubject[]
+  entries       ScheduleEntry[]
+  courses       Course[]
+  teachers      TeacherSubject[]
   bankQuestions BankQuestion[]
-  departmentId String?
-  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  departmentId  String?
+  department    Department?      @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 }
 
 model TeacherSubject {
@@ -840,11 +968,11 @@ model SubGroup {
 }
 
 model Faculty {
-  id     String  @id @default(cuid())
-  name   String  @unique
-  code   String?
-  groups Group[]
-  users  User[]
+  id          String       @id @default(cuid())
+  name        String       @unique
+  code        String?
+  groups      Group[]
+  users       User[]
   departments Department[]
 }
 
@@ -855,9 +983,10 @@ model Department {
   facultyId String?
   createdAt DateTime @default(now())
 
-  faculty  Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
-  users    User[]
-  subjects Subject[]
+  faculty   Faculty?        @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  users     User[]
+  subjects  Subject[]
+  positions StaffPosition[]
 }
 
 model Term {
@@ -907,9 +1036,9 @@ model TimeSlot {
 }
 
 model LessonType {
-  id    String  @id @default(cuid())
-  name  String  @unique
-  color String  @default("#5373b8")
+  id    String @id @default(cuid())
+  name  String @unique
+  color String @default("#5373b8")
 }
 
 model Room {

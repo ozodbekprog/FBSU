@@ -5,6 +5,7 @@ export type RegradeRole =
   | "DEKAN"
   | "KAFEDRA_MUDIRI"
   | "REGISTRAR"
+  | "BUXGALTER"
   | "TYUTOR"
   | "TEACHER"
   | "STUDENT"
