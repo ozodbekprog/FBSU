@@ -26,6 +26,12 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return Response.json({ ok: false, error: "Parametrlar noto'g'ri" }, { status: 400 });
   }
+  if (parsed.data.groups === undefined && parsed.data.studentsPerGroup === undefined) {
+    return Response.json(
+      { ok: false, error: "Generatsiya parametrlarini ko'rsating (groups, studentsPerGroup)" },
+      { status: 400 },
+    );
+  }
 
   const result = await generateBaseData(parsed.data);
   return Response.json({ ok: true, data: result });
