@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button, Card, CardBody } from "@/components/ui";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { cn, fmtDate } from "@/lib/utils";
+import { motion } from "motion/react";
 import { apiFetch } from "@/lib/api";
 import { requestBrowserLocation, type QrScanPayload } from "./live-qr";
 import { QrScanner } from "./qr-scanner";
@@ -202,11 +203,11 @@ export function CheckInForm({
         <CardBody className="relative flex flex-col items-center gap-2.5 py-12 text-center">
           <span className="relative flex size-24 items-center justify-center">
             <span className="absolute inset-0 animate-pulse-ring rounded-full bg-emerald-400/25" />
-            <span
-              className={cn(
-                "relative flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/40 ring-8 ring-emerald-50 transition-[transform,translate,scale,rotate,opacity] duration-500 ease-out",
-                pop ? "scale-100 opacity-100" : "scale-50 opacity-0",
-              )}
+            <motion.span
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", duration: 0.5, bounce: 0.22 }}
+              className="relative flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/40 ring-8 ring-emerald-50"
             >
               <svg
                 width="30"
@@ -224,7 +225,7 @@ export function CheckInForm({
               >
                 <path d="m5 13 4 4L19 7" />
               </svg>
-            </span>
+            </motion.span>
           </span>
           <p className="mt-2 text-xl font-semibold text-emerald-800">
             {result.checkout ? t("schCheckoutSuccess") : t("schAttendanceMarked")}
@@ -255,11 +256,11 @@ export function CheckInForm({
         <CardBody className="relative flex flex-col items-center gap-2.5 py-12 text-center">
           <span className="relative flex size-24 items-center justify-center">
             <span className="absolute inset-0 animate-pulse-ring rounded-full bg-amber-400/25" />
-            <span
-              className={cn(
-                "relative flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg shadow-amber-500/40 ring-8 ring-amber-50 transition-[transform,translate,scale,rotate,opacity] duration-500 ease-out",
-                pop ? "scale-100 opacity-100" : "scale-50 opacity-0",
-              )}
+            <motion.span
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", duration: 0.5, bounce: 0.22 }}
+              className="relative flex size-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg shadow-amber-500/40 ring-8 ring-amber-50"
             >
               <svg
                 width="30"
@@ -279,7 +280,7 @@ export function CheckInForm({
                 <path d="M12 10v4" />
                 <path d="M12 17.5h.01" />
               </svg>
-            </span>
+            </motion.span>
           </span>
           <p className="mt-2 text-xl font-semibold text-amber-800">
             {t("schSuspiciousTitle")}

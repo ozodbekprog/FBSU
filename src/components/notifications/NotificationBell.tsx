@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cn, fmtDateTime } from "@/lib/utils";
+import { AnimatePresence, motion } from "motion/react";
 import { ensureCsrfToken } from "@/lib/api";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import type { NotificationItem } from "./shared";
@@ -129,10 +130,20 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
         ) : null}
       </button>
 
+      <AnimatePresence>
       {open ? (
-        <div
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: -6 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{
+            opacity: 0,
+            scale: 0.98,
+            y: -4,
+            transition: { duration: 0.14, ease: [0.23, 1, 0.32, 1] },
+          }}
+          transition={{ type: "spring", duration: 0.3, bounce: 0 }}
           className={cn(
-            "animate-fade-up z-50 max-h-[calc(100dvh-6rem)] overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-lift",
+            "z-50 max-h-[calc(100dvh-6rem)] overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-lift",
             align === "left"
               ? "fixed left-[17rem] top-[4.5rem] w-96 origin-top-left"
               : "fixed inset-x-3 top-[4.25rem] origin-top sm:inset-x-auto sm:right-4 sm:top-[4.5rem] sm:w-96 sm:origin-top-right",
@@ -238,8 +249,9 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
               <path d="m9 18 6-6-6-6" />
             </svg>
           </Link>
-        </div>
+        </motion.div>
       ) : null}
+      </AnimatePresence>
     </div>
   );
 }

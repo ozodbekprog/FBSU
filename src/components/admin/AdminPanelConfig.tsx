@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
+import { AnimatePresence, motion } from "motion/react";
 import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 
@@ -63,8 +64,20 @@ export function AdminPanelConfig({ hidden }: { hidden: AdminWidget[] }) {
         </svg>
         {t("admPanelConfig")}
       </Button>
+      <AnimatePresence>
       {open ? (
-        <div className="animate-fade-up absolute right-0 top-full z-20 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: -6 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{
+            opacity: 0,
+            scale: 0.98,
+            y: -4,
+            transition: { duration: 0.14, ease: [0.23, 1, 0.32, 1] },
+          }}
+          transition={{ type: "spring", duration: 0.3, bounce: 0 }}
+          className="absolute right-0 top-full z-20 mt-2 w-72 origin-top-right rounded-2xl border border-slate-200 bg-white p-4 shadow-lg"
+        >
           <p className="text-sm font-semibold text-slate-900">{t("admPanelConfig")}</p>
           <p className="mt-0.5 text-xs text-slate-500">{t("admPanelConfigHint")}</p>
           <div className="mt-3 space-y-2">
@@ -115,8 +128,9 @@ export function AdminPanelConfig({ hidden }: { hidden: AdminWidget[] }) {
               {t("commonSave")}
             </Button>
           </div>
-        </div>
+        </motion.div>
       ) : null}
+      </AnimatePresence>
     </div>
   );
 }
