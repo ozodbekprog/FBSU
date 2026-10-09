@@ -105,7 +105,7 @@ export async function ProfileHero({
           <img
             src={coverUrl}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover/hero:scale-[1.03]"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover/hero:scale-[1.03]"
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600">

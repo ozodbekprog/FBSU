@@ -112,14 +112,14 @@ export function CourseCard({ course, staff = false }: { course: CourseCardData; 
               backgroundSize: "16px 16px",
             }}
           />
-          <span className="pointer-events-none absolute -right-10 -top-16 size-40 rounded-full bg-white/10 blur-2xl transition-transform duration-500 group-hover:scale-125" />
+          <span className="pointer-events-none absolute -right-10 -top-16 size-40 rounded-full bg-white/10 blur-2xl transition-transform duration-300 group-hover:scale-125" />
           <span className="pointer-events-none absolute -bottom-16 left-1/3 size-36 rounded-full bg-gold-400/10 blur-2xl" />
-          <span className="pointer-events-none absolute -bottom-8 -right-1 select-none text-[96px] font-black leading-none tracking-tighter text-white/10 transition-transform duration-500 group-hover:-translate-y-1.5 group-hover:scale-105">
+          <span className="pointer-events-none absolute -bottom-8 -right-1 select-none text-[96px] font-black leading-none tracking-tighter text-white/10 transition-transform duration-300 group-hover:-translate-y-1.5 group-hover:scale-105">
             {initials(course.title)}
           </span>
           <span className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/25 to-transparent" />
           <span className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gold-400/70" />
-          <span className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[420%]" />
+          <span className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-400 ease-out group-hover:translate-x-[420%]" />
           <div className="absolute inset-x-0 top-3.5 flex items-center justify-between gap-2 px-4">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/80 ring-1 ring-inset ring-white/20 backdrop-blur">
               {t("crsBadgeCourse")}

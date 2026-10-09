@@ -246,7 +246,7 @@ export function Button({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "inline-flex items-center justify-center gap-1.5 rounded-xl font-medium transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex items-center justify-center gap-1.5 rounded-xl font-medium transition-[transform,background-color,border-color,color,box-shadow] duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50",
         BUTTON_VARIANTS[variant],
         BUTTON_SIZES[size],
         className,
@@ -274,7 +274,7 @@ export function ButtonLink({
     <Link
       href={href}
       className={cn(
-        "inline-flex items-center justify-center gap-1.5 rounded-xl font-medium transition-all duration-150",
+        "inline-flex items-center justify-center gap-1.5 rounded-xl font-medium transition-[transform,background-color,border-color,color,box-shadow] duration-150 active:scale-[0.98]",
         BUTTON_VARIANTS[variant],
         BUTTON_SIZES[size],
         className,

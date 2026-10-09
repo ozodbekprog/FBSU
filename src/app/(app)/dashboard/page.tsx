@@ -173,7 +173,7 @@ function Reveal({
     <div
       data-tour={tour}
       className={cn("animate-fade-up", className)}
-      style={{ animationDelay: `${delay}ms` }}
+      style={{ animationDelay: `${Math.min(delay, 200)}ms` }}
     >
       {children}
     </div>
