@@ -14,7 +14,9 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "node prisma/seed.mjs",
     "db:reset": "prisma migrate reset --force && node prisma/seed.mjs",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "deploy": "bash scripts/deploy.sh preview",
+    "deploy:prod": "bash scripts/deploy.sh prod"
   },
   "prisma": {
     "seed": "node prisma/seed.mjs"
