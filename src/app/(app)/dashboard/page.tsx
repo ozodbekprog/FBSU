@@ -8,6 +8,7 @@ import { BarChart, DonutChart, LineChart } from "@/components/charts";
 import { GradeTrendChart } from "@/components/charts/GradeTrendChart";
 import { cn, dayName, fmtDate, initials } from "@/lib/utils";
 import { getAdminAnalytics, getStudentAnalytics, getTeacherAnalytics } from "./analytics";
+import { salaryTotalsForMonth } from "@/lib/payroll";
 import type { AdminAnalytics, StudentAnalytics, TeacherAnalytics } from "./analytics";
 import { getDictionary, getLocale, t as translate, type Locale } from "@/i18n";
 import { CheckInForm } from "@/components/attendance/check-in-form";
@@ -593,15 +594,17 @@ export default async function DashboardPage() {
               ? dict.roleHead
               : user.role === "REGISTRAR"
                 ? dict.roleRegistrar
-                : user.role === "TYUTOR"
-                  ? dict.roleTutor
-                  : user.role === "XODIM"
-                    ? dict.roleStaff
-                    : user.role === "TEACHER"
-                      ? dict.dashRoleTeacherPanel
-                      : translate(locale, "dashRoleGroup", {
-                          group: user.group?.name ?? dict.dashRoleStudent,
-                        });
+                : user.role === "BUXGALTER"
+                  ? dict.payRoleBuxgalter
+                  : user.role === "TYUTOR"
+                    ? dict.roleTutor
+                    : user.role === "XODIM"
+                      ? dict.roleStaff
+                      : user.role === "TEACHER"
+                        ? dict.dashRoleTeacherPanel
+                        : translate(locale, "dashRoleGroup", {
+                            group: user.group?.name ?? dict.dashRoleStudent,
+                          });
 
   if (user.role === "XODIM") {
     return (
@@ -620,6 +623,167 @@ export default async function DashboardPage() {
           locale={locale}
         />
       </>
+    );
+  }
+
+  if (user.role === "BUXGALTER") {
+    const month = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const [records, totals, pending, staffCount] = await Promise.all([
+      prisma.salaryRecord.findMany({
+        where: { month },
+        orderBy: [{ status: "asc" }, { total: "desc" }],
+        take: 6,
+        select: {
+          id: true, total: true, status: true, baseAmount: true, bonusAmount: true,
+          user: {
+            select: {
+              name: true,
+              staffPosition: { select: { name: true } },
+              department: { select: { name: true } },
+            },
+          },
+        },
+      }),
+      salaryTotalsForMonth(month),
+      prisma.salaryRecord.count({ where: { month, status: "PENDING" } }),
+      prisma.user.count({ where: { isActive: true, role: { not: "STUDENT" } } }),
+    ]);
+
+    const statusTone: Record<string, "slate" | "amber" | "green" | "blue"> = {
+      DRAFT: "slate", PENDING: "amber", APPROVED: "green", PAID: "blue",
+    };
+    const statusText: Record<string, string> = {
+      DRAFT: dict.payDraft, PENDING: dict.payPending,
+      APPROVED: dict.payApproved, PAID: dict.payPaid,
+    };
+    const sum = (n: number) => new Intl.NumberFormat("ru-RU").format(n);
+
+    return (
+      <div className="space-y-6">
+        <Hero
+          name={user.name}
+          firstName={firstName}
+          roleLabel={roleLabel}
+          now={now}
+          actions={[
+            { href: "/payroll", label: dict.payTitle, icon: <ClipboardIcon /> },
+            { href: "/calendar", label: dict.navCalendar, icon: <CalendarIcon /> },
+            { href: "/help", label: dict.navHelp, icon: <HelpCircleIcon /> },
+          ]}
+          locale={locale}
+        />
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatTile
+            href="/payroll"
+            label={dict.payGrandTotal}
+            value={sum(totals.grandTotal)}
+            hint={dict.payMonth}
+            tone="brand"
+            icon={<Icon><path d="M12 2v20" /><path d="M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></Icon>}
+          />
+          <StatTile
+            href="/payroll"
+            label={dict.payStaffCount}
+            value={totals.totalCount}
+            hint={`${staffCount} ta faol`}
+            tone="emerald"
+            icon={<Icon><circle cx="9" cy="7" r="4" /><path d="M16 21v-1a5 5 0 0 0-5-5h-3a5 5 0 0 0-5 5v1" /></Icon>}
+          />
+          <StatTile
+            href="/payroll"
+            label={dict.payPending}
+            value={pending}
+            hint={dict.payApprove}
+            tone="gold"
+            icon={<Icon><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></Icon>}
+          />
+          <StatTile
+            href="/payroll"
+            label={dict.payDepartment}
+            value={totals.byGroup.length}
+            hint={dict.paySummarySubtitle}
+            tone="brand"
+            icon={<Icon><path d="M4 4h5l2 3h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></Icon>}
+          />
+        </div>
+
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,21rem)]">
+          <div className="min-w-0 space-y-4">
+            <Reveal delay={120}>
+              <Card className="transition-shadow duration-200">
+                <CardHeader
+                  title={dict.payTabRecords}
+                  subtitle={`${dict.payMonth}: ${month.toISOString().slice(0, 7)}`}
+                  action={<Badge tone="blue">{records.length}</Badge>}
+                />
+                <CardBody>
+                  {records.length === 0 ? (
+                    <EmptyState title={dict.payEmpty} />
+                  ) : (
+                    <div className="space-y-2">
+                      {records.map((r) => (
+                        <div key={r.id}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 px-3 py-2.5">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-slate-900">{r.user.name}</p>
+                            <p className="text-xs text-slate-500">
+                              {[r.user.staffPosition?.name, r.user.department?.name]
+                                .filter(Boolean).join(" · ") || "—"}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold tabular-nums text-slate-900">
+                              {sum(r.total)}
+                            </span>
+                            <Badge tone={statusTone[r.status] ?? "slate"}>
+                              {statusText[r.status] ?? r.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardBody>
+              </Card>
+            </Reveal>
+          </div>
+
+          <Reveal delay={180} className="min-w-0">
+            <Card className="transition-shadow duration-200">
+              <CardHeader title={dict.paySummaryTitle} subtitle={dict.paySummarySubtitle} />
+              <CardBody>
+                {totals.byGroup.length === 0 ? (
+                  <p className="py-3 text-center text-sm text-slate-500">{dict.payNoGroupData}</p>
+                ) : (
+                  <div className="space-y-2">
+                    {totals.byGroup.map((g) => (
+                      <div key={g.group}
+                        className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-slate-800">{g.group}</p>
+                          <p className="text-xs text-slate-500">
+                            {dict.payStaffCount}: {g.count}
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-900">
+                          {sum(g.total)}
+                        </span>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between gap-2 rounded-xl bg-brand-900 px-3 py-2 text-white">
+                      <span className="text-sm font-medium">{dict.payGrandTotal}</span>
+                      <span className="text-sm font-semibold tabular-nums">
+                        {sum(totals.grandTotal)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </CardBody>
+            </Card>
+          </Reveal>
+        </div>
+      </div>
     );
   }
 
@@ -771,8 +935,7 @@ export default async function DashboardPage() {
                 ]
               : [
                   { href: "/monitoring", label: dict.navMonitoring, icon: <BarChartIcon /> },
-                  { href: "/reports", label: dict.navReports, icon: <FileTextIcon /> },
-                  { href: "/workload", label: dict.navWorkload, icon: <ClipboardIcon /> },
+                        { href: "/workload", label: dict.navWorkload, icon: <ClipboardIcon /> },
                   { href: "/schedule", label: dict.navSchedule, icon: <CalendarIcon /> },
                 ];
 

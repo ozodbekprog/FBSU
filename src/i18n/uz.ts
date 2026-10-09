@@ -9,6 +9,7 @@ import { msc } from "./dict/uz/msc";
 import { brd } from "./dict/uz/brd";
 import { lab } from "./dict/uz/lab";
 import { stf } from "./dict/uz/stf";
+import { pay } from "./dict/uz/pay";
 import { tsk } from "./dict/uz/tsk";
 import { acc } from "./dict/uz/acc";
 import { doc } from "./dict/uz/doc";
@@ -153,6 +154,7 @@ export const uz = {
   ...dip,
   ...tour,
   ...admission,
+  ...pay,
 };
 
 export type Dictionary = typeof uz;

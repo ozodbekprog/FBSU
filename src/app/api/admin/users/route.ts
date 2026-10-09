@@ -9,7 +9,7 @@ import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
 import { getClientIp as getClientIpFromHeaders } from "@/lib/client-ip";
 
-const ROLES = ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA"] as const;
+const ROLES = ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "BUXGALTER", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA"] as const;
 
 const REGISTRAR_MANAGED_ROLES: readonly Role[] = ["STUDENT", "TEACHER"];
 

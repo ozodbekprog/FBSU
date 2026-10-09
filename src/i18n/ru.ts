@@ -10,6 +10,7 @@ import { msc } from "./dict/ru/msc";
 import { brd } from "./dict/ru/brd";
 import { lab } from "./dict/ru/lab";
 import { stf } from "./dict/ru/stf";
+import { pay } from "./dict/ru/pay";
 import { tsk } from "./dict/ru/tsk";
 import { acc } from "./dict/ru/acc";
 import { doc } from "./dict/ru/doc";
@@ -154,4 +155,5 @@ export const ru: Dictionary = {
   ...dip,
   ...tour,
   ...admission,
+  ...pay,
 };

@@ -10,6 +10,7 @@ import { msc } from "./dict/en/msc";
 import { brd } from "./dict/en/brd";
 import { lab } from "./dict/en/lab";
 import { stf } from "./dict/en/stf";
+import { pay } from "./dict/en/pay";
 import { tsk } from "./dict/en/tsk";
 import { acc } from "./dict/en/acc";
 import { doc } from "./dict/en/doc";
@@ -154,4 +155,5 @@ export const en: Dictionary = {
   ...dip,
   ...tour,
   ...admission,
+  ...pay,
 };

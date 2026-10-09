@@ -36,6 +36,7 @@ const ROLE_LABEL_KEY: Record<Role, keyof Dictionary> = {
   DEKAN: "mscRoleDean",
   KAFEDRA_MUDIRI: "mscRoleHead",
   REGISTRAR: "mscRoleRegistrar",
+  BUXGALTER: "payRoleBuxgalter",
   TYUTOR: "mscRoleTutor",
   TEACHER: "mscRoleTeacher",
   STUDENT: "mscRoleStudent",

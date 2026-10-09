@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireUser, isStaff } from "@/lib/auth";
+import { requireUser, isStaff, canViewSalary, canManageSalary } from "@/lib/auth";
 import { canViewAnalysis } from "@/modules/roles/access";
 import { getModuleFlags } from "@/server/settings";
 import { getDictionary, getLocale } from "@/i18n";
@@ -25,6 +25,13 @@ export default async function AppLayout({
   const modules = await getModuleFlags();
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
+
+  // "Oyliklar" nav elementi faqat oylikni ko'rishga ruxsat bor rollarga
+  // ko'rinadi: BUXGALTER va ADMIN har doim, qolganlari faqat buxgalter
+  // `SalaryGrant` bergan bo'lsa. Ruxsat bekor qilinishi bilan bu yer
+  // qayta chiziladi va element yo'qoladi — shuning uchun ro'yxatni
+  // qo'lda sinxronlash shart emas.
+  const salaryVisible = await canViewSalary(user.role);
 
   const groups = [
     {
@@ -65,6 +72,16 @@ export default async function AppLayout({
       links: [
         ...(user.role !== "STUDENT" ? [{ href: "/staff", label: dictionary.stfTitle }] : []),
         ...(user.role !== "STUDENT" ? [{ href: "/tasks", label: dictionary.tskTitle }] : []),
+        ...(salaryVisible
+          ? [
+              {
+                href: "/payroll",
+                label: canManageSalary(user.role)
+                  ? dictionary.payTitle
+                  : dictionary.payNavGranted,
+              },
+            ]
+          : []),
         ...(["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"].includes(user.role)
           ? [{ href: "/documents", label: dictionary.docTitle }]
           : []),
@@ -116,15 +133,21 @@ export default async function AppLayout({
       "/dashboard", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
       "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar",
       "/messages", "/search", "/help", "/settings", "/access",
+      // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
+      "/payroll",
     ],
     PRO_RECTOR: [
       "/dashboard", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
       "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar",
       "/messages", "/search", "/help", "/settings", "/access",
+      // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
+      "/payroll",
     ],
     DEKAN: [
       "/dashboard", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
       "/schedule", "/calendar", "/academic-calendar", "/messages", "/search", "/help", "/settings",
+      // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
+      "/payroll",
     ],
     KAFEDRA_MUDIRI: [
       "/dashboard", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
@@ -156,6 +179,14 @@ export default async function AppLayout({
       "/dashboard", "/staff", "/tasks", "/my-qr", "/access", "/schedule", "/calendar",
       "/academic-calendar", "/messages", "/rooms", "/bookings", "/search", "/help", "/settings",
     ],
+    // Buxgalter: moliyaviy vazifa uchun faqat kerakli bo'limlar.
+    // Jadval, davomat va xodimlar davomati olib tashlandi — ular oylik
+    // hisobiga to'g'ridan-to'g'ri kirmaydi, `/payroll` ichida o'z
+    // lavozim/navbar/grafik boshqaruvi bor.
+    BUXGALTER: [
+      "/dashboard", "/payroll", "/calendar",
+      "/messages", "/my-qr", "/search", "/help", "/settings",
+    ],
     OTA_ONA: ["/parent", "/messages", "/help", "/settings"],
   };
 
@@ -182,12 +213,14 @@ export default async function AppLayout({
             ? dictionary.roleHead
             : user.role === "REGISTRAR"
               ? dictionary.roleRegistrar
-              : user.role === "TYUTOR"
-                ? dictionary.roleTutor
-                : user.role === "XODIM"
-                  ? dictionary.roleStaff
-                  : user.role === "OTA_ONA"
-                    ? dictionary.roleParent
+              : user.role === "BUXGALTER"
+                ? dictionary.payRoleBuxgalter
+                : user.role === "TYUTOR"
+                  ? dictionary.roleTutor
+                  : user.role === "XODIM"
+                    ? dictionary.roleStaff
+                    : user.role === "OTA_ONA"
+                      ? dictionary.roleParent
                     : user.role === "TEACHER"
                   ? dictionary.roleTeacher
                   : user.group?.name ?? dictionary.roleStudent;
