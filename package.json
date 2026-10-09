@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest",
@@ -16,7 +16,8 @@
     "db:reset": "prisma migrate reset --force && node prisma/seed.mjs",
     "db:studio": "prisma studio",
     "deploy": "bash scripts/deploy.sh preview",
-    "deploy:prod": "bash scripts/deploy.sh prod"
+    "deploy:prod": "bash scripts/deploy.sh prod",
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "node prisma/seed.mjs"
