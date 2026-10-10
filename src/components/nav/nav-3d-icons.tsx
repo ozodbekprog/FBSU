@@ -680,6 +680,24 @@ function Parent() {
   );
 }
 
+/** Qabul — bitiruvchi qopqog'i (mortarboard) va osilgan tilla. */
+function Admissions() {
+  return (
+    <group>
+      {/* qopqoq — keng yassi plita, biroz orqaga egilgan */}
+      <Tile a={[1.94, 1.94, 0.13]} m="brandDeep" p={[0, 0.16, 0]} radius={0.05} r={[0, 0, PI / 4]} />
+      {/* bosh qalpoq — silindr ostdan ko'rinadi */}
+      <Cyl rt={0.5} rb={0.54} h={0.42} seg={26} m="brand" p={[0, -0.16, 0]} />
+      <Cyl rt={0.55} rb={0.55} h={0.07} seg={26} m="brandLight" p={[0, -0.38, 0]} />
+      {/* tilla — o'ng burchakdan osilgan ip va uchi */}
+      <Cyl rt={0.035} h={0.94} m="gold" p={[0.88, -0.28, 0.06]} />
+      <Ball rad={0.14} m="goldLight" p={[0.88, -0.78, 0.06]} />
+      {/* qabul belgisi — oldindagi oltin halqa (cheklangan kvadrat) */}
+      <Ring rad={0.34} tube={0.06} arc={PI * 1.5} m="gold" p={[-0.66, 0.42, 0.2]} r={[0, 0, PI * 0.25]} />
+    </group>
+  );
+}
+
 /** Hujjatlar — varaqlar to'plami va oltin muhr. */
 function Documents() {
   return (
@@ -786,6 +804,7 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/access": Access,
   "/turniket": Access,
   "/parent": Parent,
+  "/admissions": Admissions,
   "/documents": Documents,
   "/diplomas": Diplomas,
   "/finance": Finance,
