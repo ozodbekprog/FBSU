@@ -90,9 +90,12 @@ export default function LanguageSwitcher({
             aria-pressed={active}
             className={cn(
               // `relative` + `after` — ko'rinadigan o'lchamni o'zgartirmasdan
-              // barmoq uchun bosish maydonini 44px gacha kengaytiradi.
+              // barmoq uchun bosish maydonini kengaytiradi. Gorizontalda
+              // `inset-x-0` faqat 38px berardi, shuning uchun `-inset-x-1`
+              // bilan 44px ga yetkaziladi (qo'shnilarning maydonlari
+              // ustma-ust tushmaydi — ular `relative` ichida).
               "relative rounded-full px-2.5 py-1 text-xs font-semibold tracking-wide transition-colors duration-150",
-              "after:absolute after:inset-x-0 after:-inset-y-3 after:content-['']",
+              "after:absolute after:-inset-x-1 after:-inset-y-3 after:content-['']",
               active
                 ? "bg-white text-brand-800 shadow-sm"
                 : "text-slate-500 hover:text-brand-700",

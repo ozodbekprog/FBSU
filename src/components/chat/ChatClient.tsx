@@ -152,7 +152,11 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
     <Card className="flex h-[calc(100vh-15rem)] min-h-[480px] animate-fade-up overflow-hidden">
       <div
         className={cn(
-          "w-full flex-col border-slate-100 md:flex md:w-80 md:border-r lg:w-96",
+          // md (768–1023px) da sidebar 256px ni yeb ketadi va kartada
+          // ikki panel uchun joy qolmaydi — o'ng panelning bo'sh holati
+          // kartadan tashqariga toshib ketardi. Shuning uchun md'da
+          // ro'yxat to'liq kenglikda, o'ng panel faqat lg'dan boshlab.
+          "w-full flex-col border-slate-100 md:flex lg:w-80 lg:border-r xl:w-96",
           activeId ? "hidden" : "flex",
         )}
       >
@@ -165,7 +169,7 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
           onStartConversation={openConversation}
         />
       </div>
-      <div className={cn("min-w-0 flex-1", activeId ? "flex" : "hidden md:flex")}>
+      <div className={cn("min-w-0 flex-1", activeId ? "flex" : "hidden lg:flex")}>
         <MessageThread
           key={activeId ?? "empty"}
           conversation={activeConversation}

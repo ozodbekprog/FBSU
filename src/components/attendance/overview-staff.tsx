@@ -196,7 +196,12 @@ export async function StaffAttendanceOverview({ courses }: { courses: StaffCours
         </CardBody>
       </Card>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {/* `sm` (640px) da 2 ustun to'g'ri keladi — sidebar hali yashirin.
+        Lekin sidebar `md` (768px) da chiqadi va 256px joyni oladi:
+        768–1023px oraliqda 2 ustun karta ~180px ga tushib, sarlavha
+        va badge'lar kesilib qolardi. Shuning uchun ikkinchi ustun
+        faqat `lg` (1024px) dan boshlab. */}
+      <div className="mt-6 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         {courses.map((course) => (
           <Card
             key={course.id}

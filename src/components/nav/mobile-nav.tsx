@@ -116,7 +116,7 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
             type="button"
             onClick={() => setOpen(false)}
             aria-label={t("shellMenuClose")}
-            className="inline-flex size-9 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-brand-50 hover:text-brand-900"
+            className="relative inline-flex size-9 items-center justify-center rounded-xl text-slate-500 transition-colors after:absolute after:-inset-1 after:content-[''] hover:bg-brand-50 hover:text-brand-900"
           >
             <CloseIcon />
           </button>
@@ -198,7 +198,10 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
         onClick={() => setOpen(true)}
         aria-label={t("shellMenuOpen")}
         aria-expanded={open}
-        className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-brand-50 hover:text-brand-900"
+        // `size-9` (36px) barmoq uchun kichik. `after:-inset-1` ko'rinadigan
+        // o'lchamni o'zgartirmasdan bosish maydonini 44px gacha kengaytiradi —
+        // boshqa sarlavha tugmalari ham shu usulda qilingan.
+        className="relative inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-slate-500 transition-colors after:absolute after:-inset-1 after:content-[''] hover:bg-brand-50 hover:text-brand-900"
       >
         <MenuIcon />
       </button>
