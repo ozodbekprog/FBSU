@@ -28,7 +28,10 @@ export type AuditAction =
   | "SALARY_STATUS_CHANGE"
   | "SALARY_DELETE"
   | "SALARY_GRANT"
-  | "SALARY_GRANT_REVOKE";
+  | "SALARY_GRANT_REVOKE"
+  | "CALL_START"
+  | "CALL_RESPOND"
+  | "CALL_END";
 
 type JsonValue = string | number | boolean | { [key: string]: JsonValue } | JsonValue[] | null;
 

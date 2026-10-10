@@ -93,24 +93,24 @@ model User {
   groupId String?
   group   Group?  @relation(fields: [groupId], references: [id])
 
-taughtCourses        Course[]          @relation("CourseTeacher")
+  taughtCourses        Course[]              @relation("CourseTeacher")
   enrollments          Enrollment[]
   submissions          Submission[]
   attendance           Attendance[]
   staffAttendance      StaffAttendance[]
   accessLogs           AccessLog[]
-  documentsCreated     Document[]        @relation("DocumentCreator")
-  documentsToSign      Document[]        @relation("DocumentSigner")
-  documentsSigned      Document[]        @relation("DocumentSignedBy")
+  documentsCreated     Document[]            @relation("DocumentCreator")
+  documentsToSign      Document[]            @relation("DocumentSigner")
+  documentsSigned      Document[]            @relation("DocumentSignedBy")
   admissionApplication AdmissionApplication?
-  parentLinksAsParent  ParentLink[]      @relation("ParentLinkParent")
-  parentLinksAsStudent ParentLink[]      @relation("ParentLinkStudent")
+  parentLinksAsParent  ParentLink[]          @relation("ParentLinkParent")
+  parentLinksAsStudent ParentLink[]          @relation("ParentLinkStudent")
   contracts            Contract[]
   payments             Payment[]
-  paymentsCreated      Payment[]         @relation("PaymentCreatedBy")
+  paymentsCreated      Payment[]             @relation("PaymentCreatedBy")
   diplomas             Diploma[]
-  tasksAssigned        WorkTask[]        @relation("WorkTaskAssignee")
-  tasksCreated         WorkTask[]        @relation("WorkTaskCreator")
+  tasksAssigned        WorkTask[]            @relation("WorkTaskAssignee")
+  tasksCreated         WorkTask[]            @relation("WorkTaskCreator")
   quizAttempts         QuizAttempt[]
   notifications        Notification[]
 
@@ -141,6 +141,8 @@ taughtCourses        Course[]          @relation("CourseTeacher")
   conversationsA        Conversation[]         @relation("ConversationA")
   conversationsB        Conversation[]         @relation("ConversationB")
   messagesSent          Message[]              @relation("MessageSender")
+  callsMade             CallSession[]          @relation("CallCaller")
+  callsReceived         CallSession[]          @relation("CallCallee")
   roomBookings          RoomBooking[]
   orders                Order[]
   courseReviews         CourseReview[]
@@ -1116,9 +1118,10 @@ model Conversation {
   lastMessageAt  DateTime @default(now())
   createdAt      DateTime @default(now())
 
-  participantA User      @relation("ConversationA", fields: [participantAId], references: [id], onDelete: Cascade)
-  participantB User      @relation("ConversationB", fields: [participantBId], references: [id], onDelete: Cascade)
+  participantA User          @relation("ConversationA", fields: [participantAId], references: [id], onDelete: Cascade)
+  participantB User          @relation("ConversationB", fields: [participantBId], references: [id], onDelete: Cascade)
   messages     Message[]
+  calls        CallSession[]
 
   @@unique([participantAId, participantBId])
   @@index([lastMessageAt])
@@ -1137,6 +1140,62 @@ model Message {
 
   @@index([conversationId, createdAt])
   @@index([senderId])
+}
+
+/// Video qo'ng'iroq holati.
+///
+/// `RINGING` — chaqirilgan, hali javob yo'q.
+/// `ACTIVE`   — ikkala tomon ham ulandi (media P2P, server orqali o'tmaydi).
+/// `ENDED` / `DECLINED` / `MISSED` — tugagan.
+enum CallStatus {
+  RINGING
+  ACTIVE
+  ENDED
+  DECLINED
+  MISSED
+}
+
+/// WebRTC signal turi. Media oqimi P2P; server faqat bu signallarni
+/// almashtiradi (polling orqali — Vercel serverless WebSocket serverini
+/// qo'llab-quvvatlamaydi).
+enum CallSignalType {
+  OFFER
+  ANSWER
+  ICE
+  HANGUP
+}
+
+model CallSession {
+  id             String     @id @default(cuid())
+  conversationId String
+  callerId       String
+  calleeId       String
+  status         CallStatus @default(RINGING)
+  startedAt      DateTime?
+  endedAt        DateTime?
+  createdAt      DateTime   @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  caller       User         @relation("CallCaller", fields: [callerId], references: [id], onDelete: Cascade)
+  callee       User         @relation("CallCallee", fields: [calleeId], references: [id], onDelete: Cascade)
+  signals      CallSignal[]
+
+  @@index([calleeId, status])
+  @@index([callerId, status])
+  @@index([status, createdAt])
+}
+
+model CallSignal {
+  id        String         @id @default(cuid())
+  callId    String
+  fromId    String
+  type      CallSignalType
+  payload   Json?
+  createdAt DateTime       @default(now())
+
+  call CallSession @relation(fields: [callId], references: [id], onDelete: Cascade)
+
+  @@index([callId, createdAt])
 }
 
 model BugReport {

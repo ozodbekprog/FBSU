@@ -15,6 +15,8 @@ type Props = {
   sending: boolean;
   onSend: (body: string) => Promise<boolean>;
   onBack: () => void;
+  onStartCall?: (conversationId: string) => void;
+  callBusy?: boolean;
 };
 
 export function MessageThread({
@@ -25,6 +27,8 @@ export function MessageThread({
   sending,
   onSend,
   onBack,
+  onStartCall,
+  callBusy,
 }: Props) {
   const { t } = useI18n();
   const [draft, setDraft] = useState("");
@@ -99,10 +103,38 @@ export function MessageThread({
           </svg>
         </button>
         <Avatar name={participant.name} src={participant.avatarUrl} size={40} />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-brand-950">{participant.name}</p>
           <p className="text-xs text-slate-500">{roleLabel(participant.role, t)}</p>
         </div>
+
+        {/* Video qo'ng'iroq — Telegram'dagi kabi sarlavhada o'ng tomonda */}
+        {onStartCall ? (
+          <button
+            type="button"
+            onClick={() => onStartCall(conversation.id)}
+            disabled={callBusy}
+            aria-label={t("callStart")}
+            title={t("callStart")}
+            data-call-start=""
+            className="relative inline-flex size-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors duration-150 after:absolute after:-inset-1 after:content-[''] hover:bg-emerald-50 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <svg
+              width="19"
+              height="19"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m16 10 4.6-2.3A1 1 0 0 1 22 8.6v6.8a1 1 0 0 1-1.4.9L16 14" />
+              <rect x="2" y="6" width="14" height="12" rx="2" />
+            </svg>
+          </button>
+        ) : null}
       </div>
 
       <div

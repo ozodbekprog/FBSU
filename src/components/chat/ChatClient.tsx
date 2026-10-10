@@ -5,6 +5,8 @@ import { Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { ConversationList } from "./ConversationList";
 import { MessageThread } from "./MessageThread";
+import { useCallSignaling } from "./useCallSignaling";
+import { VideoCallOverlay } from "./VideoCallOverlay";
 import type { ChatConversation, ChatMessage } from "./shared";
 
 type ConversationsResponse = { ok: boolean; data?: { conversations: ChatConversation[] } };
@@ -20,6 +22,7 @@ type Props = {
 };
 
 export function ChatClient({ currentUserId, initialUserId }: Props) {
+  const call = useCallSignaling(currentUserId);
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messageData, setMessageData] = useState<{
@@ -179,8 +182,11 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
           sending={sending}
           onSend={sendMessage}
           onBack={() => setActiveId(null)}
+          onStartCall={(conversationId) => void call.start(conversationId)}
+          callBusy={call.phase !== "idle"}
         />
       </div>
+      <VideoCallOverlay call={call} />
     </Card>
   );
 }

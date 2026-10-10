@@ -31,8 +31,12 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",
+    // `microphone=(self)` — xabarlardagi video qo'ng'iroq uchun zarur.
+    // Avval `microphone=()` bo'lgani sababli brauzer "Permissions policy
+    // violation" berib, `getUserMedia` faqat video track qaytarardi —
+    // qo'ng'iroq ovozsiz chiqib ketardi.
     value:
-      "camera=(self), geolocation=(self), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()",
+      "camera=(self), geolocation=(self), microphone=(self), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()",
   },
   { key: "Content-Security-Policy", value: cspDirectives },
   ...(isProduction
@@ -63,7 +67,7 @@ const nextConfig: NextConfig = {
           {
             key: "Permissions-Policy",
             value:
-              "camera=(self), geolocation=(self), microphone=(), payment=(), usb=()",
+              "camera=(self), geolocation=(self), microphone=(self), payment=(), usb=()",
           },
         ],
       },
