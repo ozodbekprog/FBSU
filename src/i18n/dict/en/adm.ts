@@ -648,6 +648,7 @@ export const adm = {
   admCuratorReportSent: "Report sent to curator",
   admCuratorReportError: "Failed to send report",
 
+
   admPanelConfig: "Configure panel",
   admPanelConfigHint: "Choose which sections are visible",
   admPanelWStats: "Stat cards",
@@ -667,4 +668,8 @@ export const adm = {
   admQuickHemisDesc: "Export package in HEMIS format",
   admQuickAuditDesc: "History of all actions",
   admQuickUpdatesDesc: "System updates and changes",
+
+  kfdSubjectsSubtitle: "Subjects by departments",
+  kfdSubjectsEmpty: "No subjects yet."
+
 };

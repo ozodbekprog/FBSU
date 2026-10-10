@@ -648,6 +648,7 @@ export const adm = {
   admCuratorReportSent: "Hisobot kuratorga yuborildi",
   admCuratorReportError: "Hisobotni yuborishda xatolik",
 
+
   admPanelConfig: "Panelni sozlash",
   admPanelConfigHint: "Qaysi bo'limlar ko'rinishini tanlang",
   admPanelWStats: "Statistika kartalari",
@@ -667,4 +668,8 @@ export const adm = {
   admQuickHemisDesc: "HEMIS formatida eksport paketi",
   admQuickAuditDesc: "Barcha amallar tarixi",
   admQuickUpdatesDesc: "Tizim yangilanishlari va o'zgarishlar",
+
+  kfdSubjectsSubtitle: "Fanlar bo'limlar bo'yicha",
+  kfdSubjectsEmpty: "Hozircha fanlar yo'q."
+
 };

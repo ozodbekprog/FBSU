@@ -648,6 +648,7 @@ export const adm = {
   admCuratorReportSent: "Отчёт отправлен куратору",
   admCuratorReportError: "Ошибка отправки отчёта",
 
+
   admPanelConfig: "Настроить панель",
   admPanelConfigHint: "Выберите, какие разделы показывать",
   admPanelWStats: "Карточки статистики",
@@ -667,4 +668,8 @@ export const adm = {
   admQuickHemisDesc: "Экспортный пакет в формате HEMIS",
   admQuickAuditDesc: "История всех действий",
   admQuickUpdatesDesc: "Обновления и изменения системы",
+
+  kfdSubjectsSubtitle: "Dисциплины по кафедрам",
+  kfdSubjectsEmpty: "Дисциплины пока не добавлены."
+
 };

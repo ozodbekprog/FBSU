@@ -13,11 +13,9 @@ import {
 } from "@/lib/theme";
 
 export function useThemeMode(): ThemeMode {
-  const [mode, setMode] = useState<ThemeMode>("light");
+  const [mode, setMode] = useState<ThemeMode>(() => effectiveTheme(getStoredTheme()));
 
   useEffect(() => {
-    setMode(effectiveTheme(getStoredTheme()));
-
     function sync() {
       setMode(effectiveTheme(getStoredTheme()));
     }

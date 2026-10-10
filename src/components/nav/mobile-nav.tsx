@@ -52,14 +52,8 @@ function CloseIcon() {
 export function MobileNav({ groups }: { groups: NavGroup[] }) {
   const { t, locale } = useI18n();
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const pathname = usePathname();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
+  const mounted = useState(true);
+  const pathname = usePathname();useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
