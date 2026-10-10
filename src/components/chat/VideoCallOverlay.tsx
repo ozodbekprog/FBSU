@@ -60,13 +60,13 @@ export function VideoCallOverlay({ call }: { call: Signaling }) {
       aria-label={t("callTitle")}
       data-call-overlay=""
       className={cn(
-        "fixed inset-0 z-[60] flex flex-col bg-slate-950 text-white",
+        "fixed inset-0 z-[60] flex flex-col bg-[#020617] text-white",
         // mobil brauzerlar uchun xavfsiz zona
         "pb-[env(safe-area-inset-bottom)]",
       )}
     >
       {/* qarshi tomon video */}
-      <div className="relative min-h-0 flex-1 bg-slate-900">
+      <div className="relative min-h-0 flex-1 bg-[#0f172a]">
         <video
           ref={attachRemote}
           autoPlay
@@ -79,11 +79,11 @@ export function VideoCallOverlay({ call }: { call: Signaling }) {
             {call.peer ? (
               <Avatar name={call.peer.name} src={call.peer.avatarUrl} size={104} />
             ) : (
-              <div className="size-24 animate-pulse rounded-full bg-slate-800" />
+              <div className="size-24 animate-pulse rounded-full bg-[#1e293b]" />
             )}
             <div>
               <p className="text-xl font-semibold">{call.peer?.name ?? t("callConnecting")}</p>
-              <p className="mt-1.5 text-sm text-slate-400">
+              <p className="mt-1.5 text-sm text-[#94a3b8]">
                 {call.phase === "ringing-in" && t("callIncoming")}
                 {call.phase === "ringing-out" && t("callRinging")}
                 {call.phase === "connecting" && t("callConnecting")}
@@ -116,7 +116,7 @@ export function VideoCallOverlay({ call }: { call: Signaling }) {
 
         {/* o'z videomiz — burchakda */}
         {call.localStream ? (
-          <div className="absolute right-3 bottom-3 w-28 overflow-hidden rounded-2xl border border-white/20 bg-slate-800 shadow-lg sm:w-40">
+          <div className="absolute right-3 bottom-3 w-28 overflow-hidden rounded-2xl border border-white/20 bg-[#1e293b] shadow-lg sm:w-40">
             <video
               ref={attachLocal}
               autoPlay
@@ -127,20 +127,14 @@ export function VideoCallOverlay({ call }: { call: Signaling }) {
               style={{ transform: "scaleX(-1)" }}
             />
             {!call.camOn ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
-                <VideoOffIcon className="size-6 text-slate-400" />
+              <div className="absolute inset-0 flex items-center justify-center bg-[#1e293b]">
+                <VideoOffIcon className="size-6 text-[#94a3b8]" />
               </div>
             ) : null}
           </div>
         ) : null}
 
         {/* yuqorida holat yorlig'i */}
-        {call.phase === "ringing-out" || call.phase === "connecting" ? (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-black/45 px-3.5 py-1.5 text-xs font-medium backdrop-blur">
-            {call.phase === "ringing-out" ? t("callRinging") : t("callConnecting")}
-          </div>
-        ) : null}
-
         {call.error ? (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-rose-500/90 px-3.5 py-1.5 text-xs font-medium">
             {call.error}
@@ -162,7 +156,7 @@ export function VideoCallOverlay({ call }: { call: Signaling }) {
           data-call-mic=""
           className={cn(
             "inline-flex size-12 items-center justify-center rounded-full transition-colors",
-            call.micOn ? "bg-white/15 hover:bg-white/25" : "bg-white text-slate-900",
+            call.micOn ? "bg-white/15 hover:bg-white/25" : "bg-[#f8fafc] text-[#0f172a]",
           )}
         >
           {call.micOn ? <MicIcon /> : <MicOffIcon />}
@@ -176,7 +170,7 @@ export function VideoCallOverlay({ call }: { call: Signaling }) {
           data-call-cam=""
           className={cn(
             "inline-flex size-12 items-center justify-center rounded-full transition-colors",
-            call.camOn ? "bg-white/15 hover:bg-white/25" : "bg-white text-slate-900",
+            call.camOn ? "bg-white/15 hover:bg-white/25" : "bg-[#f8fafc] text-[#0f172a]",
           )}
         >
           {call.camOn ? <CamIcon /> : <CamOffIcon />}
