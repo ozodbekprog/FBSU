@@ -53,9 +53,10 @@ export function isTyutor(role: string): boolean {
 }
 
 export function canScanAccess(role: string): boolean {
+  // Buxgalter skanerlamaydi — u faqat o'tish tarihini ko'radi.
   return ["ADMIN", "REGISTRAR", "XODIM"].includes(role);
 }
 
 export function canViewAccessLogs(role: string): boolean {
-  return ["ADMIN", "REGISTRAR", "XODIM", "REKTOR", "PRO_RECTOR"].includes(role);
+  return ["ADMIN", "REGISTRAR", "XODIM", "REKTOR", "PRO_RECTOR", "BUXGALTER"].includes(role);
 }

@@ -95,6 +95,11 @@ export default async function AppLayout({
         ...(["ADMIN", "REGISTRAR", "XODIM", "REKTOR", "PRO_RECTOR"].includes(user.role)
           ? [{ href: "/access", label: dictionary.accTitle }]
           : []),
+        // Buxgalter oylik hisobini qo'lda kiritadi — turniket qo'riqchisi
+        // o'tishlari uning uchun audit izi bo'lib xizmat qiladi.
+        ...(user.role === "BUXGALTER"
+          ? [{ href: "/turniket", label: dictionary.accTitle }]
+          : []),
         { href: "/search", label: dictionary.navSearch },
         { href: "/help", label: dictionary.navHelp },
         { href: "/settings", label: dictionary.navSettings },
