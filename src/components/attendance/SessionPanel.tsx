@@ -85,12 +85,8 @@ export function SessionPanel({
   const [now, setNow] = useState(() => Date.now());
   const [presentOpen, setPresentOpen] = useState(false);
   const [demoMode, setDemoMode] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  const [qr, setQr] = useState<{ code: string; url: string } | null>(null);
+  const mounted = useState(true);
+const [qr, setQr] = useState<{ code: string; url: string } | null>(null);
   const [teacherLocation, setTeacherLocation] = useState<BrowserLocation | null>(null);
   const [dynamicQr, setDynamicQr] = useState<{
     token: string;

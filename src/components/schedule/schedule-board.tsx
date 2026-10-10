@@ -514,7 +514,7 @@ export function ScheduleBoard({
 
   useLayoutEffect(() => {
     if (!panelId) {
-      setPanelPos(null);
+      queueMicrotask(() => setPanelPos(null));
       return;
     }
 

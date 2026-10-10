@@ -80,7 +80,7 @@ export function BoardCanvas({ assignmentId }: { assignmentId: string | null }) {
         },
       }) as unknown as InitialData,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [elements === null],
+    [!!elements],
   );
 
   return (

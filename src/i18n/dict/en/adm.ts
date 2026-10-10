@@ -670,6 +670,16 @@ export const adm = {
   admQuickUpdatesDesc: "System updates and changes",
 
   kfdSubjectsSubtitle: "Subjects by departments",
-  kfdSubjectsEmpty: "No subjects yet."
-
+  kfdSubjectsEmpty: "No subjects yet.",
+   kfdSubjectsTitle: "Department subjects",
+   admStudyPlansTitle: "Study plans",
+   admStudyPlansSubtitle: "Subjects assigned to groups",
+   admStudyPlansSelectGroup: "Select group",
+   admStudyPlansSelectCourse: "Select subject",
+   admStudyPlansTerm: "Term",
+   admStudyPlansNoTerm: "No term",
+   admStudyPlansCreate: "Add",
+   admStudyPlansEmpty: "No study plans yet.",
+   admStudyPlansDeleteConfirm: "Delete this study plan?",
+   admStudyPlansEnrolled: "{count} enrolled"
 };

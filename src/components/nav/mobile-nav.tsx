@@ -53,9 +53,12 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
   const { t, locale } = useI18n();
   const [open, setOpen] = useState(false);
   const mounted = useState(true);
-  const pathname = usePathname();useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  const pathname = usePathname();
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    if (open) setOpen(false);
+  }
 
   useEffect(() => {
     if (!open) return;

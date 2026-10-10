@@ -109,8 +109,8 @@ export function FunctionGraph() {
   }, [draw, expression, t]);
 
   useEffect(() => {
-    void plot();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    queueMicrotask(() => void plot());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

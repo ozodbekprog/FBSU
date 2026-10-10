@@ -52,7 +52,7 @@ export function OralDefensePanel({
   }, [assignmentId]);
 
   useEffect(() => {
-    void loadRows();
+    queueMicrotask(() => void loadRows());
     void (async () => {
       const response = await apiFetch(`/api/courses/${encodeURIComponent(courseId)}/enrollments`);
       const json = (await response.json().catch(() => null)) as

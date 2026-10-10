@@ -670,6 +670,16 @@ export const adm = {
   admQuickUpdatesDesc: "Tizim yangilanishlari va o'zgarishlar",
 
   kfdSubjectsSubtitle: "Fanlar bo'limlar bo'yicha",
-  kfdSubjectsEmpty: "Hozircha fanlar yo'q."
-
+  kfdSubjectsEmpty: "Hozircha fanlar yo'q.",
+   kfdSubjectsTitle: "Kafedra fanlari",
+   admStudyPlansTitle: "O'quv rejalari",
+   admStudyPlansSubtitle: "Guruhlarga biriktirilgan fanlar",
+   admStudyPlansSelectGroup: "Guruhni tanlang",
+   admStudyPlansSelectCourse: "Fanni tanlang",
+   admStudyPlansTerm: "Semestr",
+   admStudyPlansNoTerm: "Semestrsiz",
+   admStudyPlansCreate: "Qo'shish",
+   admStudyPlansEmpty: "Hozircha o'quv reja yo'q.",
+   admStudyPlansDeleteConfirm: "Bu o'quv rejani o'chirishni tasdiqlaysizmi?",
+   admStudyPlansEnrolled: "{count} ta yozilgan"
 };

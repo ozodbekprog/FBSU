@@ -8,6 +8,7 @@ export function PendulumSim() {
   const { t } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef(0);
+  const tickRef = useRef<(() => void) | null>(null);
   const runningRef = useRef(false);
   const thetaRef = useRef(0);
   const omegaRef = useRef(0);
@@ -95,7 +96,7 @@ export function PendulumSim() {
   }, [angle, draw]);
 
   useEffect(() => {
-    reset();
+    queueMicrotask(() => void reset());
   }, [reset]);
 
   useEffect(() => {

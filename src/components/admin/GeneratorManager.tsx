@@ -119,7 +119,7 @@ export default function GeneratorManager({ initial }: { initial: GeneratorStats 
 
   useEffect(() => {
     if (!result) {
-      setRevealed(false);
+      queueMicrotask(() => setRevealed(false));
       return;
     }
     const timer = setTimeout(() => setRevealed(true), 40);

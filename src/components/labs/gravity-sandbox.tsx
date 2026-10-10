@@ -18,6 +18,7 @@ export function GravitySandbox() {
   const wallsRef = useRef<Matter.Body[]>([]);
   const ballsRef = useRef<Matter.Body[]>([]);
   const rafRef = useRef(0);
+  const loopRef = useRef<(() => void) | null>(null);
   const bounceRef = useRef(0.6);
   const [gravity, setGravity] = useState(1);
   const [bounce, setBounce] = useState(0.6);
@@ -131,7 +132,7 @@ export function GravitySandbox() {
   useEffect(() => {
     bounceRef.current = bounce;
     for (const ball of ballsRef.current) {
-      ball.restitution = bounce;
+      (ball as Matter.Body & { restitution?: number }).restitution = bounce;
     }
   }, [bounce]);
 

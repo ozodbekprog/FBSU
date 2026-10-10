@@ -415,6 +415,7 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ i
                       due &&
                         !overdue &&
                         !submission &&
+                        // eslint-disable-next-line react-hooks/purity -- server component, runs per-request
                         due.getTime() - Date.now() <= 3 * 24 * 60 * 60 * 1000,
                     );
                     return (

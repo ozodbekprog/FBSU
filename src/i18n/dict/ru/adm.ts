@@ -670,6 +670,16 @@ export const adm = {
   admQuickUpdatesDesc: "Обновления и изменения системы",
 
   kfdSubjectsSubtitle: "Dисциплины по кафедрам",
-  kfdSubjectsEmpty: "Дисциплины пока не добавлены."
-
+  kfdSubjectsEmpty: "Дисциплины пока не добавлены.",
+   kfdSubjectsTitle: "Дисциплины кафедры",
+   admStudyPlansTitle: "Учебные планы",
+   admStudyPlansSubtitle: "Дисциплины, закреплённые за группами",
+   admStudyPlansSelectGroup: "Выберите группу",
+   admStudyPlansSelectCourse: "Выберите дисциплину",
+   admStudyPlansTerm: "Семестр",
+   admStudyPlansNoTerm: "Без семестра",
+   admStudyPlansCreate: "Добавить",
+   admStudyPlansEmpty: "Учебных планов пока нет.",
+   admStudyPlansDeleteConfirm: "Удалить этот учебный план?",
+   admStudyPlansEnrolled: "{count} записано"
 };

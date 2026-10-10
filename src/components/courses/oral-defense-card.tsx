@@ -34,7 +34,7 @@ export function OralDefenseCard({ assignmentId }: { assignmentId: string }) {
   }, [assignmentId]);
 
   useEffect(() => {
-    void load();
+    queueMicrotask(() => void load());
   }, [load]);
 
   async function request() {

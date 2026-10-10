@@ -98,6 +98,7 @@ model User {
 
   taughtCourses        Course[]              @relation("CourseTeacher")
   enrollments          Enrollment[]
+  studyPlans      StudyPlan[]
   submissions          Submission[]
   attendance           Attendance[]
   staffAttendance      StaffAttendance[]
@@ -157,6 +158,7 @@ model User {
   subjectsTaught        TeacherSubject[]
   scheduleEntriesTaught ScheduleEntry[]        @relation("ScheduleTeacher")
   examSheets            ExamSheet[]
+  verifiedSessions ExamSession[] @relation("SheetVerifier")
   auditLogs             AuditLog[]
   passwordResets        PasswordResetToken[]
   bugReports            BugReport[]
@@ -185,6 +187,7 @@ model Group {
   users     User[]
   schedule  ScheduleEntry[]
   subGroups SubGroup[]
+  studyPlans StudyPlan[]
 
   @@index([curatorId])
 }
@@ -219,6 +222,7 @@ model Course {
   examSessions       ExamSession[]
   bankQuestions      BankQuestion[]
   bonusPoints        BonusPoint[]
+  studyPlans         StudyPlan[]
 
   @@index([teacherId])
 }
@@ -924,6 +928,9 @@ model ExamSession {
   endTime       String?
   room          String?
   admissionOpen Boolean  @default(false)
+  sheetVerifiedAt   DateTime?
+  sheetVerifiedById String?
+  sheetVerifiedBy User?   @relation("SheetVerifier", fields: [sheetVerifiedById], references: [id])
   createdAt     DateTime @default(now())
 
   course Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -1008,6 +1015,24 @@ model Term {
   createdAt DateTime @default(now())
 
   sessions ExamSession[]
+  studyPlans StudyPlan[]
+}
+
+
+model StudyPlan {
+  id         String   @id @default(cuid())
+  groupId    String
+  courseId   String
+  termId     String?
+  createdById String?
+  createdAt  DateTime @default(now())
+
+  group    Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  course   Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  term     Term?     @relation(fields: [termId], references: [id], onDelete: SetNull)
+  createdBy User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([groupId, courseId])
 }
 
 model AuditLog {

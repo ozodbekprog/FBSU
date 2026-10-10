@@ -164,7 +164,7 @@ export function CheckInForm({
     if (tokenSubmitted.current) return;
     if (!initialPayload?.token && !initialPayload?.code) return;
     tokenSubmitted.current = true;
-    void submitScan(initialPayload);
+    queueMicrotask(() => void submitScan(initialPayload));
   }, [initialPayload]);
 
   if (status === "face" && pending) {
