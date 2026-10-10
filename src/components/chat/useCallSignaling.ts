@@ -51,6 +51,8 @@ type SignalRow = {
 };
 
 const POLL_MS = 1000;
+/** "Onlayn bo'lg" yangilanishi — 60 soniya (server ham shu interval bilan). */
+const PRESENCE_MS = 60_000;
 const ICE_BUFFER_LIMIT = 60;
 
 const RTC_CONFIG: RTCConfiguration = {
@@ -382,6 +384,17 @@ export function useCallSignaling(currentUserId: string) {
       cleanup();
     };
   }, [cleanup, stopPolling, tick]);
+
+  // "Onlayn bo'lg" vaqtini yangilash. Sarlavhada ko'rinadigan ma'lumot
+  // bo'lgani uchun foydalanuvchi faol ekanini muntazam bildirish kerak.
+  useEffect(() => {
+    const ping = () => {
+      void fetch("/api/chat/presence", { method: "POST" }).catch(() => {});
+    };
+    ping();
+    const id = setInterval(ping, PRESENCE_MS);
+    return () => clearInterval(id);
+  }, []);
 
   const start = useCallback(
     async (conversationId: string) => {

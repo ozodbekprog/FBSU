@@ -11,6 +11,7 @@ const USER_SELECT = {
   name: true,
   avatarUrl: true,
   role: true,
+  lastSeenAt: true,
 } as const;
 
 export async function GET() {
@@ -30,8 +31,18 @@ export async function GET() {
         take: 1,
         select: { body: true, createdAt: true, senderId: true },
       },
+      settings: {
+        where: { userId: user.id },
+        take: 1,
+        select: { pinnedAt: true, archivedAt: true, mutedUntil: true, clearedAt: true },
+      },
     },
   });
+
+  // Arxivlangan suhbatlar ro'yxatdan chiqariladi (Telegram kabi) — ular
+  // alohida ochiladi.
+  const visible = conversations.filter((c) => !c.settings[0]?.archivedAt);
+  const now = Date.now();
 
   const ids = conversations.map((conversation) => conversation.id);
   const unreadRows = ids.length
@@ -47,13 +58,29 @@ export async function GET() {
     : [];
   const unreadMap = new Map(unreadRows.map((row) => [row.conversationId, row._count._all]));
 
-  const data = conversations.map((conversation) => ({
-    id: conversation.id,
-    participant:
-      conversation.participantAId === user.id ? conversation.participantB : conversation.participantA,
-    lastMessage: conversation.messages[0] ?? null,
-    unreadCount: unreadMap.get(conversation.id) ?? 0,
-  }));
+  const data = visible
+    .map((conversation) => {
+      const setting = conversation.settings[0];
+      return {
+        id: conversation.id,
+        participant:
+          conversation.participantAId === user.id
+            ? conversation.participantB
+            : conversation.participantA,
+        lastMessage: conversation.messages[0] ?? null,
+        unreadCount: unreadMap.get(conversation.id) ?? 0,
+        pinned: !!setting?.pinnedAt,
+        archived: !!setting?.archivedAt,
+        muted: !!setting?.mutedUntil && setting.mutedUntil.getTime() > now,
+      };
+    })
+    // mahkamlanganlar tepada, so'ng oxirgi xabar bo'yicha
+    .sort((a, b) => {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+      const at = a.lastMessage?.createdAt ?? "";
+      const bt = b.lastMessage?.createdAt ?? "";
+      return new Date(bt).getTime() - new Date(at).getTime();
+    });
 
   return Response.json({ ok: true, data: { conversations: data } });
 }

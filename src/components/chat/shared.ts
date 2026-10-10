@@ -11,6 +11,7 @@ export type ChatParticipant = {
   name: string;
   avatarUrl: string | null;
   role: "ADMIN" | "TEACHER" | "STUDENT";
+  lastSeenAt?: string | null;
 };
 
 export type ChatConversation = {
@@ -18,7 +19,31 @@ export type ChatConversation = {
   participant: ChatParticipant;
   lastMessage: { body: string; createdAt: string; senderId: string } | null;
   unreadCount: number;
+  pinned?: boolean;
+  archived?: boolean;
+  muted?: boolean;
 };
+
+/**
+ * "Onlayn bo'lg" vaqtini inson o'quydigan shaklga keltiradi.
+ *
+ * Telegram uslubi: bir necha daqiqa oldin — "onlayn", bir kecha oldin —
+ * "kecha 17:00 da", eskiroq — aniq sana.
+ */
+export function lastSeenLabel(value: string | null | undefined, t: Translate) {
+  if (!value) return t("msgLastSeenUnknown");
+  const date = new Date(value);
+  const diff = Date.now() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 5) return t("msgLastSeenOnline");
+  if (minutes < 60) return t("msgLastSeenMinutes", { minutes });
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return t("msgLastSeenHours", { hours });
+  const days = Math.floor(hours / 24);
+  if (days === 1) return `${t("msgLastSeenYesterday")} ${fmtClock(value)}`;
+  if (days < 7) return t("msgLastSeenDays", { days });
+  return t("msgLastSeenDate", { date: fmtDate(value) });
+}
 
 export type ChatMessage = {
   id: string;

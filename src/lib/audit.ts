@@ -31,7 +31,12 @@ export type AuditAction =
   | "SALARY_GRANT_REVOKE"
   | "CALL_START"
   | "CALL_RESPOND"
-  | "CALL_END";
+  | "CALL_END"
+  | "CHAT_DELETE"
+  | "CHAT_CLEAR_HISTORY"
+  | "CHAT_BLOCK"
+  | "CHAT_UNBLOCK"
+  | "CHAT_REPORT";
 
 type JsonValue = string | number | boolean | { [key: string]: JsonValue } | JsonValue[] | null;
 

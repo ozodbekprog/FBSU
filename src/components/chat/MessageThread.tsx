@@ -4,8 +4,21 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Avatar, EmptyState, Skeleton } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/components/i18n/LocaleProvider";
+import { ChatMenu, type ChatMenuState } from "./ChatMenu";
+import { EmojiPicker } from "./EmojiPicker";
 import type { ChatConversation, ChatMessage } from "./shared";
-import { dayKey, fmtClock, fmtDayLabel, roleLabel } from "./shared";
+import { dayKey, fmtClock, fmtDayLabel, lastSeenLabel, roleLabel } from "./shared";
+
+export type MenuAction =
+  | { type: "pin"; value: boolean }
+  | { type: "archive"; value: boolean }
+  | { type: "mute"; preset: "1h" | "8h" | "2d" | "forever" | "off" }
+  | { type: "clear" }
+  | { type: "clearForEveryone" }
+  | { type: "delete" }
+  | { type: "block"; value: boolean }
+  | { type: "report" }
+  | { type: "search" };
 
 type Props = {
   conversation: ChatConversation | null;
@@ -17,6 +30,11 @@ type Props = {
   onBack: () => void;
   onStartCall?: (conversationId: string) => void;
   callBusy?: boolean;
+  /** Telegram uslubidagi suhbat menyusi (mahkamlash, arxiv, blok ...). */
+  menuState?: ChatMenuState;
+  onMenuAction?: (action: MenuAction) => Promise<void> | void;
+  blocked?: boolean;
+  blockedByThem?: boolean;
 };
 
 export function MessageThread({
@@ -29,10 +47,16 @@ export function MessageThread({
   onBack,
   onStartCall,
   callBusy,
+  menuState,
+  onMenuAction,
+  blocked,
+  blockedByThem,
 }: Props) {
   const { t } = useI18n();
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const conversationId = conversation?.id ?? null;
 
@@ -102,40 +126,112 @@ export function MessageThread({
             <path d="m15 18-6-6 6-6" />
           </svg>
         </button>
-        <Avatar name={participant.name} src={participant.avatarUrl} size={40} />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-brand-950">{participant.name}</p>
-          <p className="text-xs text-slate-500">{roleLabel(participant.role, t)}</p>
-        </div>
+        <button
+          type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-label={t("msgMenu")}
+          aria-expanded={menuOpen}
+          data-chat-header=""
+          className="flex min-w-0 items-center gap-3 text-left"
+        >
+          <Avatar name={participant.name} src={participant.avatarUrl} size={40} />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-brand-950">{participant.name}</p>
+            <p className="truncate text-xs text-slate-500" data-last-seen="">
+              {lastSeenLabel(participant.lastSeenAt, t)}
+            </p>
+          </div>
+        </button>
 
-        {/* Video qo'ng'iroq — Telegram'dagi kabi sarlavhada o'ng tomonda */}
-        {onStartCall ? (
+        <div className="ml-auto flex shrink-0 items-center gap-0.5">
+          {/* Qidirish */}
           <button
             type="button"
-            onClick={() => onStartCall(conversation.id)}
+            onClick={() => onMenuAction?.({ type: "search" })}
+            aria-label={t("msgSearchInChat")}
+            title={t("msgSearchInChat")}
+            data-chat-search=""
+            className="relative inline-flex size-9 items-center justify-center rounded-full text-slate-500 transition-colors duration-150 after:absolute after:-inset-1 after:content-[''] hover:bg-slate-100 hover:text-brand-900"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+          </button>
+
+          {/* Ovozli qo'ng'iroq */}
+          <button
+            type="button"
+            onClick={() => onStartCall?.(conversation.id)}
+            disabled={callBusy}
+            aria-label={t("callStart")}
+            title={t("callStart")}
+            data-audio-call=""
+            className="relative inline-flex size-9 items-center justify-center rounded-full text-slate-500 transition-colors duration-150 after:absolute after:-inset-1 after:content-[''] hover:bg-slate-100 hover:text-brand-900 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.4 21 3 13.6 3 4.5c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1l-2.3 2.7z" />
+            </svg>
+          </button>
+
+          {/* Video qo'ng'iroq */}
+          <button
+            type="button"
+            onClick={() => onStartCall?.(conversation.id)}
             disabled={callBusy}
             aria-label={t("callStart")}
             title={t("callStart")}
             data-call-start=""
-            className="relative inline-flex size-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors duration-150 after:absolute after:-inset-1 after:content-[''] hover:bg-emerald-50 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="relative inline-flex size-9 items-center justify-center rounded-full text-slate-500 transition-colors duration-150 after:absolute after:-inset-1 after:content-[''] hover:bg-emerald-50 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <svg
-              width="19"
-              height="19"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="m16 10 4.6-2.3A1 1 0 0 1 22 8.6v6.8a1 1 0 0 1-1.4.9L16 14" />
               <rect x="2" y="6" width="14" height="12" rx="2" />
             </svg>
           </button>
-        ) : null}
+
+          {/* Menyular */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label={t("msgMenu")}
+            aria-expanded={menuOpen}
+            title={t("msgMenu")}
+            data-chat-menu-toggle=""
+            className="relative inline-flex size-9 items-center justify-center rounded-full text-slate-500 transition-colors duration-150 after:absolute after:-inset-1 after:content-[''] hover:bg-slate-100 hover:text-brand-900"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <circle cx="12" cy="5" r="1.7" />
+              <circle cx="12" cy="12" r="1.7" />
+              <circle cx="12" cy="19" r="1.7" />
+            </svg>
+          </button>
+        </div>
       </div>
+
+      {menuState && onMenuAction ? (
+        <ChatMenu
+          open={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          state={menuState}
+          partnerName={participant.name}
+          onPin={(value) => onMenuAction({ type: "pin", value })}
+          onArchive={(value) => onMenuAction({ type: "archive", value })}
+          onMute={(preset) => onMenuAction({ type: "mute", preset })}
+          onClearHistory={() => onMenuAction({ type: "clear" })}
+          onClearForEveryone={() => onMenuAction({ type: "clearForEveryone" })}
+          onDeleteChat={() => onMenuAction({ type: "delete" })}
+          onBlock={(value) => onMenuAction({ type: "block", value })}
+          onReport={() => onMenuAction({ type: "report" })}
+          onSearch={() => onMenuAction({ type: "search" })}
+        />
+      ) : null}
+
+      <EmojiPicker
+        open={emojiOpen}
+        onClose={() => setEmojiOpen(false)}
+        onPick={(emoji) => setDraft((d) => d + emoji)}
+      />
 
       <div
         ref={listRef}
@@ -223,7 +319,26 @@ export function MessageThread({
 
       <div className="border-t border-slate-100 bg-white p-3 sm:p-4">
         {error ? <p className="mb-2 px-1 text-xs text-rose-600">{error}</p> : null}
-        <div className="flex items-end gap-1.5 rounded-3xl border border-slate-200 bg-white p-1.5 pl-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-[border-color,box-shadow] duration-150 focus-within:border-brand-300 focus-within:ring-4 focus-within:ring-brand-500/10">
+        {blocked ? (
+          <p className="rounded-2xl bg-amber-50 px-4 py-3 text-center text-sm text-amber-800">
+            {blockedByThem ? t("msgBlockedByThem") : t("msgYouBlockedThem")}
+          </p>
+        ) : (
+        <div className="flex items-end gap-1.5 rounded-3xl border border-slate-200 bg-white p-1.5 pl-1.5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-[border-color,box-shadow] duration-150 focus-within:border-brand-300 focus-within:ring-4 focus-within:ring-brand-500/10">
+          <button
+            type="button"
+            onClick={() => setEmojiOpen((v) => !v)}
+            aria-label={t("msgEmoji")}
+            aria-expanded={emojiOpen}
+            data-emoji-toggle=""
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-brand-700"
+          >
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M8.5 14.5s1.2 1.8 3.5 1.8 3.5-1.8 3.5-1.8" />
+              <path d="M9 9.5h.01M15 9.5h.01" />
+            </svg>
+          </button>
           <textarea
             rows={1}
             value={draft}
@@ -246,6 +361,7 @@ export function MessageThread({
             </svg>
           </button>
         </div>
+        )}
         <p className="mt-2 hidden px-2 text-[11px] text-slate-600 sm:block">
           {t("msgComposerHint")}
         </p>

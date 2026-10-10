@@ -35,8 +35,29 @@ export async function GET(
     data: { isRead: true },
   });
 
+  const setting = await prisma.conversationSetting.findUnique({
+    where: { conversationId_userId: { conversationId: id, userId: user.id } },
+    select: { clearedAt: true },
+  });
+
+  // "Tarixni tozalash": foydalanuvchining o'z tozalash vaqtidan keyingi
+  // xabarlar ko'rinmaydi. "Ikkalasida o'chirish" esa qarshi tomonga ham
+  // ta'sir qiladi.
+  const clearedForEveryoneAt = await prisma.conversation.findUnique({
+    where: { id },
+    select: { clearedForEveryoneAt: true },
+  }).then((c) => c?.clearedForEveryoneAt ?? null);
+
+  const boundaries = [setting?.clearedAt, clearedForEveryoneAt].filter(
+    (d): d is Date => !!d,
+  );
+  const visibleFrom = boundaries.length ? new Date(Math.max(...boundaries.map((d) => d.getTime()))) : null;
+
   const messages = await prisma.message.findMany({
-    where: { conversationId: id },
+    where: {
+      conversationId: id,
+      ...(visibleFrom ? { createdAt: { gt: visibleFrom } } : {}),
+    },
     orderBy: { createdAt: "desc" },
     take: 100,
   });
@@ -75,6 +96,25 @@ export async function POST(
     );
   }
 
+  const partnerId =
+    conversation.participantAId === user.id
+      ? conversation.participantBId
+      : conversation.participantAId;
+
+  // O'z tomonidan bloklagan foydalanuvchiga yuborish — Telegram kabi
+  // "boshqa tomon bloklagan" deb xabar beriladi, lekin o'z xabarimiz
+  // saqlanib qoladi (Telegram'da ham shunday).
+  const blockedByThem = await prisma.chatBlock.findUnique({
+    where: { blockerId_blockedId: { blockerId: partnerId, blockedId: user.id } },
+    select: { id: true },
+  });
+  if (blockedByThem) {
+    return Response.json(
+      { ok: false, error: "Siz tomondan bloklangan bo'lishingiz mumkin" },
+      { status: 403 },
+    );
+  }
+
   const now = Date.now();
   const previous = lastSentAt.get(user.id) ?? 0;
   if (now - previous < SEND_INTERVAL_MS) {
@@ -94,6 +134,10 @@ export async function POST(
       data: { lastMessageAt: new Date() },
     }),
   ]);
+
+  // Bloklash tekshiruvi yuqorida, yuborishdan OLDIN bajarildi.
+  // Qo'shimcha: o'z tomonidan bloklagan foydalanuvchiga yuborish mumkin
+  // (Telegram'da ham shunday) — faqat o'sha foydalanuvchiga yetib boradi.
 
   return Response.json({ ok: true, data: { message } }, { status: 201 });
 }
