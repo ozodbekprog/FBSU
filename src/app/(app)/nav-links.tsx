@@ -156,15 +156,6 @@ export function NavLinks({ groups }: { groups: NavGroup[] }) {
   const [tip, setTip] = useState<{ label: string; y: number } | null>(null);
 
   const hideTip = useCallback(() => setTip(null), []);
-
-  useEffect(() => {
-    if (!collapsed) hideTip();
-  }, [collapsed, hideTip]);
-
-  useEffect(() => {
-    hideTip();
-  }, [pathname, hideTip]);
-
   return (
     <div
       ref={shellRef}
