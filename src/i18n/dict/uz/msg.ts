@@ -99,6 +99,7 @@ export const msg = {
   callCamOn: "Kamerani yoqish",
   callCamOff: "Kamerani o'chirish",
   callClose: "Yopish",
+  callServerPending: "Guruhli qo'ng'iroq uchun server yangilanishi kutilmoqda",
   // ── Telegram uslubidagi suhbat menyusi ──
   msgMenu: "Suhbat menyusi",
   msgArchive: "Arxivga",

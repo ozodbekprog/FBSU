@@ -146,6 +146,10 @@ export function VideoCallOverlay({ call }: { call: Signaling }) {
             {call.error}
           </div>
         ) : null}
+
+        <div className="absolute bottom-3 left-3 max-w-[60%] rounded-full bg-black/40 px-3 py-1 text-[11px] text-white/80 backdrop-blur">
+          {t("callServerPending")}
+        </div>
       </div>
 
       {/* boshqaruvlar */}

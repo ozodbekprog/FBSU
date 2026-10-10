@@ -100,6 +100,7 @@ export const msg = {
   callCamOn: "Включить камеру",
   callCamOff: "Выключить камеру",
   callClose: "Закрыть",
+  callServerPending: "Ожидается обновление сервера для группового звонка",
   // ── Меню чата в стиле Telegram ──
   msgMenu: "Меню чата",
   msgArchive: "В архив",

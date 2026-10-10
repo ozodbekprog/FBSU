@@ -100,6 +100,7 @@ export const msg = {
   callCamOn: "Turn camera on",
   callCamOff: "Turn camera off",
   callClose: "Close",
+  callServerPending: "Server update pending for group calls",
   // ── Telegram-style chat menu ──
   msgMenu: "Chat menu",
   msgArchive: "Archive",
