@@ -181,9 +181,11 @@ const [qr, setQr] = useState<{ code: string; url: string } | null>(null);
 
   useEffect(() => {
     if (!latestId || !latestActive) {
-      setDynamicQr(null);
-      setDynamicImg(null);
-      setTokenError(null);
+      queueMicrotask(() => {
+        setDynamicQr(null);
+        setDynamicImg(null);
+        setTokenError(null);
+      });
       return;
     }
     let cancelled = false;
@@ -222,7 +224,7 @@ const [qr, setQr] = useState<{ code: string; url: string } | null>(null);
 
   useEffect(() => {
     if (!dynamicQr) {
-      setDynamicImg(null);
+      queueMicrotask(() => setDynamicImg(null));
       return;
     }
     let cancelled = false;

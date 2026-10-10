@@ -141,7 +141,7 @@ export async function salaryTotalsForMonth(month: Date): Promise<SalaryTotals> {
   });
 
   const map = new Map<string, { count: number; total: number }>();
-  let unassigned = { count: 0, total: 0 };
+  const unassigned = { count: 0, total: 0 };
   let grandTotal = 0;
 
   for (const row of rows) {

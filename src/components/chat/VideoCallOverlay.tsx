@@ -23,14 +23,12 @@ export function VideoCallOverlay({ call }: { call: Signaling }) {
   const { t } = useI18n();
   const localRef = useRef<HTMLVideoElement>(null);
   const remoteRef = useRef<HTMLVideoElement>(null);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useState(true);
 
   const active = call.phase !== "idle" && call.phase !== "ended";
   const connected = call.phase === "active";
 
-  useEffect(() => setMounted(true), []);
-
-  // Callback ref — oddiy `useEffect` ishlatilsa, oqim element mount
+    // Callback ref — oddiy `useEffect` ishlatilsa, oqim element mount
   // bo'lishidan OLDIN kelganda `ref.current` null bo'lardi va
   // `srcObject` biriktirilmas edi (video qora qolardi). Callback ref
   // ikkala holatni ham qamrab oladi.

@@ -374,7 +374,7 @@ export default function DocumentBoard({
                     disabled={!activeOrderTemplate || (activeOrderTemplate.needsStudent && !studentId)}
                     onClick={applyOrderTemplate}
                   >
-                    Shablonni qo'llash
+                    Shablonni qo&apos;llash
                   </Button>
                 </div>
               ) : null}

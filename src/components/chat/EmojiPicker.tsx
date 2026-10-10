@@ -45,14 +45,12 @@ type Props = {
 
 export function EmojiPicker({ open, onClose, onPick }: Props) {
   const { t } = useI18n();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useState(true);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setMounted(true), []);
-
-  useEffect(() => {
+    useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();

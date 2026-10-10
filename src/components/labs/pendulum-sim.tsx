@@ -83,8 +83,11 @@ export function PendulumSim() {
       thetaRef.current += omegaRef.current * dt;
     }
     draw();
-    rafRef.current = window.requestAnimationFrame(tick);
+    rafRef.current = window.requestAnimationFrame(tickRef.current!);
   }, [draw, gravity, length]);
+  useEffect(() => {
+    tickRef.current = tick;
+  }, [tick]);
 
   const reset = useCallback(() => {
     thetaRef.current = (angle * Math.PI) / 180;

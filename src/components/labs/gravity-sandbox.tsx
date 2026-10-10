@@ -68,8 +68,11 @@ export function GravitySandbox() {
     if (!engine || !MatterLib) return;
     MatterLib.Engine.update(engine, 1000 / 60);
     render();
-    rafRef.current = window.requestAnimationFrame(loop);
+    rafRef.current = window.requestAnimationFrame(loopRef.current!);
   }, [render]);
+  useEffect(() => {
+    loopRef.current = loop;
+  }, [loop]);
 
   const buildWalls = useCallback(() => {
     const MatterLib = matterRef.current;
@@ -131,8 +134,11 @@ export function GravitySandbox() {
 
   useEffect(() => {
     bounceRef.current = bounce;
-    for (const ball of ballsRef.current) {
-      (ball as Matter.Body & { restitution?: number }).restitution = bounce;
+    const MatterLib = matterRef.current;
+    if (MatterLib) {
+      for (const ball of ballsRef.current) {
+        MatterLib.Body.set(ball, { restitution: bounce });
+      }
     }
   }, [bounce]);
 

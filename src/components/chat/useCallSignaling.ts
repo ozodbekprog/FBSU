@@ -90,6 +90,11 @@ export function useCallSignaling(currentUserId: string) {
   // Chaqirilgan tomonda `OFFER` foydalanuvchi javob bermaguncha shu yerda
   // saqlanadi.
   const pendingOfferRef = useRef<SignalRow | null>(null);
+  // Aylanma bog'liqlikni uzish uchun ref'lar: `createPeer` ichida
+  // `finish`/`sendSignal` ishlatiladi, ular esa `createPeer` dan keyin
+  // e'lon qilinadi. Ref'lar orqali har doim eng yangi versiya chaqiriladi.
+  const finishRef = useRef<() => Promise<void>>(null as unknown as () => Promise<void>);
+  const sendSignalRef = useRef<(type: SignalRow["type"], payload?: unknown) => Promise<void>>(null as unknown as (type: SignalRow["type"], payload?: unknown) => Promise<void>);
 
   const cleanup = useCallback(() => {
     const pc = pcRef.current;
@@ -156,13 +161,13 @@ export function useCallSignaling(currentUserId: string) {
       if (pc.connectionState === "connected") setPhase("active");
       if (["failed", "closed"].includes(pc.connectionState)) {
         setError("Ulanish uzildi");
-        void finish();
+        void finishRef.current();
       }
     };
 
     pc.onicecandidate = (event) => {
       if (!event.candidate || !callRef.current) return;
-      void sendSignal("ICE", event.candidate.toJSON());
+      void sendSignalRef.current("ICE", event.candidate.toJSON());
     };
 
     return pc;
@@ -179,6 +184,9 @@ export function useCallSignaling(currentUserId: string) {
       // signal uzlib qolsa ham media oqimi ko'pincha o'zi tiklanadi
     });
   }, []);
+  useEffect(() => {
+    sendSignalRef.current = sendSignal;
+  }, [sendSignal]);
 
   const finish = useCallback(async () => {
     const active = callRef.current;
@@ -198,6 +206,9 @@ export function useCallSignaling(currentUserId: string) {
       setPhase("idle");
     }, 600);
   }, [cleanup, stopPolling]);
+  useEffect(() => {
+    finishRef.current = finish;
+  }, [finish]);
 
   const drainIce = useCallback(async (pc: RTCPeerConnection) => {
     const queued = pendingIceRef.current;

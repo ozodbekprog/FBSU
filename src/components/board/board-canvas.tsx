@@ -70,17 +70,19 @@ export function BoardCanvas({ assignmentId }: { assignmentId: string | null }) {
     return () => window.clearInterval(timer);
   }, [save]);
 
+  const elementsMissing = elements == null;
+  const themeDark = theme === "dark";
   const initialData = useMemo<InitialData>(
     () =>
       ({
         elements: elements ?? [],
         appState: {
-          viewBackgroundColor: theme === "dark" ? "#0f172a" : "#ffffff",
-          currentItemStrokeColor: theme === "dark" ? "#e2e8f0" : "#0f172a",
+          viewBackgroundColor: themeDark ? "#0f172a" : "#ffffff",
+          currentItemStrokeColor: themeDark ? "#e2e8f0" : "#0f172a",
         },
       }) as unknown as InitialData,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [!!elements],
+    [elementsMissing, themeDark],
   );
 
   return (
