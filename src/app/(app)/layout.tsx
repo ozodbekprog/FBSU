@@ -184,7 +184,7 @@ export default async function AppLayout({
     // hisobiga to'g'ridan-to'g'ri kirmaydi, `/payroll` ichida o'z
     // lavozim/navbar/grafik boshqaruvi bor.
     BUXGALTER: [
-      "/dashboard", "/payroll", "/calendar",
+      "/dashboard", "/payroll", "/turniket", "/calendar",
       "/messages", "/my-qr", "/search", "/help", "/settings",
     ],
     OTA_ONA: ["/parent", "/messages", "/help", "/settings"],

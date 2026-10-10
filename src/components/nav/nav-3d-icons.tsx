@@ -784,6 +784,7 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/tasks": Tasks,
   "/my-qr": MyQr,
   "/access": Access,
+  "/turniket": Access,
   "/parent": Parent,
   "/documents": Documents,
   "/diplomas": Diplomas,
