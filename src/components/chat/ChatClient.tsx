@@ -293,7 +293,7 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
   );
 
   return (
-    <Card className="flex h-[calc(100vh-15rem)] min-h-[480px] animate-fade-up overflow-hidden">
+    <Card className="flex h-[calc(100vh-15rem)] min-h-[480px] animate-fade-up overflow-hidden md:h-full md:min-h-0 md:rounded-none md:border-0 md:shadow-none">
       <div
         className={cn(
           // md (768–1023px) da sidebar 256px ni yeb ketadi va kartada
