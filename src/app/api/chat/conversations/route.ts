@@ -14,11 +14,13 @@ const USER_SELECT = {
   lastSeenAt: true,
 } as const;
 
-export async function GET() {
+export async function GET(request: Request) {
   const user = await getCurrentUser();
   if (!user) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
+
+  const wantArchived = new URL(request.url).searchParams.get("archived") === "1";
 
   const conversations = await prisma.conversation.findMany({
     where: { OR: [{ participantAId: user.id }, { participantBId: user.id }] },
@@ -39,9 +41,12 @@ export async function GET() {
     },
   });
 
-  // Arxivlangan suhbatlar ro'yxatdan chiqariladi (Telegram kabi) — ular
-  // alohida ochiladi.
-  const visible = conversations.filter((c) => !c.settings[0]?.archivedAt);
+  // Telegram uslubi: arxivlangan suhbatlar alohida. `?archived=1`
+  // so'rovi faqat arxivlanganlarni, oddiy so'rov faqat arxivdan
+  // tashqaridagilarni qaytaradi.
+  const visible = wantArchived
+    ? conversations.filter((c) => c.settings[0]?.archivedAt)
+    : conversations.filter((c) => !c.settings[0]?.archivedAt);
   const now = Date.now();
 
   const ids = conversations.map((conversation) => conversation.id);

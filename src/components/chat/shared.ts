@@ -50,8 +50,23 @@ export type ChatMessage = {
   conversationId: string;
   senderId: string;
   body: string;
+  type?: "TEXT" | "VOICE" | "FILE";
   isRead: boolean;
   createdAt: string;
+  forwardedFromId?: string;
+  editedAt?: string | null;
+  deletedAt?: string | null;
+  replyToId?: string | null;
+  replyTo?: { id: string; senderId: string; body: string } | null;
+  attachments?: {
+    id: string;
+    kind: "VOICE" | "IMAGE" | "FILE";
+    mimeType: string;
+    base64?: string;
+    size?: number;
+    durationSec?: number;
+    fileName?: string;
+  }[];
 };
 
 export function roleLabel(role: ChatParticipant["role"], t: Translate) {

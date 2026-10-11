@@ -10,25 +10,43 @@ import { fmtListTime, previewText, roleLabel } from "./shared";
 
 type UsersResponse = { ok: boolean; data?: { users: ChatParticipant[] } };
 
+export type BlockedUser = {
+  userId: string;
+  name: string;
+  avatarUrl: string | null;
+  role: string;
+  lastSeenAt: string | null;
+  conversationId: string | null;
+  blockedAt: string;
+};
+
 type Props = {
   conversations: ChatConversation[];
+  archived: ChatConversation[];
+  blockedUsers: BlockedUser[];
   activeId: string | null;
   currentUserId: string;
   loading?: boolean;
   onSelect: (id: string) => void;
   onStartConversation: (userId: string) => Promise<boolean>;
+  onUnblock: (conversationId: string) => Promise<boolean>;
 };
 
 export function ConversationList({
   conversations,
+  archived,
+  blockedUsers,
   activeId,
   currentUserId,
   loading = false,
   onSelect,
   onStartConversation,
+  onUnblock,
 }: Props) {
   const { t } = useI18n();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [tab, setTab] = useState<"all" | "archived" | "blocked">("all");
+  const [unblocking, setUnblocking] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ChatParticipant[]>([]);
   const [searching, setSearching] = useState(false);
@@ -111,15 +129,17 @@ export function ConversationList({
     }
   }
 
+  const list = tab === "archived" ? archived : conversations;
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="border-b border-slate-100 px-4 py-3.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <p className="text-sm font-semibold text-brand-950">{t("msgConversations")}</p>
-            {conversations.length > 0 ? (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
-                {conversations.length}
+            {list.length > 0 ? (
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-slate-200 dark:text-slate-700">
+                {list.length}
               </span>
             ) : null}
           </div>
@@ -131,10 +151,124 @@ export function ConversationList({
             {t("msgNewConversation")}
           </Button>
         </div>
+
+        {/* Arxiv / Barchasi / Bloklangan navbar */}
+        <div className="mt-2.5 flex items-center gap-1.5" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "archived"}
+            data-tab="archived"
+            onClick={() => setTab("archived")}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+              tab === "archived"
+                ? "bg-brand-900 text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-200 dark:text-slate-700 dark:hover:bg-slate-300",
+            )}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="4" rx="1" />
+              <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8" />
+              <path d="M10 12h4" />
+            </svg>
+            {t("msgTabArchived")}
+            {archived.length > 0 ? (
+              <span className="opacity-70">{archived.length}</span>
+            ) : null}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "all"}
+            data-tab="all"
+            onClick={() => setTab("all")}
+            className={cn(
+              "flex-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+              tab === "all"
+                ? "bg-brand-900 text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-200 dark:text-slate-700 dark:hover:bg-slate-300",
+            )}
+          >
+            {t("msgTabAll")}
+            {conversations.length > 0 ? (
+              <span className="ml-1 opacity-70">{conversations.length}</span>
+            ) : null}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "blocked"}
+            data-tab="blocked"
+            onClick={() => setTab("blocked")}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+              tab === "blocked"
+                ? "bg-brand-900 text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-200 dark:text-slate-700 dark:hover:bg-slate-300",
+            )}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="m5.6 5.6 12.8 12.8" />
+            </svg>
+            {t("msgTabBlocked")}
+            {blockedUsers.length > 0 ? (
+              <span className="opacity-70">{blockedUsers.length}</span>
+            ) : null}
+          </button>
+        </div>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {loading && conversations.length === 0 ? (
+        {tab === "blocked" ? (
+          blockedUsers.length === 0 ? (
+            <div className="animate-fade-up p-4">
+              <EmptyState
+                title={t("msgBlockedUsers")}
+                description={t("msgBlockedUsersDesc")}
+              />
+            </div>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {blockedUsers.map((u) => (
+                <li
+                  key={u.userId}
+                  data-blocked-user={u.userId}
+                  className="flex items-center gap-3 px-4 py-3.5"
+                >
+                  <Avatar name={u.name} src={u.avatarUrl} size={44} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      {u.name}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">
+                      {t("msgBlockedSince", {
+                        date: new Date(u.blockedAt).toLocaleDateString(),
+                      })}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!u.conversationId || unblocking === u.userId}
+                    onClick={async () => {
+                      if (!u.conversationId || unblocking) return;
+                      setUnblocking(u.userId);
+                      try {
+                        await onUnblock(u.conversationId);
+                      } finally {
+                        setUnblocking(null);
+                      }
+                    }}
+                    className="shrink-0 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:border-brand-900 hover:text-brand-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-slate-100"
+                  >
+                    {unblocking === u.userId ? t("msgUnblocking") : t("msgUnblockAction")}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )
+        ) : loading && list.length === 0 ? (
           <ul className="divide-y divide-slate-100">
             {Array.from({ length: 5 }).map((_, index) => (
               <li key={index} className="flex items-center gap-3 px-4 py-3.5">
@@ -146,21 +280,23 @@ export function ConversationList({
               </li>
             ))}
           </ul>
-        ) : conversations.length === 0 ? (
+        ) : list.length === 0 ? (
           <div className="animate-fade-up p-4">
             <EmptyState
-              title={t("msgNoConversations")}
-              description={t("msgNoConversationsDesc")}
+              title={tab === "archived" ? t("msgArchivedTitle") : t("msgNoConversations")}
+              description={tab === "archived" ? t("msgArchivedEmpty") : t("msgNoConversationsDesc")}
               action={
-                <Button size="sm" onClick={() => setPickerOpen(true)}>
-                  {t("msgNewConversation")}
-                </Button>
+                tab === "all" ? (
+                  <Button size="sm" onClick={() => setPickerOpen(true)}>
+                    {t("msgNewConversation")}
+                  </Button>
+                ) : undefined
               }
             />
           </div>
         ) : (
           <ul className="divide-y divide-slate-100">
-            {conversations.map((conversation, index) => {
+            {list.map((conversation, index) => {
               const active = conversation.id === activeId;
               const unread = conversation.unreadCount > 0;
               return (
@@ -183,13 +319,33 @@ export function ConversationList({
                     <Avatar name={conversation.participant.name} src={conversation.participant.avatarUrl} size={44} />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center justify-between gap-2">
-                        <span
-                          className={cn(
-                            "truncate text-sm",
-                            unread ? "font-semibold text-brand-950" : "font-medium text-slate-800",
-                          )}
-                        >
-                          {conversation.participant.name}
+                        <span className="flex min-w-0 items-center gap-1">
+                          <span
+                            className={cn(
+                              "truncate text-sm",
+                              unread ? "font-semibold text-brand-950" : "font-medium text-slate-800",
+                            )}
+                          >
+                            {conversation.participant.name}
+                          </span>
+                          {conversation.pinned ? (
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="shrink-0 rotate-45 text-brand-700 dark:text-brand-300"
+                              data-pinned=""
+                              aria-label={t("msgPin")}
+                            >
+                              <path d="M12 17v5" />
+                              <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />
+                            </svg>
+                          ) : null}
                         </span>
                         <span className={cn("shrink-0 text-[11px]", unread ? "font-medium text-brand-700" : "text-slate-600")}>
                           {conversation.lastMessage

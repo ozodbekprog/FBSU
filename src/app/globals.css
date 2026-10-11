@@ -282,6 +282,34 @@ body {
 .dark .bg-slate-900 { background-color: #0b1322; }
 .dark .bg-slate-900\/45 { background-color: rgb(2 6 23 / 0.65); }
 
+/* Chat komponentlari (kuzatuv paneli, suhbat ro'yxati, emoji paneli,
+   xabar pufakchalari, kontekst menyu) dark rejimda to'liq moslashsin.
+   Qiymatlar yuqoridagi `.dark` rang o'zgaruvchilari bilan bir xil. */
+.dark .text-slate-500 { color: #8da0c2; }
+.dark .text-slate-600 { color: #a9b8d3; }
+.dark .text-slate-700 { color: #c4cfe4; }
+.dark .text-slate-800 { color: #dae2f1; }
+.dark .text-slate-900 { color: #edf2fb; }
+.dark .bg-slate-50 { background-color: #0f182b; }
+.dark .bg-slate-100 { background-color: #141f36; }
+.dark .bg-slate-200 { background-color: #1d2a46; }
+.dark .hover\:bg-slate-50:hover { background-color: #131f36; }
+.dark .hover\:bg-slate-100:hover { background-color: #1d2a46; }
+.dark .hover\:bg-slate-200:hover { background-color: #2b3a5c; }
+.dark .border-slate-100 { border-color: #141f36; }
+.dark .border-slate-200 { border-color: #1d2a46; }
+.dark .border-slate-300 { border-color: #2b3a5c; }
+.dark .border-rose-200 { border-color: #4a2334; }
+.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: #141f36; }
+.dark .bg-brand-50\/80 { background-color: rgb(16 28 54 / 0.85); }
+.dark .group:hover .group-hover\:bg-slate-100 { background-color: #1d2a46; }
+.dark .from-slate-50\/80 { --tw-gradient-from: rgb(15 24 43 / 0.9); }
+.dark .border-slate-200\/70 { border-color: rgb(29 42 70 / 0.85); }
+/* Qo'ng'iroq overlay'i va boshqa joylarda `bg-slate-950/800` dark rejimda
+   teskari o'zgaruvchi tufayli OQ bo'lib qolmasligi uchun — ular doim qora. */
+.dark .bg-slate-950 { background-color: #0b1322; }
+.dark .bg-slate-800 { background-color: #1d2a46; }
+
 .dark .from-white { --tw-gradient-from: #0e1729; }
 .dark .from-white\/70 { --tw-gradient-from: rgb(14 23 41 / 0.7); }
 .dark .via-white { --tw-gradient-via: #0e1729; }

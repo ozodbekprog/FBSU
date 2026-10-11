@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 
 const sendSchema = z.object({
   body: z.string().trim().min(1).max(2000),
+  /** Javob berilayotgan xabar (reply). */
+  replyToId: z.string().min(1).optional(),
 });
 
 const lastSentAt = new Map<string, number>();
@@ -60,6 +62,24 @@ export async function GET(
     },
     orderBy: { createdAt: "desc" },
     take: 100,
+    // `bytes` (bytea) ustuni yuklanmaydi — xabar ro'yxatida u kerak
+    // emas, ovoz/fayl to'liq ma'lumoti alohida attachment endpointidan
+    // olinadi (base64). Shu bilan ro'yxat yengil bo'ladi.
+    include: {
+      attachments: {
+        select: {
+          id: true,
+          kind: true,
+          mimeType: true,
+          size: true,
+          durationSec: true,
+          fileName: true,
+        },
+      },
+      replyTo: {
+        select: { id: true, senderId: true, body: true },
+      },
+    },
   });
   messages.reverse();
 
@@ -125,9 +145,21 @@ export async function POST(
   }
   lastSentAt.set(user.id, now);
 
+  // Reply: agar replyToId berilgan bo'lsa, u shu suhbatga tegishli
+  // xabar ekanini tekshiramiz (begona xabarga javob berib bo'lmaydi).
+  let replyToId: string | undefined = parsed.data.replyToId;
+  if (replyToId) {
+    const target = await prisma.message.findFirst({
+      where: { id: replyToId, conversationId: id },
+      select: { id: true },
+    });
+    if (!target) replyToId = undefined;
+  }
+
   const [message] = await prisma.$transaction([
     prisma.message.create({
-      data: { conversationId: id, senderId: user.id, body: parsed.data.body },
+      data: { conversationId: id, senderId: user.id, body: parsed.data.body, replyToId },
+      include: { replyTo: { select: { id: true, senderId: true, body: true } } },
     }),
     prisma.conversation.update({
       where: { id },

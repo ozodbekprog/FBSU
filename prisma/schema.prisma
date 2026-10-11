@@ -1169,14 +1169,71 @@ model Message {
   conversationId String
   senderId       String
   body           String
+  type           MessageType @default(TEXT)
   isRead         Boolean  @default(false)
   createdAt      DateTime @default(now())
 
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender       User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  /// Forward qilingan asl xabar. `null` bo'lsa — xabar o'z xabari.
+  forwardedFromId String?
+  forwardedAt     DateTime?
+
+  /// Javob berilgan asl xabar (reply). `null` — oddiy xabar.
+  replyToId String?
+  replyTo   Message? @relation("MessageReply", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies   Message[] @relation("MessageReply")
+  /// Tahrirlangan vaqt (null — tahrirlanmagan).
+  editedAt   DateTime?
+  /// "O'chirilgan" — yozuv bazada qoladi (audit), lekin ko'rinmaydi.
+  deletedAt  DateTime?
+
+  conversation  Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender        User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  attachments   MessageAttachment[]
+  forwardedFrom Message?     @relation("MessageForward", fields: [forwardedFromId], references: [id], onDelete: SetNull)
+  forwardedTo   Message[]   @relation("MessageForward")
 
   @@index([conversationId, createdAt])
   @@index([senderId])
+  @@index([forwardedFromId])
+  @@index([replyToId])
+}
+
+/// Xabar turi — matn, ovozli yozuv yoki fayl.
+enum MessageType {
+  TEXT
+  VOICE
+  FILE
+}
+
+enum AttachmentKind {
+  VOICE
+  IMAGE
+  FILE
+}
+
+/// Xabarga ilova.
+///
+/// Ovoz va fayl PostgreSQL `bytea` ustunida saqlanadi: Vercel serverless
+/// funksiyalarining diski vaqtinchalik — fayl `body` ustuni esa
+/// fayl bilan bir xarakterda saqlanadi. Baza 12 MB dan boshlanadi;
+/// 1 daqiqalik Opus ovoz ≈ 180 KB, limit 5 MB (≈ 28 daqiqa).
+model MessageAttachment {
+  id        String         @id @default(cuid())
+  messageId String
+  kind      AttachmentKind
+  mimeType  String
+  /// Mazmun — `bytea`
+  bytes     Bytes
+  size      Int
+  /// Ovoz uchun davomiylik (soniya)
+  durationSec Int?
+  /// Asl fayl nomi
+  fileName  String?
+  createdAt DateTime       @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
 }
 
 /// Telegram uslubidagi suhbat sozlamalari — foydalanuvchi bo'yicha.

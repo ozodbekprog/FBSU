@@ -43,7 +43,23 @@ export function PwaRegister() {
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+      if (process.env.NODE_ENV === "production") {
+        navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+      } else {
+        // Dev rejimda service worker va uning keshlari eski JS fayllarni
+        // berib, o'zgarishlar ko'rinmasligiga sabab bo'ladi — ro'yxatdan
+        // chiqarib, keshni tozalaymiz.
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((regs) => regs.forEach((reg) => reg.unregister()))
+          .catch(() => undefined);
+        if (typeof caches !== "undefined") {
+          caches
+            .keys()
+            .then((keys) => keys.forEach((key) => caches.delete(key)))
+            .catch(() => undefined);
+        }
+      }
     }
 
     const handlePrompt = (event: Event) => {

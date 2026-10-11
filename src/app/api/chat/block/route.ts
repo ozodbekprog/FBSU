@@ -9,6 +9,50 @@ const blockSchema = z.object({
   blocked: z.boolean(),
 });
 
+/** Men bloklagan foydalanuvchilar ro'yxati (bloklanish navbari uchun).
+ * Har biri uchun konversatsiya id ham qaytariladi — blokdan chiqarish
+ * shu id orqali amalga oshiriladi. */
+export async function GET() {
+  const user = await getCurrentUser();
+  if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+
+  const blocks = await prisma.chatBlock.findMany({
+    where: { blockerId: user.id },
+    orderBy: { createdAt: "desc" },
+    select: {
+      createdAt: true,
+      blocked: {
+        select: { id: true, name: true, avatarUrl: true, role: true, lastSeenAt: true },
+      },
+    },
+  });
+
+  const blockedUsers = await Promise.all(
+    blocks.map(async (b) => {
+      const conversation = await prisma.conversation.findFirst({
+        where: {
+          OR: [
+            { participantAId: user.id, participantBId: b.blocked.id },
+            { participantAId: b.blocked.id, participantBId: user.id },
+          ],
+        },
+        select: { id: true },
+      });
+      return {
+        userId: b.blocked.id,
+        name: b.blocked.name,
+        avatarUrl: b.blocked.avatarUrl,
+        role: b.blocked.role,
+        lastSeenAt: b.blocked.lastSeenAt,
+        conversationId: conversation?.id ?? null,
+        blockedAt: b.createdAt.toISOString(),
+      };
+    }),
+  );
+
+  return Response.json({ ok: true, data: { blockedUsers } });
+}
+
 /**
  * Foydalanuvchini bloklash / blokdan chiqarish.
  *

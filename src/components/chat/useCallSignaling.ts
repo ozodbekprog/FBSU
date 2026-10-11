@@ -69,6 +69,7 @@ export function useCallSignaling(currentUserId: string) {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
+  const [isVideo, setIsVideo] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -125,26 +126,22 @@ export function useCallSignaling(currentUserId: string) {
     }
   }, []);
 
-  const teardown = useCallback(() => {
-    stopPolling();
-    cleanup();
-    callRef.current = null;
-    sinceRef.current = null;
-    cursorRef.current = null;
-    setCall(null);
-    setPeer(null);
-    setPhase("idle");
-  }, [cleanup, stopPolling]);
-
-  const createPeer = useCallback(async () => {
+  const createPeer = useCallback(async (wantVideo: boolean) => {
     cleanup();
     const pc = new RTCPeerConnection(RTC_CONFIG);
     pcRef.current = pc;
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
-      audio: { echoCancellation: true, noiseSuppression: true },
-    });
+    // Audio qo'ng'iroqda kamera umuman so'ralmaydi — aks holda kamerasiz
+    // qurilmada oddiy telefon qo'ng'iroqi ham ishlamay qolardi
+    // ("Kamera yoki mikrofonga ruxsat berilmadi").
+    const stream = wantVideo
+      ? await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+          audio: { echoCancellation: true, noiseSuppression: true },
+        })
+      : await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true },
+        });
     localRef.current = stream;
     setLocalStream(stream);
     for (const track of stream.getTracks()) pc.addTrack(track, stream);
@@ -169,6 +166,10 @@ export function useCallSignaling(currentUserId: string) {
       if (!event.candidate || !callRef.current) return;
       void sendSignalRef.current("ICE", event.candidate.toJSON());
     };
+
+    // Video mavjudligi holatini saqlaymiz. Audio qo'ng'iroqda cam holati
+    // muhim emas, ammo UI shu asosda ko'rinadi.
+    setCamOn(wantVideo);
 
     return pc;
   }, [cleanup]);
@@ -243,7 +244,15 @@ export function useCallSignaling(currentUserId: string) {
           return;
         }
         try {
-          await createPeer();
+          // Chaqiruvchi audio yoki video ekanini SDP dan aniqlaymiz:
+          // `m=video` qatori bormi-yo'qmi shu belgi.
+          const offerSdp =
+            typeof row.payload === "object" && row.payload !== null && "sdp" in row.payload
+              ? String((row.payload as { sdp?: unknown }).sdp ?? "")
+              : "";
+          const wantVideo = offerSdp.includes("m=video");
+          setIsVideo(wantVideo);
+          await createPeer(wantVideo);
           const current = pcRef.current;
           if (!current) return;
           await current.setRemoteDescription(row.payload as RTCSessionDescriptionInit);
@@ -408,10 +417,15 @@ export function useCallSignaling(currentUserId: string) {
   }, []);
 
   const start = useCallback(
-    async (conversationId: string) => {
+    async (
+      conversationId: string,
+      video = true,
+      peer?: { id: string; name: string; avatarUrl: string | null; role: string },
+    ) => {
       if (callRef.current) return;
       setError(null);
       setPhase("starting");
+      setIsVideo(video);
       try {
         const res = await fetch("/api/calls", {
           method: "POST",
@@ -426,10 +440,10 @@ export function useCallSignaling(currentUserId: string) {
         }
         // media oqimini chaqiruv yuborilishidan oldin olamiz —
         // aks holda callee javob bergan payt biz hali tayyor emas
-        await createPeer();
+        await createPeer(video);
         const pc = pcRef.current;
         if (!pc) {
-          setError("Kameraga kirib bo'lmadi");
+          setError(video ? "Kameraga kirib bo'lmadi" : "Mikrofonga kirib bo'lmadi");
           setPhase("idle");
           return;
         }
@@ -441,7 +455,12 @@ export function useCallSignaling(currentUserId: string) {
           conversationId,
           isCaller: true,
           createdAt: new Date().toISOString(),
-          caller: { id: currentUserId, name: "", avatarUrl: null, role: "" },
+          caller: {
+            id: currentUserId,
+            name: peer?.name ?? "",
+            avatarUrl: peer?.avatarUrl ?? null,
+            role: peer?.role ?? "",
+          },
           callee: { id: "", name: "", avatarUrl: null, role: "" },
         };
         await sendSignal("OFFER", offer);
@@ -525,6 +544,7 @@ export function useCallSignaling(currentUserId: string) {
     remoteStream,
     micOn,
     camOn,
+    isVideo,
     error,
     start,
     accept,

@@ -6,7 +6,7 @@
  * Har biri o'z kategoriyasiga tegishli. Qidiruv barcha emojilarni
  * nomi bo'yicha izlaydi (Telegram uslubi).
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/components/i18n/LocaleProvider";
@@ -41,16 +41,55 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onPick: (emoji: string) => void;
+  /** Emoji paneli qaysi tugma ustidan ochilishini bilishi uchun. */
+  anchorRef?: React.RefObject<HTMLElement | null>;
 };
 
-export function EmojiPicker({ open, onClose, onPick }: Props) {
+/** Emoji panelining taxminiy balandligi (joy hisoblash uchun). */
+const PICKER_HEIGHT = 336;
+const PICKER_WIDTH = 352;
+const GAP = 10;
+
+export function EmojiPicker({ open, onClose, onPick, anchorRef }: Props) {
   const { t } = useI18n();
-  const mounted = useState(true);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
+  // Panel aniq kompaktning 😊 tugmasi ustidan ochilsin — ekranning
+  // tepasida emas. `anchorRef` nuqtasini o'lchab, undan yuqorida va
+  // o'ngga tekislab joylaymiz, ko'rinmaydigan qismga chiqib ketmasligi
+  // uchun chegaralaymiz.
+  useLayoutEffect(() => {
+    if (!open) return;
+    // Pozitsiyani React state'ga emas, to'g'ridan-to'g'ri DOM'ga yozamiz
+    // (qo'shimcha render va `setState-in-effect` qoidasining oldi olinadi).
+    const position = () => {
+      const node = ref.current;
+      if (!node) return;
+      const vw = window.innerWidth;
+      const rect = anchorRef?.current?.getBoundingClientRect();
+      let left = Math.max(12, vw - PICKER_WIDTH - 16);
+      let top = 96;
+      if (rect) {
+        left = rect.right - PICKER_WIDTH;
+        top = rect.top - PICKER_HEIGHT - GAP;
+        if (top < 12) top = rect.bottom + GAP; // tepada joy qolmasa — pastga
+      }
+      left = Math.min(Math.max(12, left), Math.max(12, vw - PICKER_WIDTH - 12));
+      node.style.left = `${left}px`;
+      node.style.top = `${top}px`;
+    };
+    position();
+    window.addEventListener("resize", position);
+    window.addEventListener("scroll", position, true);
+    return () => {
+      window.removeEventListener("resize", position);
+      window.removeEventListener("scroll", position, true);
+    };
+  }, [open, anchorRef]);
+
+  useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -74,7 +113,7 @@ export function EmojiPicker({ open, onClose, onPick }: Props) {
     );
   }, [query]);
 
-  if (!mounted || !open) return null;
+  if (!open) return null;
 
   return createPortal(
     <>
@@ -84,8 +123,7 @@ export function EmojiPicker({ open, onClose, onPick }: Props) {
         data-emoji-picker=""
         className={cn(
           "animate-fade-up fixed z-[71] flex w-[min(22rem,calc(100vw-1.5rem))] flex-col",
-          "overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-xl",
-          "bottom-20 right-3 md:bottom-auto md:right-4 md:top-16",
+          "overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-xl dark:border-slate-200/30 dark:bg-[#0e1729]",
         )}
       >
         <div className="border-b border-slate-100 p-2">

@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Avatar, EmptyState, Skeleton } from "@/components/ui";
-import { cn } from "@/lib/utils";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { ChatMenu, type ChatMenuState } from "./ChatMenu";
 import { EmojiPicker } from "./EmojiPicker";
+import { MessageBubble } from "./MessageBubble";
 import type { ChatConversation, ChatMessage } from "./shared";
-import { dayKey, fmtClock, fmtDayLabel, lastSeenLabel, roleLabel } from "./shared";
+import { dayKey, fmtDayLabel, lastSeenLabel } from "./shared";
+import { useVoiceRecorder } from "@/lib/voice-recorder";
 
 export type MenuAction =
   | { type: "pin"; value: boolean }
@@ -17,7 +19,6 @@ export type MenuAction =
   | { type: "clearForEveryone" }
   | { type: "delete" }
   | { type: "block"; value: boolean }
-  | { type: "report" }
   | { type: "search" };
 
 type Props = {
@@ -26,9 +27,17 @@ type Props = {
   messages: ChatMessage[];
   loading: boolean;
   sending: boolean;
-  onSend: (body: string) => Promise<boolean>;
+  onSend: (body: string, type?: "VOICE", base64Audio?: string, durationSec?: number, replyToId?: string) => Promise<boolean>;
+  /** Fayl yoki rasm yuklash (paperclip / image tugmalari). */
+  onSendFile?: (payload: { base64: string; mimeType: string; fileName: string; replyToId?: string }) => Promise<boolean>;
+  /** Yozib olingan ovozni yuborish (mikrofon). */
+  onSendVoice?: (payload: { base64: string; durationSec: number; mimeType: string; replyToId?: string }) => Promise<boolean>;
+  /** Xabarni tahrirlash. */
+  onEditMessage?: (messageId: string, body: string) => Promise<boolean>;
+  /** Xabarni o'chirish. */
+  onDeleteMessage?: (messageId: string) => Promise<boolean>;
   onBack: () => void;
-  onStartCall?: (conversationId: string) => void;
+  onStartCall?: (conversationId: string, mode: "audio" | "video") => void;
   callBusy?: boolean;
   /** Telegram uslubidagi suhbat menyusi (mahkamlash, arxiv, blok ...). */
   menuState?: ChatMenuState;
@@ -44,6 +53,10 @@ export function MessageThread({
   loading,
   sending,
   onSend,
+  onSendFile,
+  onSendVoice,
+  onEditMessage,
+  onDeleteMessage,
   onBack,
   onStartCall,
   callBusy,
@@ -57,12 +70,29 @@ export function MessageThread({
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [editing, setEditing] = useState<ChatMessage | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ChatMessage | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const voiceRecorder = useVoiceRecorder();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const emojiBtnRef = useRef<HTMLButtonElement>(null);
+  const chatMenuBtnRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const conversationId = conversation?.id ?? null;
+  const MAX_FILE_MB = 5;
 
   useEffect(() => {
     const el = listRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+    // Foydalanuvchi tarixni ko'rish uchun yuqoriga chiqqan bo'lsa (5
+    // soniyalik poll har safar buni ishga tushirardi) majburlab pastga
+    // tortib qo'ymaymiz — faqat allaqachon pastdagi yaqin turgan bo'lsak
+    // avtomatik pastga tushiramiz.
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 140;
+    if (nearBottom) el.scrollTop = el.scrollHeight;
   }, [messages, conversationId]);
 
   const groups = useMemo(() => {
@@ -82,13 +112,116 @@ export function MessageThread({
   async function submit() {
     const text = draft.trim();
     if (!text || sending) return;
-    const ok = await onSend(text);
+    // Tahrirlash rejimi — xabarni yangilaymiz.
+    if (editing) {
+      const ok = (await onEditMessage?.(editing.id, text)) ?? false;
+      if (ok) {
+        setEditing(null);
+        setDraft("");
+        setError(null);
+      } else {
+        setError(t("msgSendError"));
+      }
+      return;
+    }
+    const ok = await onSend(text, undefined, undefined, undefined, replyTo?.id);
     if (ok) {
       setDraft("");
+      setReplyTo(null);
       setError(null);
     } else {
       setError(t("msgSendError"));
     }
+  }
+
+  function startReply(message: ChatMessage) {
+    setEditing(null);
+    setReplyTo(message);
+  }
+
+  function startEdit(message: ChatMessage) {
+    setReplyTo(null);
+    setEditing(message);
+    setDraft(message.body);
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const ok = (await onDeleteMessage?.(deleteTarget.id)) ?? false;
+      if (ok) {
+        if (editing?.id === deleteTarget.id) {
+          setEditing(null);
+          setDraft("");
+        }
+        setDeleteTarget(null);
+      } else {
+        setError(t("msgSendError"));
+      }
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  /** Faylni base64'ga o'girib yuboradi (paperclip / image). */
+  async function sendFile(file: File | undefined) {
+    if (!file) return;
+    if (file.size > MAX_FILE_MB * 1024 * 1024) {
+      setError(t("msgFileTooLarge"));
+      return;
+    }
+    if (!onSendFile) return;
+    setUploading(true);
+    try {
+      const base64 = await new Promise<string | null>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(String(reader.result ?? ""));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      }).catch(() => null);
+      if (!base64) {
+        setError(t("msgSendError"));
+        return;
+      }
+      const ok = await onSendFile({
+        base64,
+        mimeType: file.type || "application/octet-stream",
+        fileName: file.name,
+        replyToId: replyTo?.id,
+      });
+      if (ok) {
+        setError(null);
+        setReplyTo(null);
+      } else {
+        setError(t("msgSendError"));
+      }
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function startVoice() {
+    setError(null);
+    try {
+      await voiceRecorder.startRecording();
+    } catch {
+      setError(t("msgSendError"));
+    }
+  }
+
+  async function stopVoiceAndSend() {
+    const recorded = await voiceRecorder.stopRecording();
+    if (!recorded) return;
+    if (!onSendVoice) return;
+    const ok = await onSendVoice({
+      base64: recorded.base64,
+      durationSec: recorded.durationSec,
+      mimeType: recorded.mimeType,
+      replyToId: replyTo?.id,
+    });
+    if (!ok) setError(t("msgSendError"));
+    else setReplyTo(null);
   }
 
   function onKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -136,8 +269,7 @@ export function MessageThread({
         >
           <Avatar name={participant.name} src={participant.avatarUrl} size={40} />
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-brand-950">{participant.name}</p>
-            <p className="truncate text-xs text-slate-500" data-last-seen="">
+            <p className="truncate text-sm font-semibold text-brand-950">{participant.name} <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500"><circle cx="12" cy="12" r="5"/><path d="M21 15a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/><circle cx="12" cy="12" r="4"/><path d="M21 3l-1-1l-3-3M10 7l1 1l1 3"/></svg></p>            <p className="truncate text-xs text-slate-500" data-last-seen="">
               {lastSeenLabel(participant.lastSeenAt, t)}
             </p>
           </div>
@@ -162,7 +294,7 @@ export function MessageThread({
           {/* Ovozli qo'ng'iroq */}
           <button
             type="button"
-            onClick={() => onStartCall?.(conversation.id)}
+            onClick={() => onStartCall?.(conversation.id, "audio")}
             disabled={callBusy}
             aria-label={t("callStart")}
             title={t("callStart")}
@@ -177,7 +309,7 @@ export function MessageThread({
           {/* Video qo'ng'iroq */}
           <button
             type="button"
-            onClick={() => onStartCall?.(conversation.id)}
+            onClick={() => onStartCall?.(conversation.id, "video")}
             disabled={callBusy}
             aria-label={t("callStart")}
             title={t("callStart")}
@@ -193,6 +325,7 @@ export function MessageThread({
           {/* Menyular */}
           <button
             type="button"
+            ref={chatMenuBtnRef}
             onClick={() => setMenuOpen((v) => !v)}
             aria-label={t("msgMenu")}
             aria-expanded={menuOpen}
@@ -222,8 +355,8 @@ export function MessageThread({
           onClearForEveryone={() => onMenuAction({ type: "clearForEveryone" })}
           onDeleteChat={() => onMenuAction({ type: "delete" })}
           onBlock={(value) => onMenuAction({ type: "block", value })}
-          onReport={() => onMenuAction({ type: "report" })}
           onSearch={() => onMenuAction({ type: "search" })}
+          anchorRef={chatMenuBtnRef}
         />
       ) : null}
 
@@ -231,6 +364,7 @@ export function MessageThread({
         open={emojiOpen}
         onClose={() => setEmojiOpen(false)}
         onPick={(emoji) => setDraft((d) => d + emoji)}
+        anchorRef={emojiBtnRef}
       />
 
       <div
@@ -268,49 +402,17 @@ export function MessageThread({
                     {group.label}
                   </span>
                 </div>
-                {group.items.map((message, index) => {
-                  const own = message.senderId === currentUserId;
-                  return (
-                    <div
-                      key={message.id}
-                      className={cn("flex animate-fade-up", own ? "justify-end" : "justify-start")}
-                      style={{ animationDelay: `${Math.min(index, 6) * 24}ms` }}
-                    >
-                      <div
-                        className={cn(
-                          "max-w-[85%] rounded-3xl px-4 py-2.5 sm:max-w-[70%]",
-                          own
-                            ? "rounded-br-lg bg-gradient-to-br from-brand-800 to-brand-950 text-white shadow-[0_8px_20px_-12px_rgba(19,31,60,0.75)]"
-                            : "rounded-bl-lg border border-slate-200/70 bg-white text-slate-800 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_10px_24px_-16px_rgba(29,52,96,0.45)]",
-                        )}
-                      >
-                        <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
-                          {message.body}
-                        </p>
-                        <span
-                          className={cn(
-                            "mt-1 flex items-center justify-end gap-1 text-[11px]",
-                            own ? "text-brand-200" : "text-slate-600",
-                          )}
-                        >
-                          {fmtClock(message.createdAt)}
-                          {own ? (
-                            message.isRead ? (
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="text-brand-200">
-                                <path d="M18 6 7 17l-5-5" />
-                                <path d="m22 10-7.5 7.5L13 16" />
-                              </svg>
-                            ) : (
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="text-brand-300/80">
-                                <path d="M20 6 9 17l-5-5" />
-                              </svg>
-                            )
-                          ) : null}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+                {group.items.map((message) => (
+                  <MessageBubble
+                    key={message.id}
+                    message={message}
+                    own={message.senderId === currentUserId}
+                    currentUserId={currentUserId}
+                    onReply={startReply}
+                    onEdit={startEdit}
+                    onDelete={(m) => setDeleteTarget(m)}
+                  />
+                ))}
               </div>
             ))}
           </div>
@@ -319,53 +421,231 @@ export function MessageThread({
 
       <div className="border-t border-slate-100 bg-white p-3 sm:p-4">
         {error ? <p className="mb-2 px-1 text-xs text-rose-600">{error}</p> : null}
+
+        {(replyTo || editing) && !blocked ? (
+          <div className="mb-2 flex items-center gap-2 rounded-2xl border border-brand-200 bg-brand-50 px-3 py-2 dark:border-brand-800/50 dark:bg-brand-950/50">
+            <span className="min-w-0 flex-1 text-xs text-brand-800 dark:text-brand-200">
+              <span className="font-semibold">{editing ? t("msgEdit") : t("msgReply")}:</span>{" "}
+              <span className="opacity-80">
+                {editing
+                  ? editing.body
+                  : replyTo?.body || (replyTo?.attachments?.length ? "📎" : "")}
+              </span>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setEditing(null);
+                setReplyTo(null);
+                setDraft("");
+              }}
+              aria-label={t("commonCancel")}
+              className="inline-flex size-6 shrink-0 items-center justify-center rounded-full text-brand-700 hover:bg-brand-100 dark:text-brand-300 dark:hover:bg-brand-900/40"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+            </button>
+          </div>
+        ) : null}
+
         {blocked ? (
           <p className="rounded-2xl bg-amber-50 px-4 py-3 text-center text-sm text-amber-800">
             {blockedByThem ? t("msgBlockedByThem") : t("msgYouBlockedThem")}
           </p>
+        ) : voiceRecorder.isRecording ? (
+          <div className="flex items-center gap-2 rounded-3xl border border-rose-200 bg-white p-1.5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+            <button
+              type="button"
+              onClick={() => voiceRecorder.cancelRecording()}
+              aria-label={t("msgRecordingCancel")}
+              title={t("msgRecordingCancel")}
+              data-voice-cancel=""
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-rose-500 transition-colors hover:bg-rose-50"
+            >
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18" />
+                <path d="M8 6V4h8v2" />
+                <path d="M6 6l1 14h10l1-14" />
+              </svg>
+            </button>
+            <span className="size-2.5 shrink-0 animate-pulse rounded-full bg-rose-500" />
+            <span className="text-sm font-semibold tabular-nums text-slate-700">
+              {Math.floor(voiceRecorder.audioDuration / 60)}:{String(voiceRecorder.audioDuration % 60).padStart(2, "0")}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-[11px] text-slate-400">
+              {t("msgRecordingCancel")}
+            </span>
+            <button
+              type="button"
+              onClick={() => void stopVoiceAndSend()}
+              aria-label={t("msgSend")}
+              data-voice-send=""
+              className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-rose-500 text-white shadow-sm transition-colors hover:bg-rose-600"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m22 2-7 20-4-9-9-4Z" />
+                <path d="M22 2 11 13" />
+              </svg>
+            </button>
+          </div>
         ) : (
-        <div className="flex items-end gap-1.5 rounded-3xl border border-slate-200 bg-white p-1.5 pl-1.5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-[border-color,box-shadow] duration-150 focus-within:border-brand-300 focus-within:ring-4 focus-within:ring-brand-500/10">
-          <button
-            type="button"
-            onClick={() => setEmojiOpen((v) => !v)}
-            aria-label={t("msgEmoji")}
-            aria-expanded={emojiOpen}
-            data-emoji-toggle=""
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-brand-700"
-          >
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M8.5 14.5s1.2 1.8 3.5 1.8 3.5-1.8 3.5-1.8" />
-              <path d="M9 9.5h.01M15 9.5h.01" />
-            </svg>
-          </button>
-          <textarea
-            rows={1}
-            value={draft}
-            maxLength={2000}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder={t("msgComposePlaceholder")}
-            className="max-h-32 min-h-9 flex-1 resize-none bg-transparent py-2 text-sm text-slate-900 outline-none placeholder:text-slate-500"
-          />
-          <button
-            type="button"
-            onClick={() => void submit()}
-            disabled={sending || draft.trim().length === 0}
-            aria-label={t("msgSend")}
-            className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-800 to-brand-950 text-white shadow-sm transition-[--tw-gradient-from,--tw-gradient-to,opacity] duration-150 hover:from-brand-700 hover:to-brand-900 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m22 2-7 20-4-9-9-4Z" />
-              <path d="M22 2 11 13" />
-            </svg>
-          </button>
-        </div>
+          <div className="flex items-end gap-2">
+            {/* Paperclip — fayl biriktirish */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              aria-label={t("msgAttachFile")}
+              title={t("msgAttachFile")}
+              data-attach-file=""
+              className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+              </svg>
+            </button>
+
+            {/* Xabar maydoni (pill) — ichida emoji va rasm */}
+            <div className="flex min-w-0 flex-1 items-end gap-0.5 rounded-3xl border border-slate-200 bg-white p-1.5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-[border-color,box-shadow] duration-150 focus-within:border-brand-300 focus-within:ring-4 focus-within:ring-brand-500/10">
+              <textarea
+                rows={1}
+                value={draft}
+                maxLength={2000}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={onKeyDown}
+                placeholder={t("msgComposePlaceholder")}
+                className="max-h-32 min-h-9 flex-1 resize-none bg-transparent px-2 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-500"
+              />
+              <button
+                type="button"
+                ref={emojiBtnRef}
+                onClick={() => setEmojiOpen((v) => !v)}
+                aria-label={t("msgEmoji")}
+                aria-expanded={emojiOpen}
+                title={t("msgEmoji")}
+                data-emoji-toggle=""
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-brand-700"
+              >
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M8.5 14.5s1.2 1.8 3.5 1.8 3.5-1.8 3.5-1.8" />
+                  <path d="M9 9.5h.01M15 9.5h.01" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                disabled={uploading}
+                aria-label={t("msgAttachImage")}
+                title={t("msgAttachImage")}
+                data-attach-image=""
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <path d="m21 15-4.5-4.5L3.5 21" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Mikrofon (bo'sh) yoki Yuborish (matn bor) */}
+            {draft.trim() ? (
+              <button
+                type="button"
+                onClick={() => void submit()}
+                disabled={sending || uploading}
+                aria-label={t("msgSend")}
+                title={t("msgSend")}
+                data-send-button=""
+                className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-800 to-brand-950 text-white shadow-sm transition-[--tw-gradient-from,--tw-gradient-to,opacity] duration-150 hover:from-brand-700 hover:to-brand-900 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m22 2-7 20-4-9-9-4Z" />
+                  <path d="M22 2 11 13" />
+                </svg>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void startVoice()}
+                disabled={uploading}
+                aria-label={t("msgVoiceRecord")}
+                title={t("msgVoiceRecord")}
+                data-voice-toggle=""
+                className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-800 to-brand-950 text-white shadow-[0_8px_20px_-8px_rgba(19,31,60,0.55)] transition-transform duration-150 hover:from-brand-700 hover:to-brand-900 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="2" width="6" height="12" rx="3" />
+                  <path d="M5 10v1a7 7 0 0 0 14 0v-1" />
+                  <path d="M12 18v4" />
+                </svg>
+              </button>
+            )}
+          </div>
         )}
+        {/* Yashirin fayl/rasm inputlari */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          data-file-input=""
+          onChange={(event) => {
+            void sendFile(event.target.files?.[0]);
+            event.target.value = "";
+          }}
+        />
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          data-image-input=""
+          onChange={(event) => {
+            void sendFile(event.target.files?.[0]);
+            event.target.value = "";
+          }}
+        />
         <p className="mt-2 hidden px-2 text-[11px] text-slate-600 sm:block">
           {t("msgComposerHint")}
         </p>
       </div>
+
+      {/* O'chirish tasdiqi */}
+      {deleteTarget && typeof document !== "undefined"
+        ? createPortal(
+            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-slate-950/50" onClick={() => !deleting && setDeleteTarget(null)} />
+              <div
+                role="dialog"
+                aria-modal="true"
+                data-delete-confirm=""
+                className="animate-fade-up relative w-full max-w-xs rounded-2xl border border-slate-200/70 bg-white p-5 shadow-xl dark:border-slate-200/30 dark:bg-[#0e1729]"
+              >
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{t("msgConfirmDeleteMessage")}</p>
+                <div className="mt-4 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(null)}
+                    disabled={deleting}
+                    className="rounded-xl px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-200"
+                  >
+                    {t("commonCancel")}
+                  </button>
+                  <button
+                    type="button"
+                    data-delete-ok=""
+                    onClick={() => void confirmDelete()}
+                    disabled={deleting}
+                    className="rounded-xl bg-rose-600 px-3 py-2 text-sm font-medium text-white hover:bg-rose-500 disabled:opacity-60"
+                  >
+                    {t("msgDelete")}
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

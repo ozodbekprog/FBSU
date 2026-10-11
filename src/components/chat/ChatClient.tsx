@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
-import { ConversationList } from "./ConversationList";
+import { ConversationList, type BlockedUser } from "./ConversationList";
 import { MessageThread } from "./MessageThread";
 import { useCallSignaling } from "./useCallSignaling";
 import { VideoCallOverlay } from "./VideoCallOverlay";
@@ -14,6 +14,7 @@ type ConversationsResponse = { ok: boolean; data?: { conversations: ChatConversa
 type ConversationResponse = { ok: boolean; data?: { conversation: ChatConversation } };
 type MessagesResponse = { ok: boolean; data?: { messages: ChatMessage[] } };
 type MessageResponse = { ok: boolean; data?: { message: ChatMessage } };
+type BlockedResponse = { ok: boolean; data?: { blockedUsers: BlockedUser[] } };
 
 const POLL_MS = 5000;
 
@@ -25,6 +26,8 @@ type Props = {
 export function ChatClient({ currentUserId, initialUserId }: Props) {
   const call = useCallSignaling(currentUserId);
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
+  const [archived, setArchived] = useState<ChatConversation[]>([]);
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   // Telegram uslubidagi suhbat menyusi holati (mahkamlash, arxiv, ...)
   const [menuState, setMenuState] = useState<
     Record<
@@ -49,9 +52,23 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
 
   const refreshConversations = useCallback(async () => {
     try {
-      const res = await fetch("/api/chat/conversations", { cache: "no-store" });
-      const json = (await res.json().catch(() => null)) as ConversationsResponse | null;
-      if (res.ok && json?.ok && json.data) setConversations(json.data.conversations);
+      const [activeRes, archivedRes, blockedRes] = await Promise.all([
+        fetch("/api/chat/conversations", { cache: "no-store" }),
+        fetch("/api/chat/conversations?archived=1", { cache: "no-store" }),
+        fetch("/api/chat/block", { cache: "no-store" }),
+      ]);
+      const activeJson = (await activeRes.json().catch(() => null)) as ConversationsResponse | null;
+      const archivedJson = (await archivedRes.json().catch(() => null)) as ConversationsResponse | null;
+      const blockedJson = (await blockedRes.json().catch(() => null)) as BlockedResponse | null;
+      if (activeRes.ok && activeJson?.ok && activeJson.data) {
+        setConversations(activeJson.data.conversations);
+      }
+      if (archivedRes.ok && archivedJson?.ok && archivedJson.data) {
+        setArchived(archivedJson.data.conversations);
+      }
+      if (blockedRes.ok && blockedJson?.ok && blockedJson.data) {
+        setBlockedUsers(blockedJson.data.blockedUsers);
+      }
     } catch {
       return;
     } finally {
@@ -132,14 +149,14 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
   }, [initialUserId, openConversation]);
 
   const sendMessage = useCallback(
-    async (body: string) => {
+    async (body: string, type?: "VOICE", base64Audio?: string, durationSec?: number, replyToId?: string) => {
       if (!activeId) return false;
       setSending(true);
       try {
         const res = await fetch(`/api/chat/conversations/${activeId}/messages`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ body }),
+          body: JSON.stringify({ body, type, base64Audio, durationSec, replyToId }),
         });
         const json = (await res.json().catch(() => null)) as MessageResponse | null;
         const message = json?.data?.message;
@@ -160,7 +177,122 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
     [activeId, refreshConversations],
   );
 
-  const activeConversation = conversations.find((item) => item.id === activeId) ?? null;
+  const sendFile = useCallback(
+    async (payload: { base64: string; mimeType: string; fileName: string; replyToId?: string }) => {
+      if (!activeId) return false;
+      setSending(true);
+      try {
+        const res = await fetch(`/api/chat/conversations/${activeId}/file`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const json = (await res.json().catch(() => null)) as MessageResponse | null;
+        if (!res.ok || !json?.ok) return false;
+        await loadMessages(activeId);
+        void refreshConversations();
+        return true;
+      } catch {
+        return false;
+      } finally {
+        setSending(false);
+      }
+    },
+    [activeId, loadMessages, refreshConversations],
+  );
+
+  const sendVoice = useCallback(
+    async (payload: { base64: string; durationSec: number; mimeType: string; replyToId?: string }) => {
+      if (!activeId) return false;
+      setSending(true);
+      try {
+        const res = await fetch(`/api/chat/conversations/${activeId}/voice`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            audioBase64: payload.base64,
+            mimeType: payload.mimeType,
+            durationSec: payload.durationSec,
+            replyToId: payload.replyToId,
+          }),
+        });
+        const json = (await res.json().catch(() => null)) as MessageResponse | null;
+        if (!res.ok || !json?.ok) return false;
+        await loadMessages(activeId);
+        void refreshConversations();
+        return true;
+      } catch {
+        return false;
+      } finally {
+        setSending(false);
+      }
+    },
+    [activeId, loadMessages, refreshConversations],
+  );
+
+  const editMessage = useCallback(
+    async (messageId: string, body: string) => {
+      if (!activeId) return false;
+      setSending(true);
+      try {
+        const res = await fetch(`/api/chat/conversations/${activeId}/messages/${messageId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ body }),
+        });
+        const json = (await res.json().catch(() => null)) as MessageResponse | null;
+        if (!res.ok || !json?.ok) return false;
+        // Tahrirlangan xabarni ro'yxatda yangilaymiz.
+        const updated = (json.data as { message?: ChatMessage } | undefined)?.message;
+        setMessageData((prev) =>
+          prev && prev.conversationId === activeId
+            ? {
+                conversationId: activeId,
+                items: prev.items.map((m) => (m.id === messageId && updated ? { ...m, ...updated } : m)),
+              }
+            : prev,
+        );
+        void refreshConversations();
+        return true;
+      } catch {
+        return false;
+      } finally {
+        setSending(false);
+      }
+    },
+    [activeId, refreshConversations],
+  );
+
+  const deleteMessage = useCallback(
+    async (messageId: string) => {
+      if (!activeId) return false;
+      try {
+        const res = await fetch(`/api/chat/conversations/${activeId}/messages/${messageId}`, {
+          method: "DELETE",
+        });
+        const json = (await res.json().catch(() => null)) as { ok: boolean } | null;
+        if (!res.ok || !json?.ok) return false;
+        // O'chirilgan xabarni ro'yxatda "o'chirildi" deb belgilaymiz.
+        setMessageData((prev) =>
+          prev && prev.conversationId === activeId
+            ? {
+                conversationId: activeId,
+                items: prev.items.map((m) =>
+                  m.id === messageId ? { ...m, deletedAt: new Date().toISOString(), body: "" } : m,
+                ),
+              }
+            : prev,
+        );
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [activeId],
+  );
+
+  const activeConversation =
+    [...conversations, ...archived].find((item) => item.id === activeId) ?? null;
   const messages =
     messageData && messageData.conversationId === activeId ? messageData.items : [];
   const loadingMessages = activeId !== null && messageData?.conversationId !== activeId;
@@ -268,19 +400,11 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ conversationId: activeId, blocked: action.value }),
           });
-          if (res?.ok) patchMenuState(activeId, { blocked: action.value });
-          break;
-        }
-        case "report": {
-          await json("/api/chat/report", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              conversationId: activeId,
-              reason: "abuse",
-              note: "Suhbat menyusidan yuborilgan shikoyat",
-            }),
-          });
+          if (res?.ok) {
+            patchMenuState(activeId, { blocked: action.value });
+            // Bloklanganlar navbari darhol yangilansin.
+            void refreshConversations();
+          }
           break;
         }
         case "search":
@@ -290,6 +414,27 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
       }
     },
     [activeId, patchMenuState, refreshConversations],
+  );
+
+  // Bloklanganlar navbaridan foydalanuvchini blokdan chiqarish.
+  const unblockUser = useCallback(
+    async (conversationId: string) => {
+      const res = await fetch("/api/chat/block", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversationId, blocked: false }),
+      })
+        .then((r) => r.json().catch(() => null))
+        .catch(() => null);
+      if (res?.ok) {
+        setBlockedUsers((prev) => prev.filter((u) => u.conversationId !== conversationId));
+        patchMenuState(conversationId, { blocked: false });
+        void refreshConversations();
+        return true;
+      }
+      return false;
+    },
+    [patchMenuState, refreshConversations],
   );
 
   return (
@@ -306,6 +451,9 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
       >
         <ConversationList
           conversations={conversations}
+          archived={archived}
+          blockedUsers={blockedUsers}
+          onUnblock={unblockUser}
           activeId={activeId}
           currentUserId={currentUserId}
           loading={!loaded}
@@ -322,8 +470,19 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
           loading={loadingMessages}
           sending={sending}
           onSend={sendMessage}
+          onSendFile={sendFile}
+          onSendVoice={sendVoice}
+          onEditMessage={editMessage}
+          onDeleteMessage={deleteMessage}
           onBack={() => setActiveId(null)}
-          onStartCall={(conversationId) => void call.start(conversationId)}
+          onStartCall={(conversationId, mode) => {
+            const p = activeConversation?.participant;
+            void call.start(
+              conversationId,
+              mode === "video",
+              p ? { id: p.id, name: p.name, avatarUrl: p.avatarUrl, role: p.role } : undefined,
+            );
+          }}
           callBusy={call.phase !== "idle"}
           menuState={activeId ? menuState[activeId] : undefined}
           blocked={activeId ? menuState[activeId]?.blocked : false}
