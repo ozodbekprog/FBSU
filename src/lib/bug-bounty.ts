@@ -1,5 +1,12 @@
 export type BountySeverity = "low" | "medium" | "high";
 
+export type BountyFilterKey = "all" | "open" | "fixed" | "rejected";
+
+export function parseBountyFilter(value: string | undefined): BountyFilterKey {
+  if (value === "open" || value === "fixed" || value === "rejected") return value;
+  return "all";
+}
+
 export const BOUNTY_POINTS: Record<BountySeverity, number> = {
   low: 20,
   medium: 30,

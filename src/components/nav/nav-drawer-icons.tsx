@@ -161,6 +161,12 @@ const S: Record<string, ReactNode> = {
       <path d="m20 20-4.3-4.3" />
     </>
   ),
+"/assistant": (
+    <>
+      {/* Fariza — 4 qirrali AI uchquni (sparkle) */}
+      <path d="M12 3l2 7 7 2-7 2-2 7-2-7-7-2 7-2z" />
+    </>
+  ),
 "/help": (
     <>
       <circle cx="12" cy="12" r="9" />
@@ -281,6 +287,12 @@ const S: Record<string, ReactNode> = {
     <>
       <circle cx="12" cy="9" r="5" />
       <path d="M8.5 13.5 7 22l5-2.5L17 22l-1.5-8.5" />
+    </>
+  ),
+"/bounty": (
+    <>
+      <circle cx="12" cy="9" r="5" />
+      <path d="M8.5 13.3 7 22l5-2.6L17 22l-1.5-8.7" />
     </>
   ),
 };

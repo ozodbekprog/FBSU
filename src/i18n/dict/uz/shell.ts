@@ -32,6 +32,7 @@ export const shell = {
   navRooms: "Xonalar",
   navSearch: "Qidiruv",
   navHelp: "Yordam",
+  navBounty: "Bug bounty",
   navSettings: "Sozlamalar",
   navMonitoring: "Monitoring",
   navApprovals: "Tasdiqlashlar",

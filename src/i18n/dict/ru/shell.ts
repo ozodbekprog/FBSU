@@ -32,6 +32,7 @@ export const shell = {
   navRooms: "Аудитории",
   navSearch: "Поиск",
   navHelp: "Помощь",
+  navBounty: "Bug bounty",
   navSettings: "Настройки",
   navMonitoring: "Мониторинг",
   navApprovals: "Согласования",
