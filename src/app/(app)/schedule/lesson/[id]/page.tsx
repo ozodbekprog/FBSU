@@ -8,6 +8,7 @@ import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { cn, fmtDate } from "@/lib/utils";
 import { SLOT_TIMES, dateFromIso, matchCourseSlug, slotRange, todayIso } from "@/components/attendance/lesson-utils";
 import { LessonCountdown } from "@/components/schedule/lesson-countdown";
+import { roomNameFrom } from "@/lib/jitsi";
 
 const MATERIAL_TYPE_KEYS = {
   TEXT: "crsText",
@@ -237,6 +238,15 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ i
         eyebrow={dictionary.navSchedule}
         title={subjectName}
         subtitle={`${entry.group.name} · ${dictionary[dayKey]} · ${pairNumber}`}
+        action={
+          <ButtonLink
+            href={`/lessons/${roomNameFrom(`${entry.id}:${dateFromIso(todayIso())}`)}`}
+            variant="secondary"
+            size="sm"
+          >
+            {dictionary.vidTitle}
+          </ButtonLink>
+        }
       />
       {range ? (
         <div className="mb-4">

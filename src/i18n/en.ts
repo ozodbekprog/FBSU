@@ -21,6 +21,7 @@ import { tour } from "./dict/en/tour";
 import { admission } from "./dict/en/admission";
 import { cab } from "./dict/en/cab";
 import { sim } from "./dict/en/sim";
+import { vid } from "./dict/en/vid";
 
 export const en: Dictionary = {
   commonSave: "Save",
@@ -161,4 +162,5 @@ export const en: Dictionary = {
   ...pay,
   ...cab,
   ...sim,
+  ...vid,
 };

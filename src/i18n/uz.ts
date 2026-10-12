@@ -20,6 +20,7 @@ import { tour } from "./dict/uz/tour";
 import { admission } from "./dict/uz/admission";
 import { cab } from "./dict/uz/cab";
 import { sim } from "./dict/uz/sim";
+import { vid } from "./dict/uz/vid";
 
 export const uz = {
   commonSave: "Saqlash",
@@ -160,6 +161,7 @@ export const uz = {
   ...pay,
   ...cab,
   ...sim,
+  ...vid,
 };
 
 export type Dictionary = typeof uz;
