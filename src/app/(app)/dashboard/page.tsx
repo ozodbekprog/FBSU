@@ -494,26 +494,26 @@ function TeacherAnalyticsSection({ data, locale }: { data: TeacherAnalytics; loc
       />
       <div className="grid gap-4 lg:grid-cols-2">
         <AnalyticsCard
-          title={translate(locale, "dashSubmissionsTitle")}
-          subtitle={translate(locale, "dashSubmissionsSubtitle")}
-          note={translate(locale, "dashSubmissionsNote")}
-          delay={60}
-          empty={!data.submissionsByDay.some((point) => point.value > 0)}
-          emptyDescription={translate(locale, "dashSubmissionsEmpty")}
-          locale={locale}
-        >
-          <BarChart data={data.submissionsByDay} />
-        </AnalyticsCard>
-        <AnalyticsCard
           title={translate(locale, "dashAttendanceTrendTitle")}
           subtitle={translate(locale, "dashAttendanceTrendSubtitle")}
           note={translate(locale, "dashAttendanceTrendNote")}
-          delay={120}
+          delay={60}
           empty={data.attendanceByDay.length === 0}
           emptyDescription={translate(locale, "dashAttendanceTrendEmpty")}
           locale={locale}
         >
           <LineChart data={data.attendanceByDay} />
+        </AnalyticsCard>
+        <AnalyticsCard
+          title={translate(locale, "dashSubmissionsTitle")}
+          subtitle={translate(locale, "dashSubmissionsSubtitle")}
+          note={translate(locale, "dashSubmissionsNote")}
+          delay={120}
+          empty={!data.submissionsByDay.some((point) => point.value > 0)}
+          emptyDescription={translate(locale, "dashSubmissionsEmpty")}
+          locale={locale}
+        >
+          <BarChart data={data.submissionsByDay} />
         </AnalyticsCard>
         <AnalyticsCard
           title={translate(locale, "dashCourseStudentsTitle")}
@@ -952,14 +952,7 @@ export default async function DashboardPage() {
     }
 
     const actions: QuickAction[] =
-      user.role === "TEACHER"
-        ? [
-            { href: "/attendance", label: dict.dashActionAttendance, icon: <CheckCircleIcon /> },
-            { href: "/schedule", label: dict.dashActionSchedule, icon: <CalendarIcon /> },
-            { href: "/grades", label: dict.dashActionAssignments, icon: <ClipboardIcon /> },
-            { href: "/quizzes", label: dict.dashActionQuizzes, icon: <HelpCircleIcon /> },
-          ]
-        : user.role === "ADMIN"
+      user.role === "ADMIN"
           ? [
               { href: "/admin", label: dict.dashActionStats, icon: <BarChartIcon /> },
               { href: "/admin/users", label: dict.dashActionUsers, icon: <UsersIcon /> },
@@ -1014,7 +1007,6 @@ export default async function DashboardPage() {
             greeting={translate(locale, "dashGreeting", { name: firstName })}
             roleLabel={roleLabel}
             dateLabel={`${dayName(now.getDay())}, ${fmtDate(now)}`}
-            actions={actions}
             position={cabinetPosition ?? dict.roleTeacher}
             department={user.department?.name ?? "—"}
             faculty={user.faculty?.name ?? "—"}
@@ -1034,6 +1026,10 @@ export default async function DashboardPage() {
             locale={locale}
           />
         )}
+
+        {analytics.kind === "teacher" ? (
+          <TeacherAnalyticsSection data={analytics} locale={locale} />
+        ) : null}
 
         {user.role === "TEACHER" ? (
           <div className="mt-6">
@@ -1199,9 +1195,7 @@ export default async function DashboardPage() {
           </div>
         ) : null}
 
-        {analytics.kind === "teacher" ? (
-          <TeacherAnalyticsSection data={analytics} locale={locale} />
-        ) : (
+        {analytics.kind === "teacher" ? null : (
           <AdminAnalyticsSection data={analytics} locale={locale} />
         )}
       </>

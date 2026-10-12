@@ -14,7 +14,91 @@ const SALARY_TONE: Record<string, "slate" | "amber" | "green" | "blue"> = {
 
 export type SalaryView = { monthLabel: string; total: number; status: string };
 
-export type TeacherQuickAction = { href: string; label: string; icon: ReactNode };
+const ICON_PATHS: Record<string, ReactNode> = {
+  journal: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8.5 12.5 2.5 2.5 4.5-5" />
+    </>
+  ),
+  schedule: (
+    <>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M16 3v4M8 3v4M3 11h18" />
+    </>
+  ),
+  assignments: (
+    <>
+      <path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1z" />
+      <path d="M16 5h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2" />
+      <path d="m9 13 2 2 4-4" />
+    </>
+  ),
+  quizzes: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 9.5a2.5 2.5 0 1 1 3.3 2.4c-.8.3-1.3 1-1.3 1.8v.3" />
+      <path d="M12 17h.01" />
+    </>
+  ),
+  journals: (
+    <>
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </>
+  ),
+  workload: (
+    <>
+      <path d="M6 20v-6" />
+      <path d="M12 20V4" />
+      <path d="M18 20V10" />
+      <path d="M3 20h18" />
+    </>
+  ),
+  reports: (
+    <>
+      <path d="M14 3v5h5" />
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M9 13h6M9 17h6" />
+    </>
+  ),
+  bank: (
+    <>
+      <path d="M4 6h16v12H4z" />
+      <path d="M8 10h8M8 14h5" />
+    </>
+  ),
+  certificates: (
+    <>
+      <circle cx="12" cy="9" r="5" />
+      <path d="m8.5 13.5-1.5 7 5-2.5 5 2.5-1.5-7" />
+    </>
+  ),
+  payroll: (
+    <>
+      <rect x="3" y="6" width="18" height="13" rx="2" />
+      <path d="M3 10h18" />
+    </>
+  ),
+};
+
+function ActionIcon({ path }: { path: ReactNode }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {path}
+    </svg>
+  );
+}
 
 export function TeacherSummaryCard({
   name,
@@ -23,7 +107,6 @@ export function TeacherSummaryCard({
   greeting,
   roleLabel,
   dateLabel,
-  actions,
   position,
   department,
   faculty,
@@ -39,7 +122,6 @@ export function TeacherSummaryCard({
   greeting: string;
   roleLabel: string;
   dateLabel: string;
-  actions: TeacherQuickAction[];
   position: string;
   department: string;
   faculty: string;
@@ -61,15 +143,19 @@ export function TeacherSummaryCard({
     { label: d.cabFaculty, value: faculty },
     { label: d.cabJoined, value: joinedAt },
   ];
-  const links = [
-    { href: "/journal", label: d.cabLinkJournal },
-    { href: "/journals", label: d.cabLinkJournals },
-    { href: "/workload", label: d.cabLinkWorkload },
-    { href: "/schedule", label: d.cabLinkSchedule },
-    { href: "/reports", label: d.cabLinkReports },
-    { href: "/question-bank", label: d.cabLinkQuestionBank },
-    { href: "/certificates", label: d.cabLinkCertificates },
-    ...(salaryVisible ? [{ href: "/payroll", label: d.cabLinkPayroll }] : []),
+  const quickLinks = [
+    { href: "/journal", label: d.cabLinkJournal, icon: ICON_PATHS.journal },
+    { href: "/schedule", label: d.cabLinkSchedule, icon: ICON_PATHS.schedule },
+    { href: "/grades", label: d.dashActionAssignments, icon: ICON_PATHS.assignments },
+    { href: "/quizzes", label: d.dashActionQuizzes, icon: ICON_PATHS.quizzes },
+    { href: "/journals", label: d.cabLinkJournals, icon: ICON_PATHS.journals },
+    { href: "/workload", label: d.cabLinkWorkload, icon: ICON_PATHS.workload },
+    { href: "/reports", label: d.cabLinkReports, icon: ICON_PATHS.reports },
+    { href: "/question-bank", label: d.cabLinkQuestionBank, icon: ICON_PATHS.bank },
+    { href: "/certificates", label: d.cabLinkCertificates, icon: ICON_PATHS.certificates },
+    ...(salaryVisible
+      ? [{ href: "/payroll", label: d.cabLinkPayroll, icon: ICON_PATHS.payroll }]
+      : []),
   ];
 
   return (
@@ -92,22 +178,28 @@ export function TeacherSummaryCard({
                 </span>
               </div>
             </div>
+            <Badge
+              tone={faceEnrolled ? "green" : "amber"}
+              className="ring-1 ring-white/15 backdrop-blur"
+            >
+              {d.cabFace}: {faceEnrolled ? d.cabFaceOk : d.cabFaceNo}
+            </Badge>
           </div>
           <div className="mt-6">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-200/80">
               {d.dashQuickActions}
             </p>
             <div className="mt-2.5 flex flex-wrap gap-2">
-              {actions.map((action) => (
+              {quickLinks.map((link) => (
                 <Link
-                  key={action.href}
-                  href={action.href}
-                  className="group inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3.5 py-2 text-sm font-medium text-white backdrop-blur transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-200 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/20"
+                  key={link.href}
+                  href={link.href}
+                  className="group inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3 py-1.5 text-sm font-medium text-white backdrop-blur transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-200 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/20"
                 >
                   <span className="text-gold-300 transition-transform duration-200 group-hover:scale-110">
-                    {action.icon}
+                    <ActionIcon path={link.icon} />
                   </span>
-                  {action.label}
+                  {link.label}
                 </Link>
               ))}
             </div>
@@ -118,14 +210,9 @@ export function TeacherSummaryCard({
       <CardBody className="space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="truncate text-sm text-slate-500">{email}</p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge tone={faceEnrolled ? "green" : "amber"}>
-              {d.cabFace}: {faceEnrolled ? d.cabFaceOk : d.cabFaceNo}
-            </Badge>
-            <ButtonLink href="/profile" variant="secondary" size="sm">
-              {d.cabEditProfile}
-            </ButtonLink>
-          </div>
+          <ButtonLink href="/profile" variant="secondary" size="sm">
+            {d.cabEditProfile}
+          </ButtonLink>
         </div>
 
         <div>
@@ -160,19 +247,6 @@ export function TeacherSummaryCard({
           ) : (
             <span className="text-sm text-slate-500">{d.cabSalaryEmpty}</span>
           )}
-        </div>
-
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-            {d.cabLinksTitle}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {links.map((link) => (
-              <ButtonLink key={link.href} href={link.href} size="sm" variant="secondary">
-                {link.label}
-              </ButtonLink>
-            ))}
-          </div>
         </div>
       </CardBody>
     </Card>
