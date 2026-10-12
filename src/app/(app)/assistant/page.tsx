@@ -13,7 +13,7 @@ export default async function AssistantPage() {
   const dictionary = getDictionary(locale);
   const user = await getCurrentUser();
   return (
-    <div className="flex h-[calc(100dvh-12.5rem)] min-h-[30rem] flex-col gap-4">
+    <div className="flex h-[calc(100dvh-6.5rem)] min-h-[28rem] flex-col gap-3 md:h-[calc(100dvh-4rem)]">
       <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 pe-1">
         <div>
           <h1 className="flex items-center gap-3 font-serif text-3xl leading-tight text-slate-900 sm:text-4xl">
@@ -39,7 +39,7 @@ export default async function AssistantPage() {
           </p>
         </div>
       </header>
-      <div className="min-h-0 flex-1">
+      <div className="-mx-4 min-h-0 flex-1 md:-mx-8 md:-mb-8">
         <AssistantChat name={user?.name ?? ""} role={user?.role ?? "STUDENT"} />
       </div>
     </div>
