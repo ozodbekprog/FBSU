@@ -22,6 +22,7 @@ import { cab } from "./dict/uz/cab";
 import { sim } from "./dict/uz/sim";
 import { vid } from "./dict/uz/vid";
 import { res } from "./dict/uz/res";
+import { ob } from "./dict/uz/ob";
 
 export const uz = {
   commonSave: "Saqlash",
@@ -164,6 +165,7 @@ export const uz = {
   ...sim,
   ...vid,
   ...res,
+  ...ob,
 };
 
 export type Dictionary = typeof uz;

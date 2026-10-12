@@ -23,6 +23,7 @@ import { cab } from "./dict/en/cab";
 import { sim } from "./dict/en/sim";
 import { vid } from "./dict/en/vid";
 import { res } from "./dict/en/res";
+import { ob } from "./dict/en/ob";
 
 export const en: Dictionary = {
   commonSave: "Save",
@@ -165,4 +166,5 @@ export const en: Dictionary = {
   ...sim,
   ...vid,
   ...res,
+  ...ob,
 };
