@@ -158,7 +158,7 @@ export const adm = {
   admBugs: "Xatoliklar",
   admBugsSubtitle: "{messages} ta xabar · {open} ta ochiq",
   admBugEmptyTitle: "Xatolik xabarlari yo'q",
-  admBugEmptyDesc: "Foydalanuvchilar AI yordamchi orqali xatolik yuborganda shu yerda paydo bo'ladi.",
+  admBugEmptyDesc: "Foydalanuvchilar Fariza orqali xatolik yuborganda shu yerda paydo bo'ladi.",
   admBugSaveError: "Saqlashda xatolik yuz berdi",
   admBugAiAnalysis: "🤖 AI tahlili:",
   admBugDeepSeek: "🧠 DeepSeek tahlili",

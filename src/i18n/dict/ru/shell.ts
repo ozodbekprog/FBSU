@@ -9,7 +9,7 @@ export const shell = {
   navGroupManage: "Управление",
 
   navDashboard: "Дашборд",
-  navAssistant: "AI Помощник",
+  navAssistant: "Fariza",
   navCourses: "Курсы",
   navCatalog: "Каталог",
   navElectives: "Элективные курсы",

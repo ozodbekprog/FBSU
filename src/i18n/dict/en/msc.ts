@@ -401,14 +401,14 @@ export const msc = {
   mscHelpBotAttendanceResult: "Status under the 80% rule",
 
   mscBugGreeting:
-    "Hello! 😊 I'm the AI assistant. How can I help you on the FBSU site? Write your problem or question — we'll solve it together.",
-  mscBugTitle: "AI assistant",
-  mscBugSubtitle: "DeepSeek · sends to admin",
+    "Hi! 😊 I'm Fariza — FBSU's smart agent. Ask about your groups, attendance, grades, schedule or deadlines — I'll fetch the data myself. If something's broken — write to me, I'll pass it to the admin.",
+  mscBugTitle: "Fariza",
+  mscBugSubtitle: "AI agent · sends to admin",
   mscBugClose: "Close",
   mscBugOpen: "Help",
-  mscBugTyping: "AI is typing…",
+  mscBugTyping: "Fariza is typing…",
   mscBugInputPlaceholder: "Type a message...",
-  mscBugInputAria: "Message to the AI assistant",
+  mscBugInputAria: "Message for Fariza",
   mscBugSend: "Send",
   mscBugAttach: "Attach a screenshot",
   mscBugAttachedAlt: "Attached screenshot",
@@ -435,7 +435,7 @@ export const msc = {
   mscBugPromiseError: "Promise error",
   mscBugAnalysisPrompt:
     "The following problem occurred on the page: {reason}. Briefly explain it (2-3 sentences) and say how to fix it.",
-  mscBugSubmittedByAi: "Sent by the user through the AI assistant",
+  mscBugSubmittedByAi: "Sent by the user through Fariza",
   mscBugLineDatabase: "while working with data",
   mscBugLineNetwork: "in the network connection",
   mscBugLineRender: "while rendering the page",

@@ -158,7 +158,7 @@ export const adm = {
   admBugs: "Bugs",
   admBugsSubtitle: "{messages} messages · {open} open",
   admBugEmptyTitle: "No bug reports",
-  admBugEmptyDesc: "They will appear here when users submit a bug through the AI assistant.",
+  admBugEmptyDesc: "They will appear here when users submit a bug through Fariza.",
   admBugSaveError: "Failed to save",
   admBugAiAnalysis: "🤖 AI analysis:",
   admBugDeepSeek: "🧠 DeepSeek analysis",

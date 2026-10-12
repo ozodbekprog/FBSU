@@ -1,7 +1,7 @@
 export const tour = {
   tourWelcomeTitle: "FBSU'ga xush kelibsiz!",
   tourWelcomeText:
-    "Bir daqiqalik qisqa tur asosiy imkoniyatlarni ko'rsatadi: menyu, davomat, jadval, baholar va AI yordamchi. Xohlasangiz, o'tkazib yuborishingiz mumkin.",
+    "Bir daqiqalik qisqa tur asosiy imkoniyatlarni ko'rsatadi: menyu, davomat, jadval, baholar va Fariza (AI agent). Xohlasangiz, o'tkazib yuborishingiz mumkin.",
   tourStart: "Tur boshlash",
   tourSkip: "O'tkazib yuborish",
   tourNext: "Keyingi",
@@ -21,9 +21,9 @@ export const tour = {
   tourStatsText: "Kurslaringiz, bugungi darslar va yaqin topshiriqlar soni bir qarashda.",
   tourLessonsTitle: "Bugungi darslar",
   tourLessonsText: "Darslar vaqti va xonasi bilan. To'liq haftalik jadval \"Jadval\" bo'limida.",
-  tourAiTitle: "AI yordamchi",
+  tourAiTitle: "Fariza",
   tourAiText:
-    "Savolingiz bo'lsa shu yerga yozing: AI tushuntiradi, kerakli sahifaga olib boradi va xatolik haqida xabar yuboradi.",
+    "Savolingiz bo'lsa shu yerga yozing: Fariza guruhlar, davomat, baholar va jadval bo'yicha ma'lumotni o'zi topib beradi va kerakli sahifaga olib boradi.",
   tourDoneTitle: "Tayyor!",
   tourDoneText:
     "Endi platformadan bemalol foydalanasiz. Turni istalgan vaqtda \"Yordam\" sahifasidagi \"Turni boshlash\" tugmasi orqali qayta ko'rishingiz mumkin.",

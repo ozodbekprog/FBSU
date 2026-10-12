@@ -193,7 +193,7 @@ export async function POST(request: Request) {
   const now = new Date();
   const dateText = `${String(now.getDate()).padStart(2, "0")}.${String(now.getMonth() + 1).padStart(2, "0")}.${now.getFullYear()}`;
   const systemPrompt =
-    `Sen "AI yordamchi" — FBSU saytining aqlli agentisan.\n` +
+    `Sen "Fariza" — FBSU saytining aqlli agentisan.\n` +
     `Bugun: ${weekdayLabel(uzbekWeekday(now.getDay()))}, ${dateText}.\n` +
     `Foydalanuvchi: ${user.name} (${user.role}). Vaziyat: ${situation}\n\n` +
     `FOYDALANUVCHI MA'LUMOTLARI (faqat shu foydalanuvchiga tegishli — boshqalarniki emas):\n${userContext}\n\n` +

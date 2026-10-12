@@ -398,14 +398,14 @@ export const msc = {
   mscHelpBotAttendanceResult: "80% qoidasi bo'yicha holat",
 
   mscBugGreeting:
-    "Salom! 😊 Men AI yordamchiman. FBSU saytida qanday yordam bera olaman? Muammo yoki savolingizni yozing — birgalikda hal qilamiz.",
-  mscBugTitle: "AI yordamchi",
-  mscBugSubtitle: "DeepSeek · adminga yuboradi",
+    "Salom! 😊 Men Fariza — FBSU'ning aqlli agentiman. Guruhlar, davomat, baholar, jadval va muddatlar bo'yicha so'rang — tizimdan o'zim topib beraman. Xatolik bo'lsa ham yozing — adminga yetkazaman.",
+  mscBugTitle: "Fariza",
+  mscBugSubtitle: "AI agent · adminga yuboradi",
   mscBugClose: "Yopish",
   mscBugOpen: "Yordam",
-  mscBugTyping: "AI yozmoqda…",
+  mscBugTyping: "Fariza yozmoqda…",
   mscBugInputPlaceholder: "Xabar yozing...",
-  mscBugInputAria: "AI yordamchiga xabar",
+  mscBugInputAria: "Farizaga xabar",
   mscBugSend: "Yuborish",
   mscBugAttach: "Skrinshot biriktirish",
   mscBugAttachedAlt: "Biriktirilgan skrinshot",
@@ -432,7 +432,7 @@ export const msc = {
   mscBugPromiseError: "Promise xatosi",
   mscBugAnalysisPrompt:
     "Sahifada quyidagi muammo yuz berdi: {reason}. Menga qisqa tushuntir (2-3 gap) va qanday hal qilishni ayt.",
-  mscBugSubmittedByAi: "Foydalanuvchi AI yordamchi orqali yubordi",
+  mscBugSubmittedByAi: "Foydalanuvchi Fariza orqali yubordi",
   mscBugLineDatabase: "ma'lumotlar bilan ishlashda",
   mscBugLineNetwork: "tarmoq aloqasida",
   mscBugLineRender: "sahifani ko'rsatishda",

@@ -402,14 +402,14 @@ export const msc = {
   mscHelpBotAttendanceResult: "Статус по правилу 80%",
 
   mscBugGreeting:
-    "Здравствуйте! 😊 Я AI-помощник. Чем могу помочь на сайте FBSU? Напишите проблему или вопрос — разберёмся вместе.",
-  mscBugTitle: "AI-помощник",
-  mscBugSubtitle: "DeepSeek · отправляет администратору",
+    "Здравствуйте! 😊 Я Fariza — умный агент FBSU. Спросите про группы, посещаемость, оценки, расписание или дедлайны — я найду данные сама. Если что-то не работает — тоже напишите, передам администратору.",
+  mscBugTitle: "Fariza",
+  mscBugSubtitle: "AI-агент · отправляет администратору",
   mscBugClose: "Закрыть",
   mscBugOpen: "Помощь",
-  mscBugTyping: "AI пишет…",
+  mscBugTyping: "Fariza пишет…",
   mscBugInputPlaceholder: "Введите сообщение...",
-  mscBugInputAria: "Сообщение AI-помощнику",
+  mscBugInputAria: "Сообщение для Fariza",
   mscBugSend: "Отправить",
   mscBugAttach: "Прикрепить скриншот",
   mscBugAttachedAlt: "Прикреплённый скриншот",
@@ -437,7 +437,7 @@ export const msc = {
   mscBugPromiseError: "Ошибка Promise",
   mscBugAnalysisPrompt:
     "На странице произошла следующая проблема: {reason}. Кратко объясни (2-3 предложения) и скажи, как решить.",
-  mscBugSubmittedByAi: "Отправлено пользователем через AI-помощника",
+  mscBugSubmittedByAi: "Отправлено пользователем через Fariza",
   mscBugLineDatabase: "при работе с данными",
   mscBugLineNetwork: "при сетевом соединении",
   mscBugLineRender: "при отображении страницы",

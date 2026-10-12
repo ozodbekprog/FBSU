@@ -158,7 +158,7 @@ export const adm = {
   admBugs: "Ошибки",
   admBugsSubtitle: "{messages} сообщений · {open} открыто",
   admBugEmptyTitle: "Сообщений об ошибках нет",
-  admBugEmptyDesc: "Они появятся здесь, когда пользователи отправят ошибку через AI-помощник.",
+  admBugEmptyDesc: "Они появятся здесь, когда пользователи отправят ошибку через Fariza.",
   admBugSaveError: "Ошибка при сохранении",
   admBugAiAnalysis: "🤖 AI-анализ:",
   admBugDeepSeek: "🧠 Анализ DeepSeek",
