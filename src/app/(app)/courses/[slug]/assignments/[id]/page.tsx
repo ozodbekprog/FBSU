@@ -357,6 +357,9 @@ export default async function AssignmentDetailPage({
         <div className="lg:col-span-2">
           <AssignmentAi assignmentId={id} />
         </div>
+        <ButtonLink href={`/board?assignment=${id}`} variant="secondary" className="w-full">
+          {dictionary.brdOpen}
+        </ButtonLink>
         <OralDefenseCard assignmentId={id} />
       </div>
     </>

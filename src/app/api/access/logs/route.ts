@@ -1,37 +1,19 @@
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { canViewAccessLogs } from "@/modules/roles/access";
+import { parseAccessHistoryFilters } from "@/modules/access/history";
+import { getAccessHistory } from "@/server/access-history";
 
-export async function GET() {
+export async function GET(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   if (!canViewAccessLogs(user.role)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
-  const dayStart = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00.000Z");
+  // Filtrlar: q (shaxs ismi), direction (IN/OUT), allowed (allowed/denied),
+  // range (today/week/month/all), page — sahifalab yuklash uchun.
+  const filters = parseAccessHistoryFilters(new URL(request.url).searchParams);
+  const data = await getAccessHistory(filters);
 
-  const [logs, todayLogs] = await Promise.all([
-    prisma.accessLog.findMany({
-      orderBy: { at: "desc" },
-      take: 50,
-      include: { user: { select: { name: true, role: true } } },
-    }),
-    prisma.accessLog.findMany({
-      where: { at: { gte: dayStart }, allowed: true },
-      select: { userId: true, direction: true },
-    }),
-  ]);
-
-  const stats = {
-    todayIn: todayLogs.filter((log) => log.direction === "IN").length,
-    todayOut: todayLogs.filter((log) => log.direction === "OUT").length,
-    uniqueToday: new Set(
-      todayLogs
-        .map((log) => log.userId)
-        .filter((id): id is string => typeof id === "string"),
-    ).size,
-  };
-
-  return Response.json({ ok: true, data: { logs, stats } });
+  return Response.json({ ok: true, data });
 }

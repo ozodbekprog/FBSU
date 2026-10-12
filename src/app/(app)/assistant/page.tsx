@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/ui";
 import { getDictionary, getLocale } from "@/i18n";
+import { getCurrentUser } from "@/lib/auth";
 import { AssistantChat } from "@/components/assistant/assistant-chat";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -11,16 +11,16 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function AssistantPage() {
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
+  const user = await getCurrentUser();
   return (
-    <>
-      <PageHeader
-        eyebrow={dictionary.mscBugTitle}
-        title={dictionary.mscBugTitle}
-        subtitle={dictionary.mscBugSubtitle}
-      />
-      <div className="h-[calc(100dvh-13rem)] min-h-[24rem]">
-        <AssistantChat />
+    <div className="flex h-[calc(100dvh-6.5rem)] min-h-[28rem] flex-col md:h-[calc(100dvh-4rem)]">
+      <div className="-mx-4 min-h-0 flex-1 md:-mx-8 md:-mb-8">
+        <AssistantChat
+          name={user?.name ?? ""}
+          role={user?.role ?? "STUDENT"}
+          status={dictionary.mscBugSubtitle}
+        />
       </div>
-    </>
+    </div>
   );
 }

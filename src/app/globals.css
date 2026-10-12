@@ -364,19 +364,25 @@ aside:has(> [data-nav-shell][data-collapsed="true"]) {
    o'zgaruvchiga chiqaramiz (masalan xabar sahifasi `md:fixed` paneli).
    Agar bu yo'q bo'lsa, panel `left-64` (256px) deb taxmin qiladi va
    sidebar (328px / yopiqda 80px) uni berkitib qo'yadi.
-   `:has()` orqali holat aniqlanadi — yopish/ochilishda ham o'z-o'zidan
-   moslashadi. */
-body:has(aside:has(> [data-nav-shell])) {
+   DIQQAT: `:has()` ni ichma-ich (nested) yozib bo'lmaydi — brauzerda
+   bunday selector butunlay tushib qoladi (CSS.supports tekshiruvi
+   yopiq holatda ham `false` beradi), natijada o'zgaruvchi yangilanmay
+   panel eski joyda qolib bo'sh joy paydo bo'ladi. Shuning uchun tashqarida
+   bitta `:has()`, ichkarida oddiy atribut selektorlari ishlatiladi. */
+body:has([data-nav-shell]) {
   --nav-shell-w: 20.5rem;
 }
 
-body:has(aside:has(> [data-nav-shell][data-collapsed="true"])) {
+body:has([data-nav-shell][data-collapsed="true"]) {
   --nav-shell-w: 5rem;
 }
 
 @media (min-width: 768px) {
   .app-shell-offset-left {
     left: var(--nav-shell-w, 20.5rem);
+    /* Yon menyu bilan bir xil tezlikda siljiydi — yig'ilganda panel
+       bo'sh joy qoldirmasdan orqasidan ergashadi. */
+    transition: left 360ms cubic-bezier(0.32, 0.72, 0, 1);
   }
 }
 
