@@ -1006,32 +1006,34 @@ export default async function DashboardPage() {
 
     return (
       <>
-        <Hero
-          name={user.name}
-          firstName={firstName}
-          roleLabel={roleLabel}
-          now={now}
-          actions={actions}
-          locale={locale}
-        />
-
         {user.role === "TEACHER" ? (
-          <div className="mt-6">
-            <TeacherSummaryCard
-              name={user.name}
-              email={user.email}
-              avatarUrl={user.avatarUrl}
-              position={cabinetPosition ?? dict.roleTeacher}
-              department={user.department?.name ?? "—"}
-              faculty={user.faculty?.name ?? "—"}
-              joinedAt={fmtDate(user.createdAt)}
-              faceEnrolled={cabinetFace}
-              salary={cabinetSalary}
-              salaryVisible={cabinetSalaryVisible}
-              d={dict}
-            />
-          </div>
-        ) : null}
+          <TeacherSummaryCard
+            name={user.name}
+            email={user.email}
+            avatarUrl={user.avatarUrl}
+            greeting={translate(locale, "dashGreeting", { name: firstName })}
+            roleLabel={roleLabel}
+            dateLabel={`${dayName(now.getDay())}, ${fmtDate(now)}`}
+            actions={actions}
+            position={cabinetPosition ?? dict.roleTeacher}
+            department={user.department?.name ?? "—"}
+            faculty={user.faculty?.name ?? "—"}
+            joinedAt={fmtDate(user.createdAt)}
+            faceEnrolled={cabinetFace}
+            salary={cabinetSalary}
+            salaryVisible={cabinetSalaryVisible}
+            d={dict}
+          />
+        ) : (
+          <Hero
+            name={user.name}
+            firstName={firstName}
+            roleLabel={roleLabel}
+            now={now}
+            actions={actions}
+            locale={locale}
+          />
+        )}
 
         {user.role === "TEACHER" ? (
           <div className="mt-6">
