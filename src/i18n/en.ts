@@ -20,6 +20,7 @@ import { dip } from "./dict/en/dip";
 import { tour } from "./dict/en/tour";
 import { admission } from "./dict/en/admission";
 import { cab } from "./dict/en/cab";
+import { sim } from "./dict/en/sim";
 
 export const en: Dictionary = {
   commonSave: "Save",
@@ -54,6 +55,7 @@ export const en: Dictionary = {
   authLoginTitle: "Sign in",
   authLoginSubtitle: "Continue with your FBSU account",
   authLoginForgot: "Reset password",
+  authLoginRemember: "Remember me",
   authLoginError: "Sign-in failed",
   authLoginSubmitting: "Signing in...",
   authLoginSubmit: "Sign in",
@@ -158,4 +160,5 @@ export const en: Dictionary = {
   ...admission,
   ...pay,
   ...cab,
+  ...sim,
 };

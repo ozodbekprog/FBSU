@@ -20,6 +20,7 @@ import { dip } from "./dict/ru/dip";
 import { tour } from "./dict/ru/tour";
 import { admission } from "./dict/ru/admission";
 import { cab } from "./dict/ru/cab";
+import { sim } from "./dict/ru/sim";
 
 export const ru: Dictionary = {
   commonSave: "Сохранить",
@@ -54,6 +55,7 @@ export const ru: Dictionary = {
   authLoginTitle: "Вход в систему",
   authLoginSubtitle: "Продолжите с аккаунтом FBSU",
   authLoginForgot: "Восстановить пароль",
+  authLoginRemember: "Запомнить меня",
   authLoginError: "Не удалось войти",
   authLoginSubmitting: "Вход...",
   authLoginSubmit: "Войти",
@@ -158,4 +160,5 @@ export const ru: Dictionary = {
   ...admission,
   ...pay,
   ...cab,
+  ...sim,
 };

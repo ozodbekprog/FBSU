@@ -19,6 +19,7 @@ import { dip } from "./dict/uz/dip";
 import { tour } from "./dict/uz/tour";
 import { admission } from "./dict/uz/admission";
 import { cab } from "./dict/uz/cab";
+import { sim } from "./dict/uz/sim";
 
 export const uz = {
   commonSave: "Saqlash",
@@ -53,6 +54,7 @@ export const uz = {
   authLoginTitle: "Tizimga kirish",
   authLoginSubtitle: "FBSU hisobingiz bilan davom eting",
   authLoginForgot: "Parolni tiklash",
+  authLoginRemember: "Meni eslab qol",
   authLoginError: "Kirishda xatolik yuz berdi",
   authLoginSubmitting: "Kirilmoqda...",
   authLoginSubmit: "Kirish",
@@ -157,6 +159,7 @@ export const uz = {
   ...admission,
   ...pay,
   ...cab,
+  ...sim,
 };
 
 export type Dictionary = typeof uz;

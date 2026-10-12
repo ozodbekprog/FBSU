@@ -19,6 +19,7 @@ import { AssignmentAi } from "@/components/courses/assignment-ai";
 import { OralDefenseCard } from "@/components/courses/oral-defense-card";
 import { OralDefensePanel } from "@/components/courses/oral-defense-panel";
 import { DueChip, SubmissionBadge } from "@/components/courses/assignments-status";
+import { SimilarityPanel } from "@/components/courses/similarity-panel";
 
 function DownloadIcon() {
   return (
@@ -193,6 +194,12 @@ export default async function AssignmentDetailPage({
               fileUrl: submission.fileUrl,
               pendingChange: pendingSet.has(submission.id),
             }))}
+          />
+          <SimilarityPanel
+            assignmentId={id}
+            names={Object.fromEntries(
+              submissions.map((submission) => [submission.id, submission.student.name] as const),
+            )}
           />
         </div>
       </>
