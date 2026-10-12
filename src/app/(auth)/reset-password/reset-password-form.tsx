@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button, Input, Label } from "@/components/ui";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { apiFetch } from "@/lib/api";
+import { useIsClient } from "@/lib/use-is-client";
 
 export default function ResetPasswordForm({ token }: { token: string }) {
   const router = useRouter();
@@ -14,7 +15,8 @@ export default function ResetPasswordForm({ token }: { token: string }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
-  const hydrated = useState(true);async function onSubmit(e: React.FormEvent) {
+  const hydrated = useIsClient();
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (password.length < 12) {
       setError(t("authResetErrorShort"));

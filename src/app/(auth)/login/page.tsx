@@ -9,6 +9,7 @@ import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { apiFetch } from "@/lib/api";
+import { useIsClient } from "@/lib/use-is-client";
 
 const DEMO_ACCOUNTS = [
   {
@@ -192,7 +193,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const hydrated = useState(true);function fillDemo(demoEmail: string) {
+  const hydrated = useIsClient();
+  function fillDemo(demoEmail: string) {
     setEmail(demoEmail);
     setPassword("ttpu1234");
     setError(null);

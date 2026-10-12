@@ -7,6 +7,7 @@ import { Logo } from "@/components/brand/logo";
 import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { apiFetch } from "@/lib/api";
+import { useIsClient } from "@/lib/use-is-client";
 
 export default function ForgotPasswordPage() {
   const { locale, t } = useI18n();
@@ -14,7 +15,8 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const hydrated = useState(true);async function onSubmit(e: React.FormEvent) {
+  const hydrated = useIsClient();
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);

@@ -9,6 +9,7 @@ import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { apiFetch } from "@/lib/api";
+import { useIsClient } from "@/lib/use-is-client";
 
 const PANEL_FEATURES = [
   "authRegisterFeature1",
@@ -28,7 +29,8 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const hydrated = useState(true);function update(key: keyof typeof form, value: string) {
+  const hydrated = useIsClient();
+  function update(key: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
