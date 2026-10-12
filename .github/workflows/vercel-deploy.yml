@@ -36,11 +36,12 @@ jobs:
       # Kerakli dependency'larni o'rnatish (Prisma uchun)
       - run: npm ci
 
-      # Production bazaga migratsiyalarni o'tkazish
+      # Production bazaga migratsiyalarni o'tkazish (unpooled ulanish — advisory lock uchun)
       - run: |
           set -a
           . .vercel/.env.production.local
           set +a
+          export DATABASE_URL="$DATABASE_URL_UNPOOLED"
           npx prisma migrate deploy
 
       # Productionga deploy qilish
