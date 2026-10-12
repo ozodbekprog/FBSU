@@ -386,16 +386,31 @@ body:has([data-nav-shell][data-collapsed="true"]) {
   }
 }
 
-/* Kichik ekranlar (va kattalashtirilgan brauzer) uchun sidebar icon-only
-   rail bo'ladi — lekin umuman YO'QOLMAYDI.
+/* Haqiqiy telefonlar (touch, pointer: coarse): desktop sidebar butunlay
+   yashiriladi — mobil navigatsiya yon menyu (hamburger drawer) va pastdagi
+   tab panel orqali bo'ladi. Avval bu yerda rail ko'rsatilardi: telefonda
+   nuqtalardan iborat yaroqsiz ustun paydo bo'lib, kontentni siqib, yozuvlar
+   kesilib qolardi (3D ikonkalar mobil uchun o'chirilgan). */
+@media (max-width: 767px) and (pointer: coarse) {
+  aside:has(> [data-nav-shell]) {
+    display: none;
+  }
+}
+
+/* Sichqonchali (pointer: fine) tor ekranlar (brauzer zoom'i yoki
+   kichraytirilgan oyna) uchun sidebar icon-only rail bo'ladi — lekin
+   umuman YO'QOLMAYDI.
 
    Avval `hidden md:flex` ishlatilgandi, shuning uchun brauzer zoom'ida
    (CSS kenglik 768px dan pastga tushganda) sidebar butunlay yo'qolardi.
    Endi u faqat torayadi: matnlar yashiriladi, ikonkalar qoladi.
 
    `:not([data-collapsed="true"])` — foydalanuvchi qo'lda yopgan holatga
-   (5rem) bu qoida tegmaydi, u o'z holatini saqlaydi. */
-@media (max-width: 767px) {
+   (5rem) bu qoida tegmaydi, u o'z holatini saqlaydi.
+
+   Telefonlar (pointer: coarse) uchun esa yuqoridagi qoida sidebar'ni
+   butunlay yashiradi — mobil navigatsiya drawer + tab panel orqali. */
+@media (max-width: 767px) and (pointer: fine) {
   aside:has(> [data-nav-shell]):not([data-collapsed="true"]) {
     width: 4.5rem;
   }
