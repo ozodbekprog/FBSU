@@ -283,6 +283,12 @@ const S: Record<string, ReactNode> = {
       <path d="M8.5 13.5 7 22l5-2.5L17 22l-1.5-8.5" />
     </>
   ),
+"/bounty": (
+    <>
+      <circle cx="12" cy="9" r="5" />
+      <path d="M8.5 13.3 7 22l5-2.6L17 22l-1.5-8.7" />
+    </>
+  ),
 };
 
 /** Berilgan href uchun drawer ikonkasi (yo'q bo'lsa `null`). */
