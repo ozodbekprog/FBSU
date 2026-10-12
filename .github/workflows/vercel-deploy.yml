@@ -1,0 +1,37 @@
+# Vercel production deploy workflow
+# Asosiy branch'ga push yoki qo'lda ishga tushirishda ishlaydi
+name: Vercel Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Bir vaqtning o'zida faqat bitta deploy ruxsat etiladi
+concurrency:
+  group: vercel-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      # Kodni olish
+      - uses: actions/checkout@v4
+
+      # Node.js 22 ni o'rnatish
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Vercel CLI 62 ni global o'rnatish
+      - run: npm i -g vercel@62
+
+      # Loyiha sozlamalarini Vercel'dan yuklab olish
+      - run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      # Productionga deploy qilish
+      - run: vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
