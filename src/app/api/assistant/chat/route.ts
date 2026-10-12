@@ -5,6 +5,10 @@ import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { askAi } from "@/lib/ai";
 import { friendlyBugLine } from "@/components/bugs/bug-utils";
+import { runAssistantAgent } from "@/server/assistant/agent";
+import { SLOT_TIMES, uzbekWeekday, weekdayLabel } from "@/server/assistant/data";
+
+export const maxDuration = 60;
 
 const chatSchema = z.object({
   messages: z
@@ -23,17 +27,6 @@ const chatSchema = z.object({
     })
     .optional(),
 });
-
-const SLOT_TIMES: Record<number, string> = {
-  1: "09:00-10:20",
-  2: "10:30-11:50",
-  3: "12:00-13:20",
-  4: "14:20-15:40",
-  5: "15:50-17:10",
-  6: "17:20-18:40",
-  7: "18:50-20:10",
-  8: "20:20-21:40",
-};
 
 async function buildUserContext(user: {
   id: string;
@@ -197,29 +190,38 @@ export async function POST(request: Request) {
     groupId: user.groupId,
   });
 
-  const reply = await askAi(
-    [
-      {
-        role: "system",
-        content:
-          `Sen "AI yordamchi" — FBSU saytining aqlli yordamchisisan.\n` +
-          `Foydalanuvchi: ${user.name} (${user.role}). Vaziyat: ${situation}\n\n` +
-          `FOYDALANUVCHI MA'LUMOTLARI (faqat shu foydalanuvchiga tegishli — boshqalarniki emas):\n${userContext}\n\n` +
-          "Qoidalar:\n" +
-          "- O'zbek tilida, qisqa (2-4 gap), samimiy yoz.\n" +
-          "- Faqat yuqoridagi ma'lumotlardan va saytning umumiy imkoniyatlaridan foydalan. Boshqa foydalanuvchilarning ma'lumotlarini hech qachon aytma.\n" +
-          "- Ma'lumot yetarli bo'lmasa — qaysi sahifada ko'rish mumkinligini ayt.\n" +
-          "- Sahifa ochish kerak bo'lsa, javob oxirida ALOHIDA qatorda aynan shunday yoz: [[NAV:/courses|Kurslar]]\n" +
-          `  Ruxsat etilgan sahifalar:\n${pageList}\n` +
-          "- 'Ochdim' deb yozma — tizim o'zi ochadi.\n" +
-          "- Jadval, davomat, topshiriqlar bo'yicha aniq qadam-baqadam maslahat ber.\n" +
-          "- Texnik tafsilotlar (kod, server, IP, fayl yo'li) — aytma.\n" +
-          "- Faqat shu foydalanuvchining o'z ma'lumotlari haqida gapiradi, boshqalar haqida so'ralsa — 'bu faqat administrator uchun' deb ayt.",
-      },
-      ...parsed.data.messages,
-    ],
-    { maxTokens: 350, timeoutMs: 25000 },
-  );
+  const now = new Date();
+  const dateText = `${String(now.getDate()).padStart(2, "0")}.${String(now.getMonth() + 1).padStart(2, "0")}.${now.getFullYear()}`;
+  const systemPrompt =
+    `Sen "AI yordamchi" — FBSU saytining aqlli agentisan.\n` +
+    `Bugun: ${weekdayLabel(uzbekWeekday(now.getDay()))}, ${dateText}.\n` +
+    `Foydalanuvchi: ${user.name} (${user.role}). Vaziyat: ${situation}\n\n` +
+    `FOYDALANUVCHI MA'LUMOTLARI (faqat shu foydalanuvchiga tegishli — boshqalarniki emas):\n${userContext}\n\n` +
+    "Qoidalar:\n" +
+    "- O'zbek tilida, qisqa (2-4 gap), samimiy yoz.\n" +
+    "- Aniq raqam, ro'yxat yoki tahlil kerak bo'lsa (davomat, baho, jadval, muddat, guruh) — mavjud tool'lardan foydalan; javobdagi raqamlar tool natijasidan olinishi shart, o'zingdan to'qima.\n" +
+    "- Faqat yuqoridagi ma'lumotlardan va tool natijalaridan foydalan; tool natijalari ham aynan shu foydalanuvchi huquqi doirasida olinadi.\n" +
+    "- Ma'lumot yetarli bo'lmasa — qaysi sahifada ko'rish mumkinligini ayt.\n" +
+    "- Sahifa ochish kerak bo'lsa, javob oxirida ALOHIDA qatorda aynan shunday yoz: [[NAV:/courses|Kurslar]]\n" +
+    `  Ruxsat etilgan sahifalar:\n${pageList}\n` +
+    "- 'Ochdim' deb yozma — tizim o'zi ochadi.\n" +
+    "- Jadval, davomat, topshiriqlar bo'yicha aniq qadam-baqadam maslahat ber.\n" +
+    "- Texnik tafsilotlar (kod, server, IP, fayl yo'li) — aytma.\n" +
+    "- O'zgartirish (baho qo'yish, hujjat yaratish, xat yuborish) hozircha qila olmaysan — bunday so'rovda qaysi sahifada qilishni ayt.\n" +
+    "- Faqat shu foydalanuvchining o'z ma'lumotlari haqida gapiradi, boshqalar haqida so'ralsa — 'bu faqat administrator uchun' deb ayt.";
+
+  const userRef = { id: user.id, role: user.role, groupId: user.groupId };
+  const agentReply = await runAssistantAgent({
+    user: userRef,
+    systemPrompt,
+    messages: parsed.data.messages,
+  });
+  const reply =
+    agentReply ??
+    (await askAi(
+      [{ role: "system", content: systemPrompt }, ...parsed.data.messages],
+      { maxTokens: 350, timeoutMs: 25000 },
+    ));
 
   if (!reply) {
     return Response.json(

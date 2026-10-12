@@ -118,6 +118,86 @@ export async function askAiWithTools(
   }
 }
 
+export type AiAgentMessage = {
+  role: "system" | "user" | "assistant" | "tool";
+  content: string | null;
+  tool_calls?: { id: string; type: "function"; function: { name: string; arguments: string } }[];
+  tool_call_id?: string;
+};
+
+export type AiAgentToolCall = { id: string; name: string; args: Record<string, unknown> };
+
+/**
+ * Agent sikli uchun bitta qadam. `askAiWithTools` dan farqi: tool chaqiruvlari
+ * ID si va eski assistant xabari saqlanadi — shu bilan tool natijalarini
+ * keyingi qadamda to'g'ri bog'lash mumkin.
+ */
+export async function agentChatStep(
+  messages: AiAgentMessage[],
+  tools: AiTool[],
+  options?: { timeoutMs?: number; maxTokens?: number },
+): Promise<{ message: AiAgentMessage; toolCalls: AiAgentToolCall[] } | null> {
+  const key = process.env.DEEPSEEK_API_KEY;
+  if (!key) return null;
+  try {
+    const payload: Record<string, unknown> = {
+      model: "deepseek-chat",
+      messages,
+      max_tokens: options?.maxTokens ?? 600,
+      temperature: 0.3,
+    };
+    if (tools.length > 0) payload.tools = tools;
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(options?.timeoutMs ?? 25000),
+    });
+    if (!response.ok) return null;
+    const json = (await response.json().catch(() => null)) as
+      | {
+          choices?: {
+            message?: {
+              content?: string | null;
+              tool_calls?: { id?: string; function?: { name?: string; arguments?: string } }[];
+            };
+          }[];
+        }
+      | null;
+    const raw = json?.choices?.[0]?.message;
+    if (!raw) return null;
+    const toolCalls: AiAgentToolCall[] = Array.isArray(raw.tool_calls)
+      ? raw.tool_calls
+          .map((call) => {
+            let args: Record<string, unknown> = {};
+            try {
+              args = JSON.parse(call.function?.arguments ?? "{}") as Record<string, unknown>;
+            } catch {
+              args = {};
+            }
+            return { id: call.id ?? "", name: call.function?.name ?? "", args };
+          })
+          .filter((call) => call.id && call.name)
+      : [];
+    const content =
+      typeof raw.content === "string" && raw.content.trim() ? raw.content.trim() : null;
+    const message: AiAgentMessage = { role: "assistant", content };
+    if (toolCalls.length > 0) {
+      message.tool_calls = toolCalls.map((call) => ({
+        id: call.id,
+        type: "function",
+        function: { name: call.name, arguments: JSON.stringify(call.args) },
+      }));
+    }
+    return { message, toolCalls };
+  } catch {
+    return null;
+  }
+}
+
 export async function analyzeBug(input: {
   message: string;
   stack?: string | null;
