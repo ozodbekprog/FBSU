@@ -58,6 +58,7 @@ describe("proxy (auth pre-check)", () => {
       "/register",
       "/forgot-password",
       "/reset-password",
+      "/app",
       "/api/csrf",
       "/api/auth/login",
       "/sw.js",

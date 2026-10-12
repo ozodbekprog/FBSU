@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Badge, ButtonLink, Card } from "@/components/ui";
 import { Logo } from "@/components/brand/logo";
+import { AppInstallButton } from "@/components/pwa/AppInstallButton";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { getDictionary, getLocale } from "@/i18n";
 
@@ -65,6 +66,7 @@ export default async function HomePage() {
   const navLinks = [
     { href: "#imkoniyatlar", label: dictionary.landNavFeatures },
     { href: "#boshlash", label: dictionary.landNavStart },
+    { href: "#ilova", label: dictionary.landNavApp },
     { href: "#statistika", label: dictionary.landNavStats },
     { href: "#aloqa", label: dictionary.landNavContact },
   ];
@@ -356,9 +358,69 @@ export default async function HomePage() {
   const footerPlatform = [
     { href: "#imkoniyatlar", label: dictionary.landNavFeatures },
     { href: "#boshlash", label: dictionary.landNavStart },
+    { href: "/app", label: dictionary.landFooterApp },
     { href: "/login", label: dictionary.landFooterLogin },
     { href: "/register", label: dictionary.authLoginRegister },
     { href: "/help", label: dictionary.landFooterHelp },
+  ];
+
+  const appPoints = [
+    dictionary.landAppPoint1,
+    dictionary.landAppPoint2,
+    dictionary.landAppPoint3,
+  ];
+
+  const appScreenRows = [
+    {
+      label: dictionary.navCourses,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-4"
+        >
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+      ),
+    },
+    {
+      label: dictionary.navSchedule,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-4"
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <path d="M16 2v4M8 2v4M3 10h18" />
+        </svg>
+      ),
+    },
+    {
+      label: dictionary.navMessages,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-4"
+        >
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+      ),
+    },
   ];
 
   return (
@@ -705,6 +767,133 @@ export default async function HomePage() {
               >
                 {dictionary.landDemoLogin}
               </ButtonLink>
+            </div>
+          </div>
+        </section>
+
+        <section id="ilova" className="py-20 sm:py-24">
+          <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+            <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16">
+              <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
+                  {dictionary.landAppEyebrow}
+                </p>
+                <h2 className="mt-3 text-3xl font-bold tracking-tight text-brand-950 sm:text-4xl">
+                  {dictionary.landAppTitle}
+                </h2>
+                <p className="mt-4 leading-relaxed text-slate-600">
+                  {dictionary.landAppSubtitle}
+                </p>
+                <ul className="mx-auto mt-7 flex max-w-md flex-col gap-3 lg:mx-0">
+                  {appPoints.map((point) => (
+                    <li
+                      key={point}
+                      className="inline-flex items-center gap-2.5 text-left text-sm text-slate-600"
+                    >
+                      <svg aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="size-4 shrink-0 text-emerald-500"
+                      >
+                        <path d="M20 6 9 17l-5-5" />
+                      </svg>
+                      {point}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
+                  <AppInstallButton size="lg" withManualHint className="w-full min-w-44 sm:w-auto" />
+                </div>
+                <div className="mt-6 flex justify-center lg:justify-start">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-gold-300/70 bg-gold-300/15 px-3.5 py-1.5 text-xs font-medium text-gold-800">
+                    <svg aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="size-3.5"
+                    >
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M12 7v5l3 2" />
+                    </svg>
+                    {dictionary.landAppSoonBadge}
+                  </span>
+                </div>
+              </div>
+
+              <div className="relative mx-auto w-full max-w-sm">
+                <div className="pointer-events-none absolute -inset-10 rounded-[3rem] bg-gradient-to-tr from-brand-200/50 via-white to-gold-300/30 blur-2xl" />
+                <div className="relative">
+                  <div className="relative mx-auto w-[248px] rounded-[2.6rem] border border-slate-200 bg-brand-950 p-2 shadow-lift sm:w-[270px]">
+                    <div className="overflow-hidden rounded-[2.15rem] bg-white">
+                      <div className="relative bg-gradient-to-b from-brand-900 to-brand-700 px-5 pb-10 pt-8 text-center">
+                        <img
+                          src="/logo.svg"
+                          alt=""
+                          width={56}
+                          height={56}
+                          className="mx-auto rounded-2xl bg-white shadow-lg"
+                        />
+                        <p className="mt-3 text-base font-semibold text-white">FBSU</p>
+                        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-brand-200">
+                          {dictionary.landAppEyebrow}
+                        </p>
+                      </div>
+                      <div className="-mt-5 space-y-2 px-3.5 pb-4">
+                        {appScreenRows.map((row) => (
+                          <div
+                            key={row.label}
+                            className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-white px-3 py-2.5 shadow-[0_8px_18px_-12px_rgba(29,52,96,0.35)]"
+                          >
+                            <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
+                              {row.icon}
+                            </span>
+                            <span className="text-xs font-medium text-slate-700">{row.label}</span>
+                            <span className="ml-auto size-1.5 rounded-full bg-gold-400" />
+                          </div>
+                        ))}
+                        <div className="flex items-center justify-center gap-2 rounded-xl bg-gold-400 px-3 py-2.5 text-xs font-semibold text-brand-950">
+                          <svg aria-hidden="true"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="size-3.5"
+                          >
+                            <path d="M12 3v12" />
+                            <path d="m7 10 5 5 5-5" />
+                            <path d="M5 21h14" />
+                          </svg>
+                          {dictionary.landAppInstall}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="absolute -left-6 top-24 hidden w-40 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-lift sm:block lg:-left-10">
+                    <p className="text-xs font-semibold text-brand-950">
+                      {dictionary.landAppAndroid}
+                    </p>
+                    <p className="mt-0.5 text-[11px] leading-snug text-slate-500">
+                      {dictionary.landAppAndroidNote}
+                    </p>
+                  </div>
+                  <div className="absolute -right-6 bottom-24 hidden w-40 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-lift sm:block lg:-right-10">
+                    <p className="text-xs font-semibold text-brand-950">{dictionary.landAppIos}</p>
+                    <p className="mt-0.5 text-[11px] leading-snug text-slate-500">
+                      {dictionary.landAppIosNote}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
