@@ -404,6 +404,11 @@ export const msc = {
   mscBugGreeting:
     "Здравствуйте! 😊 Я Fariza — умный агент FBSU. Спросите про группы, посещаемость, оценки, расписание или дедлайны — я найду данные сама. Если что-то не работает — тоже напишите, передам администратору.",
   mscBugTitle: "Fariza",
+  mscNewSession: "Новый чат",
+  mscSessionsTitle: "Чаты",
+  mscRecentTitle: "Недавние запросы",
+  mscSessionsEmpty: "Пока нет чатов",
+  mscAgentBadge: "Агент",
   mscHeroHello: "Здравствуйте, {name}!",
   mscSuggestStudent1: "Есть ли у меня сегодня занятия?",
   mscSuggestStudent2: "Как у меня с посещаемостью — прохожу 80%?",

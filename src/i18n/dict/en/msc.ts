@@ -403,6 +403,11 @@ export const msc = {
   mscBugGreeting:
     "Hi! 😊 I'm Fariza — FBSU's smart agent. Ask about your groups, attendance, grades, schedule or deadlines — I'll fetch the data myself. If something's broken — write to me, I'll pass it to the admin.",
   mscBugTitle: "Fariza",
+  mscNewSession: "New chat",
+  mscSessionsTitle: "Chats",
+  mscRecentTitle: "Recent prompts",
+  mscSessionsEmpty: "No chats yet",
+  mscAgentBadge: "Agent",
   mscHeroHello: "Hi, {name}!",
   mscSuggestStudent1: "Do I have classes today?",
   mscSuggestStudent2: "How\'s my attendance — am I above 80%?",

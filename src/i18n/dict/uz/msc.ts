@@ -400,6 +400,11 @@ export const msc = {
   mscBugGreeting:
     "Salom! 😊 Men Fariza — FBSU'ning aqlli agentiman. Guruhlar, davomat, baholar, jadval va muddatlar bo'yicha so'rang — tizimdan o'zim topib beraman. Xatolik bo'lsa ham yozing — adminga yetkazaman.",
   mscBugTitle: "Fariza",
+  mscNewSession: "Yangi suhbat",
+  mscSessionsTitle: "Suhbatlar",
+  mscRecentTitle: "So\'nggi so\'rovlar",
+  mscSessionsEmpty: "Hozircha suhbat yo\'q",
+  mscAgentBadge: "Agent",
   mscHeroHello: "Salom, {name}!",
   mscSuggestStudent1: "Bugun darsim bormi?",
   mscSuggestStudent2: "Davomatim qanday — 80% dan o\'tdimmi?",
