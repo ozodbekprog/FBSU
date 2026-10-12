@@ -452,6 +452,34 @@ function Help() {
   );
 }
 
+/**
+ * Fariza — AI yordamchi ikonkasi.
+ *
+ * Shakl: to'rt qirrali "uchqun" (sparkle) — sun'iy intellekt uchun
+ * umum qabul qilingan belgi — plus orbita halqasi ("agent" ishlayotgani).
+ * Uzun va qisqa nurlar navbatma-navbat: haqiqiy yulduz nurlanishi kabi.
+ */
+function Assistant() {
+  return (
+    <group>
+      {/* Orbita halqasi — agent aylanib turganini bildiradi */}
+      <Ring rad={0.6} tube={0.075} m="brandLight" r={[PI / 2.5, 0, 0]} />
+      {/* Uzun nurlar (vertikal + gorizontal) */}
+      {[0, 1].map((i) => (
+        <Tile key={`long${i}`} a={[0.82, 0.15, 0.15]} m="gold" p={[0, 0, 0]} r={[0, 0, (i * PI) / 2]} />
+      ))}
+      {/* Qisqa diagonal nurlar */}
+      {[0, 1].map((i) => (
+        <Tile key={`short${i}`} a={[0.46, 0.11, 0.11]} m="goldLight" p={[0, 0, 0]} r={[0, 0, (i * PI) / 2 + PI / 4]} />
+      ))}
+      {/* Markaziy yadro */}
+      <Ball rad={0.16} m="goldLight" p={[0, 0, 0.02]} />
+      {/* Alohida kichik uchqun — "yangi fikr" belgisi */}
+      <Tile a={[0.22, 0.08, 0.08]} m="goldLight" p={[0.46, 0.46, 0]} r={[0, 0, PI / 4]} />
+    </group>
+  );
+}
+
 function Settings() {
   return (
     <group>
@@ -783,6 +811,7 @@ function Payroll() {
 
 export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/dashboard": Gauge,  "/courses": Courses,
+  "/assistant": Assistant,
   "/catalog": Catalog,
   "/electives": Electives,
   "/schedule": Schedule,

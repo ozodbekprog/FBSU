@@ -36,17 +36,30 @@ export async function GET(request: Request) {
       settings: {
         where: { userId: user.id },
         take: 1,
-        select: { pinnedAt: true, archivedAt: true, mutedUntil: true, clearedAt: true },
+        select: { pinnedAt: true, archivedAt: true, mutedUntil: true, clearedAt: true, deletedAt: true },
       },
     },
   });
 
+  // "Suhbatni o'chirish" (Telegram uslubi): suhbat faqat shu
+  // foydalanuvchi ro'yxatidan yashiriladi. Yashirin hisoblanadi faqat
+  // `deletedAt > lastMessageAt` bo'lganda — ya'ni o'chirilgandan KEYIN
+  // yangi xabar kelmagan bo'lsa. Qarshi tomon yozsa, suhbat
+  // o'z-o'zidan qaytadi (buning uchun alohida kod kerak emas).
+  const notDeleted = (c: (typeof conversations)[number]) => {
+    const deletedAt = c.settings[0]?.deletedAt;
+    if (!deletedAt) return true;
+    return deletedAt.getTime() < c.lastMessageAt.getTime();
+  };
+
   // Telegram uslubi: arxivlangan suhbatlar alohida. `?archived=1`
   // so'rovi faqat arxivlanganlarni, oddiy so'rov faqat arxivdan
   // tashqaridagilarni qaytaradi.
-  const visible = wantArchived
-    ? conversations.filter((c) => c.settings[0]?.archivedAt)
-    : conversations.filter((c) => !c.settings[0]?.archivedAt);
+  const visible = (
+    wantArchived
+      ? conversations.filter((c) => c.settings[0]?.archivedAt)
+      : conversations.filter((c) => !c.settings[0]?.archivedAt)
+  ).filter(notDeleted);
   const now = Date.now();
 
   const ids = conversations.map((conversation) => conversation.id);
@@ -140,6 +153,15 @@ export async function POST(request: Request) {
       }
       conversationId = fallback.id;
     }
+  } else {
+    // Suhbat avval o'chirilgan (yashirilgan) bo'lishi mumkin. Foydalanuvchi
+    // uni ataylab qayta ochyapti — ro'yxatga qaytaramiz.
+    // `clearedAt` TEGILMAYDI: o'chirishda tarix tozalangan, Telegram'dagi
+    // kabi yangi suhbat bo'sh boshlanadi.
+    await prisma.conversationSetting.updateMany({
+      where: { conversationId, userId: user.id, deletedAt: { not: null } },
+      data: { deletedAt: null },
+    });
   }
 
   return Response.json(

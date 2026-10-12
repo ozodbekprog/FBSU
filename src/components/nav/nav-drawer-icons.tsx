@@ -161,6 +161,12 @@ const S: Record<string, ReactNode> = {
       <path d="m20 20-4.3-4.3" />
     </>
   ),
+"/assistant": (
+    <>
+      {/* Fariza — 4 qirrali AI uchquni (sparkle) */}
+      <path d="M12 3l2 7 7 2-7 2-2 7-2-7-7-2 7-2z" />
+    </>
+  ),
 "/help": (
     <>
       <circle cx="12" cy="12" r="9" />
