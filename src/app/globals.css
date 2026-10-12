@@ -172,6 +172,17 @@
 
 html {
   scroll-behavior: smooth;
+  /* Запрет double-tap zoom на мобильных устройствах.
+   * `manipulation` = `pan-x pan-y pinch-zoom`: прокрутка (pan) и
+   * pinch-zoom РАБОТАЮТ, а увеличение двойным тапом отключено.
+   *
+   * Почему не `pan-x pan-y` (который блокирует и pinch): это слишком
+   * агрессивно — оно заблокировало бы pinch-zoom внутри карт, изображений
+   * и других компонентов, которым он нужен. `manipulation` — точечное
+   * решение, которое не ломает остальные жесты.
+   *
+   * Прокрутка, клики, выделение и ввод текста НЕ затрагиваются. */
+  touch-action: manipulation;
 }
 
 body {
@@ -366,6 +377,47 @@ body:has(aside:has(> [data-nav-shell][data-collapsed="true"])) {
 @media (min-width: 768px) {
   .app-shell-offset-left {
     left: var(--nav-shell-w, 20.5rem);
+  }
+}
+
+/* Kichik ekranlar (va kattalashtirilgan brauzer) uchun sidebar icon-only
+   rail bo'ladi — lekin umuman YO'QOLMAYDI.
+
+   Avval `hidden md:flex` ishlatilgandi, shuning uchun brauzer zoom'ida
+   (CSS kenglik 768px dan pastga tushganda) sidebar butunlay yo'qolardi.
+   Endi u faqat torayadi: matnlar yashiriladi, ikonkalar qoladi.
+
+   `:not([data-collapsed="true"])` — foydalanuvchi qo'lda yopgan holatga
+   (5rem) bu qoida tegmaydi, u o'z holatini saqlaydi. */
+@media (max-width: 767px) {
+  aside:has(> [data-nav-shell]):not([data-collapsed="true"]) {
+    width: 4.5rem;
+  }
+
+  aside:has(> [data-nav-shell]):not([data-collapsed="true"]) .nav-label,
+  aside:has(> [data-nav-shell]):not([data-collapsed="true"]) .nav-badge {
+    max-width: 0;
+    opacity: 0;
+  }
+
+  aside:has(> [data-nav-shell]):not([data-collapsed="true"]) .nav-link {
+    gap: 0;
+    padding-inline: 0.5rem;
+  }
+
+  aside:has(> [data-nav-shell]):not([data-collapsed="true"]) .nav-link .nav-icon {
+    margin-inline: auto;
+  }
+
+  aside:has(> [data-nav-shell]):not([data-collapsed="true"]) .nav-group-label {
+    max-height: 0;
+  }
+
+  /* Sidebar'dagi foydalanuvchi kartasi va til almashtirgich kichik ekranda
+     siqiladi — ularni ham yashirib, faqat kerakliarni qoldiramiz. */
+  aside:has(> [data-nav-shell]):not([data-collapsed="true"]) > div:last-child > a,
+  aside:has(> [data-nav-shell]):not([data-collapsed="true"]) > div:last-child > form {
+    display: none;
   }
 }
 

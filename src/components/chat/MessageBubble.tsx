@@ -2,6 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import {
+  MAX_RATE,
+  MIN_RATE,
+  RATE_PRESETS,
+  RATE_STEP,
+  formatRate,
+  readStoredRate,
+  storeRate,
+} from "./voice-speed";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import type { ChatMessage } from "./shared";
@@ -32,8 +41,15 @@ export function MessageBubble({ message, own, currentUserId, onReply, onEdit, on
   const isEdited = !!message.editedAt;
   const [isPlaying, setIsPlaying] = useState(false);
   const [menuAt, setMenuAt] = useState<{ x: number; y: number } | null>(null);
+  // Ovoz tezligi (Telegram uslubidagi boshqaruv). Boshlang'ich qiymat 1 —
+  // saqlangan qiymat `play()` paytida `readStoredRate()` dan olinadi, shuning
+  // uchun server va mijoz render'i bir xil bo'lib qoladi.
+  const [rate, setRate] = useState(1);
+  const [speedAt, setSpeedAt] = useState<{ x: number; y: number } | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const speedRef = useRef<HTMLDivElement>(null);
+  const speedBtnRef = useRef<HTMLButtonElement>(null);
 
   const attachment = message.attachments?.[0];
   const rawUrl = attachment ? `/api/chat/attachments/${attachment.id}?raw=1` : null;
@@ -56,7 +72,15 @@ export function MessageBubble({ message, own, currentUserId, onReply, onEdit, on
     } else {
       audioRef.current.src = rawUrl;
     }
+    audioRef.current.playbackRate = readStoredRate();
     audioRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+  }
+
+  /** Tezlikni o'zgartiradi va joriy ijroga darhol qo'llaydi. */
+  function applyRate(next: number) {
+    const safe = storeRate(next);
+    setRate(safe);
+    if (audioRef.current) audioRef.current.playbackRate = safe;
   }
 
   const closeMenu = useCallback(() => setMenuAt(null), []);
@@ -156,6 +180,34 @@ export function MessageBubble({ message, own, currentUserId, onReply, onEdit, on
                 {durationLabel}
               </span>
             ) : null}
+            {/* Tezlik tugmasi — Telegram'dagi kabi vaqt yonida, bosilsa
+                menyu ochiladi. Faqat tezlik 1.0 bo'lganda "Normal" deb
+                yoziladi; boshqa holatda faqat "1.5×" ko'rinadi. */}
+            <button
+              type="button"
+              ref={speedBtnRef}
+              data-voice-speed-toggle=""
+              aria-label={t("msgSpeedSet")}
+              aria-expanded={speedAt !== null}
+              title={t("msgSpeedSet")}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (speedAt) {
+                  setSpeedAt(null);
+                  return;
+                }
+                const r = e.currentTarget.getBoundingClientRect();
+                setSpeedAt({ x: r.left, y: r.top });
+              }}
+              className={cn(
+                "shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums transition-colors",
+                own
+                  ? "text-white/90 hover:bg-white/20"
+                  : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+              )}
+            >
+              {rate === 1 ? t("msgSpeedNormal") : formatRate(rate)}
+            </button>
           </div>
         ) : isImage && rawUrl ? (
           <a href={rawUrl} download={fileName} className="block max-h-72 overflow-hidden rounded-2xl" aria-label={t("msgOpenFile")}>
@@ -206,6 +258,80 @@ export function MessageBubble({ message, own, currentUserId, onReply, onEdit, on
           </span>
         ) : null}
       </div>
+
+      {speedAt && typeof document !== "undefined"
+        ? createPortal(
+            <>
+              <div className="fixed inset-0 z-[92]" aria-hidden="true" onPointerDown={() => setSpeedAt(null)} />
+              <div
+                ref={speedRef}
+                role="menu"
+                data-voice-speed-menu=""
+                aria-label={t("msgSpeedTitle")}
+                onClick={(e) => e.stopPropagation()}
+                className="animate-fade-up fixed z-[93] w-56 overflow-hidden rounded-xl border border-slate-200/70 bg-white shadow-xl dark:border-slate-200/20 dark:bg-[#0e1729]"
+                style={{
+                  // Tugma ustida ochiladi va ekran chegarasidan chiqmaydi.
+                  left: Math.min(Math.max(12, speedAt.x), Math.max(12, window.innerWidth - 236)),
+                  top: Math.max(12, speedAt.y - 300),
+                }}
+              >
+                {/* Slider — joriy tezlik ko'rsatkichi bilan */}
+                <div className="border-b border-slate-100 px-3 pb-2 pt-3 dark:border-slate-800">
+                  <div className="mb-1.5 flex items-center justify-between text-[11px] font-semibold text-slate-500">
+                    <span>{t("msgSpeedTitle")}</span>
+                    <span data-voice-speed-value="" className="tabular-nums text-brand-900 dark:text-slate-200">
+                      {formatRate(rate)}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    data-voice-speed-slider=""
+                    min={MIN_RATE}
+                    max={MAX_RATE}
+                    step={RATE_STEP}
+                    value={rate}
+                    aria-label={t("msgSpeedSet")}
+                    onChange={(e) => applyRate(Number.parseFloat(e.currentTarget.value))}
+                    className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-brand-900 dark:bg-slate-700"
+                  />
+                </div>
+
+                {/* Tayyor tezliklar */}
+                <div className="py-1">
+                  {RATE_PRESETS.map((preset) => {
+                    const active = Math.abs(rate - preset.rate) < 0.001;
+                    return (
+                      <button
+                        key={preset.rate}
+                        type="button"
+                        role="menuitemradio"
+                        aria-checked={active}
+                        data-voice-speed-option={preset.rate}
+                        onClick={() => applyRate(preset.rate)}
+                        className={cn(
+                          "flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors",
+                          active
+                            ? "font-semibold text-brand-900 dark:text-slate-100"
+                            : "text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                        )}
+                      >
+                        <span className="w-11 shrink-0 tabular-nums">{formatRate(preset.rate)}</span>
+                        <span className="min-w-0 flex-1 truncate">{t(preset.labelKey)}</span>
+                        {active ? (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0" aria-hidden="true">
+                            <path d="m5 13 4 4L19 7" />
+                          </svg>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>,
+            document.body,
+          )
+        : null}
 
       {menuAt && typeof document !== "undefined"
         ? createPortal(

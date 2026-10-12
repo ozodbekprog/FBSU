@@ -14,6 +14,7 @@ import { Logo } from "@/components/brand/logo";
 import { MobileTabBar, NavLinks, type MobileTab, type MobileTabIcon } from "./nav-links";
 import { MobileNav } from "@/components/nav/mobile-nav";
 import { BugAssistant } from "@/components/bugs/bug-assistant";
+import { OfflineBanner } from "@/components/pwa/OfflineBanner";
 import { TourGuide } from "@/components/tour/tour-guide";
 import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 
@@ -289,7 +290,11 @@ export default async function AppLayout({
   return (
     <LocaleProvider locale={locale} dictionary={dictionary}>
       <div className="flex min-h-screen">
-      <aside className="app-shell-sidebar sticky top-0 z-30 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-200/60 bg-white/85 backdrop-blur-xl md:flex">
+      {/* Sidebar HAR DOIM ko'rinadi. Avval `hidden md:flex` edi — brauzerda
+          kattalashtirganda (Ctrl/Cmd + yoki pinch-zoom) CSS kenglik 768px
+          dan pastga tushardi va sidebar butunlay yo'qolardi (videodagi
+          holat). Endi u faqat kichrayadi (icon rail), lekin yo'qolmaydi. */}
+      <aside className="app-shell-sidebar sticky top-0 z-30 flex h-dvh w-64 shrink-0 flex-col border-r border-slate-200/60 bg-white/85 backdrop-blur-xl">
         <div className="flex h-16 items-center justify-between border-b border-slate-100 px-5">
           <Link href="/dashboard" className="transition-opacity hover:opacity-80">
             <Logo />
@@ -342,6 +347,7 @@ export default async function AppLayout({
       <MobileTabBar tabs={visibleTabs} />
       <BugAssistant />
       <TourGuide role={user.role} />
+      <OfflineBanner />
     </div>
     </LocaleProvider>
   );

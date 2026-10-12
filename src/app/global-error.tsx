@@ -18,7 +18,9 @@ export default function GlobalError({
       <body
         style={{
           margin: 0,
-          minHeight: "100vh",
+          // `100dvh` — telefon brauzeri paneli yashiringanda ham ekon
+// ko'rinadigan maydonni to'g'ri oladi.
+          minHeight: "100dvh",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

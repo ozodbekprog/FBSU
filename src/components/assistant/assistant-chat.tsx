@@ -244,7 +244,7 @@ export function AssistantChat() {
               <img
                 src={message.shot}
                 alt={t("mscBugAttachedAlt")}
-                className="mt-1.5 max-h-32 rounded-lg border border-white/40"
+                className="mt-1.5 max-h-32 max-w-full rounded-lg border border-white/40"
               />
             ) : null}
             <span

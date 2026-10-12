@@ -9,7 +9,10 @@ export default function MessagesLoading() {
         <Skeleton className="mt-2 h-4 w-52" />
       </div>
 
-      <Card className="flex h-[calc(100vh-15rem)] min-h-[480px] overflow-hidden">
+      {/* `100dvh` — telefon brauzeri paneli yashiringanda ham ekran
+          ko'rinadigan maydonni to'g'ri oladi va kattalashtirilganda
+          panel chetlab ketmaydi. */}
+      <Card className="flex h-[calc(100dvh_-_15rem)] min-h-[60vh] overflow-hidden sm:min-h-[480px]">
         <div className="hidden w-80 flex-col gap-4 border-r border-slate-100 p-4 md:flex lg:w-96">
           <div className="flex items-center justify-between">
             <Skeleton className="h-5 w-24" />
