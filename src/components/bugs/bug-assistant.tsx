@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useIsClient } from "@/lib/use-is-client";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { BUG_ASSISTANT_EVENT } from "./report";
@@ -10,6 +11,7 @@ import { stashPendingReport } from "@/components/assistant/pending";
 export function BugAssistant() {
   const { t } = useI18n();
   const mounted = useIsClient();
+  const pathname = usePathname();
   const [hasPending, setHasPending] = useState(false);
   const lastAutoAt = useRef(0);
 
@@ -50,6 +52,8 @@ export function BugAssistant() {
   }, [t]);
 
   if (!mounted) return null;
+  // Fariza sahifasida chiqmaydi — foydalanuvchi allaqachon suhbat ichida.
+  if (pathname.startsWith("/assistant")) return null;
 
   return (
     <Link
