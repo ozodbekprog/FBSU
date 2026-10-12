@@ -275,7 +275,7 @@ export function AssistantChat({ name, role }: { name: string; role: string }) {
 
   return (
     <div
-      className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-[#D4AF37]/15 bg-[#131829] shadow-[0_36px_90px_-48px_rgba(3,6,18,0.95)]"
+      className="flex h-full min-h-0 flex-col overflow-hidden border-t border-[#D4AF37]/15 bg-[#131829]"
       style={{
         backgroundImage: "radial-gradient(rgba(237,241,251,0.05) 1px, transparent 1.3px)",
         backgroundSize: "26px 26px",
