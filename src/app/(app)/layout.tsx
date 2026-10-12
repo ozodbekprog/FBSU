@@ -38,6 +38,7 @@ export default async function AppLayout({
       label: dictionary.navGroupMain,
       links: [
         { href: "/dashboard", label: dictionary.navDashboard },
+        { href: "/assistant", label: dictionary.navAssistant },
         ...(user.role === "OTA_ONA" ? [{ href: "/parent", label: dictionary.parentTitle }] : []),
         { href: "/courses", label: dictionary.navCourses },
         { href: "/schedule", label: dictionary.navSchedule },
@@ -135,53 +136,53 @@ export default async function AppLayout({
 
   const ROLE_MENU: Record<string, string[]> = {
     REKTOR: [
-      "/dashboard", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
+      "/dashboard", "/assistant", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
       "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar",
       "/messages", "/search", "/help", "/settings", "/access",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     PRO_RECTOR: [
-      "/dashboard", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
+      "/dashboard", "/assistant", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
       "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar",
       "/messages", "/search", "/help", "/settings", "/access",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     DEKAN: [
-      "/dashboard", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
+      "/dashboard", "/assistant", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
       "/schedule", "/calendar", "/academic-calendar", "/messages", "/search", "/help", "/settings",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     KAFEDRA_MUDIRI: [
-      "/dashboard", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
+      "/dashboard", "/assistant", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
       "/schedule", "/calendar", "/academic-calendar", "/messages", "/search", "/help", "/settings",
     ],
     REGISTRAR: [
-      "/dashboard", "/monitoring", "/admissions", "/approvals", "/finance", "/documents", "/diplomas", "/staff",
+      "/dashboard", "/assistant", "/monitoring", "/admissions", "/approvals", "/finance", "/documents", "/diplomas", "/staff",
       "/tasks", "/admin/users", "/admin/groups", "/admin/import", "/admin/hemis", "/schedule",
       "/calendar", "/academic-calendar", "/rooms", "/messages", "/search", "/help", "/settings",
       "/my-qr", "/access",
     ],
     TYUTOR: [
-      "/dashboard", "/curator", "/attendance", "/schedule", "/calendar", "/academic-calendar",
+      "/dashboard", "/assistant", "/curator", "/attendance", "/schedule", "/calendar", "/academic-calendar",
       "/tasks", "/staff", "/my-qr", "/messages", "/search", "/help", "/settings",
     ],
     TEACHER: [
-      "/dashboard", "/courses", "/journal", "/journals",
+      "/dashboard", "/assistant", "/courses", "/journal", "/journals",
       "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/attendance",
       "/reports", "/workload", "/staff", "/tasks", "/my-qr", "/messages", "/bookings", "/rooms",
       "/search", "/help", "/settings",
     ],
     STUDENT: [
-      "/dashboard", "/courses", "/schedule", "/calendar",
+      "/dashboard", "/assistant", "/courses", "/schedule", "/calendar",
       "/academic-calendar", "/exams", "/grades", "/gpa", "/transcript", "/attendance",
       "/certificates", "/finance", "/my-qr", "/messages", "/orders", "/bookings", "/rooms",
       "/search", "/help", "/settings",
     ],
     XODIM: [
-      "/dashboard", "/staff", "/tasks", "/my-qr", "/access", "/schedule", "/calendar",
+      "/dashboard", "/assistant", "/staff", "/tasks", "/my-qr", "/access", "/schedule", "/calendar",
       "/academic-calendar", "/messages", "/rooms", "/bookings", "/search", "/help", "/settings",
     ],
     // Buxgalter: moliyaviy vazifa uchun faqat kerakli bo'limlar.
@@ -189,10 +190,10 @@ export default async function AppLayout({
     // hisobiga to'g'ridan-to'g'ri kirmaydi, `/payroll` ichida o'z
     // lavozim/navbar/grafik boshqaruvi bor.
     BUXGALTER: [
-      "/dashboard", "/payroll", "/turniket", "/calendar",
+      "/dashboard", "/assistant", "/payroll", "/turniket", "/calendar",
       "/messages", "/my-qr", "/search", "/help", "/settings",
     ],
-    OTA_ONA: ["/parent", "/messages", "/help", "/settings"],
+    OTA_ONA: ["/assistant", "/parent", "/messages", "/help", "/settings"],
   };
 
   const allowedHrefs = ROLE_MENU[user.role];

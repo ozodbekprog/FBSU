@@ -9,6 +9,7 @@ export const shell = {
   navGroupManage: "Management",
 
   navDashboard: "Dashboard",
+  navAssistant: "AI Assistant",
   navCourses: "Courses",
   navCatalog: "Catalog",
   navElectives: "Elective courses",
