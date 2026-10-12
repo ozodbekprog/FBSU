@@ -1,9 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Input } from "@/components/ui";
-import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { takePendingReport } from "@/components/assistant/pending";
@@ -17,7 +15,66 @@ function fmtClock(value: Date) {
   return `${hours}:${minutes}`;
 }
 
-export function AssistantChat() {
+const SUGGESTIONS_STUDENT = [
+  "mscSuggestStudent1",
+  "mscSuggestStudent2",
+  "mscSuggestStudent3",
+  "mscSuggestStudent4",
+] as const;
+const SUGGESTIONS_STAFF = [
+  "mscSuggestStaff1",
+  "mscSuggestStaff2",
+  "mscSuggestStaff3",
+  "mscSuggestStaff4",
+] as const;
+
+/** Fariza belgisi — girih uslubidagi sakkiz qirrali yulduz (qo'sh kvadrat). */
+function FarizaStar({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.3">
+      <rect x="6.2" y="6.2" width="11.6" height="11.6" />
+      <rect x="6.2" y="6.2" width="11.6" height="11.6" transform="rotate(45 12 12)" />
+    </svg>
+  );
+}
+
+function FarizaAvatar({ className, animate }: { className?: string; animate?: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={
+        "flex size-8 shrink-0 select-none items-center justify-center rounded-full border border-[#D4AF37]/40 bg-[#1A2036] text-[#E3C76A] " +
+        (className ?? "")
+      }
+    >
+      <FarizaStar className={"size-[15px] " + (animate ? "animate-spin-slow" : "")} />
+    </span>
+  );
+}
+
+/** Model javoblaridagi yengil markdown: **bold** va `code`. */
+function renderInline(text: string): ReactNode[] {
+  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+      return (
+        <strong key={index} className="font-semibold text-[#F5F8FF]">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
+      return (
+        <code key={index} className="rounded bg-[#232B47] px-1 py-0.5 text-[13px]">
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    return part;
+  });
+}
+
+export function AssistantChat({ name, role }: { name: string; role: string }) {
   const { t } = useI18n();
   const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -44,28 +101,19 @@ export function AssistantChat() {
       : null,
   );
 
-  // Sahifa doim ochiq — birinchi kirishda salomlashuv xabari
-  // va (bo'lsa) ushlangan xato foydalanuvchi xabari sifatida.
+  // Bo'sh holatda katta salomlashuv ko'rsatiladi; agar sahifaga ushlangan
+  // xato bilan kirilgan bo'lsa — o'sha xabar suhbatga qo'shiladi.
   useEffect(() => {
     if (greeted.current) return;
     greeted.current = true;
     setMessages((prev) => {
-      const next: ChatMessage[] = [...prev];
-      if (initialPending) {
-        next.push({
-          role: "user",
-          text: initialPending.message,
-          time: fmtClock(new Date()),
-        });
-      }
-      next.push({
-        role: "ai",
-        text: t("mscBugGreeting"),
-        time: fmtClock(new Date()),
-      });
-      return next;
+      if (!initialPending) return prev;
+      return [
+        ...prev,
+        { role: "user", text: initialPending.message, time: fmtClock(new Date()) },
+      ];
     });
-  }, [initialPending, t]);
+  }, [initialPending]);
 
   useEffect(() => {
     const el = listRef.current;
@@ -198,102 +246,166 @@ export function AssistantChat() {
     void sendReport(initialPending.message);
   }, [initialPending, sendReport]);
 
-  async function handleSend() {
-    const value = input.trim();
-    if (!value || busy) return;
-    const pending: ChatMessage[] = [
-      ...messages,
-      { role: "user", text: value, time: fmtClock(new Date()), shot: shot?.dataUrl },
-    ];
-    setMessages(pending);
-    setInput("");
-    setBusy(true);
-    const reply = await askAiReply(pending);
-    setBusy(false);
-    aiSay(reply);
-    if (shot && !sent) {
-      await sendReport(value);
-    }
+  const submit = useCallback(
+    async (raw: string) => {
+      const value = raw.trim();
+      if (!value || busy) return;
+      const pending: ChatMessage[] = [
+        ...messages,
+        { role: "user", text: value, time: fmtClock(new Date()), shot: shot?.dataUrl },
+      ];
+      setMessages(pending);
+      setInput("");
+      setBusy(true);
+      const reply = await askAiReply(pending);
+      setBusy(false);
+      aiSay(reply);
+      if (shot && !sent) {
+        await sendReport(value);
+      }
+    },
+    [aiSay, askAiReply, busy, messages, sent, sendReport, shot],
+  );
+
+  function handleSend() {
+    void submit(input);
   }
 
+  const suggestions = role === "STUDENT" ? SUGGESTIONS_STUDENT : SUGGESTIONS_STAFF;
+
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card">
-      <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/80 px-4 py-3">
-        <span className="flex size-7 items-center justify-center rounded-full bg-brand-900 text-[11px] font-semibold text-white">
-          AI
-        </span>
-        <div>
-          <p className="text-sm font-semibold text-slate-800">{t("mscBugTitle")}</p>
-          <p className="text-[11px] text-slate-600">{t("mscBugSubtitle")}</p>
-        </div>
-      </div>
-
-      <div ref={listRef} className="min-h-0 flex-1 space-y-2.5 overflow-y-auto overscroll-contain px-4 py-3.5">
-        {messages.map((message, index) => (
-          <div
-            key={`${message.role}-${index}`}
-            className={cn(
-              "max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed",
-              message.role === "ai"
-                ? "bg-slate-100 text-slate-700"
-                : "ml-auto bg-brand-900 text-white",
+    <div
+      className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-[#D4AF37]/15 bg-[#131829] shadow-[0_36px_90px_-48px_rgba(3,6,18,0.95)]"
+      style={{
+        backgroundImage: "radial-gradient(rgba(237,241,251,0.05) 1px, transparent 1.3px)",
+        backgroundSize: "26px 26px",
+      }}
+    >
+      <div
+        ref={listRef}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 sm:px-8"
+        style={{ scrollbarColor: "#2E3A5E transparent" }}
+      >
+        {messages.length === 0 ? (
+          <div className="flex h-full flex-col justify-center">
+            <div className="max-w-[44rem]">
+              <FarizaStar className="size-6 text-[#D4AF37]" />
+              <h2 className="mt-5 font-serif text-[26px] leading-snug text-[#F2F5FD] sm:text-[30px]">
+                {t("mscHeroHello", { name })}
+              </h2>
+              <p className="mt-2.5 max-w-[38rem] text-sm leading-6 text-[#9AA6C6]">
+                {t("mscBugGreeting")}
+              </p>
+              <div className="mt-7 flex flex-wrap items-center gap-2">
+                {suggestions.map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void submit(t(key))}
+                    className="rounded-full border border-[#D4AF37]/25 px-3.5 py-1.5 text-[13px] text-[#D9E0F2] transition-colors hover:border-[#D4AF37]/50 hover:bg-[#D4AF37]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D4AF37] disabled:opacity-50"
+                  >
+                    {t(key)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {messages.map((message, index) =>
+              message.role === "ai" ? (
+                <div key={`ai-${index}`} className="flex gap-3">
+                  <FarizaAvatar className="mt-0.5" />
+                  <div className="min-w-0 max-w-[46rem]">
+                    <p className="whitespace-pre-wrap text-[15px] leading-7 text-[#E7ECF9]">
+                      {renderInline(message.text)}
+                    </p>
+                    {message.shot ? (
+                      <img
+                        src={message.shot}
+                        alt={t("mscBugAttachedAlt")}
+                        className="mt-2 max-h-36 max-w-full rounded-lg border border-[#D4AF37]/20"
+                      />
+                    ) : null}
+                    <span className="mt-1 block text-[10px] text-[#7C88A8]">{message.time}</span>
+                  </div>
+                </div>
+              ) : (
+                <div key={`user-${index}`} className="flex justify-end">
+                  <div className="min-w-0 max-w-[80%] sm:max-w-[70%]">
+                    <div className="rounded-lg border-l-2 border-[#D4AF37]/60 bg-[#232B47] px-4 py-2.5 text-[15px] leading-7 text-[#EDF1FB]">
+                      <p className="whitespace-pre-wrap">{renderInline(message.text)}</p>
+                      {message.shot ? (
+                        <img
+                          src={message.shot}
+                          alt={t("mscBugAttachedAlt")}
+                          className="mt-2 max-h-36 max-w-full rounded-lg border border-[#D4AF37]/20"
+                        />
+                      ) : null}
+                    </div>
+                    <span className="mt-1 block text-right text-[10px] text-[#8B96B6]">
+                      {message.time}
+                    </span>
+                  </div>
+                </div>
+              ),
             )}
-          >
-            {message.text}
-            {message.shot ? (
-              <img
-                src={message.shot}
-                alt={t("mscBugAttachedAlt")}
-                className="mt-1.5 max-h-32 max-w-full rounded-lg border border-white/40"
-              />
+            {busy ? (
+              <div className="flex items-center gap-3" role="status" aria-label={t("mscBugTyping")}>
+                <FarizaAvatar animate />
+                <span className="flex items-center gap-1.5 py-2">
+                  <span className="size-1.5 animate-bounce rounded-full bg-[#8B96B6] [animation-delay:-0.3s]" />
+                  <span className="size-1.5 animate-bounce rounded-full bg-[#8B96B6] [animation-delay:-0.15s]" />
+                  <span className="size-1.5 animate-bounce rounded-full bg-[#8B96B6]" />
+                </span>
+              </div>
             ) : null}
-            <span
-              className={cn(
-                "mt-0.5 block text-right text-[11px]",
-                message.role === "ai" ? "text-slate-400" : "text-brand-200",
-              )}
-            >
-              {message.time}
-            </span>
           </div>
-        ))}
-        {busy ? (
-          <div className="w-fit rounded-2xl bg-slate-100 px-3 py-2 text-sm text-slate-600">
-            {t("mscBugTyping")}
-          </div>
-        ) : null}
+        )}
       </div>
 
-      <div className="space-y-2 border-t border-slate-100 px-4 py-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div className="border-t border-[#D4AF37]/10 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
         {shot ? (
-          <div className="flex items-center gap-2">
+          <div className="mb-3 flex items-center gap-3">
             <img
               src={shot.dataUrl}
               alt={t("mscBugAttachedAlt")}
-              className="h-12 w-20 rounded-lg border border-slate-200 object-cover"
+              className="h-12 w-20 max-w-full rounded-lg border border-[#D4AF37]/25 object-cover"
             />
-            <span className="min-w-0 flex-1 truncate text-[11px] text-slate-500">{shot.name}</span>
+            <span className="min-w-0 flex-1 truncate text-[11px] text-[#9AA6C6]">{shot.name}</span>
             <button
               type="button"
               onClick={() => setShot(null)}
-              className="text-xs text-slate-500 transition-colors hover:text-slate-700"
+              className="text-xs text-[#E3C76A] transition-colors hover:text-[#F0DE9A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D4AF37]"
             >
               {t("mscBugRemove")}
             </button>
           </div>
         ) : null}
-        <div className="flex gap-2">
+        <div className="flex items-end gap-1.5 rounded-2xl border border-[#D4AF37]/20 bg-[#1A2036] py-1.5 pe-1.5 ps-2 transition-colors focus-within:border-[#D4AF37]/55">
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={busy}
             title={t("mscBugAttach")}
             aria-label={t("mscBugAttach")}
-            className="rounded-lg border border-slate-200 px-2.5 text-sm text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full text-[#8B96B6] transition-colors hover:bg-[#232B47] hover:text-[#EDF1FB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D4AF37] disabled:opacity-50"
           >
-            📎
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+            </svg>
           </button>
-          <Input
+          <input
             value={input}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={(event) => {
@@ -317,10 +429,29 @@ export function AssistantChat() {
             }}
             placeholder={t("mscBugInputPlaceholder")}
             aria-label={t("mscBugInputAria")}
+            className="min-w-0 flex-1 bg-transparent px-1.5 py-2 text-[15px] text-[#EDF1FB] outline-none placeholder:text-[#7C88A8]"
           />
-          <Button size="sm" onClick={() => void handleSend()} disabled={!input.trim() || busy}>
-            {t("mscBugSend")}
-          </Button>
+          <button
+            type="button"
+            onClick={() => void handleSend()}
+            disabled={!input.trim() || busy}
+            aria-label={t("mscBugSend")}
+            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#D4AF37] text-[#131829] transition-colors hover:bg-[#E3C76A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D4AF37] disabled:opacity-40"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 19V5" />
+              <path d="m5 12 7-7 7 7" />
+            </svg>
+          </button>
         </div>
         <input
           ref={fileRef}
@@ -333,17 +464,15 @@ export function AssistantChat() {
             event.target.value = "";
           }}
         />
-        <div className="flex items-center justify-between gap-2">
+        <div className="mt-2.5 flex items-center justify-between gap-3">
           <button
             type="button"
             disabled={busy || sent}
             onClick={() => void sendReport()}
-            className={cn(
-              "text-xs font-medium transition-colors",
-              sent
-                ? "text-emerald-600"
-                : "text-brand-700 hover:text-brand-900 hover:underline",
-            )}
+            className={
+              "text-[13px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D4AF37] " +
+              (sent ? "text-[#8FBF9F]" : "text-[#E3C76A] hover:text-[#F0DE9A] hover:underline")
+            }
           >
             {sent
               ? t("mscBugSent")
@@ -351,7 +480,7 @@ export function AssistantChat() {
                 ? t("mscBugSendReportShot")
                 : t("mscBugSendReport")}
           </button>
-          <span className="text-[11px] text-slate-600">{t("mscBugDetailsAdmin")}</span>
+          <span className="text-[10px] text-[#7C88A8]">{t("mscBugDetailsAdmin")}</span>
         </div>
       </div>
     </div>
