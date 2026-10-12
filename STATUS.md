@@ -1,6 +1,18 @@
 # STATUS — qurilish holati
 
-Oxirgi yangilanish: LEGO konstruktor + Jurnal 2.0 + Modul sozlamalari (Komp 1)
+Oxirgi yangilanish: OpenBoard 2.0 — "Onlayn daftar" (2026-10-12)
+
+## OpenBoard 2.0 — onlayn doska va daftar
+
+- [x] `/board` qayta qurildi: Apple Notes uslubidagi sidebar (qidiruv, yaratish —
+      bo'sh/doska/lab, o'chirish, nusxalash, sana) + blokli muharrir + avtosave
+- [x] Bloklar: matn (rich-text), sarlavha, kod (JS/Math **Run**), formula (KaTeX),
+      kimyoviy formula (mhchem), chizma (Excalidraw + PNG preview), rasm, jadval,
+      cheklist, laboratoriya shabloni (→ `/labs`)
+- [x] Saqlash: `Board.data` JSON v3 + `GET/PUT /api/openboard` (CSRF, zod, 9MB);
+      eski v2 excalidraw yozuvi avtomatik v3 ga ko'chadi; topshiriq doskasi saqlanadi
+- [x] Sidebar menyusida "Onlayn daftar" + topshiriq sahifasidagi tugma qaytarildi
+- [x] Tekshiruv: 27/27 unit test; jonli Playwright E2E yashil; OpenBoard kodida tsc 0 xato
 
 ## To'lqin 8 — "LEGO" qurish tizimi
 

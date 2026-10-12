@@ -78,10 +78,14 @@ export default async function AppLayout({
       label: dictionary.navGroupStudy,
       links: [
         { href: "/exams", label: dictionary.navExams },
+        ...(modules.secure_exams
+          ? [{ href: "/secure-exams", label: dictionary.navSecureExams }]
+          : []),
         { href: "/grades", label: isStaff(user.role) ? dictionary.navGradesStaff : dictionary.navGradesStudent },
         { href: "/gpa", label: dictionary.navGpa },
         { href: "/transcript", label: dictionary.navTranscript },
         { href: "/attendance", label: dictionary.navAttendance },
+        { href: "/board", label: dictionary.brdTitle },
         ...(isStaff(user.role) ? [{ href: "/journal", label: dictionary.navJournal }] : []),
         ...(modules.certificates ? [{ href: "/certificates", label: dictionary.navCertificates }] : []),
         ...(isStaff(user.role) ? [{ href: "/journals", label: dictionary.navJournals }] : []),
@@ -202,14 +206,14 @@ export default async function AppLayout({
       "/tasks", "/staff", "/my-qr", "/messages", "/search", "/help", "/settings",
     ],
     TEACHER: [
-      "/dashboard", "/assistant", "/courses", "/journal", "/journals",
-      "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/attendance",
+      "/dashboard", "/assistant", "/courses", "/board", "/journal", "/journals",
+      "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/secure-exams", "/attendance",
       "/reports", "/workload", "/staff", "/tasks", "/my-qr", "/messages", "/bookings", "/rooms",
       "/research", "/search", "/help", "/settings",
     ],
     STUDENT: [
-      "/dashboard", "/assistant", "/courses", "/schedule", "/calendar",
-      "/academic-calendar", "/exams", "/grades", "/gpa", "/transcript", "/attendance",
+      "/dashboard", "/assistant", "/courses", "/board", "/schedule", "/calendar",
+      "/academic-calendar", "/exams", "/secure-exams", "/grades", "/gpa", "/transcript", "/attendance",
       "/certificates", "/finance", "/my-qr", "/messages", "/orders", "/bookings", "/rooms",
       "/search", "/help", "/settings",
     ],
