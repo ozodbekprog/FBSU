@@ -11,6 +11,7 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     scheduleEntry: { findMany: vi.fn().mockResolvedValue([{ groupId: "g1" }]) },
     studyPlan: { findMany: vi.fn().mockResolvedValue([]) },
+    enrollment: { findMany: vi.fn().mockResolvedValue([]) },
     group: { findMany: vi.fn().mockResolvedValue([{ id: "g1", name: "AI-2", year: 2026 }]) },
     user: { groupBy: vi.fn().mockResolvedValue([{ groupId: "g1", _count: { _all: 16 } }]) },
   },

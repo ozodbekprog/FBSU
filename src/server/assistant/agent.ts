@@ -65,7 +65,7 @@ async function accessibleGroups(user: AgentUser) {
       select: { id: true, name: true, year: true },
     });
   }
-  const [bySchedule, byPlan] = await Promise.all([
+  const [bySchedule, byPlan, byEnrollment] = await Promise.all([
     prisma.scheduleEntry.findMany({
       where: { teacherId: user.id },
       select: { groupId: true },
@@ -78,8 +78,21 @@ async function accessibleGroups(user: AgentUser) {
       distinct: ["groupId"],
       take: 200,
     }),
+    prisma.enrollment.findMany({
+      where: { status: "ACTIVE", course: { teacherId: user.id } },
+      select: { user: { select: { groupId: true } } },
+      take: 500,
+    }),
   ]);
-  const ids = [...new Set([...bySchedule, ...byPlan].map((row) => row.groupId))];
+  const ids = [
+    ...new Set([
+      ...bySchedule.map((row) => row.groupId),
+      ...byPlan.map((row) => row.groupId),
+      ...byEnrollment
+        .map((row) => row.user.groupId)
+        .filter((groupId): groupId is string => Boolean(groupId)),
+    ]),
+  ];
   if (ids.length === 0) return [];
   return prisma.group.findMany({
     where: { id: { in: ids } },

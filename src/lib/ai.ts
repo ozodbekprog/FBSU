@@ -1,6 +1,19 @@
 import "server-only";
 
-const API_URL = "https://api.deepseek.com/chat/completions";
+/**
+ * AI provayder sozlamalari. Standart — DeepSeek (o'zgarmagan).
+ * Lokal/zaxira provayder kerak bo'lsa .env da:
+ *   AI_API_KEY=...            (aks holda DEEPSEEK_API_KEY ishlatiladi)
+ *   AI_API_BASE=https://zenmux.ai/api/v1
+ *   AI_MODEL=deepseek/deepseek-v4.1-flash
+ */
+const API_BASE = (process.env.AI_API_BASE ?? "https://api.deepseek.com").replace(/\/+$/, "");
+const API_URL = `${API_BASE}/chat/completions`;
+const MODEL = process.env.AI_MODEL ?? "deepseek-chat";
+
+function aiKey(): string | undefined {
+  return process.env.AI_API_KEY ?? process.env.DEEPSEEK_API_KEY;
+}
 
 export type AiMessage = { role: "system" | "user" | "assistant"; content: string };
 
@@ -34,7 +47,7 @@ export async function askAi(
   messages: AiMessage[],
   options?: { timeoutMs?: number; maxTokens?: number },
 ): Promise<string | null> {
-  const key = process.env.DEEPSEEK_API_KEY;
+  const key = aiKey();
   if (!key) return null;
   try {
     const response = await fetch(API_URL, {
@@ -44,7 +57,7 @@ export async function askAi(
         Authorization: `Bearer ${key}`,
       },
       body: JSON.stringify({
-        model: "deepseek-chat",
+        model: MODEL,
         messages,
         max_tokens: options?.maxTokens ?? 400,
         temperature: 0.3,
@@ -67,7 +80,7 @@ export async function askAiWithTools(
   tools: AiTool[],
   options?: { timeoutMs?: number; maxTokens?: number },
 ): Promise<{ content: string | null; toolCalls: AiToolCall[] } | null> {
-  const key = process.env.DEEPSEEK_API_KEY;
+  const key = aiKey();
   if (!key) return null;
   try {
     const response = await fetch(API_URL, {
@@ -77,7 +90,7 @@ export async function askAiWithTools(
         Authorization: `Bearer ${key}`,
       },
       body: JSON.stringify({
-        model: "deepseek-chat",
+        model: MODEL,
         messages,
         tools,
         max_tokens: options?.maxTokens ?? 400,
@@ -137,11 +150,11 @@ export async function agentChatStep(
   tools: AiTool[],
   options?: { timeoutMs?: number; maxTokens?: number },
 ): Promise<{ message: AiAgentMessage; toolCalls: AiAgentToolCall[] } | null> {
-  const key = process.env.DEEPSEEK_API_KEY;
+  const key = aiKey();
   if (!key) return null;
   try {
     const payload: Record<string, unknown> = {
-      model: "deepseek-chat",
+      model: MODEL,
       messages,
       max_tokens: options?.maxTokens ?? 600,
       temperature: 0.3,

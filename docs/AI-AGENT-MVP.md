@@ -27,16 +27,31 @@
 
 ## Xavfsizlik modeli
 
-- Har tool **foydalanuvchi huquqi doirasida** ishlaydi: talaba — faqat o'z ma'lumoti; o'qituvchi — faqat o'z kurs/guruhlari (jadval + o'quv reja bo'yicha); begona guruhga so'rov "topilmadi" javobini oladi.
+- Har tool **foydalanuvchi huquqi doirasida** ishlaydi: talaba — faqat o'z ma'lumoti; o'qituvchi — faqat o'z kurs/guruhlari (jadval, o'quv reja va kursga yozilishlar bo'yicha aniqlanadi); begona guruhga so'rov "topilmadi" javobini oladi.
 - `ADMIN` — cheklovsiz (guruh ro'yxati 80 ta bilan cheklangan).
 - Yozuvchi amal yo'q (MVP) — keyingi bosqichda har yozuv `confirm` + AuditLog bilan.
 - Rate limit: 60 so'rov/soat/foydalanuvchi (avvalgi qoida saqlangan).
+
+## AI provayder sozlamalari
+
+Standart — DeepSeek (`api.deepseek.com`, `deepseek-chat`), production o'zgarmagan.
+Lokal provayderni `.env` dan almashtirish mumkin (kod o'zgarishisiz):
+
+```
+AI_API_KEY=sk-...                       # bo'sh bo'lsa DEEPSEEK_API_KEY ishlatiladi
+AI_API_BASE=https://zenmux.ai/api/v1    # ZenMux (lokal sinovda shu)
+AI_MODEL=deepseek/deepseek-v4.1-flash   # free variant: inclusionai/ling-3.1-flash
+```
+
+`.env` gitignore da (`.env*`) — kalit repoga tushmaydi.
 
 ## Tekshirilgan
 
 - `npx tsc --noEmit`, `npm run build` — toza.
 - Unit testlar: `tests/assistant-agent-data.test.ts` (8), `tests/assistant-agent-loop.test.ts` (4) — jami 276 test ✓.
 - Jonli DB smoke (vaqtinchalik test, o'chirilgan): o'qituvchi (t.math@ttpu.uz) va talaba (ozodbek@ttpu.uz) bo'yicha barcha tool'lar real ma'lumot qaytardi; begona guruhga ruxsat yo'q ✓.
+- HTTP E2E (ZenMux model bilan, 2026-10-12): o'qituvchi "Guruhlarim davomatini tahlil qil" → 4 guruh bo'yicha 23 ta qoloq talaba ro'yxati + `/reports` sahifasiga yo'naltirish (~9.5s); bahoni o'zgartirish so'rovi rad etildi va `/grades` ga yo'naltirildi ✓.
+- Eslatma: `n.mahamatov@ttpu.uz` hisobida bazada ma'lumot yo'q (0 kurs/guruh) — sinov uchun `t.math@ttpu.uz`, `t.eng@ttpu.uz` ishlatiladi (parol: `ttpu1234`).
 
 ## Keyingi bosqichlar (taklif)
 
