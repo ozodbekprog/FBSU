@@ -371,6 +371,18 @@ function Questions() {
   );
 }
 
+function Research() {
+  return (
+    <group>
+      <Ring rad={0.78} tube={0.05} m="brandLight" p={[0, 0, 0]} r={[PI / 2, 0, 0]} />
+      <Ring rad={0.78} tube={0.05} m="brandLight" p={[0, 0, 0]} r={[PI / 2, PI / 3, 0]} />
+      <Ring rad={0.78} tube={0.05} m="brandLight" p={[0, 0, 0]} r={[PI / 2, -PI / 3, 0]} />
+      <Ball rad={0.2} m="gold" p={[0, 0, 0]} />
+      <Ball rad={0.09} m="goldLight" p={[0.5, 0.34, 0.3]} />
+    </group>
+  );
+}
+
 function Messages() {
   return (
     <group>
@@ -541,6 +553,30 @@ function Admin() {
       <Ring rad={0.18} tube={0.06} m="brandDeep" p={[0, 0.16, 0.3]} />
       <Cube a={[0.12, 0.26, 0.12]} m="goldLight" p={[0, -0.14, 0.3]} />
       <Cube a={[0.34, 0.1, 0.12]} m="goldLight" p={[0, -0.32, 0.3]} />
+    </group>
+  );
+}
+
+function AdminUsers() {
+  return (
+    <group>
+      <Tile a={[1.9, 1.8, 0.2]} m="brandDeep" p={[0, 0, -0.06]} radius={0.12} />
+      <Ball rad={0.16} m="goldLight" p={[-0.44, 0.52, 0.12]} />
+      <Cube a={[0.72, 0.1, 0.08]} m="gold" p={[0.26, 0.52, 0.12]} />
+      <Ball rad={0.15} m="brandLight" p={[-0.44, 0.02, 0.12]} />
+      <Cube a={[0.6, 0.09, 0.08]} m="brandLight" p={[0.2, 0.02, 0.12]} />
+      <Ball rad={0.14} m="brandLight" p={[-0.44, -0.48, 0.12]} />
+      <Cube a={[0.48, 0.08, 0.08]} m="brandLight" p={[0.14, -0.48, 0.12]} />
+    </group>
+  );
+}
+
+function AdminGroups() {
+  return (
+    <group>
+      <Tile a={[1.5, 0.4, 0.42]} m="gold" p={[0, 0.52, 0.12]} radius={0.12} />
+      <Tile a={[1.85, 0.4, 0.42]} m="brandLight" p={[0, 0, 0]} radius={0.12} />
+      <Tile a={[2.2, 0.4, 0.42]} m="brand" p={[0, -0.52, -0.12]} radius={0.12} />
     </group>
   );
 }
@@ -827,6 +863,7 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/bounty": Bounty,
   "/journals": Journals,
   "/question-bank": Questions,
+  "/research": Research,
   "/messages": Messages,
   "/orders": Orders,
   "/bookings": Bookings,
@@ -838,6 +875,8 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/reports": Reports,
   "/workload": Workload,
   "/admin": Admin,
+  "/admin/users": AdminUsers,
+  "/admin/groups": AdminGroups,
   "/board": Board,
   "/labs": Labs,
   "/approvals": Approvals,
