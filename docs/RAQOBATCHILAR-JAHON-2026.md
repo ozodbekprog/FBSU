@@ -494,7 +494,7 @@ Ma'lum bir ochiq manba topilmadi. Universitetlar o'z ichiga maxsus tizimlar (sao
 
 | Platform | Nima uchun yaqin | Farq |
 |----------|------------------|------|
-| **Moodle** | Ochiq kod, universitet, kurs+bo'lim+materiallar, testlar, davomat, baholar jurnali, sertifikatlar — **eng yaqin** | FBSU LMS Next.js/TypeScript da, Moodle PHP da. FBSU-da Face ID, QR-davomat, Telegram bot, 12 rol, modul yoqish tizimi — tabiiy (ichki) qo'llab-quvvatlash yo'q |
+| **Moodle** | Ochiq kod, universitet, kurs+bo'lim+materiallar, testlar, davomat, baholar jurnali, sertifikatlar — **eng yaqin** | FBSU LMS Next.js/TypeScript da, Moodle PHP da. FBSU-da Face ID, QR-davomat, Telegram bot, PWA, 12 rol va modul yoqish tizimi bor — Moodle'da bularning aksariyati plagin yoki tashqi integratsiya orqali qo'shiladi |
 | **Canvas** | UI/UX, assignment management, rubrics, LTI integratsiyasi, grading workflows | Canvas proprietary, narxli, FG-ni ishlatmaydi |
 | **Open edX** | Ochiq kod, scalability, MOOC capacity, course authoring (Studio) | Open edX Python/XBlock, katta infrastructure talab qiladi |
 
@@ -517,21 +517,21 @@ Ma'lum bir ochiq manba topilmadi. Universitetlar o'z ichiga maxsus tizimlar (sao
 | 3 | **QR-sessiya davomat** + **turniket kioski** integratsiyasi | ✅ Ha | Davomatni QR orqali + Face ID — natijada 80% imtihon qoidasi. Boshqa LMS-da bunday kengaytirilgan davomat mavjud emas. |
 | 4 | **12 ro'li modul yoqish/o'chirish tizimi** (ADMIN → OTA_ONA) | ✅ Ha | Moodle 14 rol, Canvas 6 — lekin Moodle/Canvas'da modulni yoqish-o'chirish ichki (native) qo'llab-quvvatlanmaydi, tashqi integratsiya kerak. FBSU-da esa har bir modul alohida yoqilishi/o'chirilishi mumkin. |
 | 5 | **Telegram bot integratsiyasi** (/jadval, /ertaga, /hafta, /davomat, kunlik 08:00 eslatma) | ✅ Ha | Boshqa LMS-larda Telegram bot native ravishda integratsiya qilinmaydi. Bu mustaqil Telegram bot bo'lib, LMS API-si bilan aloqa o'rnatilgan. |
-| 6 | **Kafedra/fakultet/monitoring scope** + **CSV eksport** (hisobotlar) | ✅ Ha | Monitoring darajasini granular (fakultet → kafedra → o'qituvchi → guruh) qilib berish. Boshqa LMS-larda bunday scope cheklangan. |
-| 7 | **Oylik/payroll moduli** (yuklama hisobi + kadrlar davomati: Keldim/Ketdim, navbat/smena) | ✅ Ha | LMS + HR/Payroll birlashtirilgan. Moodle Workplace-da payroll yo'q, boshqa LMS-larda ham native emas. |
+| 6 | **PWA** (o'rnatiladigan ilova + offline shell) | ✅ Ha | `public/manifest.webmanifest`, `public/sw.js`, `src/components/pwa/PwaRegister.tsx` — jonli tekshirilgan (manifest 200, sw.js 200). Moodle/Canvas ham PWA qo'llaydi — bu paritet, kamchilik emas. |
+| 7 | **Kafedra/fakultet/monitoring scope** + **CSV eksport** (hisobotlar) | ✅ Ha | Monitoring darajasini granular (fakultet → kafedra → o'qituvchi → guruh) qilib berish. Boshqa LMS-larda bunday scope cheklangan. |
+| 8 | **Oylik/payroll moduli** (yuklama hisobi + kadrlar davomati: Keldim/Ketdim, navbat/smena) | ✅ Ha | LMS + HR/Payroll birlashtirilgan. Moodle Workplace-da payroll yo'q, boshqa LMS-larda ham native emas. |
 
 ### 6.4 5–8 ta aniq kamchilik/xavf
 
 | № | Kamchilik/Xavf | Sabab | Manba/Tayanch |
 |---|----------------|-------|---------------|
 | 1 | **HEMIS integratsiyasi shartligi** | 403-son farmon bo'yicha barcha nodavlat OTMlar HEMISga integratsiya qilishi shart. Agar integratsiya bo'lmasa — litsenziya bo'lmaysa. | [manba 41] — Prezident Farmoni |
-| 2 | **PWA yo'qligi** | Moodle, Canvas, Brightspace — PWA qo'llab-quvvatlaydi. FBSU-da offline rejim yo'q. Mobil foydalanuvchilar (kampusda signal kam bo'lgan joylarda) zarar ko'radi. | [manba 3] — Moodle PWA support |
-| 3 | **Antiplagiat (Turnitin/itpan) integratsiyasi yo'qligi** | Turnitin 2026 — 15% submissions 80%+ AI-generated. Universitetlar plagiarism detection talab qiladi. FBSU-da hali yo'q. | [manba 52] — Turnitin Integrity Report |
-| 4 | **Video-konferensiya yo'qligi** | Zoom/Meet/BigBlueButton integratsiyasi yo'q. Darslarni online boshqarish uchun kerak. Moodle — BigBlueButton, Canvas — Zoom native. | [manba 11] — D2L features |
-| 5 | **Ilmiy faoliyat (research) moduli yo'qligi** | Universitetlar uchun ilmiy maqolalar, grantlar, publications tracking — mustaqil modul sifatida yo'q. | Talqin: [talqin] — korporativ LMS-larda ham bu modullar cheklangan, lekin universitet kontekstida muhim |
-| 6 | **I18n — 3 til (uz/ru/en)** — hali to'liq emas | Loyihaning i18n arxitekturasi mavjud, lekin kontent tarjima darajasi kam. Moodle — 100+ tilli, Chamilo — 60+ tilli. | [talqin] — kodda i18n framework bor, lekin ma'lumotlar tarjimi hali to'liq emas |
-| 7 | **Mobil natijalar baholash interfeysi** | Baholar jurnali — "mobil uslub" deyilgan, lekin kompakt ekranlarda daraxtli ko'rinish hali optimallashtirilmagan bo'lishi mumkin | [talqin] — foydalanuvchi UX tajribasiga bog'liq |
-| 8 | **LTI/standart integratsiya ekosistemi** | Canvas — 1000+ LTI tools, Moodle — 2000+ plugins. FBSU-da LTI framework mavjud emas (yoki mavjud bo'lsa, ekosistem hali kichik). Bu kengaytirish uchun muhim. | [talqin] — integratsiya mavjud bo'lsa, rivojlantirish zarur |
+| 2 | **Antiplagiat (Turnitin/itpan) integratsiyasi yo'qligi** | Turnitin 2026 — 15% submissions 80%+ AI-generated. Universitetlar plagiarism detection talab qiladi. FBSU-da hali yo'q. | [manba 52] — Turnitin Integrity Report |
+| 3 | **Video-konferensiya yo'qligi** | Zoom/Meet/BigBlueButton integratsiyasi yo'q. Darslarni online boshqarish uchun kerak. Moodle — BigBlueButton, Canvas — Zoom native. | [manba 11] — D2L features |
+| 4 | **Ilmiy faoliyat (research) moduli yo'qligi** | Universitetlar uchun ilmiy maqolalar, grantlar, publications tracking — mustaqil modul sifatida yo'q. | Talqin: [talqin] — korporativ LMS-larda ham bu modullar cheklangan, lekin universitet kontekstida muhim |
+| 5 | **I18n — 3 til (uz/ru/en)** — hali to'liq emas | Loyihaning i18n arxitekturasi mavjud, lekin kontent tarjima darajasi kam. Moodle — 100+ tilli, Chamilo — 60+ tilli. | [talqin] — kodda i18n framework bor, lekin ma'lumotlar tarjimi hali to'liq emas |
+| 6 | **Mobil natijalar baholash interfeysi** | Baholar jurnali — "mobil uslub" deyilgan, lekin kompakt ekranlarda daraxtli ko'rinish hali optimallashtirilmagan bo'lishi mumkin | [talqin] — foydalanuvchi UX tajribasiga bog'liq |
+| 7 | **LTI/standart integratsiya ekosistemi** | Canvas — 1000+ LTI tools, Moodle — 2000+ plugins. FBSU-da LTI framework mavjud emas (yoki mavjud bo'lsa, ekosistem hali kichik). Bu kengaytirish uchun muhim. | [talqin] — integratsiya mavjud bo'lsa, rivojlantirish zarur |
 
 ---
 
@@ -544,7 +544,7 @@ Ma'lum bir ochiq manba topilmadi. Universitetlar o'z ichiga maxsus tizimlar (sao
 | **P0** | **HEMIS integratsiyasini amalga oshirish** (REST API / GraphQL) | 🔴 Kritik | 403-son farmon — integratsiyasiz litsenziya yo'q. Ma'lumotlarni avtomatik sinxronlash kerak (student records, grades, attendance, enrollment). |
 | **P0** | **Antiplagiat (Turnitin / iThenticate) integratsiyasi** qo'shish | 🔴 Kritik | 92% talabalar AI ishlatadi, 15% essaylar 80%+ AI-generated. Universitet darajasida academic integrity talab qilinadi. LTI 1.3 orqali integratsiya — standart. |
 | **P1** | **Video-konferensiya integratsiyasi** (BigBlueButton ochiq kod / Zoom LTI) | 🟠 Juda muhim | Onlayn darslarning asosiy vositasi. BigBlueButton — ochiq kod, Moodle integratsiyasi bilan, self-hosted qilish mumkin. Zoom — LTI orqali. |
-| **P1** | **PWA (Progressive Web App) qo'shish** | 🟠 Juda muhim | Offline rejim, push notification, app-store siz. Mobil-first bo'lish zarur. Moodle ham, Canvas ham PWA qo'llaydi. |
+| **P2** | **PWA'ni chuqurlashtirish** (offline kesh kengaytirish, push notification) | 🟡 Muhim | Asosiy PWA allaqachon bor (manifest + service worker + offline shell). Qolgan ish: ko'proq sahifalarni keshlash va push bildirishnomalar. |
 | **P1** | **LTI 1.3 framework** qurish (integratsiya ekosistemasi) | 🟠 Juda muhim | 1000+ tashqi tools (Turnitin, Panopto, Kahoot, Gradescope va boshqalar) ni ulashish uchun. Open standard — investitsiya barqaror. |
 | **P2** | **Ilmiy faoliyat moduli** (maqolalar, grantlar, publications, h-index tracking) | 🟡 Muhim | Universitet xodimlari uchun zarur. Moodle-da yo'q, korporativ LMS-larda ham cheklangan. O'zgartirish imkoniyati — farqlovchilik. |
 | **P2** | **Micro-credentials / Digital Badges** (Open Badges 3.0) | 🟡 Muhim | Bozor trendi (CAGR 18.8%). Talabalar va xodimlar uchun verifiable credentials. Moodle badges + Blockcerts integratsiyasi mumkin. |
@@ -628,7 +628,7 @@ Ma'lum bir ochiq manba topilmadi. Universitetlar o'z ichiga maxsus tizimlar (sao
 3. **O'zbekistondagi boshqa universitetlar LMS tizimlari** — AQSH, Fransiya, Turkiya universitetlarining O'zbekistondagi filiallari nima ishlatayotganini tekshirish kerak.
 4. **LMS bozori raqamlari** — turli hisobotlar farqli raqamlar ko'rsatadi ($24B–$35B 2025/2026). Bitta manba asosida emas, bir nechta manbalarni o'rganish tavsiya etiladi.
 5. **Turnitin narxi** — Turnitin pricing ochiq emas, universitetlar arzon narx so'rash kerak. LTI 1.3 integratsiya qilish ham Turnitin tomonidan qo'llab-quvvatlanadi.
-6. **PWA qo'shish xarajati** — FBSU LMS-da PWA yo'qligi kamchilik sifatida keltirilgan, lekin uni qo'shish uchun xarajat va muddat baholanmagan.
+6. **PWA chuqurligi** — FBSU'da PWA bor (manifest, service worker, offline shell — jonli tekshirilgan), lekin kesh qamrovi va push bildirishnomalar hali baholanmagan.
 
 ---
 
