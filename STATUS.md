@@ -13,6 +13,7 @@ Oxirgi yangilanish: OpenBoard 2.0 — "Onlayn daftar" (2026-10-12)
       eski v2 excalidraw yozuvi avtomatik v3 ga ko'chadi; topshiriq doskasi saqlanadi
 - [x] Sidebar menyusida "Onlayn daftar" + topshiriq sahifasidagi tugma qaytarildi
 - [x] Tekshiruv: 27/27 unit test; jonli Playwright E2E yashil; OpenBoard kodida tsc 0 xato
+- [x] Prod: fbsu.vercel.app/board jonli (2026-10-13, merge 31c93c7)
 
 ## To'lqin 8 — "LEGO" qurish tizimi
 
