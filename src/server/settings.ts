@@ -7,6 +7,7 @@ export const MODULE_KEYS = [
   "catalog",
   "forum",
   "qr_attendance",
+  "secure_exams",
 ] as const;
 
 export type ModuleKey = (typeof MODULE_KEYS)[number];
@@ -40,6 +41,10 @@ export const MODULE_META: Record<ModuleKey, ModuleMeta> = {
     title: "QR davomat",
     description: "QR kod orqali dars davomatini tez belgilash.",
   },
+  secure_exams: {
+    title: "Xavfsiz imtihon",
+    description: "Kod bilan kiriladigan, nazorat ostidagi test sessiyalari.",
+  },
 };
 
 export const DEFAULT_MODULE_FLAGS: ModuleFlags = {
@@ -49,6 +54,7 @@ export const DEFAULT_MODULE_FLAGS: ModuleFlags = {
   catalog: true,
   forum: true,
   qr_attendance: true,
+  secure_exams: true,
 };
 
 const MODULES_SETTING_KEY = "modules";
