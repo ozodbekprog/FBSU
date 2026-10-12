@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { requireUser } from "@/lib/auth";
+import { canViewSalary, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { Avatar, Badge, ButtonLink, Card, CardBody, CardHeader, EmptyState } from "@/components/ui";
@@ -13,6 +13,15 @@ import type { AdminAnalytics, StudentAnalytics, TeacherAnalytics } from "./analy
 import { getDictionary, getLocale, t as translate, type Locale } from "@/i18n";
 import { CheckInForm } from "@/components/attendance/check-in-form";
 import { LessonBanner } from "@/components/dashboard/lesson-banner";
+import { buildWorkloadData } from "@/components/workload/workload-data";
+import type { WorkloadCourse, WorkloadSummary } from "@/components/workload/workload-data";
+import {
+  TeacherCoursesCard,
+  TeacherInfoCard,
+  TeacherLinksCard,
+  TeacherSalaryCard,
+} from "@/components/cabinet/teacher-cabinet";
+import { isValidFaceDescriptor } from "@/modules/attendance/face";
 import {
   SLOT_TIMES,
   dateFromIso,
@@ -839,8 +848,27 @@ export default async function DashboardPage() {
     const todayDow = now.getDay() === 0 ? 7 : now.getDay();
     const dateIso = todayIso();
     let todayLessons: TodayLesson[] = [];
+    let cabinetCourses: WorkloadCourse[] = [];
+    let cabinetSummary: WorkloadSummary = {
+      courseCount: 0,
+      studentCount: 0,
+      pendingReviews: 0,
+      weeklyHours: 0,
+    };
+    let cabinetPosition: string | null = null;
+    let cabinetFace = false;
+    let cabinetSalary: { monthLabel: string; total: number; status: string } | null = null;
+    let cabinetSalaryVisible = false;
     if (user.role === "TEACHER") {
-      const [entries, teacherCourses, marks] = await Promise.all([
+      const [
+        entries,
+        teacherCourses,
+        marks,
+        cabinetProfile,
+        cabinetSalaryRow,
+        cabinetWorkload,
+        cabinetSalaryVisibleRow,
+      ] = await Promise.all([
         prisma.scheduleEntry.findMany({
           where: {
             dayOfWeek: todayDow,
@@ -864,7 +892,31 @@ export default async function DashboardPage() {
           where: { date: dateFromIso(dateIso), course: { teacherId: user.id } },
           _count: { _all: true },
         }),
+        prisma.user.findUnique({
+          where: { id: user.id },
+          select: { faceDescriptor: true, staffPosition: { select: { name: true } } },
+        }),
+        prisma.salaryRecord.findFirst({
+          where: { userId: user.id, status: { not: "DRAFT" } },
+          orderBy: { month: "desc" },
+          select: { month: true, total: true, status: true },
+        }),
+        buildWorkloadData({ teacherId: user.id, includeAllTeachers: false }),
+        canViewSalary(user.role),
       ]);
+
+      cabinetCourses = cabinetWorkload.courses;
+      cabinetSummary = cabinetWorkload.summary;
+      cabinetPosition = cabinetProfile?.staffPosition?.name ?? null;
+      cabinetFace = isValidFaceDescriptor(cabinetProfile?.faceDescriptor);
+      cabinetSalaryVisible = cabinetSalaryVisibleRow;
+      cabinetSalary = cabinetSalaryRow
+        ? {
+            monthLabel: `${String(cabinetSalaryRow.month.getUTCMonth() + 1).padStart(2, "0")}.${cabinetSalaryRow.month.getUTCFullYear()}`,
+            total: cabinetSalaryRow.total,
+            status: cabinetSalaryRow.status,
+          }
+        : null;
 
       const teacherName = normalizeTeacherName(user.name);
       const markedByCourse = new Map(marks.map((row) => [row.courseId, row._count._all]));
@@ -967,6 +1019,28 @@ export default async function DashboardPage() {
           actions={actions}
           locale={locale}
         />
+
+        {user.role === "TEACHER" ? (
+          <div className="mt-6 grid items-start gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-1">
+              <TeacherInfoCard
+                name={user.name}
+                email={user.email}
+                avatarUrl={user.avatarUrl}
+                position={cabinetPosition ?? dict.roleTeacher}
+                department={user.department?.name ?? "—"}
+                faculty={user.faculty?.name ?? "—"}
+                joinedAt={fmtDate(user.createdAt)}
+                faceEnrolled={cabinetFace}
+                d={dict}
+              />
+            </div>
+            <div className="space-y-6 lg:col-span-2">
+              <TeacherSalaryCard salary={cabinetSalary} visible={cabinetSalaryVisible} d={dict} />
+              <TeacherLinksCard salaryVisible={cabinetSalaryVisible} d={dict} />
+            </div>
+          </div>
+        ) : null}
 
         {user.role === "TEACHER" ? (
           <div className="mt-6">
@@ -1124,6 +1198,12 @@ export default async function DashboardPage() {
               </CardBody>
             </Card>
           </Reveal>
+        ) : null}
+
+        {user.role === "TEACHER" ? (
+          <div className="mt-6">
+            <TeacherCoursesCard courses={cabinetCourses} summary={cabinetSummary} d={dict} />
+          </div>
         ) : null}
 
         {analytics.kind === "teacher" ? (
