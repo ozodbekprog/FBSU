@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useIsClient } from "@/lib/use-is-client";
 import type { NavGroup } from "@/app/(app)/nav-links";
 import { Logo } from "@/components/brand/logo";
 import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
@@ -52,7 +53,7 @@ function CloseIcon() {
 export function MobileNav({ groups }: { groups: NavGroup[] }) {
   const { t, locale } = useI18n();
   const [open, setOpen] = useState(false);
-  const mounted = useState(true);
+  const mounted = useIsClient();
   const pathname = usePathname();
   const [prevPathname, setPrevPathname] = useState(pathname);
   if (prevPathname !== pathname) {

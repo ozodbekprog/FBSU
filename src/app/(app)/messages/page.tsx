@@ -24,7 +24,10 @@ export default async function MessagesPage({
           subtitle={dictionary.msgSubtitle}
         />
       </div>
-      <div className="md:fixed md:inset-y-0 md:right-0 md:left-64 md:z-20 md:bg-surface">
+      <div className="app-shell-offset-left md:fixed md:inset-y-0 md:right-0 md:z-20 md:bg-surface">
+        {/* `app-shell-offset-left` sidebar kengligini `--nav-shell-w` dan
+            oladi (ochiq 20.5rem / yopiq 5rem). Qattiq `md:left-64`
+            ishlatilsa, panel sidebar ostida qolib ketardi. */}
         <ChatClient currentUserId={user.id} initialUserId={initialUserId} />
       </div>
     </>

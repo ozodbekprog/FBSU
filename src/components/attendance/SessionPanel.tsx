@@ -6,6 +6,7 @@ import QRCode from "qrcode";
 import { Badge, Button, Card, CardBody, CardHeader, Label, Select, Table } from "@/components/ui";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { fmtDateTime } from "@/lib/utils";
+import { useIsClient } from "@/lib/use-is-client";
 import { apiFetch } from "@/lib/api";
 import {
   formatSecondsLeft,
@@ -85,7 +86,7 @@ export function SessionPanel({
   const [now, setNow] = useState(() => Date.now());
   const [presentOpen, setPresentOpen] = useState(false);
   const [demoMode, setDemoMode] = useState(false);
-  const mounted = useState(true);
+  const mounted = useIsClient();
 const [qr, setQr] = useState<{ code: string; url: string } | null>(null);
   const [teacherLocation, setTeacherLocation] = useState<BrowserLocation | null>(null);
   const [dynamicQr, setDynamicQr] = useState<{

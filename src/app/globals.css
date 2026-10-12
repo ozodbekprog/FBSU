@@ -34,15 +34,22 @@
   --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 10px 28px -14px rgba(29, 52, 96, 0.14);
   --shadow-lift: 0 2px 6px rgba(16, 24, 40, 0.05), 0 16px 36px -16px rgba(29, 52, 96, 0.22);
 
-  --animate-fade-up: fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* DIQQAT: transformli animatsiyalarda `both` fill-mode ISHLATILMAYDI.
+   * `both` bilan animatsiya tugagandan keyin ham elementda interpolatsiya
+   * natijasi — identity `matrix(1,0,0,1,0,0)` — qolib ketadi (`transform:
+   * none` so'zi emas, shunday matrix). Bu o'ziga containing block
+   * yaratadi va ichidagi `position: fixed` qatorlarni buzadi: ular oynaga
+   * emas, balandligi 0 bo'lgan ota konteyneriga nisbatan joylashadi va
+   * butun panel ko'rinmay qoladi. */
+  --animate-fade-up: fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1);
   --animate-fade-in: fade-in 0.4s ease-out both;
-  --animate-grow-y: grow-y 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-grow-y: grow-y 0.7s cubic-bezier(0.22, 1, 0.36, 1);
   --animate-draw: draw 1.2s ease-out both;
   --animate-spin-slow: spin 2.6s linear infinite;
   --animate-shimmer: shimmer 1.6s ease-in-out infinite;
   --animate-pulse-ring: pulse-ring 2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
   --animate-scanline: scanline 2.6s ease-in-out infinite;
-  --animate-pop-in: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  --animate-pop-in: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
   --animate-countdown: countdown 20s linear both;
 
   @keyframes fade-up {
@@ -52,7 +59,13 @@
     }
     to {
       opacity: 1;
-      transform: translateY(0);
+      /* DIQQAT: bu yerda `transform: none` bo'lishi SHART. `translateY(0)`
+       * yozilsa, animatsiya tugagandan keyin ham elementda
+       * `transform: matrix(1,0,0,1,0,0)` qoladi (fill-mode: both) — bu
+       * o'ziga containing block yaratadi va ichidagi `position: fixed`
+       * qatorlar oynaga emas, shu elementga nisbatan joylashadi. Natija:
+       * balandligi 0 bo'lgan konteyner ichida hamma narsa yopilib qoladi. */
+      transform: none;
     }
   }
 
@@ -70,7 +83,9 @@
       transform: scaleY(0);
     }
     to {
-      transform: scaleY(1);
+      /* `fade-up` kabi: `none` — aks holda `scaleY(1)` containing block
+       * yaratib qoladi. */
+      transform: none;
     }
   }
 
@@ -138,7 +153,9 @@
       opacity: 1;
     }
     100% {
-      transform: scale(1);
+      /* `fade-up` kabi: `none` — aks holda `scale(1)` containing block
+       * yaratib qoladi. */
+      transform: none;
       opacity: 1;
     }
   }
@@ -330,6 +347,26 @@ aside:has(> [data-nav-shell]) {
 
 aside:has(> [data-nav-shell][data-collapsed="true"]) {
   width: 5rem;
+}
+
+/* Sidebar kengligini boshqa joylardagi kontent ham ishlatishi uchun
+   o'zgaruvchiga chiqaramiz (masalan xabar sahifasi `md:fixed` paneli).
+   Agar bu yo'q bo'lsa, panel `left-64` (256px) deb taxmin qiladi va
+   sidebar (328px / yopiqda 80px) uni berkitib qo'yadi.
+   `:has()` orqali holat aniqlanadi — yopish/ochilishda ham o'z-o'zidan
+   moslashadi. */
+body:has(aside:has(> [data-nav-shell])) {
+  --nav-shell-w: 20.5rem;
+}
+
+body:has(aside:has(> [data-nav-shell][data-collapsed="true"])) {
+  --nav-shell-w: 5rem;
+}
+
+@media (min-width: 768px) {
+  .app-shell-offset-left {
+    left: var(--nav-shell-w, 20.5rem);
+  }
 }
 
 aside:has(> [data-nav-shell]) #sidebar-nav > * {

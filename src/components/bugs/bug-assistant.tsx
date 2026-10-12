@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button, Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
+import { useIsClient } from "@/lib/use-is-client";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import type { Dictionary } from "@/i18n";
 import { bugKind, type BugKind } from "./bug-utils";
@@ -34,7 +35,7 @@ export function BugAssistant() {
   const { t } = useI18n();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const mounted = useState(true);
+  const mounted = useIsClient();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -300,7 +301,10 @@ useEffect(() => {
           type="button"
           data-tour="ai-assistant"
           onClick={openManually}
-          className="fixed bottom-24 right-3 z-40 flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-700 shadow-lift transition-transform duration-150 hover:scale-105 active:scale-95 md:bottom-6 md:right-6"
+          /* `md:bottom-6` chat kompozitorining tugmalarini (🎤 va ✈️) to'sib
+           qo'yardi — xabar sahifasida kompozitor o'ng pastda turadi.
+           Shuning uchun md'da balandroqda turamiz. */
+          className="fixed bottom-24 right-3 z-40 flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-700 shadow-lift transition-transform duration-150 hover:scale-105 active:scale-95 md:bottom-28 md:right-6"
         >
           <span className="flex size-6 items-center justify-center rounded-full bg-brand-900 text-[11px] text-white">
             AI

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import {
@@ -12,32 +12,47 @@ import {
   type ThemeMode,
 } from "@/lib/theme";
 
+/**
+ * Joriy rejim.
+ *
+ * Avval `useState(() => effectiveTheme(getStoredTheme()))` ishlatilardi —
+ * bu render paytida `localStorage` o'qidi. Serverda `localStorage` yo'q,
+ * shuning uchun server har doim "light" chiqarardi, brauzer esa saqlangan
+ * "dark" ni. Natijada **hydration mismatch** (ThemeToggle ikki xil markup
+ * berardi) va butun daraxt mijozda qayta qurilardi.
+ *
+ * `useSyncExternalStore` buning o'rnini bosadi: uchchinchi (`server`)
+ * argument orqali server qiymati aniq belgilanadi, shuning uchun React
+ * hydrationni xatosiz bajaradi va `setState-in-effect` ham kelmaydi.
+ */
+function subscribeTheme(onStoreChange: () => void) {
+  function onSystemChange() {
+    if (getStoredTheme() === null) {
+      applyTheme(null);
+      onStoreChange();
+    }
+  }
+
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  media.addEventListener("change", onSystemChange);
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(THEME_CHANGE_EVENT, onStoreChange);
+  return () => {
+    media.removeEventListener("change", onSystemChange);
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(THEME_CHANGE_EVENT, onStoreChange);
+  };
+}
+
+function getThemeSnapshot(): ThemeMode {
+  return effectiveTheme(getStoredTheme());
+}
+
+// Serverda `localStorage` yo'q — har doim standart "light".
+const getThemeServerSnapshot = (): ThemeMode => "light";
+
 export function useThemeMode(): ThemeMode {
-  const [mode, setMode] = useState<ThemeMode>(() => effectiveTheme(getStoredTheme()));
-
-  useEffect(() => {
-    function sync() {
-      setMode(effectiveTheme(getStoredTheme()));
-    }
-    function onSystemChange() {
-      if (getStoredTheme() === null) {
-        applyTheme(null);
-        setMode(effectiveTheme(null));
-      }
-    }
-
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    media.addEventListener("change", onSystemChange);
-    window.addEventListener("storage", sync);
-    window.addEventListener(THEME_CHANGE_EVENT, sync);
-    return () => {
-      media.removeEventListener("change", onSystemChange);
-      window.removeEventListener("storage", sync);
-      window.removeEventListener(THEME_CHANGE_EVENT, sync);
-    };
-  }, []);
-
-  return mode;
+  return useSyncExternalStore(subscribeTheme, getThemeSnapshot, getThemeServerSnapshot);
 }
 
 function SunIcon() {
