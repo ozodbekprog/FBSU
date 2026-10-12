@@ -33,5 +33,15 @@ jobs:
       # Loyiha sozlamalarini Vercel'dan yuklab olish
       - run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
+      # Kerakli dependency'larni o'rnatish (Prisma uchun)
+      - run: npm ci
+
+      # Production bazaga migratsiyalarni o'tkazish
+      - run: |
+          set -a
+          . .vercel/.env.production.local
+          set +a
+          npx prisma migrate deploy
+
       # Productionga deploy qilish
       - run: vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
