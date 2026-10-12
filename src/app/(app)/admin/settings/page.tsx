@@ -5,7 +5,7 @@ import { MODULE_KEYS, MODULE_META, getModuleFlags } from "@/server/settings";
 import { getDictionary, getLocale } from "@/i18n";
 
 export default async function AdminSettingsPage() {
-  await requireRole(["ADMIN"]);
+  await requireRole(["ADMIN", "REKTOR"]);
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
   const flags = await getModuleFlags();

@@ -7,10 +7,14 @@ const settingsSchema = z.object({
   modules: z.partialRecord(z.enum(MODULE_KEYS), z.boolean()),
 });
 
+const SETTINGS_ROLES: readonly string[] = ["ADMIN", "REKTOR"];
+
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (!SETTINGS_ROLES.includes(user.role)) {
+    return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
 
   const modules = await getModuleFlags();
   return Response.json({ ok: true, data: { modules } });
@@ -19,7 +23,9 @@ export async function GET() {
 export async function PUT(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (!SETTINGS_ROLES.includes(user.role)) {
+    return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
 
   const body = await request.json().catch(() => null);
   const parsed = settingsSchema.safeParse(body);

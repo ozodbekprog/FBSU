@@ -9,7 +9,9 @@ import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 export default async function ApprovalsPage() {
   const user = await requireUser();
-  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") redirect("/dashboard");
+  if (user.role !== "ADMIN" && user.role !== "REGISTRAR" && user.role !== "REKTOR") {
+    redirect("/dashboard");
+  }
 
   const locale = await getLocale();
   const dictionary = getDictionary(locale);

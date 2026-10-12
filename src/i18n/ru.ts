@@ -22,6 +22,7 @@ import { admission } from "./dict/ru/admission";
 import { cab } from "./dict/ru/cab";
 import { sim } from "./dict/ru/sim";
 import { vid } from "./dict/ru/vid";
+import { res } from "./dict/ru/res";
 
 export const ru: Dictionary = {
   commonSave: "Сохранить",
@@ -163,4 +164,5 @@ export const ru: Dictionary = {
   ...cab,
   ...sim,
   ...vid,
+  ...res,
 };

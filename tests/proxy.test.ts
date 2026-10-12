@@ -150,6 +150,13 @@ describe("proxy (rol darvozasi: /approvals)", () => {
     expect(isPassthrough(res)).toBe(true);
   });
 
+  it("rektor tokeni bilan o'tadi", async () => {
+    process.env.AUTH_SECRET = "test-secret";
+    const token = await signedSession("REKTOR");
+    const res = await proxy(makeRequest("/approvals", token));
+    expect(isPassthrough(res)).toBe(true);
+  });
+
   it("talaba tokeni /dashboardga 307 yo'naltiriladi", async () => {
     process.env.AUTH_SECRET = "test-secret";
     const token = await signedSession("STUDENT");

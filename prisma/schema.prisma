@@ -162,6 +162,7 @@ model User {
   auditLogs             AuditLog[]
   passwordResets        PasswordResetToken[]
   bugReports            BugReport[]
+  publications          Publication[]
 
   subGroupId    String?
   subGroup      SubGroup? @relation(fields: [subGroupId], references: [id], onDelete: SetNull)
@@ -511,14 +512,15 @@ model Notification {
 }
 
 model Announcement {
-  id        String   @id @default(cuid())
-  courseId  String
+  id        String    @id @default(cuid())
+  courseId  String?
   authorId  String
   title     String
   body      String
-  createdAt DateTime @default(now())
+  audience  Json?
+  createdAt DateTime  @default(now())
 
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course Course? @relation(fields: [courseId], references: [id], onDelete: Cascade)
   author User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([courseId, createdAt])
@@ -1421,4 +1423,52 @@ model AdmissionApplication {
 
   @@index([status])
   @@index([programId])
+}
+
+/// Ilmiy ish turi.
+enum PublicationKind {
+  ARTICLE
+  CONFERENCE
+  MONOGRAPH
+  PATENT
+  TEXTBOOK
+}
+
+enum PublicationStatus {
+  DRAFT
+  SUBMITTED
+  PUBLISHED
+}
+
+enum PublicationIndexing {
+  NONE
+  SCOPUS
+  WOS
+  RINC
+  LOCAL
+}
+
+/// O'qituvchining ilmiy ishi — maqola, konferensiya,
+/// monografiya, patent yoki darslik.
+model Publication {
+  id        String              @id @default(cuid())
+  userId    String
+  title     String
+  kind      PublicationKind     @default(ARTICLE)
+  status    PublicationStatus   @default(DRAFT)
+  indexing  PublicationIndexing @default(NONE)
+  authors   String?
+  journal   String?
+  year      Int?
+  doi       String?
+  url       String?
+  note      String?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([year])
+  @@index([kind])
 }

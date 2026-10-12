@@ -132,6 +132,38 @@ const LINKS: { href: string; label: keyof Dictionary; icon: ReactNode }[] = [
     ),
   },
   {
+    href: "/admin/study-plans",
+    label: "admNavStudyPlans",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        <path d="M9 7h7M9 11h5" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/announcements",
+    label: "admNavAnnouncements",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 11l14-5v12L3 13v-2z" />
+        <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
+      </svg>
+    ),
+  },
+  {
+    href: "/admin/backup",
+    label: "admNavBackup",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+        <ellipse cx="12" cy="5" rx="8" ry="3" />
+        <path d="M4 5v6c0 1.66 3.58 3 8 3s8-1.34 8-3V5" />
+        <path d="M4 11v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6" />
+      </svg>
+    ),
+  },
+  {
     href: "/admin/audit",
     label: "admNavAudit",
     icon: (
@@ -197,9 +229,12 @@ export default function AdminNav({ role }: { role?: string }) {
             link.href === "/admin/groups" ||
             link.href === "/admin/orders" ||
             link.href === "/admin/import" ||
-            link.href === "/admin/hemis",
+            link.href === "/admin/hemis" ||
+            link.href === "/admin/study-plans",
         )
-      : LINKS;
+      : role === "REKTOR"
+        ? LINKS.filter((link) => link.href === "/admin/settings")
+        : LINKS;
 
   return (
     <nav className="mb-6 flex w-fit max-w-full flex-wrap items-center gap-1 rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_14px_30px_-22px_rgba(29,52,96,0.25)] backdrop-blur">

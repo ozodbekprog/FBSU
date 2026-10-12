@@ -7,6 +7,7 @@ import type { Role, User } from "@prisma/client";
 
 const COOKIE_NAME = "ttpu_session";
 const MAX_AGE = 60 * 60 * 24 * 7;
+const REMEMBER_MAX_AGE = 60 * 60 * 24 * 30;
 
 export type SessionUser = {
   uid: string;
@@ -22,7 +23,12 @@ function secretKey() {
   return new TextEncoder().encode(secret);
 }
 
-export async function createSession(user: Pick<User, "id" | "role" | "name" | "email" | "sessionEpoch">) {
+export async function createSession(
+  user: Pick<User, "id" | "role" | "name" | "email" | "sessionEpoch">,
+  opts?: { remember?: boolean },
+) {
+  const remember = opts?.remember === true;
+  const maxAge = remember ? REMEMBER_MAX_AGE : MAX_AGE;
   const token = await new SignJWT({
     uid: user.id,
     role: user.role,
@@ -32,7 +38,7 @@ export async function createSession(user: Pick<User, "id" | "role" | "name" | "e
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("7d")
+    .setExpirationTime(remember ? "30d" : "7d")
     .sign(secretKey());
 
   const store = await cookies();
@@ -41,7 +47,7 @@ export async function createSession(user: Pick<User, "id" | "role" | "name" | "e
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: MAX_AGE,
+    maxAge,
   });
 }
 

@@ -12,6 +12,7 @@ export type AuditAction =
   | "PASSWORD_RESET_REQUEST"
   | "PASSWORD_RESET_SUCCESS"
   | "PASSWORD_RESET_FAILED"
+  | "PASSWORD_RESET_EMAIL_FAILED"
   | "USER_CREATE"
   | "CHAT_VOICE_MESSAGE"
   | "CHAT_FILE_MESSAGE"
@@ -39,7 +40,10 @@ export type AuditAction =
   | "CHAT_CLEAR_HISTORY"
   | "CHAT_BLOCK"
   | "CHAT_UNBLOCK"
-  | "CHAT_REPORT";
+  | "CHAT_REPORT"
+  | "ANNOUNCEMENT_CREATE"
+  | "ANNOUNCEMENT_DELETE"
+  | "COURSE_CREATE";
 
 type JsonValue = string | number | boolean | { [key: string]: JsonValue } | JsonValue[] | null;
 

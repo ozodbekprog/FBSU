@@ -1,17 +1,17 @@
 import "server-only";
 import Redis, { RedisOptions } from "ioredis";
 
-const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 const redisPreferred = process.env.RATE_LIMIT_REDIS !== "0";
 
 let redis: Redis | null = null;
-let redisBroken = !redisPreferred;
+let redisBroken = !redisPreferred || !process.env.REDIS_URL;
 
 const memoryStore = new Map<string, number[]>();
 
-function getRedis() {
+function getRedis(): Redis | null {
+  if (!process.env.REDIS_URL) return null;
   if (!redis) {
-    redis = new Redis(redisUrl, {
+    redis = new Redis(process.env.REDIS_URL, {
       maxRetriesPerRequest: 1,
       enableReadyCheck: true,
       lazyConnect: true,
@@ -27,6 +27,10 @@ function getRedis() {
 async function ensureConnected(): Promise<Redis | null> {
   if (redisBroken) return null;
   const client = getRedis();
+  if (!client) {
+    redisBroken = true;
+    return null;
+  }
   try {
     if (client.status === "wait") {
       await client.connect();

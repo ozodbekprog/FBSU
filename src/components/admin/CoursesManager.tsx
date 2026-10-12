@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Avatar, Badge, Button, Card, CardBody, CardHeader, EmptyState, Input, Select, Table } from "@/components/ui";
+import { Avatar, Badge, Button, Card, CardBody, CardHeader, EmptyState, Input, Label, Select, Table, Textarea } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
+import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type AdminCourse = {
@@ -20,6 +21,7 @@ export type AdminCourse = {
 export type TeacherOption = { id: string; name: string; email: string };
 
 type ApiResult = { ok: boolean; error?: string };
+type CreateResult = { ok: boolean; error?: string; data?: { id: string } };
 
 function ToggleSwitch({
   checked,
@@ -85,6 +87,13 @@ export default function CoursesManager({
   const [notice, setNotice] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [electiveOverrides, setElectiveOverrides] = useState<Record<string, boolean>>({});
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [createTeacherId, setCreateTeacherId] = useState("");
+  const [createPublished, setCreatePublished] = useState(false);
+  const [createBusy, setCreateBusy] = useState(false);
 
   const search = query.trim().toLowerCase();
   const filtered = search
@@ -156,6 +165,55 @@ export default function CoursesManager({
     router.refresh();
   }
 
+  function openCreate() {
+    setCreateOpen(true);
+    setTitle("");
+    setDescription("");
+    setCreateTeacherId(teachers[0]?.id ?? "");
+    setCreatePublished(false);
+    setError(null);
+    setNotice(null);
+  }
+
+  function closeCreate() {
+    setCreateOpen(false);
+    setTitle("");
+    setDescription("");
+    setCreateTeacherId("");
+    setCreatePublished(false);
+    setError(null);
+  }
+
+  async function submitCreate() {
+    setCreateBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await apiFetch("/api/admin/courses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title.trim(),
+          description: description.trim() || null,
+          teacherId: createTeacherId || undefined,
+          isPublished: createPublished,
+        }),
+      });
+      const json = (await res.json().catch(() => null)) as CreateResult | null;
+      if (!res.ok || !json || !json.ok) {
+        setError(json?.error ?? t("admErrorGeneric"));
+        return;
+      }
+      closeCreate();
+      setNotice(t("admCourseCreated"));
+      router.refresh();
+    } catch {
+      setError(t("admNetworkError"));
+    } finally {
+      setCreateBusy(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -187,8 +245,88 @@ export default function CoursesManager({
               {error}
             </span>
           ) : null}
+          <Button onClick={openCreate}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            {t("admCourseNew")}
+          </Button>
         </div>
       </div>
+
+      {createOpen ? (
+        <Card className="border-brand-200/70">
+          <CardHeader
+            title={t("admCourseNewTitle")}
+            action={
+              <Button variant="ghost" size="sm" onClick={closeCreate}>{t("admClose")}</Button>
+            }
+          />
+          <CardBody>
+            <form
+              className="grid gap-4 sm:grid-cols-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void submitCreate();
+              }}
+            >
+              <div>
+                <Label>{t("admColCourse")}</Label>
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={t("crsCourseNamePlaceholder")}
+                  required
+                  minLength={2}
+                  maxLength={200}
+                />
+              </div>
+              <div>
+                <Label>{t("admColTeacher")}</Label>
+                <Select
+                  value={createTeacherId}
+                  onChange={(e) => setCreateTeacherId(e.target.value)}
+                  disabled={createBusy}
+                >
+                  {teachers.map((teacher) => (
+                    <option key={teacher.id} value={teacher.id}>
+                      {teacher.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div className="sm:col-span-2">
+                <Label>{t("crsDescription")}</Label>
+                <Textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder={t("crsDescriptionPlaceholder")}
+                  rows={3}
+                  maxLength={5000}
+                />
+              </div>
+              <div className="flex items-end sm:col-span-2">
+                <label className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-slate-200/70 bg-slate-50/60 px-3.5 py-2.5 transition-colors duration-150 hover:bg-slate-50">
+                  <input
+                    type="checkbox"
+                    checked={createPublished}
+                    onChange={(e) => setCreatePublished(e.target.checked)}
+                    className="size-4 shrink-0 rounded border-slate-300 accent-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+                  />
+                  <span className="text-sm font-medium text-slate-700">{t("admCoursePublished")}</span>
+                </label>
+              </div>
+              <div className="flex items-center gap-2 sm:col-span-2">
+                <Button type="submit" disabled={createBusy || title.trim().length < 2}>
+                  {createBusy ? t("admSaving") : t("admCreate")}
+                </Button>
+                <Button type="button" variant="secondary" onClick={closeCreate}>{t("admCancel")}</Button>
+              </div>
+              {error ? <p className="text-sm text-rose-600 sm:col-span-2">{error}</p> : null}
+            </form>
+          </CardBody>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader title={t("admCourses")} subtitle={t("admCourseListSubtitle", { count: filtered.length })} />

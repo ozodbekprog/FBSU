@@ -29,7 +29,10 @@ export async function PATCH(
   if (!announcement) {
     return Response.json({ ok: false, error: "E'lon topilmadi" }, { status: 404 });
   }
-  if (announcement.authorId !== user.id && !canManageCourse(user, announcement.course)) {
+  if (
+    announcement.authorId !== user.id &&
+    !(announcement.course && canManageCourse(user, announcement.course))
+  ) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -69,7 +72,10 @@ export async function DELETE(
   if (!announcement) {
     return Response.json({ ok: false, error: "E'lon topilmadi" }, { status: 404 });
   }
-  if (announcement.authorId !== user.id && !canManageCourse(user, announcement.course)) {
+  if (
+    announcement.authorId !== user.id &&
+    !(announcement.course && canManageCourse(user, announcement.course))
+  ) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

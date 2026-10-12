@@ -10,7 +10,7 @@ const actionSchema = z.object({
 });
 
 /**
- * Kursga yozilish so'rovini ko'rib chiqish (faqat ADMIN/REGISTRAR).
+ * Kursga yozilish so'rovini ko'rib chiqish (faqat ADMIN/REGISTRAR/REKTOR).
  * Tasdiqlansa — talaba kursga qo'shiladi; rad etilsa — status REJECTED.
  */
 export async function POST(
@@ -21,7 +21,11 @@ export async function POST(
   if (!user) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") {
+  if (
+    user.role !== "ADMIN" &&
+    user.role !== "REGISTRAR" &&
+    user.role !== "REKTOR"
+  ) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser, isStaff, canViewSalary, canManageSalary } from "@/lib/auth";
 import { canViewAnalysis } from "@/modules/roles/access";
 import { getModuleFlags } from "@/server/settings";
+import { getMaintenanceMode } from "@/server/maintenance";
 import { getDictionary, getLocale } from "@/i18n";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { Avatar } from "@/components/ui";
@@ -25,6 +26,34 @@ export default async function AppLayout({
   const modules = await getModuleFlags();
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
+
+  // Maintenance rejimi: admindan boshqa har bir foydalanuvchi uchun
+  // brend uslubidagi "texnik xizmat" ekrani ko'rsatiladi.
+  // ADMIN tizimni boshqarishi uchun hamma narsaga kiraveradi.
+  if (user.role !== "ADMIN" && (await getMaintenanceMode())) {
+    return (
+      <LocaleProvider locale={locale} dictionary={dictionary}>
+        <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6">
+          <Link href="/dashboard" className="mb-8 transition-opacity hover:opacity-80">
+            <Logo />
+          </Link>
+          <div className="w-full max-w-md rounded-2xl border border-slate-200/70 bg-white p-8 text-center shadow-[0_1px_2px_rgba(16,24,40,0.04),0_10px_28px_-14px_rgba(29,52,96,0.14)]">
+            <span className="mx-auto mb-4 inline-flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-900 text-white shadow-lg shadow-brand-900/25">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3v3M18.4 5.6l-2.1 2.1M21 12h-3M18.4 18.4l-2.1-2.1M12 18v3M7.8 16.3l-2.2 2.1M3 12h3M7.8 7.7 5.6 5.6" />
+                <circle cx="12" cy="12" r="3.5" />
+              </svg>
+            </span>
+            <h1 className="text-xl font-semibold tracking-tight text-brand-950">Tizim texnik xizmatda</h1>
+            <p className="mt-2 text-sm leading-relaxed text-slate-500">
+              Hozircha texnik xizmat ishlari olib borilmoqda. Iltimos, birozdan keyin qaytib kiring.
+            </p>
+            <LogoutForm />
+          </div>
+        </div>
+      </LocaleProvider>
+    );
+  }
 
   // "Oyliklar" nav elementi faqat oylikni ko'rishga ruxsat bor rollarga
   // ko'rinadi: BUXGALTER va ADMIN har doim, qolganlari faqat buxgalter
@@ -57,6 +86,9 @@ export default async function AppLayout({
         ...(modules.certificates ? [{ href: "/certificates", label: dictionary.navCertificates }] : []),
         ...(isStaff(user.role) ? [{ href: "/journals", label: dictionary.navJournals }] : []),
         ...(isStaff(user.role) ? [{ href: "/question-bank", label: dictionary.navQuestionBank }] : []),
+        ...(isStaff(user.role) || ["DEKAN","KAFEDRA_MUDIRI","PRO_RECTOR","REKTOR"].includes(user.role)
+          ? [{ href: "/research", label: dictionary.resTitle }]
+          : []),
       ],
     },
     {
@@ -137,27 +169,27 @@ export default async function AppLayout({
   const ROLE_MENU: Record<string, string[]> = {
     REKTOR: [
       "/dashboard", "/assistant", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
-      "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar",
+      "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar", "/research",
       "/messages", "/search", "/help", "/settings", "/access",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     PRO_RECTOR: [
       "/dashboard", "/assistant", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
-      "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar",
+      "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar", "/research",
       "/messages", "/search", "/help", "/settings", "/access",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     DEKAN: [
       "/dashboard", "/assistant", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
-      "/schedule", "/calendar", "/academic-calendar", "/messages", "/search", "/help", "/settings",
+      "/schedule", "/calendar", "/academic-calendar", "/research", "/messages", "/search", "/help", "/settings",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     KAFEDRA_MUDIRI: [
       "/dashboard", "/assistant", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
-      "/schedule", "/calendar", "/academic-calendar", "/messages", "/search", "/help", "/settings",
+      "/schedule", "/calendar", "/academic-calendar", "/research", "/messages", "/search", "/help", "/settings",
     ],
     REGISTRAR: [
       "/dashboard", "/assistant", "/monitoring", "/admissions", "/approvals", "/finance", "/documents", "/diplomas", "/staff",
@@ -173,7 +205,7 @@ export default async function AppLayout({
       "/dashboard", "/assistant", "/courses", "/journal", "/journals",
       "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/attendance",
       "/reports", "/workload", "/staff", "/tasks", "/my-qr", "/messages", "/bookings", "/rooms",
-      "/search", "/help", "/settings",
+      "/research", "/search", "/help", "/settings",
     ],
     STUDENT: [
       "/dashboard", "/assistant", "/courses", "/schedule", "/calendar",

@@ -193,6 +193,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [remember, setRemember] = useState(false);
   const hydrated = useIsClient();
   function fillDemo(demoEmail: string) {
     setEmail(demoEmail);
@@ -201,13 +202,21 @@ export default function LoginPage() {
     void loginWith(demoEmail, "ttpu1234");
   }
 
-  async function loginWith(emailValue: string, passwordValue: string) {
+  async function loginWith(
+    emailValue: string,
+    passwordValue: string,
+    rememberValue = false,
+  ) {
     setLoading(true);
     setError(null);
     try {
       const res = await apiFetch("/api/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email: emailValue, password: passwordValue }),
+        body: JSON.stringify({
+          email: emailValue,
+          password: passwordValue,
+          remember: rememberValue,
+        }),
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) {
@@ -230,7 +239,7 @@ export default function LoginPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await loginWith(email, password);
+    await loginWith(email, password, remember);
   }
 
   return (
@@ -358,7 +367,16 @@ export default function LoginPage() {
                     </svg>
                   </button>
                 </div>
-                <div className="mt-2 flex justify-end">
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+                    <input
+                      type="checkbox"
+                      checked={remember}
+                      onChange={(e) => setRemember(e.target.checked)}
+                      className="size-4 shrink-0 rounded border-slate-300 accent-brand-600 focus-visible:ring-2 focus-visible:ring-brand-500/40"
+                    />
+                    <span>{t("authLoginRemember")}</span>
+                  </label>
                   <Link
                     href="/forgot-password"
                     className="text-xs font-medium text-brand-700 transition-colors duration-150 hover:text-brand-900 hover:underline"

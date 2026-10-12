@@ -56,15 +56,15 @@ export async function POST(request: Request) {
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
 
   if (exists) {
+    // Anti-enumeration: identical response to a successful registration.
+    // No user row is created — a duplicate (inactive) row would pollute
+    // the database and leak the registration status by its existence.
     await createAuditLog({
       action: "REGISTER",
       meta: { email, reason: "email_already_exists" },
       ip: clientInfo.ip,
       userAgent: clientInfo.userAgent,
     });
-    await prisma.user.create({
-      data: { name: parsed.data.name.trim(), email, passwordHash, role: "STUDENT", isActive: false },
-    }).catch(() => {});
     return Response.json({ ok: true, user: { id: "exists", name: "", role: "STUDENT" } }, { status: 201 });
   }
 

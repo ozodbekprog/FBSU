@@ -1,6 +1,7 @@
 import { randomInt } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import type { Role } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -8,6 +9,27 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const IMPORT_TYPES = ["students", "groups", "subjects"] as const;
 const PASSWORD_CHARS = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
+
+const ROLES = [
+  "ADMIN",
+  "REKTOR",
+  "PRO_RECTOR",
+  "DEKAN",
+  "KAFEDRA_MUDIRI",
+  "REGISTRAR",
+  "BUXGALTER",
+  "TYUTOR",
+  "TEACHER",
+  "STUDENT",
+  "XODIM",
+  "OTA_ONA",
+] as const satisfies readonly Role[];
+
+/**
+ * Registrator faqat ushbu rollardagi foydalanuvchilarni import qila oladi.
+ * Boshqa rollarni (ADMIN, REKTOR, ...) import qilish — ADMIN huquqi.
+ */
+const REGISTRAR_IMPORT_ROLES: readonly Role[] = ["STUDENT", "TEACHER"];
 
 type ImportType = (typeof IMPORT_TYPES)[number];
 
@@ -39,6 +61,8 @@ const HEADER_ALIASES: Record<ImportType, Record<string, string>> = {
     subgroup: "subGroup",
     telefon: "phone",
     phone: "phone",
+    rol: "role",
+    role: "role",
   },
   groups: {
     nomi: "name",
@@ -47,6 +71,8 @@ const HEADER_ALIASES: Record<ImportType, Record<string, string>> = {
     year: "year",
     fakultet: "faculty",
     faculty: "faculty",
+    rol: "role",
+    role: "role",
   },
   subjects: {
     nomi: "name",
@@ -55,6 +81,8 @@ const HEADER_ALIASES: Record<ImportType, Record<string, string>> = {
     code: "code",
     rang: "color",
     color: "color",
+    rol: "role",
+    role: "role",
   },
 };
 
@@ -155,6 +183,29 @@ function cellValue(cells: string[], map: Record<string, number>, key: string) {
   return (cells[index] ?? "").trim();
 }
 
+function normalizeRole(value: string): string | null {
+  const normalized = value.trim().toUpperCase().replace(/[\s_-]+/g, "");
+  return (ROLES as readonly string[]).includes(normalized) ? normalized : null;
+}
+
+/**
+ * REGISTRAR uchun xavfsizlik teksrovi: ruxsat etilmagan rolni ko'rsatgan
+ * qator aniq xato bilan rad etiladi. ADMIN hamma rolni import qila oladi.
+ */
+function registrarImportError(
+  userRole: Role,
+  row: number,
+  value: string,
+): RowError | null {
+  if (userRole !== "REGISTRAR") return null;
+  const role = normalizeRole(value);
+  if (!role || REGISTRAR_IMPORT_ROLES.includes(role as Role)) return null;
+  return {
+    row,
+    message: `Ruxsat etilmagan rol: ${value || "bo'sh"} (faqat ${REGISTRAR_IMPORT_ROLES.join("/")})`,
+  };
+}
+
 function isBlankRow(cells: string[]) {
   return cells.every((cell) => cell.trim() === "");
 }
@@ -197,7 +248,7 @@ async function findOrCreateFaculty(name: string, cache: Map<string, string>) {
   return created.id;
 }
 
-async function importStudents(rows: string[][]): Promise<ImportSummary> {
+async function importStudents(rows: string[][], userRole: Role): Promise<ImportSummary> {
   const summary = emptySummary();
   const { map, start } = resolveColumns(rows, "students");
   const groupCache = new Map<string, string>();
@@ -207,6 +258,12 @@ async function importStudents(rows: string[][]): Promise<ImportSummary> {
     const cells = rows[index];
     const rowNumber = index + 1;
     if (isBlankRow(cells)) continue;
+
+    const roleError = registrarImportError(userRole, rowNumber, cellValue(cells, map, "role"));
+    if (roleError) {
+      summary.errors.push(roleError);
+      continue;
+    }
 
     const name = cellValue(cells, map, "name");
     const email = cellValue(cells, map, "email").toLowerCase();
@@ -296,7 +353,7 @@ async function importStudents(rows: string[][]): Promise<ImportSummary> {
   return summary;
 }
 
-async function importGroups(rows: string[][]): Promise<ImportSummary> {
+async function importGroups(rows: string[][], userRole: Role): Promise<ImportSummary> {
   const summary = emptySummary();
   const { map, start } = resolveColumns(rows, "groups");
   const facultyCache = new Map<string, string>();
@@ -306,6 +363,12 @@ async function importGroups(rows: string[][]): Promise<ImportSummary> {
     const cells = rows[index];
     const rowNumber = index + 1;
     if (isBlankRow(cells)) continue;
+
+    const roleError = registrarImportError(userRole, rowNumber, cellValue(cells, map, "role"));
+    if (roleError) {
+      summary.errors.push(roleError);
+      continue;
+    }
 
     const name = cellValue(cells, map, "name");
     const yearText = cellValue(cells, map, "year");
@@ -366,7 +429,7 @@ async function importGroups(rows: string[][]): Promise<ImportSummary> {
   return summary;
 }
 
-async function importSubjects(rows: string[][]): Promise<ImportSummary> {
+async function importSubjects(rows: string[][], userRole: Role): Promise<ImportSummary> {
   const summary = emptySummary();
   const { map, start } = resolveColumns(rows, "subjects");
   const seen = new Set<string>();
@@ -375,6 +438,12 @@ async function importSubjects(rows: string[][]): Promise<ImportSummary> {
     const cells = rows[index];
     const rowNumber = index + 1;
     if (isBlankRow(cells)) continue;
+
+    const roleError = registrarImportError(userRole, rowNumber, cellValue(cells, map, "role"));
+    if (roleError) {
+      summary.errors.push(roleError);
+      continue;
+    }
 
     const name = cellValue(cells, map, "name");
     const codeText = cellValue(cells, map, "code");
@@ -439,7 +508,9 @@ async function importSubjects(rows: string[][]): Promise<ImportSummary> {
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") {
+    return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
 
   const contentLength = request.headers.get("content-length");
   const declaredSize = contentLength === null ? Number.NaN : Number(contentLength);
@@ -468,10 +539,10 @@ export async function POST(request: Request) {
 
   const summary =
     typeParsed.data === "students"
-      ? await importStudents(rows)
+      ? await importStudents(rows, user.role)
       : typeParsed.data === "groups"
-        ? await importGroups(rows)
-        : await importSubjects(rows);
+        ? await importGroups(rows, user.role)
+        : await importSubjects(rows, user.role);
 
   return Response.json({ ok: true, data: summary });
 }

@@ -16,7 +16,11 @@ export async function POST(
   if (!user) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") {
+  if (
+    user.role !== "ADMIN" &&
+    user.role !== "REGISTRAR" &&
+    user.role !== "REKTOR"
+  ) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

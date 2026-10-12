@@ -69,7 +69,15 @@ export async function POST(request: Request) {
         text: `Parolni tiklash uchun havola: ${link}\n\nHavola 30 daqiqa amal qiladi. Agar siz so'ramagan bo'lsangiz, bu xatni e'tiborsiz qoldiring.`,
       });
     } catch (error) {
-      console.error("Email yuborishda xatolik:", error);
+      console.error("[forgot-password] email yuborilmadi:", error);
+      await createAuditLog({
+        action: "PASSWORD_RESET_EMAIL_FAILED",
+        entity: "User",
+        entityId: user.id,
+        meta: { email, reason: "email_send_failed" },
+        ip: clientInfo.ip,
+        userAgent: clientInfo.userAgent,
+      });
     }
     await createAuditLog({
       action: "PASSWORD_RESET_REQUEST",

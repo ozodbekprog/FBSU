@@ -15,6 +15,12 @@ import {
 } from "@/components/ui";
 import { canViewMonitoring } from "@/modules/roles/access";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
+import {
+  canViewFinanceSection,
+  formatMoney,
+  getFinanceKpis,
+  type FinanceKpi,
+} from "./data-finance";
 
 function toneFor(percent: number): "green" | "amber" | "rose" {
   if (percent >= 80) return "green";
@@ -108,6 +114,10 @@ export default async function MonitoringPage({
     if (facultyId) return group.facultyId === facultyId;
     return true;
   });
+
+  const financeKpis: FinanceKpi | null = canViewFinanceSection(user.role)
+    ? await getFinanceKpis()
+    : null;
 
   const [
     students,
@@ -303,6 +313,93 @@ export default async function MonitoringPage({
           hint={pendingSchedule > 0 ? dictionary.admMonitoringStatPendingScheduleHint : dictionary.admMonitoringQueueClear}
         />
       </div>
+
+      {financeKpis ? (
+        <div className="mt-6">
+          <Card>
+            <CardHeader
+              title={translate(locale, "admMonitoringFinanceTitle")}
+              subtitle={translate(locale, "admMonitoringFinanceSubtitle", {
+                count: financeKpis.contractCount,
+              })}
+            />
+            <CardBody>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <Stat
+                  label={dictionary.finContract}
+                  value={financeKpis.contractCount}
+                  hint={`${dictionary.admTotal}: ${formatMoney(financeKpis.contractTotal)}`}
+                />
+                <Stat
+                  label={dictionary.finPaid}
+                  value={formatMoney(financeKpis.paidTotal)}
+                />
+                <Stat
+                  label={dictionary.finDebt}
+                  value={formatMoney(financeKpis.debtTotal)}
+                />
+                <Stat
+                  label={dictionary.finDebtors}
+                  value={financeKpis.debtorsCount}
+                />
+              </div>
+              {financeKpis.byYear.length === 0 ? (
+                <div className="mt-5">
+                  <EmptyState
+                    title={dictionary.admNoDataTitle}
+                    description={dictionary.finEmpty}
+                  />
+                </div>
+              ) : (
+                <div className="mt-5">
+                  <Table>
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                        <th className="rounded-l-xl py-2.5 pr-3 pl-3 text-left font-medium">
+                          {dictionary.finYear}
+                        </th>
+                        <th className="px-3 py-2.5 text-left font-medium">
+                          {dictionary.finContract}
+                        </th>
+                        <th className="px-3 py-2.5 text-left font-medium">
+                          {dictionary.finAmount}
+                        </th>
+                        <th className="px-3 py-2.5 text-left font-medium">
+                          {dictionary.finPaid}
+                        </th>
+                        <th className="rounded-r-xl px-3 py-2.5 text-left font-medium">
+                          {dictionary.finDebt}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {financeKpis.byYear.map((row) => (
+                        <tr key={row.year}>
+                          <td className="py-2.5 pr-3 pl-3 text-sm font-medium text-slate-800">
+                            {row.year}
+                          </td>
+                          <td className="px-3 py-2.5 text-sm text-slate-600">
+                            {row.contractCount}
+                          </td>
+                          <td className="px-3 py-2.5 text-sm text-slate-600">
+                            {formatMoney(row.contractTotal)}
+                          </td>
+                          <td className="px-3 py-2.5 text-sm text-emerald-600">
+                            {formatMoney(row.paidTotal)}
+                          </td>
+                          <td className="px-3 py-2.5 text-sm font-medium text-rose-600">
+                            {formatMoney(row.debtTotal)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+              )}
+            </CardBody>
+          </Card>
+        </div>
+      ) : null}
 
       <div className="mt-6 grid gap-4 xl:grid-cols-2">
         <Card>

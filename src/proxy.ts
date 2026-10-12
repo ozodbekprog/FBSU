@@ -55,10 +55,11 @@ const CSRF_SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
  * API endpoints that are reachable without a CSRF token.
  *
  * - `/api/csrf` only *mints* the token (GET).
- * - The auth endpoints below are reachable from the login/register forms, which
- *   fetch `/api/csrf` first (src/lib/csrf-client.ts auto-injects the header),
- *   so they are kept here only as a safety net for direct/native clients.
- * Everything else under `/api/` must present a valid double-submit token.
+ * - `/api/health` is a stateless liveness probe.
+ * Everything else under `/api/` must present a valid double-submit token:
+ * the auth endpoints (login, register, forgot, reset) included — the
+ * login/register forms fetch `/api/csrf` first and apiFetch
+ * (src/lib/api.ts, src/lib/csrf-client.ts) auto-injects the header.
  */
 const CSRF_EXEMPT_API = ["/api/csrf", "/api/health"];
 
@@ -135,7 +136,7 @@ function looksLikeSessionCookie(value: string | undefined): boolean {
  * the page (`requireUser`), this only makes the gate server-side.
  */
 const ROLE_GATED: Record<string, string[]> = {
-  "/approvals": ["ADMIN", "REGISTRAR"],
+  "/approvals": ["ADMIN", "REGISTRAR", "REKTOR"],
   "/monitoring": ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR"],
 };
 

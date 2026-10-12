@@ -9,6 +9,7 @@ import { getClientIp as getClientIpFromHeaders } from "@/lib/client-ip";
 const schema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+  remember: z.boolean().optional(),
 });
 
 const LOGIN_WINDOW_MS = 10 * 60 * 1000;
@@ -72,7 +73,7 @@ export async function POST(request: Request) {
   }
 
   await clearRateLimit(limitKey, "auth");
-  await createSession(user);
+  await createSession(user, { remember: parsed.data.remember });
   await createAuditLog({
     action: "LOGIN_SUCCESS",
     entity: "User",
