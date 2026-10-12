@@ -13,7 +13,7 @@ const SALARY_TONE: Record<string, "slate" | "amber" | "green" | "blue"> = {
 
 export type SalaryView = { monthLabel: string; total: number; status: string };
 
-export function TeacherInfoCard({
+export function TeacherSummaryCard({
   name,
   email,
   avatarUrl,
@@ -22,6 +22,8 @@ export function TeacherInfoCard({
   faculty,
   joinedAt,
   faceEnrolled,
+  salary,
+  salaryVisible,
   d,
 }: {
   name: string;
@@ -32,84 +34,22 @@ export function TeacherInfoCard({
   faculty: string;
   joinedAt: string;
   faceEnrolled: boolean;
-  d: Dictionary;
-}) {
-  const rows = [
-    { label: d.cabPosition, value: position },
-    { label: d.cabDepartment, value: department },
-    { label: d.cabFaculty, value: faculty },
-    { label: d.cabJoined, value: joinedAt },
-  ];
-  return (
-    <Card>
-      <CardHeader title={d.cabProfileTitle} />
-      <CardBody>
-        <div className="flex items-center gap-4">
-          <Avatar name={name} src={avatarUrl} size={56} />
-          <div className="min-w-0">
-            <p className="truncate font-semibold text-brand-950">{name}</p>
-            <p className="truncate text-sm text-slate-500">{email}</p>
-          </div>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Badge tone="blue">{position}</Badge>
-          <Badge tone={faceEnrolled ? "green" : "amber"}>
-            {d.cabFace}: {faceEnrolled ? d.cabFaceOk : d.cabFaceNo}
-          </Badge>
-        </div>
-        <dl className="mt-4 divide-y divide-slate-100 border-t border-slate-100">
-          {rows.map((row) => (
-            <div key={row.label} className="flex items-center justify-between gap-4 py-2.5">
-              <dt className="text-sm text-slate-500">{row.label}</dt>
-              <dd className="truncate text-sm font-medium text-slate-800">{row.value}</dd>
-            </div>
-          ))}
-        </dl>
-      </CardBody>
-    </Card>
-  );
-}
-
-export function TeacherSalaryCard({
-  salary,
-  visible,
-  d,
-}: {
   salary: SalaryView | null;
-  visible: boolean;
+  salaryVisible: boolean;
   d: Dictionary;
 }) {
-  const labels: Record<string, string> = {
+  const salaryLabels: Record<string, string> = {
     DRAFT: d.payDraft,
     PENDING: d.payPending,
     APPROVED: d.payApproved,
     PAID: d.payPaid,
   };
-  return (
-    <Card>
-      <CardHeader title={d.cabSalaryTitle} />
-      {visible && salary ? (
-        <CardBody>
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-sm text-slate-500">{salary.monthLabel}</span>
-            <Badge tone={SALARY_TONE[salary.status] ?? "slate"}>
-              {labels[salary.status] ?? salary.status}
-            </Badge>
-          </div>
-          <p className="mt-2 text-2xl font-semibold tracking-tight text-brand-900">
-            {new Intl.NumberFormat("ru-RU").format(salary.total)}
-          </p>
-        </CardBody>
-      ) : (
-        <CardBody>
-          <p className="text-sm text-slate-500">{d.cabSalaryEmpty}</p>
-        </CardBody>
-      )}
-    </Card>
-  );
-}
-
-export function TeacherLinksCard({ salaryVisible, d }: { salaryVisible: boolean; d: Dictionary }) {
+  const infoRows = [
+    { label: d.cabPosition, value: position },
+    { label: d.cabDepartment, value: department },
+    { label: d.cabFaculty, value: faculty },
+    { label: d.cabJoined, value: joinedAt },
+  ];
   const links = [
     { href: "/journal", label: d.cabLinkJournal },
     { href: "/journals", label: d.cabLinkJournals },
@@ -120,16 +60,69 @@ export function TeacherLinksCard({ salaryVisible, d }: { salaryVisible: boolean;
     { href: "/certificates", label: d.cabLinkCertificates },
     ...(salaryVisible ? [{ href: "/payroll", label: d.cabLinkPayroll }] : []),
   ];
+
   return (
     <Card>
-      <CardHeader title={d.cabLinksTitle} />
-      <CardBody>
-        <div className="flex flex-wrap gap-2">
-          {links.map((link) => (
-            <ButtonLink key={link.href} href={link.href} size="sm" variant="secondary">
-              {link.label}
-            </ButtonLink>
+      <CardHeader
+        title={d.cabProfileTitle}
+        action={
+          <ButtonLink href="/profile" variant="secondary" size="sm">
+            {d.cabEditProfile}
+          </ButtonLink>
+        }
+      />
+      <CardBody className="space-y-5">
+        <div className="flex items-center gap-4">
+          <Avatar name={name} src={avatarUrl} size={56} />
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-brand-950">{name}</p>
+            <p className="truncate text-sm text-slate-500">{email}</p>
+          </div>
+          <div className="ml-auto hidden flex-wrap justify-end gap-2 sm:flex">
+            <Badge tone="blue">{position}</Badge>
+            <Badge tone={faceEnrolled ? "green" : "amber"}>
+              {d.cabFace}: {faceEnrolled ? d.cabFaceOk : d.cabFaceNo}
+            </Badge>
+          </div>
+        </div>
+
+        <dl className="grid gap-3 sm:grid-cols-2">
+          {infoRows.map((row) => (
+            <div key={row.label} className="rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-2.5">
+              <dt className="text-xs text-slate-500">{row.label}</dt>
+              <dd className="mt-0.5 truncate text-sm font-medium text-slate-800">{row.value}</dd>
+            </div>
           ))}
+        </dl>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3">
+          <span className="text-sm font-medium text-slate-600">{d.cabSalaryTitle}</span>
+          {salaryVisible && salary ? (
+            <span className="flex flex-wrap items-center gap-3">
+              <span className="text-sm text-slate-500">{salary.monthLabel}</span>
+              <span className="font-semibold text-brand-900">
+                {new Intl.NumberFormat("ru-RU").format(salary.total)}
+              </span>
+              <Badge tone={SALARY_TONE[salary.status] ?? "slate"}>
+                {salaryLabels[salary.status] ?? salary.status}
+              </Badge>
+            </span>
+          ) : (
+            <span className="text-sm text-slate-500">{d.cabSalaryEmpty}</span>
+          )}
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+            {d.cabLinksTitle}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {links.map((link) => (
+              <ButtonLink key={link.href} href={link.href} size="sm" variant="secondary">
+                {link.label}
+              </ButtonLink>
+            ))}
+          </div>
         </div>
       </CardBody>
     </Card>

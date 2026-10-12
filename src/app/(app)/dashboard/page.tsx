@@ -15,12 +15,7 @@ import { CheckInForm } from "@/components/attendance/check-in-form";
 import { LessonBanner } from "@/components/dashboard/lesson-banner";
 import { buildWorkloadData } from "@/components/workload/workload-data";
 import type { WorkloadCourse, WorkloadSummary } from "@/components/workload/workload-data";
-import {
-  TeacherCoursesCard,
-  TeacherInfoCard,
-  TeacherLinksCard,
-  TeacherSalaryCard,
-} from "@/components/cabinet/teacher-cabinet";
+import { TeacherCoursesCard, TeacherSummaryCard } from "@/components/cabinet/teacher-cabinet";
 import { isValidFaceDescriptor } from "@/modules/attendance/face";
 import {
   SLOT_TIMES,
@@ -1021,24 +1016,20 @@ export default async function DashboardPage() {
         />
 
         {user.role === "TEACHER" ? (
-          <div className="mt-6 grid items-start gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-1">
-              <TeacherInfoCard
-                name={user.name}
-                email={user.email}
-                avatarUrl={user.avatarUrl}
-                position={cabinetPosition ?? dict.roleTeacher}
-                department={user.department?.name ?? "—"}
-                faculty={user.faculty?.name ?? "—"}
-                joinedAt={fmtDate(user.createdAt)}
-                faceEnrolled={cabinetFace}
-                d={dict}
-              />
-            </div>
-            <div className="space-y-6 lg:col-span-2">
-              <TeacherSalaryCard salary={cabinetSalary} visible={cabinetSalaryVisible} d={dict} />
-              <TeacherLinksCard salaryVisible={cabinetSalaryVisible} d={dict} />
-            </div>
+          <div className="mt-6">
+            <TeacherSummaryCard
+              name={user.name}
+              email={user.email}
+              avatarUrl={user.avatarUrl}
+              position={cabinetPosition ?? dict.roleTeacher}
+              department={user.department?.name ?? "—"}
+              faculty={user.faculty?.name ?? "—"}
+              joinedAt={fmtDate(user.createdAt)}
+              faceEnrolled={cabinetFace}
+              salary={cabinetSalary}
+              salaryVisible={cabinetSalaryVisible}
+              d={dict}
+            />
           </div>
         ) : null}
 
