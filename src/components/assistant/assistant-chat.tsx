@@ -54,27 +54,21 @@ const SUGGESTIONS_STAFF = [
   "mscSuggestStaff4",
 ] as const;
 
-function FarizaStar({ className }: { className?: string }) {
+function FarizaMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.3">
-      <rect x="6.2" y="6.2" width="11.6" height="11.6" />
-      <rect x="6.2" y="6.2" width="11.6" height="11.6" transform="rotate(45 12 12)" />
+    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
+      <rect x="3" y="3" width="42" height="42" rx="11" className="fill-gold-400" />
+      <path
+        d="M14 9h20v5.6H19.6v6.2H28v5.6h-8.4v12.6H14V9Z"
+        className="fill-white dark:fill-[#0e1729]"
+        transform="translate(24 24) scale(0.8) translate(-24 -24)"
+      />
     </svg>
   );
 }
 
 function FarizaAvatar({ className, animate }: { className?: string; animate?: boolean }) {
-  return (
-    <span
-      aria-hidden
-      className={
-        "flex size-8 shrink-0 select-none items-center justify-center rounded-full border border-gold-400/40 bg-white text-gold-500 shadow-card " +
-        (className ?? "")
-      }
-    >
-      <FarizaStar className={"size-[15px] " + (animate ? "animate-spin-slow" : "")} />
-    </span>
-  );
+  return <FarizaMark className={"size-8 shrink-0 select-none " + (animate ? "animate-spin-slow " : "") + (className ?? "")} />;
 }
 
 function SuggestionIcon({ index }: { index: number }) {
@@ -170,7 +164,7 @@ export function AssistantChat({ name, role, status }: { name: string; role: stri
 
   useEffect(() => {
     const el = listRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el && messages.length > 0) el.scrollTop = el.scrollHeight;
   }, [messages, busy]);
 
   const aiSay = useCallback((text: string) => {
@@ -409,7 +403,7 @@ export function AssistantChat({ name, role, status }: { name: string; role: stri
     <div className="rounded-2xl border border-slate-200 bg-white shadow-card transition-all focus-within:border-brand-300 focus-within:shadow-lift focus-within:ring-4 focus-within:ring-brand-500/10">
       <div className="flex items-center justify-between px-4 pt-3">
         <span className="flex items-center gap-2 text-[13px] font-medium text-slate-800">
-          <FarizaStar className="size-4 text-gold-500" />
+          <FarizaMark className="size-4" />
           Fariza
         </span>
         <span className="rounded-full border border-gold-400/40 bg-gold-400/10 px-2 py-[2px] text-[10px] font-medium text-gold-800">
@@ -492,9 +486,7 @@ export function AssistantChat({ name, role, status }: { name: string; role: stri
     <div className="flex h-full min-h-0 overflow-hidden border-t border-slate-200 bg-white">
       <aside className="hidden w-60 shrink-0 flex-col border-e border-slate-200 bg-slate-50 md:flex lg:w-64">
         <div className="flex items-center gap-2.5 px-4 pb-3 pt-4">
-          <span className="flex size-8 shrink-0 select-none items-center justify-center rounded-full border border-gold-400/40 bg-white text-gold-500 shadow-card">
-            <FarizaStar className="size-4" />
-          </span>
+          <FarizaMark className="size-8 shrink-0 select-none" />
           <div className="min-w-0">
             <p className="text-sm font-semibold text-slate-900">Fariza</p>
             <p className="flex items-center gap-1.5 text-[10px] text-slate-500">
@@ -574,9 +566,7 @@ export function AssistantChat({ name, role, status }: { name: string; role: stri
           {messages.length === 0 ? (
             <div className="flex h-full items-center justify-center">
               <div className="w-full max-w-[40rem] text-center">
-                <span className="mx-auto flex size-14 items-center justify-center rounded-full border border-slate-200 bg-white text-gold-500 shadow-card">
-                  <FarizaStar className="size-7" />
-                </span>
+                <FarizaMark className="mx-auto block size-14" />
                 <h2 className="mt-5 text-[24px] font-semibold leading-snug tracking-tight text-slate-900 sm:text-[28px]">
                   {t("mscHeroHello", { name })}
                 </h2>
