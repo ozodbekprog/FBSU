@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 import { ConversationList, type BlockedUser } from "./ConversationList";
 import { MessageThread } from "./MessageThread";
 import { useCallSignaling } from "./useCallSignaling";
@@ -12,9 +13,34 @@ import type { ChatConversation, ChatMessage } from "./shared";
 
 type ConversationsResponse = { ok: boolean; data?: { conversations: ChatConversation[] } };
 type ConversationResponse = { ok: boolean; data?: { conversation: ChatConversation } };
+type ConversationSettingsResponse = {
+  ok: boolean;
+  data?: {
+    pinned: boolean;
+    archived: boolean;
+    muted: boolean;
+    blocked: boolean;
+    blockedByThem: boolean;
+  };
+};
 type MessagesResponse = { ok: boolean; data?: { messages: ChatMessage[] } };
 type MessageResponse = { ok: boolean; data?: { message: ChatMessage } };
 type BlockedResponse = { ok: boolean; data?: { blockedUsers: BlockedUser[] } };
+
+type MenuEntry = {
+  pinned: boolean;
+  archived: boolean;
+  muted: boolean;
+  blocked: boolean;
+  blockedByThem?: boolean;
+};
+
+const MENU_DEFAULTS: Partial<MenuEntry> = {
+  pinned: false,
+  archived: false,
+  muted: false,
+  blocked: false,
+};
 
 const POLL_MS = 5000;
 
@@ -24,23 +50,14 @@ type Props = {
 };
 
 export function ChatClient({ currentUserId, initialUserId }: Props) {
+  const { t } = useI18n();
   const call = useCallSignaling(currentUserId);
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [archived, setArchived] = useState<ChatConversation[]>([]);
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   // Telegram uslubidagi suhbat menyusi holati (mahkamlash, arxiv, ...)
-  const [menuState, setMenuState] = useState<
-    Record<
-      string,
-      {
-        pinned: boolean;
-        archived: boolean;
-        muted: boolean;
-        blocked: boolean;
-        blockedByThem?: boolean;
-      }
-    >
-  >({});
+  const [menuState, setMenuState] = useState<Record<string, MenuEntry>>({});
+  const [menuNotice, setMenuNotice] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messageData, setMessageData] = useState<{
     conversationId: string;
@@ -132,6 +149,7 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
         setConversations((prev) =>
           prev.some((item) => item.id === conversation.id) ? prev : [conversation, ...prev],
         );
+        setMenuNotice(null);
         setActiveId(conversation.id);
         void refreshConversations();
         return true;
@@ -325,17 +343,21 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
     if (!activeId) return;
     let cancelled = false;
     void (async () => {
-      const res = await fetch(`/api/chat/conversations/${activeId}`, { cache: "no-store" })
-        .then((r) => r.json())
-        .catch(() => null);
-      if (cancelled || !res?.ok) return;
-      patchMenuState(activeId, {
-        pinned: !!res.data.pinned,
-        archived: !!res.data.archived,
-        muted: !!res.data.muted,
-        blocked: !!res.data.blocked,
-        blockedByThem: !!res.data.blockedByThem,
-      });
+      try {
+        const res = await fetch(`/api/chat/conversations/${activeId}`, { cache: "no-store" });
+        const json = (await res.json()) as ConversationSettingsResponse | null;
+        if (cancelled || !json?.ok || !json.data) return;
+        patchMenuState(activeId, {
+          pinned: !!json.data.pinned,
+          archived: !!json.data.archived,
+          muted: !!json.data.muted,
+          blocked: !!json.data.blocked,
+          blockedByThem: !!json.data.blockedByThem,
+        });
+      } catch (err) {
+        console.warn("[chat] sozlamalarni yuklab bo'lmadi", err);
+        return;
+      }
     })();
     return () => {
       cancelled = true;
@@ -345,6 +367,7 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
   const menuAction = useCallback(
     async (action: MenuAction) => {
       if (!activeId) return;
+      setMenuNotice(null);
       const base = `/api/chat/conversations/${activeId}`;
       const json = async (url: string, init?: RequestInit) =>
         fetch(url, init).then((r) => r.json().catch(() => null)).catch(() => null);
@@ -357,6 +380,7 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
             body: JSON.stringify({ pinned: action.value }),
           });
           if (res?.ok) patchMenuState(activeId, { pinned: action.value });
+          else setMenuNotice(t("msgActionError"));
           break;
         }
         case "archive": {
@@ -370,7 +394,7 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
             // arxivga o'tkazilgan suhbat ro'yxatdan chiqadi
             if (action.value) setActiveId(null);
             void refreshConversations();
-          }
+          } else setMenuNotice(t("msgActionError"));
           break;
         }
         case "mute": {
@@ -380,6 +404,7 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
             body: JSON.stringify({ mute: action.preset }),
           });
           if (res?.ok) patchMenuState(activeId, { muted: action.preset !== "off" });
+          else setMenuNotice(t("msgActionError"));
           break;
         }
         case "clear":
@@ -394,7 +419,7 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
                 : null,
             );
             void refreshConversations();
-          }
+          } else setMenuNotice(t("msgActionError"));
           break;
         }
         case "delete": {
@@ -403,7 +428,7 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
             setActiveId(null);
             setMessageData(null);
             void refreshConversations();
-          }
+          } else setMenuNotice(t("msgActionError"));
           break;
         }
         case "block": {
@@ -416,16 +441,14 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
             patchMenuState(activeId, { blocked: action.value });
             // Bloklanganlar navbari darhol yangilansin.
             void refreshConversations();
-          }
+          } else setMenuNotice(t("msgActionError"));
           break;
         }
         case "search":
-          // qidiruv maydoniga fokus — alohida komponent emas
-          document.querySelector<HTMLTextAreaElement>("textarea")?.focus();
           break;
       }
     },
-    [activeId, patchMenuState, refreshConversations],
+    [activeId, patchMenuState, refreshConversations, t],
   );
 
   // Bloklanganlar navbaridan foydalanuvchini blokdan chiqarish.
@@ -479,7 +502,10 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
           activeId={activeId}
           currentUserId={currentUserId}
           loading={!loaded}
-          onSelect={setActiveId}
+          onSelect={(id) => {
+            setMenuNotice(null);
+            setActiveId(id);
+          }}
           onStartConversation={openConversation}
         />
       </div>
@@ -506,9 +532,10 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
             );
           }}
           callBusy={call.phase !== "idle"}
-          menuState={activeId ? menuState[activeId] : undefined}
-          blocked={activeId ? menuState[activeId]?.blocked : false}
-          blockedByThem={activeId ? menuState[activeId]?.blockedByThem : false}
+          menuState={activeId ? { ...MENU_DEFAULTS, ...menuState[activeId] } : undefined}
+          menuNotice={menuNotice}
+          blocked={activeId ? !!menuState[activeId]?.blocked : false}
+          blockedByThem={activeId ? !!menuState[activeId]?.blockedByThem : false}
           onMenuAction={(action) => menuAction(action)}
         />
       </div>
