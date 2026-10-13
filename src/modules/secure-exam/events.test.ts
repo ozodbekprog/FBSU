@@ -16,6 +16,12 @@ describe("severityOf", () => {
     expect(severityOf("COPY")).toBe("WARNING");
     expect(severityOf("MULTI_MONITOR")).toBe("CRITICAL");
     expect(severityOf("SUBMIT")).toBe("INFO");
+    expect(severityOf("DUPLICATE_TAB")).toBe("WARNING");
+    expect(severityOf("CAMERA_BLOCKED")).toBe("WARNING");
+    expect(severityOf("DRAG_ATTEMPT")).toBe("WARNING");
+    expect(severityOf("AUX_CLICK")).toBe("WARNING");
+    expect(severityOf("SNAPSHOT")).toBe("INFO");
+    expect(severityOf("MOUSE_LEFT")).toBe("INFO");
   });
 });
 

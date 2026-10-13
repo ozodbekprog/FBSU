@@ -23,6 +23,12 @@ export const EVENT_LABEL_KEY: Record<SecureEventType, keyof Dictionary> = {
   SUBMIT: "secEventSUBMIT",
   TERMINATED: "secEventTERMINATED",
   TIMEOUT: "secEventTIMEOUT",
+  DUPLICATE_TAB: "secEventDUPLICATE_TAB",
+  MOUSE_LEFT: "secEventMOUSE_LEFT",
+  DRAG_ATTEMPT: "secEventDRAG_ATTEMPT",
+  AUX_CLICK: "secEventAUX_CLICK",
+  CAMERA_BLOCKED: "secEventCAMERA_BLOCKED",
+  SNAPSHOT: "secEventSNAPSHOT",
 };
 
 export const SEVERITY_TONE: Record<EventSeverity, "slate" | "amber" | "rose"> = {

@@ -1028,11 +1028,24 @@ model SecureExamRun {
 
   exam    SecureExam      @relation(fields: [examId], references: [id], onDelete: Cascade)
   student User            @relation("SecureExamStudent", fields: [studentId], references: [id], onDelete: Cascade)
-  attempt QuizAttempt     @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  events  SecureExamEvent[]
+  attempt   QuizAttempt         @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  events    SecureExamEvent[]
+  snapshots SecureExamSnapshot[]
 
   @@unique([examId, studentId])
   @@index([examId, status])
+}
+
+model SecureExamSnapshot {
+  id    String   @id @default(cuid())
+  runId String
+  at    DateTime @default(now())
+  mime  String   @default("image/jpeg")
+  data  String
+
+  run SecureExamRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, at])
 }
 
 model SecureExamEvent {

@@ -99,6 +99,7 @@ export function RunRoom({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [fullscreenActive, setFullscreenActive] = useState(false);
   const [multiMonitor, setMultiMonitor] = useState(false);
+  const [duplicateTab, setDuplicateTab] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState(false);
   const [toast, setToast] = useState<{ label: string; tone: "amber" | "rose" } | null>(null);
@@ -107,6 +108,8 @@ export function RunRoom({
   const eventsRef = useRef<QueuedEvent[]>([]);
   const screenCountRef = useRef<number | null>(null);
   const multiRaisedRef = useRef(false);
+  const dupRaisedRef = useRef(false);
+  const darkCountRef = useRef(0);
   const phaseRef = useRef(phase);
   const finishedRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -340,6 +343,121 @@ export function RunRoom({
     [],
   );
 
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return;
+    const channel = new BroadcastChannel(`secure-exam-room-${runId}`);
+    const clientId = clientIdRef.current;
+    const flagDuplicate = () => {
+      if (dupRaisedRef.current) return;
+      dupRaisedRef.current = true;
+      setDuplicateTab(true);
+      eventsRef.current.push({ type: "DUPLICATE_TAB" });
+      showToast("DUPLICATE_TAB");
+    };
+    channel.onmessage = (event: MessageEvent) => {
+      const data = event.data as { clientId?: string; type?: string } | null;
+      if (!data || typeof data.clientId !== "string") return;
+      if (data.clientId === clientId) return;
+      flagDuplicate();
+      if (data.type === "hello") {
+        channel.postMessage({ clientId, type: "here" });
+      }
+    };
+    channel.postMessage({ clientId, type: "hello" });
+    const heartbeat = window.setInterval(
+      () => channel.postMessage({ clientId, type: "beat" }),
+      5000,
+    );
+    return () => {
+      window.clearInterval(heartbeat);
+      channel.close();
+    };
+  }, [runId, showToast]);
+
+  useEffect(() => {
+    if (phase !== "running") return;
+    const onAux = (event: MouseEvent) => {
+      if (event.button !== 1) return;
+      event.preventDefault();
+      pushEvent("AUX_CLICK");
+    };
+    const onDrag = (event: Event) => {
+      event.preventDefault();
+      pushEvent("DRAG_ATTEMPT");
+    };
+    const onMouseOut = (event: MouseEvent) => {
+      if (event.relatedTarget === null) pushEvent("MOUSE_LEFT");
+    };
+    document.addEventListener("auxclick", onAux, true);
+    document.addEventListener("dragstart", onDrag, true);
+    document.addEventListener("drop", onDrag, true);
+    document.addEventListener("mouseout", onMouseOut, true);
+    return () => {
+      document.removeEventListener("auxclick", onAux, true);
+      document.removeEventListener("dragstart", onDrag, true);
+      document.removeEventListener("drop", onDrag, true);
+      document.removeEventListener("mouseout", onMouseOut, true);
+    };
+  }, [phase, pushEvent]);
+
+  useEffect(() => {
+    if (!cameraReady || phase !== "running") return;
+    const canvas = document.createElement("canvas");
+    canvas.width = 160;
+    canvas.height = 120;
+    const timer = window.setInterval(() => {
+      const video = videoRef.current;
+      const context = canvas.getContext("2d");
+      if (!video || !context || video.readyState < 2) return;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const frame = context.getImageData(0, 0, canvas.width, canvas.height);
+      let sum = 0;
+      for (let index = 0; index < frame.data.length; index += 4) {
+        sum += frame.data[index] + frame.data[index + 1] + frame.data[index + 2];
+      }
+      const average = sum / (frame.data.length / 4) / 3;
+      if (average < 12) {
+        darkCountRef.current += 1;
+      } else {
+        darkCountRef.current = 0;
+      }
+      if (darkCountRef.current >= 3) {
+        darkCountRef.current = 0;
+        pushEvent("CAMERA_BLOCKED");
+      }
+    }, 20_000);
+    return () => window.clearInterval(timer);
+  }, [cameraReady, phase, pushEvent]);
+
+  useEffect(() => {
+    if (!cameraReady || phase !== "running") return;
+    const sendSnapshot = async () => {
+      const video = videoRef.current;
+      if (!video || video.readyState < 2) return;
+      const canvas = document.createElement("canvas");
+      canvas.width = 320;
+      canvas.height = 240;
+      const context = canvas.getContext("2d");
+      if (!context) return;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const image = canvas.toDataURL("image/jpeg", 0.55);
+      if (image.length > 250_000) return;
+      eventsRef.current.push({ type: "SNAPSHOT" });
+      await apiFetch(
+        `/api/secure-exams/runs/${runId}/snapshot`,
+        "POST",
+        { image },
+        t("commonNetworkError"),
+      );
+    };
+    const first = window.setTimeout(() => void sendSnapshot(), 8_000);
+    const timer = window.setInterval(() => void sendSnapshot(), 60_000);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(timer);
+    };
+  }, [cameraReady, phase, runId, t]);
+
   async function start() {
     setError(null);
     setCameraError(false);
@@ -492,6 +610,16 @@ export function RunRoom({
 
   return (
     <div className="mx-auto max-w-3xl">
+      {duplicateTab ? (
+        <div className="mb-3 flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="3" width="13" height="13" rx="2" />
+            <path d="M9 21h11a2 2 0 0 0 2-2V9" />
+          </svg>
+          {t("secDuplicateTab")}
+        </div>
+      ) : null}
+
       {multiMonitor ? (
         <div className="mb-4 flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

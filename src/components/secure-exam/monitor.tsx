@@ -98,6 +98,8 @@ export function ExamMonitor({ examId }: { examId: string }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [snapshotsFor, setSnapshotsFor] = useState<{ runId: string; studentName: string } | null>(null);
+  const [snapshotItems, setSnapshotItems] = useState<Array<{ at: string; image: string }> | null>(null);
 
   const load = useCallback(async () => {
     const result = await apiFetch<MonitorData>(`/api/secure-exams/${examId}`, "GET", undefined, t("commonNetworkError"));
@@ -151,6 +153,22 @@ export function ExamMonitor({ examId }: { examId: string }) {
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
       setCopied(false);
+    }
+  }
+
+  async function openSnapshots(runId: string, studentName: string) {
+    setSnapshotsFor({ runId, studentName });
+    setSnapshotItems(null);
+    const result = await apiFetch<{ snapshots: Array<{ at: string; image: string }> }>(
+      `/api/secure-exams/runs/${runId}/snapshots`,
+      "GET",
+      undefined,
+      t("commonNetworkError"),
+    );
+    if (result.ok) {
+      setSnapshotItems(result.data.snapshots);
+    } else {
+      setSnapshotItems([]);
     }
   }
 
@@ -359,30 +377,42 @@ export function ExamMonitor({ examId }: { examId: string }) {
                   <td className="px-4 py-3 text-xs text-slate-500">{timeOf(run.lastSeenAt)}</td>
                   <td className="px-4 py-3 text-slate-700">{run.score ?? "—"}</td>
                   <td className="px-4 py-3">
-                    {run.status === "ACTIVE" ? (
-                      <div className="flex items-center justify-end gap-1.5">
+                    <div className="flex items-center justify-end gap-1.5">
+                      {exam.webcamEnabled ? (
                         <Button
                           size="sm"
-                          variant="secondary"
+                          variant="ghost"
                           disabled={busy !== null}
-                          onClick={() => void act(`extra:${run.id}`, `/api/secure-exams/runs/${run.id}/extra`, "POST", { minutes: 5 })}
+                          onClick={() => void openSnapshots(run.id, run.studentName)}
                         >
-                          {t("secExtra5")}
+                          {t("secViewSnapshots")}
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          disabled={busy !== null}
-                          onClick={() => {
-                            if (window.confirm(t("secTerminateConfirm"))) {
-                              void act(`stop:${run.id}`, `/api/secure-exams/runs/${run.id}/terminate`, "POST");
-                            }
-                          }}
-                        >
-                          {t("secTerminate")}
-                        </Button>
-                      </div>
-                    ) : null}
+                      ) : null}
+                      {run.status === "ACTIVE" ? (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            disabled={busy !== null}
+                            onClick={() => void act(`extra:${run.id}`, `/api/secure-exams/runs/${run.id}/extra`, "POST", { minutes: 5 })}
+                          >
+                            {t("secExtra5")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            disabled={busy !== null}
+                            onClick={() => {
+                              if (window.confirm(t("secTerminateConfirm"))) {
+                                void act(`stop:${run.id}`, `/api/secure-exams/runs/${run.id}/terminate`, "POST");
+                              }
+                            }}
+                          >
+                            {t("secTerminate")}
+                          </Button>
+                        </>
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -421,6 +451,44 @@ export function ExamMonitor({ examId }: { examId: string }) {
           </ul>
         )}
       </Card>
+
+      {snapshotsFor ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/40 p-4 backdrop-blur-sm"
+        >
+          <div className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-lift">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-semibold tracking-tight text-slate-900">
+                {t("secSnapshotsTitle")} — {snapshotsFor.studentName}
+              </p>
+              <Button size="sm" variant="secondary" onClick={() => setSnapshotsFor(null)}>
+                {t("commonCancel")}
+              </Button>
+            </div>
+            {snapshotItems === null ? (
+              <p className="mt-4 text-sm text-slate-500">{t("commonLoading")}</p>
+            ) : snapshotItems.length === 0 ? (
+              <p className="mt-4 text-sm text-slate-500">{t("secSnapshotsEmpty")}</p>
+            ) : (
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {snapshotItems.map((item, index) => (
+                  <figure
+                    key={`${item.at}-${index}`}
+                    className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
+                  >
+                    <img src={item.image} alt="" className="aspect-[4/3] w-full object-cover" />
+                    <figcaption className="px-2 py-1 text-[11px] text-slate-500">
+                      {timeOf(item.at)}
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

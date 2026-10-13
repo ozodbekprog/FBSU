@@ -66,6 +66,21 @@ butun limitni to'ldiradi; INFO faqat yozib boriladi. Limitdan keyingi amal:
 
 Barcha javoblar `{ ok, data }` / `{ ok, error }` formatida, CSRF proxy darajasida tekshiriladi.
 
+## Nazorat choralari (web)
+
+- **Fullscreen**: majburiy rejim, chiqish darhol qayd etiladi va bloklovchi oyna ko'rsatiladi.
+- **Oyna/tab**: `visibilitychange`, fokus yo'qotish, **dublikat oyna** (BroadcastChannel) aniqlanadi.
+- **Klaviatura**: F12 / Ctrl+Shift+I,J,C / PrintScreen bloklanadi va qayd etiladi.
+- **Nusxa/blok**: copy/cut/paste, kontekst menyu, matn tanlash, drag&drop, o'rta tugma (auxclick) bloklanadi.
+- **Sichqoncha**: kursorni oynadan chiqarish qayd etiladi (MOUSE_LEFT).
+- **Kamera**: darvoza darajasida ruxsat olinadi; har daqiqada nazorat kadri serverda saqlanadi
+  (oxirgi 12 ta, o'qituvchi monitorda "Kadrlarni ko'rish" orqali ko'radi); kadr qorayib qolsa
+  (kamera to'silgan bo'lishi mumkin) — CAMERA_BLOCKED hodisasi.
+- **Ko'p monitor**: `screen.isExtended` / `getScreenDetails` orqali aniqlanadi (CRITICAL — limitni to'ldiradi).
+
+Cheklov (halol bo'lish kerak): brauzer darajasida OS klavishlarini (Alt+Tab va h.k.), ekran
+suratini yoki ikkinchi qurilmani to'liq to'sib bo'lmaydi — buni Windows klient (2-bosqich) hal qiladi.
+
 ## Web va Windows klient (2-bosqich)
 
 Hozirgi web rejim — eng yaxshi samarali nazorat: fullscreen talabi, tab/oyna

@@ -21,6 +21,12 @@ export const SECURE_EVENT_TYPES = [
   "SUBMIT",
   "TERMINATED",
   "TIMEOUT",
+  "DUPLICATE_TAB",
+  "MOUSE_LEFT",
+  "DRAG_ATTEMPT",
+  "AUX_CLICK",
+  "CAMERA_BLOCKED",
+  "SNAPSHOT",
 ] as const;
 
 export type SecureEventType = (typeof SECURE_EVENT_TYPES)[number];
@@ -46,6 +52,12 @@ export const EVENT_SEVERITY: Record<SecureEventType, EventSeverity> = {
   SUBMIT: "INFO",
   TERMINATED: "INFO",
   TIMEOUT: "INFO",
+  DUPLICATE_TAB: "WARNING",
+  MOUSE_LEFT: "INFO",
+  DRAG_ATTEMPT: "WARNING",
+  AUX_CLICK: "WARNING",
+  CAMERA_BLOCKED: "WARNING",
+  SNAPSHOT: "INFO",
 };
 
 export function severityOf(type: SecureEventType): EventSeverity {
