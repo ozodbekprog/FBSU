@@ -142,4 +142,5 @@ export const sec = {
   secCreateForQuiz: "Xavfsiz imtihon",
   secYourExam: "Sizning imtihoningiz",
   secAccount: "Hisob",
+  secStaffPanel: "O'qituvchi paneli",
 };

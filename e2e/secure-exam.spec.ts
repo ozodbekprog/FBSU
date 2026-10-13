@@ -116,6 +116,8 @@ test("xavfsiz imtihon: to'g'ridan-to'g'ri havola va o'qituvchi to'xtatishi", asy
     const { id, code } = await createExam(teacher, `E2E to'xtatish ${Date.now()}`);
 
     await login(student, "ozodbek@ttpu.uz");
+    await student.goto("/e");
+    await expect(student.getByText("Imtihonga kirish")).toBeVisible({ timeout: 15_000 });
     await student.goto(`/e/${code}`);
     await expect(student.getByText("Sizning imtihoningiz")).toBeVisible({ timeout: 15_000 });
     await student.getByRole("button", { name: "Kirish" }).click();

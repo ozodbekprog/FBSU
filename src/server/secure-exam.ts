@@ -5,7 +5,6 @@ import { asAnswers, autoScore, toQuestionFull } from "@/components/quiz/shared";
 import { EXAM_CODE_MAX_RETRIES } from "@/modules/secure-exam/config";
 import { generateExamCode, isValidExamCode, normalizeExamCode } from "@/modules/secure-exam/code";
 import { isEnrolled } from "@/components/quiz/server";
-import { attendanceCounts } from "@/app/api/attendance/summary/data";
 import { effectiveDeadline, remainingSeconds } from "@/modules/secure-exam/policy";
 import type { LimitAction, RunState, RunStatus } from "@/modules/secure-exam/types";
 
@@ -176,15 +175,6 @@ export async function inspectSecureJoin(
 
   if (!(await isEnrolled(exam.courseId, user.id))) {
     return { kind: "ERROR", status: 403, message: "Kursga yozilmagansiz" };
-  }
-
-  const attendanceRecords = await prisma.attendance.findMany({
-    where: { courseId: exam.courseId, studentId: user.id },
-    select: { status: true },
-  });
-  const attendance = attendanceCounts(attendanceRecords.map((record) => record.status));
-  if (!attendance.eligible) {
-    return { kind: "ERROR", status: 403, message: "Imtihonga ruxsat yo'q (davomat past)" };
   }
 
   const finishedAttempts = await prisma.quizAttempt.count({

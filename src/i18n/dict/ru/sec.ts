@@ -142,4 +142,5 @@ export const sec = {
   secCreateForQuiz: "Безопасный экзамен",
   secYourExam: "Ваш экзамен",
   secAccount: "Аккаунт",
+  secStaffPanel: "Панель преподавателя",
 };

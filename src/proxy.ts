@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { jwtVerify, SignJWT } from "jose";
+import { jwtVerify } from "jose";
 
 /**
  * Fast auth pre-check for protected app routes.
@@ -131,6 +131,45 @@ function looksLikeSessionCookie(value: string | undefined): boolean {
 }
 
 /**
+ * Exam-only rejim: `fbsu-exam.vercel.app` (va EXAM_HOSTS ro'yxatidagi
+ * domenlar) faqat imtihonga oid sahifalarni ko'rsatadi. Boshqa har qanday
+ * LMS yo'li "/" ga qaytariladi, "/" esa imtihon bosh sahifasiga (rewrite
+ * /e) ochiladi. Shu tarzda exam domenida LMS menyusi ko'rinmaydi.
+ */
+const EXAM_HOSTS = (process.env.EXAM_HOSTS ?? "fbsu-exam.vercel.app")
+  .split(",")
+  .map((host) => host.trim().toLowerCase())
+  .filter(Boolean);
+
+const EXAM_ALLOWED_EXACT = new Set(["/login", "/register", "/forgot-password", "/reset-password"]);
+const EXAM_ALLOWED_SECTIONS = ["/e", "/exam", "/secure-exams"];
+const EXAM_ALLOWED_PREFIXES = ["/api/", "/_next/", "/uploads/", "/verify/"];
+
+function isExamHost(host: string | null): boolean {
+  if (!host) return false;
+  return EXAM_HOSTS.includes(host.toLowerCase());
+}
+
+function examRequestHost(request: NextRequest): string | null {
+  const raw = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  if (!raw) return null;
+  const first = raw.split(",")[0]?.trim();
+  return first || null;
+}
+
+function isExamHostPath(pathname: string): boolean {
+  if (EXAM_ALLOWED_EXACT.has(pathname)) return true;
+  if (
+    EXAM_ALLOWED_SECTIONS.some(
+      (section) => pathname === section || pathname.startsWith(`${section}/`),
+    )
+  ) {
+    return true;
+  }
+  return EXAM_ALLOWED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+/**
  * Role-gated pages: the proxy verifies the session JWT and answers with a real
  * 307 instead of a streamed page redirect. Real authorization still lives in
  * the page (`requireUser`), this only makes the gate server-side.
@@ -161,6 +200,20 @@ export async function proxy(request: NextRequest) {
   // State-changing API calls are CSRF-checked here before anything else runs.
   const csrfError = await enforceCsrf(request);
   if (csrfError) return csrfError;
+
+  // Exam domeni: faqat imtihonga oid yo'llar; qolgani "/" ga qaytadi.
+  if (isExamHost(examRequestHost(request))) {
+    if (pathname === "/") {
+      const session = request.cookies.get(SESSION_COOKIE)?.value;
+      if (!looksLikeSessionCookie(session)) {
+        return NextResponse.redirect(new URL("/login?next=%2Fe", request.url), 307);
+      }
+      return NextResponse.rewrite(new URL("/e", request.url));
+    }
+    if (!isExamHostPath(pathname)) {
+      return NextResponse.redirect(new URL("/", request.url), 307);
+    }
+  }
 
   // Public pages and static/API assets never need the cookie gate.
   if (isPublicPath(pathname)) return NextResponse.next();

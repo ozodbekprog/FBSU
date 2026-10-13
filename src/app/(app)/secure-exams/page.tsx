@@ -7,33 +7,14 @@ import { CreateForm } from "@/components/secure-exam/create-form";
 import { RepeatExamButton } from "@/components/secure-exam/repeat-button";
 import { JoinForm } from "@/components/secure-exam/join-form";
 import { formatExamCode } from "@/modules/secure-exam/code";
-import type { ExamStatus, RunStatus } from "@/modules/secure-exam/types";
+import type { RunStatus } from "@/modules/secure-exam/types";
+import {
+  EXAM_TONE,
+  RUN_TONE,
+  examStatusLabel,
+  runStatusLabel,
+} from "@/components/secure-exam/display";
 import { getDictionary, getLocale } from "@/i18n";
-import type { Dictionary } from "@/i18n/uz";
-
-const EXAM_TONE: Record<ExamStatus, "blue" | "green" | "slate"> = {
-  SCHEDULED: "blue",
-  ACTIVE: "green",
-  CLOSED: "slate",
-};
-
-const RUN_TONE: Record<RunStatus, "green" | "blue" | "rose"> = {
-  ACTIVE: "green",
-  SUBMITTED: "blue",
-  TERMINATED: "rose",
-};
-
-function examStatusLabel(status: ExamStatus, dictionary: Dictionary): string {
-  if (status === "SCHEDULED") return dictionary.secStatusScheduled;
-  if (status === "ACTIVE") return dictionary.secStatusActive;
-  return dictionary.secStatusClosed;
-}
-
-function runStatusLabel(status: RunStatus, dictionary: Dictionary): string {
-  if (status === "ACTIVE") return dictionary.secRunActive;
-  if (status === "SUBMITTED") return dictionary.secRunSubmitted;
-  return dictionary.secRunTerminated;
-}
 
 export default async function SecureExamsPage({
   searchParams,

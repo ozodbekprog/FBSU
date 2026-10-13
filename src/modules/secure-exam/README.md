@@ -26,6 +26,17 @@ rejimda topshiradi. Qoidabuzarliklar qayd etiladi, o'qituvchi jonli kuzatadi.
    ogohlantirishlar, monitorlar, ball), jonli hodisalar lentasi, amallar: to'xtatish,
    +5 daqiqa, sessiyani yakunlash (barcha faol urinishlarni topshiradi), o'chirish.
 
+## Exam domeni (faqat imtihon)
+
+`fbsu-exam.vercel.app` (yoki `EXAM_HOSTS` env) — alohida imtihon tajribasi:
+- `/` → `/e` (exam bosh sahifasi: kod kiritish + urinishlar ro'yxati, LMS menyusiz);
+- faqat `/e`, `/exam`, `/secure-exams` (o'qituvchi paneli), `/login` va API yo'llari
+  ochiladi; qolgan har qanday LMS yo'li `/` ga qaytariladi;
+- `(exam)` route group minimal tartib beradi: logo + foydalanuvchi + "Xavfsiz rejim" chip.
+
+Yozilganlik (enrollment) tekshiriladi; davomat to'sig'i yo'q — sessiyani o'qituvchi
+jonli nazorat qiladi, kodni faqat kerakli talabalarga beradi.
+
 ## Model va modul
 
 DB: `SecureExam`, `SecureExamRun`, `SecureExamEvent` (enumlar: `SecureExamStatus`,
