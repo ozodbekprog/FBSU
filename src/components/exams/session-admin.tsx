@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { AttendanceBadge } from "./session-badges";
 import { SHEET_STATUSES, SHEET_STATUS_KEY, type SessionSheetRow } from "./session-shared";
+import { SheetImportDialog } from "./sheet-import-dialog";
 
 type Draft = { seat: string; status: string; score: string };
 
@@ -131,6 +132,8 @@ export function SheetManager({ sessionId, rows }: { sessionId: string; rows: Ses
               />
               {t("grdExIncludeIneligible")}
             </label>
+            {/* Import: oddiy (matn) va AI (tartibsiz matnni tozalash) */}
+            <SheetImportDialog sessionId={sessionId} />
             <Button size="sm" onClick={generate} disabled={generating}>
               {generating ? t("grdExGenerating") : t("grdExGenerateSheets")}
             </Button>
