@@ -41,14 +41,6 @@ test.afterAll(async () => {
   await prisma.$disconnect();
 });
 
-function pad(value: number): string {
-  return String(value).padStart(2, "0");
-}
-
-function localInput(date: Date): string {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
 async function createExam(page: Page, title: string): Promise<{ id: string; code: string }> {
   await page.goto("/secure-exams");
   await expect(page.getByRole("heading", { name: "Xavfsiz imtihon" })).toBeVisible();
@@ -57,13 +49,8 @@ async function createExam(page: Page, title: string): Promise<{ id: string; code
     .locator("main select")
     .first()
     .selectOption({ label: "Test 1: Asosiy tushunchalar — Dasturlash asoslari" });
-
-  const now = new Date();
-  const end = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-  await page.locator('input[type="datetime-local"]').first().fill(localInput(now));
-  await page.locator('input[type="datetime-local"]').nth(1).fill(localInput(end));
   await page.getByPlaceholder("Yakuniy nazorat — Dasturlash asoslari").fill(title);
-  await page.getByRole("button", { name: "Sessiya yaratish" }).click();
+  await page.getByRole("button", { name: "45 daqiqa" }).click();
 
   const codeText = page.locator("p.font-mono.text-3xl");
   await expect(codeText).toBeVisible();
@@ -88,8 +75,7 @@ test("xavfsiz imtihon: yaratish, kirish, topshirish va monitor", async ({ browse
     const student = await studentContext.newPage();
 
     await login(teacher, "t.prog@ttpu.uz");
-    const title = `E2E xavfsiz imtihon ${Date.now()}`;
-    const { id, code } = await createExam(teacher, title);
+    const { id, code } = await createExam(teacher, `E2E xavfsiz ${Date.now()}`);
     expect(code).toMatch(/^[A-Z2-9]{3}-[A-Z2-9]{3}$/);
 
     await login(student, "ozodbek@ttpu.uz");
@@ -127,8 +113,7 @@ test("xavfsiz imtihon: o'qituvchi urinishni to'xtatadi", async ({ browser }) => 
     const student = await studentContext.newPage();
 
     await login(teacher, "t.prog@ttpu.uz");
-    const title = `E2E to'xtatish ${Date.now()}`;
-    const { id, code } = await createExam(teacher, title);
+    const { id, code } = await createExam(teacher, `E2E to'xtatish ${Date.now()}`);
 
     await login(student, "ozodbek@ttpu.uz");
     await joinExam(student, code);

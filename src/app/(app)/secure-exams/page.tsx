@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { fmtDateTime } from "@/lib/utils";
 import { Badge, ButtonLink, Card, EmptyState, PageHeader } from "@/components/ui";
 import { CreateForm } from "@/components/secure-exam/create-form";
+import { RepeatExamButton } from "@/components/secure-exam/repeat-button";
 import { JoinForm } from "@/components/secure-exam/join-form";
 import { formatExamCode } from "@/modules/secure-exam/code";
 import type { ExamStatus, RunStatus } from "@/modules/secure-exam/types";
@@ -34,10 +35,15 @@ function runStatusLabel(status: RunStatus, dictionary: Dictionary): string {
   return dictionary.secRunTerminated;
 }
 
-export default async function SecureExamsPage() {
+export default async function SecureExamsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string; quiz?: string }>;
+}) {
   const user = await requireUser();
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
+  const params = await searchParams;
 
   if (isStaff(user.role)) {
     const [exams, quizzes] = await Promise.all([
@@ -105,9 +111,24 @@ export default async function SecureExamsPage() {
                       <p className="font-mono text-lg font-semibold tracking-[0.2em] text-brand-950">
                         {formatExamCode(exam.code)}
                       </p>
-                      <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-brand-700 group-hover:underline">
-                        {dictionary.secMonitor}
-                      </span>
+                      <div className="mt-2 flex items-center justify-end gap-1.5">
+                        <RepeatExamButton
+                          exam={{
+                            quizId: exam.quizId,
+                            title: exam.title,
+                            durationMin: exam.durationMin,
+                            requireFullscreen: exam.requireFullscreen,
+                            blockCopy: exam.blockCopy,
+                            requireClient: exam.requireClient,
+                            webcamEnabled: exam.webcamEnabled,
+                            maxWarnings: exam.maxWarnings,
+                            limitAction: exam.limitAction,
+                          }}
+                        />
+                        <span className="text-xs font-medium text-brand-700 group-hover:underline">
+                          {dictionary.secMonitor}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </Card>
@@ -119,6 +140,7 @@ export default async function SecureExamsPage() {
               {dictionary.secCreate}
             </p>
             <CreateForm
+              initialQuizId={typeof params.quiz === "string" ? params.quiz : undefined}
               quizzes={quizzes.map((quiz) => ({
                 id: quiz.id,
                 title: quiz.title,
@@ -146,7 +168,7 @@ export default async function SecureExamsPage() {
     <>
       <PageHeader title={dictionary.secTitle} subtitle={dictionary.secSubtitleStudent} />
       <div className="grid items-start gap-6 lg:grid-cols-[400px_minmax(0,1fr)]">
-        <JoinForm />
+        <JoinForm initialCode={typeof params.code === "string" ? params.code.toUpperCase() : ""} />
         <div className="space-y-3">
           <p className="text-sm font-semibold uppercase tracking-wider text-slate-500">
             {dictionary.secMyRuns}

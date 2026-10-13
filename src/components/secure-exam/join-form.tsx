@@ -6,10 +6,10 @@ import { Button, Card, Input, Label } from "@/components/ui";
 import { apiFetch } from "@/components/quiz/api";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 
-export function JoinForm() {
+export function JoinForm({ initialCode = "" }: { initialCode?: string }) {
   const { t } = useI18n();
   const router = useRouter();
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(initialCode.toUpperCase());
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 

@@ -97,6 +97,7 @@ export function ExamMonitor({ examId }: { examId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const load = useCallback(async () => {
     const result = await apiFetch<MonitorData>(`/api/secure-exams/${examId}`, "GET", undefined, t("commonNetworkError"));
@@ -145,11 +146,22 @@ export function ExamMonitor({ examId }: { examId: string }) {
   async function copyCode() {
     if (!data) return;
     try {
-      await navigator.clipboard.writeText(data.exam.code);
+      await navigator.clipboard.writeText(formatExamCode(data.exam.code));
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
       setCopied(false);
+    }
+  }
+
+  async function copyLink() {
+    if (!data) return;
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/e/${data.exam.code}`);
+      setCopiedLink(true);
+      window.setTimeout(() => setCopiedLink(false), 2000);
+    } catch {
+      setCopiedLink(false);
     }
   }
 
@@ -164,6 +176,7 @@ export function ExamMonitor({ examId }: { examId: string }) {
   }
 
   const { exam, runs, events } = data;
+  const shareLink = `${window.location.origin}/e/${exam.code}`;
 
   return (
     <div className="space-y-4">
@@ -247,6 +260,28 @@ export function ExamMonitor({ examId }: { examId: string }) {
           >
             {t("secDelete")}
           </Button>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+          <img
+            src={`/api/secure-exams/${exam.id}/qr`}
+            alt={t("secQrHint")}
+            className="size-24 rounded-xl border border-slate-200 bg-white p-1"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+              {t("secShareTitle")}
+            </p>
+            <p className="mt-1 break-all font-mono text-xs text-brand-900">{shareLink}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Button size="sm" variant="secondary" onClick={() => void copyLink()}>
+                {copiedLink ? t("secCopied") : t("secCopyLink")}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => void copyCode()}>
+                {copied ? t("secCopied") : t("secCopyCode")}
+              </Button>
+            </div>
+            <p className="mt-1.5 text-xs text-slate-500">{t("secQrHint")}</p>
+          </div>
         </div>
         {error ? <p className="mt-3 text-sm text-rose-600">{error}</p> : null}
       </Card>

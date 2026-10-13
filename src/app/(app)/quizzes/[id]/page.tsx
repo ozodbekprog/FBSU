@@ -48,6 +48,9 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
           subtitle={quiz.course.title}
           action={
             <div className="flex gap-2">
+              <ButtonLink href={`/secure-exams?quiz=${quiz.id}`} variant="secondary">
+                {dictionary.secCreateForQuiz}
+              </ButtonLink>
               <ButtonLink href={`/quizzes/${quiz.id}/results`} variant="secondary">
                 {dictionary.grdExResults}
               </ButtonLink>

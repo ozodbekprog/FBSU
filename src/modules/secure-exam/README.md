@@ -6,9 +6,13 @@ rejimda topshiradi. Qoidabuzarliklar qayd etiladi, o'qituvchi jonli kuzatadi.
 
 ## Oqim
 
-1. **O'qituvchi** `/secure-exams` da sessiya yaratadi: test, vaqt oynasi, davomiylik,
-   qoidalar (fullscreen, nusxa blok, kamera, ogohlantirish limiti). Tizim 6 belgili
-   kod generatsiya qiladi (`ABCDEFGHJKLMNPQRSTUVWXYZ23456789`, chalkash belgilarsiz).
+1. **O'qituvchi** `/secure-exams` da sessiya yaratadi. Tezkor rejim: testni tanlab
+   davomiylikni bosish kifoya (30/45/60 daqiqa) — imtihon darhol boshlanadi (2 soatlik
+   oyna, fullscreen + nusxa blok, 3 ogohlantirishdan keyin to'xtash). To'liq sozlamalar
+   "Qo'shimcha sozlamalar" ostida (vaqt oynasi, limit harakati, kamera, FBSU ilovasi).
+   Tizim 6 belgili kod (`ABCDEFGHJKLMNPQRSTUVWXYZ23456789`) va **to'g'ridan-to'g'ri
+   havola** beradi: `/e/{code}` + QR kod (monitor sahifasida). Har bir imtihonni
+   ro'yxatdan "Qayta yaratish" bilan bir klikda takrorlash mumkin.
 2. **Talaba** `/secure-exams` da kodni kiritadi → `POST /api/secure-exams/join` →
    quiz attempt + run yaratiladi (yoki mavjudi qayta ochiladi) → `/exam/[runId]`.
 3. **Imtihon xonasi** (`/exam/[runId]`, `(exam)` route group — sidebarsiz):
@@ -67,5 +71,5 @@ kamera. Webdan chetlab o'tish odatda seziladi, lekin to'liq to'sib bo'lmaydi.
 ## Testlar
 
 `src/modules/secure-exam/*.test.ts` — kod, hodisalar, siyosat, aralashtirish (vitest).
-`e2e/secure-exam.spec.ts` — o'qituvchi yaratadi → talaba kiradi → savol belgilanadi →
-kontekst menyu hodisasi → topshirish → monitor natijani ko'rsatadi (Playwright).
+`e2e/secure-exam.spec.ts` — o'qituvchi tezkor rejimda yaratadi → talaba kiradi → savol
+belgilanadi → kontekst menyu hodisasi → topshirish → monitor natijani ko'rsatadi (Playwright).
