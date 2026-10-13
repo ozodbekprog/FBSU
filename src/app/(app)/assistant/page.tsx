@@ -13,7 +13,10 @@ export default async function AssistantPage() {
   const dictionary = getDictionary(locale);
   const user = await getCurrentUser();
   return (
-    <div className="flex h-[calc(100dvh-6.5rem)] min-h-[28rem] flex-col md:h-[calc(100dvh-4rem)]">
+    <div
+      translate="no"
+      className="flex h-[calc(100dvh-6.5rem)] min-h-[28rem] flex-col md:h-[calc(100dvh-4rem)]"
+    >
       <div className="-mx-4 min-h-0 flex-1 md:-mx-8 md:-mb-8">
         <AssistantChat
           name={user?.name ?? ""}
