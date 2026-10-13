@@ -79,6 +79,13 @@ const S: Record<string, ReactNode> = {
       <path d="m9 14 2 2 4-4" />
     </>
   ),
+"/secure-exams": (
+    <>
+      <path d="M12 2 5 4.6v6.1c0 4.6 3 8.5 7 10.3 4-1.8 7-5.7 7-10.3V4.6z" />
+      <rect x="9.2" y="11" width="5.6" height="4.6" rx="1" />
+      <path d="M10.4 11V9.8a1.6 1.6 0 0 1 3.2 0V11" />
+    </>
+  ),
 "/grades": (
     <>
       <rect x="4" y="3" width="16" height="18" rx="2" />
