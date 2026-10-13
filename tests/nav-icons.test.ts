@@ -26,11 +26,12 @@ const covered = (href: string, keys: Set<string>) => {
   return [...keys].some((k) => href.startsWith(`${k}/`));
 };
 
-// Bu branch'dagi eski kamchiliklar (mening vazifam doirasidan tashqari).
-// Maqsad: yangi kamchilik qo'shilmasin, eskilari ko'rinib tursin.
-// Har biri tuzatilganda shu ro'yxatdan o'chirilsin.
-const KNOWN_GAPS_3D = new Set(["/assistant", "/research"]);
-const KNOWN_GAPS_DRAWER = new Set(["/admissions", "/assistant", "/research", "/turniket"]);
+// Eski kamchiliklar ro'yxati. Merge paytida main'dagi nav ishi tufayli
+// hammasi tuzatildi (/assistant, /research, /admissions, /turniket) —
+// shuning uchun ro'yxatlar bo'shatildi. Yangi kamchilik qo'shilsa,
+// vaqtincha shu yerga yoziladi va tuzatilgach o'chiriladi.
+const KNOWN_GAPS_3D = new Set<string>([]);
+const KNOWN_GAPS_DRAWER = new Set<string>([]);
 
 describe("nav ikonkalari", () => {
   it("yo'nalishlar topildi", () => {
