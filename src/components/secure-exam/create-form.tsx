@@ -15,6 +15,8 @@ export type QuizOption = {
   timeLimitMin: number | null;
 };
 
+const QUICK_MINUTES = [30, 45, 60] as const;
+
 function pad(value: number): string {
   return String(value).padStart(2, "0");
 }
@@ -63,11 +65,22 @@ function Toggle({
   );
 }
 
-export function CreateForm({ quizzes }: { quizzes: QuizOption[] }) {
+type Created = { id: string; code: string };
+
+export function CreateForm({
+  quizzes,
+  initialQuizId,
+}: {
+  quizzes: QuizOption[];
+  initialQuizId?: string;
+}) {
   const { t } = useI18n();
   const router = useRouter();
-  const [quizId, setQuizId] = useState(quizzes[0]?.id ?? "");
+  const initial = quizzes.find((quiz) => quiz.id === initialQuizId) ?? quizzes[0] ?? null;
+
+  const [quizId, setQuizId] = useState(initial?.id ?? "");
   const [title, setTitle] = useState("");
+  const [advanced, setAdvanced] = useState(false);
   const [startsAt, setStartsAt] = useState(defaultStart);
   const [endsAt, setEndsAt] = useState(defaultEnd);
   const [durationMin, setDurationMin] = useState("");
@@ -78,27 +91,79 @@ export function CreateForm({ quizzes }: { quizzes: QuizOption[] }) {
   const [maxWarnings, setMaxWarnings] = useState(DEFAULT_MAX_WARNINGS);
   const [limitAction, setLimitAction] = useState<"WARN" | "TERMINATE">("TERMINATE");
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [created, setCreated] = useState<{ id: string; code: string } | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [created, setCreated] = useState<Created | null>(null);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const selected = quizzes.find((quiz) => quiz.id === quizId) ?? null;
 
-  async function submit() {
+  function autoTitle(): string {
+    const now = new Date();
+    const date = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}`;
+    return selected ? `${selected.title} — ${date}` : t("secTitle");
+  }
+
+  function resolveTitle(): string {
+    return title.trim() === "" ? autoTitle() : title.trim();
+  }
+
+  function handleResult(result: { ok: true; data: Created } | { ok: false; error: string }) {
+    if (!result.ok) {
+      setError(result.error);
+      setBusy(null);
+      return;
+    }
+    setCreated(result.data);
+    setBusy(null);
+    router.refresh();
+  }
+
+  async function quickStart(minutes: number) {
     if (busy) return;
     if (!quizId) {
       setError(t("secPickQuiz"));
       return;
     }
-    setBusy(true);
+    setBusy(`quick:${minutes}`);
     setError(null);
-    const duration = durationMin.trim() === "" ? null : Number(durationMin);
-    const result = await apiFetch<{ id: string; code: string }>(
+    const now = new Date();
+    const result = await apiFetch<Created>(
       "/api/secure-exams",
       "POST",
       {
         quizId,
-        title: title.trim() === "" ? (selected ? selected.title : "") : title.trim(),
+        title: resolveTitle(),
+        startsAt: new Date(now.getTime() - 60_000).toISOString(),
+        endsAt: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(),
+        durationMin: minutes,
+        requireFullscreen: true,
+        blockCopy: true,
+        requireClient: false,
+        webcamEnabled: false,
+        maxWarnings: DEFAULT_MAX_WARNINGS,
+        limitAction: "TERMINATE",
+      },
+      t("commonError"),
+    );
+    handleResult(result);
+  }
+
+  async function submitAdvanced() {
+    if (busy) return;
+    if (!quizId) {
+      setError(t("secPickQuiz"));
+      return;
+    }
+    setBusy("advanced");
+    setError(null);
+    const duration = durationMin.trim() === "" ? null : Number(durationMin);
+    const result = await apiFetch<Created>(
+      "/api/secure-exams",
+      "POST",
+      {
+        quizId,
+        title: resolveTitle(),
         startsAt: new Date(startsAt).toISOString(),
         endsAt: new Date(endsAt).toISOString(),
         durationMin: duration !== null && Number.isFinite(duration) ? duration : null,
@@ -111,51 +176,73 @@ export function CreateForm({ quizzes }: { quizzes: QuizOption[] }) {
       },
       t("commonError"),
     );
-    if (!result.ok) {
-      setError(result.error);
-      setBusy(false);
-      return;
-    }
-    setCreated(result.data);
-    setBusy(false);
-    router.refresh();
+    handleResult(result);
   }
 
   async function copyCode() {
     if (!created) return;
     try {
-      await navigator.clipboard.writeText(created.code);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(formatExamCode(created.code));
+      setCopiedCode(true);
+      window.setTimeout(() => setCopiedCode(false), 2000);
     } catch {
-      setCopied(false);
+      setCopiedCode(false);
+    }
+  }
+
+  async function copyLink() {
+    if (!created) return;
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/e/${created.code}`);
+      setCopiedLink(true);
+      window.setTimeout(() => setCopiedLink(false), 2000);
+    } catch {
+      setCopiedLink(false);
     }
   }
 
   if (created) {
     return (
       <Card className="p-5">
-        <p className="text-sm font-medium text-emerald-700">{t("secCreatedCode", { code: formatExamCode(created.code) })}</p>
-        <p className="mt-3 font-mono text-3xl font-semibold tracking-[0.25em] text-brand-950">
-          {formatExamCode(created.code)}
+        <p className="text-sm font-medium text-emerald-700">
+          {t("secCreatedCode", { code: formatExamCode(created.code) })}
         </p>
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={() => void copyCode()}>
-            {copied ? t("secCopied") : t("secCopyCode")}
-          </Button>
-          <ButtonLink href={`/secure-exams/${created.id}`} size="sm">
-            {t("secMonitor")}
-          </ButtonLink>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setCreated(null);
-              setTitle("");
-            }}
-          >
-            {t("secCreate")}
-          </Button>
+        <div className="mt-3 flex flex-wrap items-start gap-4">
+          <img
+            src={`/api/secure-exams/${created.id}/qr`}
+            alt={t("secQrHint")}
+            className="size-28 rounded-xl border border-slate-200 bg-white p-1"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="font-mono text-3xl font-semibold tracking-[0.25em] text-brand-950">
+              {formatExamCode(created.code)}
+            </p>
+            <p className="mt-2 break-all font-mono text-xs text-slate-500">
+              {window.location.origin}/e/{created.code}
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Button variant="secondary" size="sm" onClick={() => void copyLink()}>
+                {copiedLink ? t("secCopied") : t("secCopyLink")}
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => void copyCode()}>
+                {copiedCode ? t("secCopied") : t("secCopyCode")}
+              </Button>
+              <ButtonLink href={`/secure-exams/${created.id}`} size="sm">
+                {t("secMonitor")}
+              </ButtonLink>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setCreated(null);
+                  setTitle("");
+                }}
+              >
+                {t("secCreate")}
+              </Button>
+            </div>
+            <p className="mt-2 text-xs text-slate-500">{t("secQrHint")}</p>
+          </div>
         </div>
       </Card>
     );
@@ -171,8 +258,11 @@ export function CreateForm({ quizzes }: { quizzes: QuizOption[] }) {
 
   return (
     <Card className="p-5">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="md:col-span-2">
+      <p className="font-semibold tracking-tight text-slate-900">{t("secQuickTitle")}</p>
+      <p className="mt-1 text-sm text-slate-500">{t("secQuickHint")}</p>
+
+      <div className="mt-4 space-y-4">
+        <div>
           <Label>{t("secFieldQuiz")}</Label>
           <Select value={quizId} onChange={(event) => setQuizId(event.target.value)}>
             {quizzes.map((quiz) => (
@@ -182,7 +272,7 @@ export function CreateForm({ quizzes }: { quizzes: QuizOption[] }) {
             ))}
           </Select>
         </div>
-        <div className="md:col-span-2">
+        <div>
           <Label>{t("secFieldTitle")}</Label>
           <Input
             value={title}
@@ -191,72 +281,108 @@ export function CreateForm({ quizzes }: { quizzes: QuizOption[] }) {
             maxLength={200}
           />
         </div>
-        <div>
-          <Label>{t("secFieldStartsAt")}</Label>
-          <Input
-            type="datetime-local"
-            value={startsAt}
-            onChange={(event) => setStartsAt(event.target.value)}
-          />
-        </div>
-        <div>
-          <Label>{t("secFieldEndsAt")}</Label>
-          <Input
-            type="datetime-local"
-            value={endsAt}
-            onChange={(event) => setEndsAt(event.target.value)}
-          />
-        </div>
-        <div>
-          <Label>{t("secFieldDuration")}</Label>
-          <Input
-            type="number"
-            min={1}
-            max={600}
-            value={durationMin}
-            onChange={(event) => setDurationMin(event.target.value)}
-            placeholder={selected?.timeLimitMin ? String(selected.timeLimitMin) : "—"}
-          />
-          <p className="mt-1 text-xs text-slate-500">{t("secFieldDurationHint")}</p>
-        </div>
-        <div>
-          <Label>{t("secFieldMaxWarnings")}</Label>
-          <Input
-            type="number"
-            min={1}
-            max={MAX_WARNINGS_LIMIT}
-            value={maxWarnings}
-            onChange={(event) => setMaxWarnings(Number(event.target.value) || DEFAULT_MAX_WARNINGS)}
-          />
-        </div>
-        <div className="md:col-span-2">
-          <Label>{t("secFieldLimitAction")}</Label>
-          <Select
-            value={limitAction}
-            onChange={(event) => setLimitAction(event.target.value === "WARN" ? "WARN" : "TERMINATE")}
+      </div>
+
+      {!advanced ? (
+        <div className="mt-4">
+          <div className="grid grid-cols-3 gap-2">
+            {QUICK_MINUTES.map((minutes) => (
+              <Button
+                key={minutes}
+                size="lg"
+                disabled={busy !== null}
+                onClick={() => void quickStart(minutes)}
+              >
+                {busy === `quick:${minutes}` ? t("secCreating") : t("secMinutes", { count: minutes })}
+              </Button>
+            ))}
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-slate-500">{t("secQuickNote")}</p>
+          <button
+            type="button"
+            onClick={() => setAdvanced(true)}
+            className="mt-3 text-sm font-medium text-brand-700 transition hover:text-brand-900 hover:underline"
           >
-            <option value="TERMINATE">{t("secLimitTerminate")}</option>
-            <option value="WARN">{t("secLimitWarn")}</option>
-          </Select>
+            {t("secAdvanced")} →
+          </button>
         </div>
-        <div className="grid gap-2.5 md:col-span-2 md:grid-cols-2">
-          <Toggle label={t("secFieldFullscreen")} checked={requireFullscreen} onChange={setRequireFullscreen} />
-          <Toggle label={t("secFieldBlockCopy")} checked={blockCopy} onChange={setBlockCopy} />
-          <Toggle label={t("secFieldWebcam")} checked={webcamEnabled} onChange={setWebcamEnabled} />
-          <Toggle
-            label={t("secFieldClient")}
-            hint={t("secFieldClientHint")}
-            checked={requireClient}
-            onChange={setRequireClient}
-          />
+      ) : (
+        <div className="mt-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label>{t("secFieldStartsAt")}</Label>
+              <Input
+                type="datetime-local"
+                value={startsAt}
+                onChange={(event) => setStartsAt(event.target.value)}
+              />
+            </div>
+            <div>
+              <Label>{t("secFieldEndsAt")}</Label>
+              <Input
+                type="datetime-local"
+                value={endsAt}
+                onChange={(event) => setEndsAt(event.target.value)}
+              />
+            </div>
+            <div>
+              <Label>{t("secFieldDuration")}</Label>
+              <Input
+                type="number"
+                min={1}
+                max={600}
+                value={durationMin}
+                onChange={(event) => setDurationMin(event.target.value)}
+                placeholder={selected?.timeLimitMin ? String(selected.timeLimitMin) : "—"}
+              />
+              <p className="mt-1 text-xs text-slate-500">{t("secFieldDurationHint")}</p>
+            </div>
+            <div>
+              <Label>{t("secFieldMaxWarnings")}</Label>
+              <Input
+                type="number"
+                min={1}
+                max={MAX_WARNINGS_LIMIT}
+                value={maxWarnings}
+                onChange={(event) => setMaxWarnings(Number(event.target.value) || DEFAULT_MAX_WARNINGS)}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <Label>{t("secFieldLimitAction")}</Label>
+              <Select
+                value={limitAction}
+                onChange={(event) =>
+                  setLimitAction(event.target.value === "WARN" ? "WARN" : "TERMINATE")
+                }
+              >
+                <option value="TERMINATE">{t("secLimitTerminate")}</option>
+                <option value="WARN">{t("secLimitWarn")}</option>
+              </Select>
+            </div>
+            <div className="grid gap-2.5 md:col-span-2 md:grid-cols-2">
+              <Toggle label={t("secFieldFullscreen")} checked={requireFullscreen} onChange={setRequireFullscreen} />
+              <Toggle label={t("secFieldBlockCopy")} checked={blockCopy} onChange={setBlockCopy} />
+              <Toggle label={t("secFieldWebcam")} checked={webcamEnabled} onChange={setWebcamEnabled} />
+              <Toggle
+                label={t("secFieldClient")}
+                hint={t("secFieldClientHint")}
+                checked={requireClient}
+                onChange={setRequireClient}
+              />
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <Button onClick={() => void submitAdvanced()} disabled={busy !== null}>
+              {busy === "advanced" ? t("secCreating") : t("secCreateSubmit")}
+            </Button>
+            <Button variant="ghost" onClick={() => setAdvanced(false)} disabled={busy !== null}>
+              {t("secAdvancedClose")}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
+
       {error ? <p className="mt-3 text-sm text-rose-600">{error}</p> : null}
-      <div className="mt-4">
-        <Button onClick={() => void submit()} disabled={busy}>
-          {busy ? t("secCreating") : t("secCreateSubmit")}
-        </Button>
-      </div>
     </Card>
   );
 }

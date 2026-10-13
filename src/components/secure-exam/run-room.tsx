@@ -71,7 +71,6 @@ export function RunRoom({
   courseTitle,
   questions,
   endsAt: initialEndsAt,
-  serverNow,
   initialAnswers,
   initialWarnings,
   settings,
@@ -82,7 +81,6 @@ export function RunRoom({
   courseTitle: string;
   questions: QuestionPublic[];
   endsAt: string | null;
-  serverNow: string;
   initialAnswers: QuizAnswers;
   initialWarnings: number;
   settings: RunSettings;
@@ -92,7 +90,9 @@ export function RunRoom({
   const [phase, setPhase] = useState<"gate" | "running" | "terminated" | "finished">("gate");
   const [answers, setAnswers] = useState<QuizAnswers>(initialAnswers);
   const [warnings, setWarnings] = useState(initialWarnings);
-  const [endsAt, setEndsAt] = useState<string | null>(initialEndsAt);
+  const [localDeadlineMs, setLocalDeadlineMs] = useState<number | null>(
+    initialEndsAt ? Date.parse(initialEndsAt) : null,
+  );
   const [now, setNow] = useState(() => Date.now());
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -107,7 +107,6 @@ export function RunRoom({
   const eventsRef = useRef<QueuedEvent[]>([]);
   const screenCountRef = useRef<number | null>(null);
   const multiRaisedRef = useRef(false);
-  const offsetRef = useRef(Date.parse(serverNow) - Date.now());
   const phaseRef = useRef(phase);
   const finishedRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -180,8 +179,9 @@ export function RunRoom({
       const state = result.data;
       setError(null);
       setWarnings(state.warnings);
-      if (state.endsAt) setEndsAt(state.endsAt);
-      offsetRef.current = Date.parse(state.serverNow) - Date.now();
+      if (state.endsAt) {
+        setLocalDeadlineMs(Date.parse(state.endsAt) + (Date.now() - Date.parse(state.serverNow)));
+      }
       if (state.status === "TERMINATED") {
         finishedRef.current = true;
         setPhase("terminated");
@@ -218,9 +218,10 @@ export function RunRoom({
     return () => window.clearInterval(timer);
   }, [phase]);
 
-  const remaining = endsAt
-    ? Math.max(0, Math.floor((Date.parse(endsAt) - (now + offsetRef.current)) / 1000))
-    : null;
+  const remaining =
+    localDeadlineMs === null
+      ? null
+      : Math.max(0, Math.floor((localDeadlineMs - now) / 1000));
 
   useEffect(() => {
     if (phase === "running" && remaining === 0 && !finishedRef.current) {

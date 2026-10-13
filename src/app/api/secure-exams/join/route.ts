@@ -7,7 +7,6 @@ import {
   isEnrolled,
   publicError,
 } from "@/components/quiz/server";
-import { attendanceCounts } from "@/app/api/attendance/summary/data";
 import { toQuestionFull } from "@/components/quiz/shared";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { isValidExamCode, normalizeExamCode } from "@/modules/secure-exam/code";
@@ -97,18 +96,6 @@ export async function POST(request: Request) {
 
     if (!(await isEnrolled(exam.courseId, user.id))) {
       return Response.json({ ok: false, error: "Kursga yozilmagansiz" }, { status: 403 });
-    }
-
-    const attendanceRecords = await prisma.attendance.findMany({
-      where: { courseId: exam.courseId, studentId: user.id },
-      select: { status: true },
-    });
-    const attendance = attendanceCounts(attendanceRecords.map((record) => record.status));
-    if (!attendance.eligible) {
-      return Response.json(
-        { ok: false, error: "Imtihonga ruxsat yo'q (davomat past)" },
-        { status: 403 },
-      );
     }
 
     const activeAttempt = await prisma.quizAttempt.findFirst({

@@ -75,7 +75,6 @@ export default async function SecureRunPage({
       courseTitle={run.exam.course.title}
       questions={questions}
       endsAt={deadline ? deadline.toISOString() : null}
-      serverNow={new Date().toISOString()}
       initialAnswers={initialAnswers}
       initialWarnings={run.warnings}
       settings={{

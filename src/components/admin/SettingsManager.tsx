@@ -22,7 +22,7 @@ const ICON_TONES: Record<ModuleKey, string> = {
   catalog: "from-brand-500 to-brand-800 shadow-brand-500/30",
   forum: "from-violet-400 to-purple-600 shadow-purple-500/30",
   qr_attendance: "from-rose-400 to-pink-600 shadow-rose-500/30",
-  secure_exams: "from-slate-400 to-slate-700 shadow-slate-500/30",
+  secure_exams: "from-slate-500 to-brand-900 shadow-brand-900/30",
 };
 
 const MODULE_ICONS: Record<ModuleKey, ReactNode> = {
@@ -66,8 +66,8 @@ const MODULE_ICONS: Record<ModuleKey, ReactNode> = {
   ),
   secure_exams: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" />
-      <path d="M9 12l2 2 4-4" />
+      <path d="M12 3 4 6v5c0 4.4 3.4 8.4 8 10 4.6-1.6 8-5.6 8-10V6z" />
+      <path d="m9 12 2 2 4-4" />
     </svg>
   ),
 };

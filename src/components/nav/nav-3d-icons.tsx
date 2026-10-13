@@ -242,6 +242,36 @@ function Exams() {
   );
 }
 
+function SecureExams() {
+  const shield = useMemo(
+    () =>
+      nav3DGeometry(
+        () =>
+          nav3DPolygon([
+            [-0.45, 0.52],
+            [0.45, 0.52],
+            [0.45, -0.04],
+            [0, -0.56],
+            [-0.45, -0.04],
+          ]),
+        0.18,
+        0.055,
+      ),
+    [],
+  );
+  return (
+    <group>
+      <Tile a={[1.24, 1.7, 0.18]} m="paper" p={[-0.16, 0, 0]} radius={0.08} />
+      {[0.46, 0.16, -0.14].map((y, i) => (
+        <Cube key={y} a={[i === 2 ? 0.5 : 0.86, 0.085, 0.08]} m="brandDeep" p={[-0.22, y, 0.11]} />
+      ))}
+      <mesh geometry={shield} position={[0.54, -0.5, 0.2]} material={NAV3D_MATERIALS.brand} />
+      <Ball rad={0.085} m="goldLight" p={[0.54, -0.38, 0.44]} />
+      <Cube a={[0.06, 0.14, 0.06]} m="goldLight" p={[0.54, -0.51, 0.43]} />
+    </group>
+  );
+}
+
 function Grades() {
   return (
     <group>
@@ -854,6 +884,7 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/calendar": Calendar,
   "/academic-calendar": Academic,
   "/exams": Exams,
+  "/secure-exams": SecureExams,
   "/grades": Grades,
   "/gpa": Gpa,
   "/transcript": Transcript,
