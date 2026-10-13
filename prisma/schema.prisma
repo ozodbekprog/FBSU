@@ -1090,12 +1090,30 @@ model SubGroup {
 }
 
 model Faculty {
-  id          String       @id @default(cuid())
-  name        String       @unique
-  code        String?
-  groups      Group[]
-  users       User[]
-  departments Department[]
+  id            String       @id @default(cuid())
+  name          String       @unique
+  code          String?
+  groups        Group[]
+  users         User[]
+  departments   Department[]
+  contractRates FacultyContractRate[]
+}
+
+/// Fakultetning bir shartnoma uchun to'laydigan summasi (o'quv yili bo'yicha).
+/// Admin belgilaydi, Moliya bo'limida hisob-kitobda ishlatiladi.
+model FacultyContractRate {
+  id        String   @id @default(cuid())
+  facultyId String
+  year      Int
+  amount    Int
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  faculty Faculty @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+
+  @@unique([facultyId, year])
+  @@index([year])
 }
 
 model Department {

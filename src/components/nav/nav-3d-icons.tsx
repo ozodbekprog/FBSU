@@ -758,6 +758,19 @@ function Diplomas() {
 }
 
 /** Moliya — oltin tangalar ustuni va hisob varaqasi. */
+/** Fakultet summalari — ko'tarilgan ustunlar va tilla tanga. */
+function FacultyRates() {
+  return (
+    <group>
+      <Cube a={[1.5, 0.16, 0.5]} m="brandDeep" p={[-0.5, -0.5, 0]} />
+      <Cube a={[1.2, 0.16, 0.5]} m="brand" p={[-0.35, -0.2, 0.07]} />
+      <Cube a={[0.9, 0.16, 0.5]} m="brandLight" p={[-0.2, 0.1, 0.14]} />
+      <Cyl rt={0.28} rb={0.28} h={0.12} seg={26} m="gold" p={[0.58, 0.5, 0.3]} />
+      <Cyl rt={0.22} rb={0.22} h={0.12} seg={26} m="goldLight" p={[0.58, 0.66, 0.3]} />
+    </group>
+  );
+}
+
 function Finance() {
   return (
     <group>
@@ -839,6 +852,7 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/documents": Documents,
   "/diplomas": Diplomas,
   "/finance": Finance,
+  "/finance/rates": FacultyRates,
   "/payroll": Payroll,
 };
 

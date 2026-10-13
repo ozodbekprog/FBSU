@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import type { Role } from "@prisma/client";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Badge, Card, CardBody, CardHeader, EmptyState, PageHeader, Stat, Table } from "@/components/ui";
+import { Badge, ButtonLink, Card, CardBody, CardHeader, EmptyState, PageHeader, Stat, Table } from "@/components/ui";
 import { getDictionary, getLocale } from "@/i18n";
 import { fmtDateTime } from "@/lib/utils";
 import FinanceBoard, {
@@ -11,6 +11,8 @@ import FinanceBoard, {
   type FinanceStudentOption,
 } from "@/components/finance/finance-board";
 import { debtorCount, totalDebt, totalOverpaid } from "@/components/finance/debt";
+import { FIN_YEARS, loadFacultyBreakdown } from "@/components/finance/data";
+import { breakdownTotals } from "@/components/finance/faculty-rates";
 
 const VIEW_ROLES: Role[] = ["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"];
 
@@ -238,6 +240,14 @@ export default async function FinancePage() {
   const debtTotal = totalDebt(contractItems);
   const overpaidTotal = totalOverpaid(contractItems);
 
+  // Fakultetlar bo'yicha hisob — admin belgilagan summalar asosida.
+  const currentYear = new Date().getFullYear();
+  const facultyYear = FIN_YEARS.includes(currentYear)
+    ? currentYear
+    : FIN_YEARS[FIN_YEARS.length - 1];
+  const facultyData = await loadFacultyBreakdown(facultyYear);
+  const facultyTotals = breakdownTotals(facultyData.rows);
+
   return (
     <>
       <PageHeader title={dictionary.finTitle} subtitle={dictionary.finSubtitle} />
@@ -255,6 +265,70 @@ export default async function FinancePage() {
           debtorCount: debtorCount(contractItems),
         }}
       />
+      <Card className="mt-5">
+        <CardHeader
+          title={dictionary.finFacultyBreakdown}
+          subtitle={`${facultyYear} · ${dictionary.finExpected}: ${money(facultyTotals.expected)}`}
+          action={
+            <ButtonLink href="/finance/rates" size="sm" variant="secondary">
+              {dictionary.finNavRates}
+            </ButtonLink>
+          }
+        />
+        <CardBody>
+          {facultyData.rows.length === 0 ? (
+            <EmptyState title={dictionary.finRateNoData} />
+          ) : (
+            <div className="-mx-6 overflow-x-auto">
+              <Table>
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                    <th className="px-6 py-2 font-medium">{dictionary.finFaculty}</th>
+                    <th className="px-3 py-2 font-medium">{dictionary.finStudents}</th>
+                    <th className="px-3 py-2 font-medium">{dictionary.finRate}</th>
+                    <th className="px-3 py-2 font-medium">{dictionary.finExpected}</th>
+                    <th className="px-3 py-2 font-medium">{dictionary.finAmount}</th>
+                    <th className="px-3 py-2 font-medium">{dictionary.finPaid}</th>
+                    <th className="px-6 py-2 font-medium">{dictionary.finCurrentDebt}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {facultyData.rows.map((row) => (
+                    <tr key={row.facultyId} className="text-sm text-slate-700">
+                      <td className="px-6 py-3 font-medium text-slate-900">
+                        {row.name}
+                        {row.code ? (
+                          <span className="ml-2 text-xs text-slate-400">{row.code}</span>
+                        ) : null}
+                      </td>
+                      <td className="px-3 py-3 text-slate-600">{row.students}</td>
+                      <td className="px-3 py-3 text-slate-900">
+                        {row.rate ? money(row.rate) : "—"}
+                      </td>
+                      <td className="px-3 py-3 font-medium text-slate-900">
+                        {money(row.expected)}
+                      </td>
+                      <td className="px-3 py-3 font-medium text-slate-900">
+                        {money(row.contracted)}
+                      </td>
+                      <td className="px-3 py-3 text-emerald-600">{money(row.paid)}</td>
+                      <td
+                        className={
+                          row.debt > 0
+                            ? "px-6 py-3 font-medium text-rose-600"
+                            : "px-6 py-3 font-medium text-slate-500"
+                        }
+                      >
+                        {money(row.debt)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
+          )}
+        </CardBody>
+      </Card>
     </>
   );
 }

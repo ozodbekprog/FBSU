@@ -129,6 +129,9 @@ export default async function AppLayout({
         ...(["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR", "STUDENT"].includes(user.role)
           ? [{ href: "/finance", label: dictionary.finTitle }]
           : []),
+        ...(["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"].includes(user.role)
+          ? [{ href: "/finance/rates", label: dictionary.finNavRates }]
+          : []),
         { href: "/my-qr", label: dictionary.accMyQr },
         ...(["ADMIN", "REGISTRAR", "XODIM", "REKTOR", "PRO_RECTOR"].includes(user.role)
           ? [{ href: "/access", label: dictionary.accTitle }]

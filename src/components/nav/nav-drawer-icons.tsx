@@ -268,6 +268,14 @@ const S: Record<string, ReactNode> = {
       <path d="M6 10v.01M18 15v.01" />
     </>
   ),
+"/finance/rates": (
+    <>
+      <path d="M3 21h18" />
+      <path d="M5 21V8l5-4 5 4v13" />
+      <path d="M10 21v-5h4v5" />
+      <circle cx="18" cy="17" r="3" />
+    </>
+  ),
 "/payroll": (
     <>
       <rect x="5" y="2" width="14" height="20" rx="2" />
