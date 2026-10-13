@@ -21,6 +21,7 @@ export const fin = {
   finCurrentDebt: "Current debt",
   finRatesTitle: "Faculty contract rates",
   finRatesSubtitle: "Set the amount payable per contract for each faculty",
+  finFacultyAll: "All faculties",
   finFaculty: "Faculty",
   finRate: "Contract amount (UZS)",
   finStudents: "Students",

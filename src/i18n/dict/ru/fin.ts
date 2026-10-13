@@ -21,6 +21,7 @@ export const fin = {
   finCurrentDebt: "Текущий долг",
   finRatesTitle: "Суммы контрактов по факультетам",
   finRatesSubtitle: "Укажите сумму оплаты за один контракт по факультетам",
+  finFacultyAll: "Все факультеты",
   finFaculty: "Факультет",
   finRate: "Сумма контракта (сум)",
   finStudents: "Студенты",

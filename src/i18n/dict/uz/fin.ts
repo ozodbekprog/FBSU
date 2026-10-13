@@ -21,6 +21,7 @@ export const fin = {
   finCurrentDebt: "Joriy qarz",
   finRatesTitle: "Fakultet shartnoma summalari",
   finRatesSubtitle: "Fakultetlar bo'yicha bitta shartnoma uchun to'lov summasini belgilang",
+  finFacultyAll: "Barcha fakultetlar",
   finFaculty: "Fakultet",
   finRate: "Shartnoma summa (so'm)",
   finStudents: "Talabalar",

@@ -196,19 +196,38 @@ export default async function FinancePage() {
     };
   });
 
-  const studentOptions: FinanceStudentOption[] = canManage
+  // Fakultetlar va ularga belgilangan shartnoma summalari (o'quv yili bo'yicha).
+const currentYear = new Date().getFullYear();
+const facultyYear = FIN_YEARS.includes(currentYear)
+  ? currentYear
+  : FIN_YEARS[FIN_YEARS.length - 1];
+const facultyData = await loadFacultyBreakdown(facultyYear);
+const facultyTotals = breakdownTotals(facultyData.rows);
+const facultyNames = new Map(facultyData.faculties.map((f) => [f.id, f.name]));
+
+const studentOptions: FinanceStudentOption[] = canManage
     ? (
         await prisma.user.findMany({
           where: { role: "STUDENT", isActive: true },
           orderBy: { name: "asc" },
           take: 300,
-          select: { id: true, name: true, group: { select: { name: true } } },
+          select: {
+            id: true,
+            name: true,
+            group: { select: { name: true, facultyId: true } },
+          },
         })
-      ).map((student) => ({
-        id: student.id,
-        name: student.name,
-        groupName: student.group?.name ?? null,
-      }))
+      ).map((student) => {
+        // Fakultet avval bevosita, keyin guruh orqali (Group.facultyId).
+        const facultyId = student.group?.facultyId ?? null;
+        return {
+          id: student.id,
+          name: student.name,
+          groupName: student.group?.name ?? null,
+          facultyId,
+          facultyName: facultyId ? (facultyNames.get(facultyId) ?? null) : null,
+        };
+      })
     : [];
 
   const payments = await prisma.payment.findMany({
@@ -240,14 +259,6 @@ export default async function FinancePage() {
   const debtTotal = totalDebt(contractItems);
   const overpaidTotal = totalOverpaid(contractItems);
 
-  // Fakultetlar bo'yicha hisob — admin belgilagan summalar asosida.
-  const currentYear = new Date().getFullYear();
-  const facultyYear = FIN_YEARS.includes(currentYear)
-    ? currentYear
-    : FIN_YEARS[FIN_YEARS.length - 1];
-  const facultyData = await loadFacultyBreakdown(facultyYear);
-  const facultyTotals = breakdownTotals(facultyData.rows);
-
   return (
     <>
       <PageHeader title={dictionary.finTitle} subtitle={dictionary.finSubtitle} />
@@ -256,6 +267,7 @@ export default async function FinancePage() {
         students={studentOptions}
         payments={paymentItems}
         canManage={canManage}
+        facultyRates={facultyData.rates}
         stats={{
           contractCount: contractItems.length,
           contractTotal,

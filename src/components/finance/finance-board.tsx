@@ -24,6 +24,8 @@ export type FinanceStudentOption = {
   id: string;
   name: string;
   groupName: string | null;
+  facultyId: string | null;
+  facultyName: string | null;
 };
 
 export type FinanceContractItem = {
@@ -94,12 +96,15 @@ export default function FinanceBoard({
   payments,
   canManage,
   stats,
+  facultyRates = {},
 }: {
   contracts: FinanceContractItem[];
   students: FinanceStudentOption[];
   payments: FinancePaymentItem[];
   canManage: boolean;
   stats: FinanceStats;
+  /** facultyId -> belgilangan shartnoma summa (avtomatik to'ldirish uchun). */
+  facultyRates?: Record<string, number>;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -109,7 +114,9 @@ export default function FinanceBoard({
     return YEARS.includes(current) ? String(current) : String(YEARS[YEARS.length - 1]);
   });
   const [studentId, setStudentId] = useState("");
+  const [facultyFilter, setFacultyFilter] = useState("");
   const [amount, setAmount] = useState("");
+  const [amountTouched, setAmountTouched] = useState(false);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -127,7 +134,40 @@ export default function FinanceBoard({
       .filter((contract) => contract.year === Number(year))
       .map((contract) => contract.studentId),
   );
+
   const availableStudents = students.filter((student) => !contractedIds.has(student.id));
+
+  // Formada tanlanadigan fakultetlar (shartnomasi yo'q talabalari bor).
+  const facultyOptions = (() => {
+    const ids = new Set(
+      students
+        .filter((student) => student.facultyId && !contractedIds.has(student.id))
+        .map((student) => student.facultyId as string),
+    );
+    return [...ids]
+      .map((id) => ({
+        id,
+        name: students.find((student) => student.facultyId === id)?.facultyName ?? id,
+        count: students.filter(
+          (student) => student.facultyId === id && !contractedIds.has(student.id),
+        ).length,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  })();
+
+  const visibleStudents = facultyFilter
+    ? availableStudents.filter((student) => student.facultyId === facultyFilter)
+    : availableStudents;
+
+  // Tanlangan talabaning fakultetiga admin belgilagan summa.
+  // Foydalanuvchi maydonu o'zgartirgan bo'lsa — ustiga yozmaymiz.
+  const suggestedAmount = (() => {
+    if (amountTouched) return null;
+    const student = students.find((item) => item.id === studentId);
+    if (!student?.facultyId) return null;
+    const rate = facultyRates[student.facultyId];
+    return rate && rate > 0 ? rate : null;
+  })();
 
   // Tanlangan talabaning jami shartnoma / to'lov / qarz ko'rsatkichlari
   const paymentTotals = paymentStudent
@@ -239,7 +279,7 @@ export default function FinanceBoard({
         <Card>
           <CardHeader title={t("finAddContract")} />
           <CardBody>
-            <form className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" onSubmit={createContract}>
+            <form className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5" onSubmit={createContract}>
               <div>
                 <Label>{t("finYear")}</Label>
                 <Select value={year} onChange={(e) => setYear(e.target.value)} required>
@@ -251,14 +291,37 @@ export default function FinanceBoard({
                 </Select>
               </div>
               <div>
+                <Label>{t("finFaculty")}</Label>
+                <Select
+                  value={facultyFilter}
+                  onChange={(e) => {
+                    setFacultyFilter(e.target.value);
+                    setStudentId("");
+                    setAmount("");
+                    setAmountTouched(false);
+                  }}
+                >
+                  <option value="">{t("finFacultyAll")}</option>
+                  {facultyOptions.map((faculty) => (
+                    <option key={faculty.id} value={faculty.id}>
+                      {faculty.name} ({faculty.count})
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div>
                 <Label>{t("grdStudent")}</Label>
                 <Select
                   value={studentId}
-                  onChange={(e) => setStudentId(e.target.value)}
+                  onChange={(e) => {
+                    setStudentId(e.target.value);
+                    setAmount("");
+                    setAmountTouched(false);
+                  }}
                   required
                 >
                   <option value="">—</option>
-                  {availableStudents.map((student) => (
+                  {visibleStudents.map((student) => (
                     <option key={student.id} value={student.id}>
                       {student.name}
                       {student.groupName ? ` — ${student.groupName}` : ""}
@@ -272,8 +335,11 @@ export default function FinanceBoard({
                   type="number"
                   min={0}
                   step={1}
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  value={amountTouched || !suggestedAmount ? amount : String(suggestedAmount)}
+                  onChange={(e) => {
+                    setAmount(e.target.value);
+                    setAmountTouched(true);
+                  }}
                   required
                 />
               </div>
