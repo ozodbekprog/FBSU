@@ -10,7 +10,8 @@ import { logAudit } from "@/server/audit";
 export async function GET(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  const isProctor = user.role === "NAZORATCHI";
+  if (user.role !== "TEACHER" && user.role !== "ADMIN" && !isProctor) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -26,6 +27,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
     });
     if (!exam) return Response.json({ ok: false, error: "Imtihon topilmadi" }, { status: 404 });
     if (
+      !isProctor &&
       !canManageSecureExam(
         { createdById: exam.createdById, courseTeacherId: exam.course.teacherId },
         user,

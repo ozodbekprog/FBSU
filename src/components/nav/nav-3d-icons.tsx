@@ -272,6 +272,18 @@ function SecureExams() {
   );
 }
 
+function Nazorat() {
+  return (
+    <group>
+      <Tile a={[1.3, 1.7, 0.18]} m="paper" p={[0, 0, 0]} radius={0.08} />
+      <Ring rad={0.6} tube={0.1} m="brand" p={[0, 0.06, 0.14]} />
+      <Ball rad={0.25} m="brandDeep" p={[0, 0.06, 0.2]} />
+      <Ball rad={0.09} m="goldLight" p={[0.07, 0.15, 0.36]} />
+      <Cube a={[0.52, 0.075, 0.07]} m="gold" p={[0, -0.66, 0.12]} />
+    </group>
+  );
+}
+
 function Grades() {
   return (
     <group>
@@ -819,6 +831,7 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/academic-calendar": Academic,
   "/exams": Exams,
   "/secure-exams": SecureExams,
+  "/nazorat": Nazorat,
   "/grades": Grades,
   "/gpa": Gpa,
   "/transcript": Transcript,

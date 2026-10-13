@@ -86,6 +86,12 @@ const S: Record<string, ReactNode> = {
       <path d="M10.4 11V9.8a1.6 1.6 0 0 1 3.2 0V11" />
     </>
   ),
+"/nazorat": (
+    <>
+      <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
 "/grades": (
     <>
       <rect x="4" y="3" width="16" height="18" rx="2" />

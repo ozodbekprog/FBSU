@@ -27,6 +27,9 @@ export const SECURE_EVENT_TYPES = [
   "AUX_CLICK",
   "CAMERA_BLOCKED",
   "SNAPSHOT",
+  "FACE_MISSING",
+  "FACE_TURNED",
+  "MULTIPLE_FACES",
 ] as const;
 
 export type SecureEventType = (typeof SECURE_EVENT_TYPES)[number];
@@ -58,6 +61,9 @@ export const EVENT_SEVERITY: Record<SecureEventType, EventSeverity> = {
   AUX_CLICK: "WARNING",
   CAMERA_BLOCKED: "WARNING",
   SNAPSHOT: "INFO",
+  FACE_MISSING: "WARNING",
+  FACE_TURNED: "WARNING",
+  MULTIPLE_FACES: "CRITICAL",
 };
 
 export function severityOf(type: SecureEventType): EventSeverity {

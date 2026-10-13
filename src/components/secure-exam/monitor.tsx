@@ -90,7 +90,7 @@ function dateOf(iso: string): string {
   return `${String(date.getDate()).padStart(2, "0")}.${String(date.getMonth() + 1).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
-export function ExamMonitor({ examId }: { examId: string }) {
+export function ExamMonitor({ examId, readOnly = false }: { examId: string; readOnly?: boolean }) {
   const { t } = useI18n();
   const router = useRouter();
   const [data, setData] = useState<MonitorData | null>(null);
@@ -236,6 +236,7 @@ export function ExamMonitor({ examId }: { examId: string }) {
             </Button>
           </div>
         </div>
+        {readOnly ? null : (
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {exam.status === "SCHEDULED" ? (
             <Button
@@ -279,6 +280,7 @@ export function ExamMonitor({ examId }: { examId: string }) {
             {t("secDelete")}
           </Button>
         </div>
+        )}
         <div className="mt-4 flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
           <img
             src={`/api/secure-exams/${exam.id}/qr`}
@@ -388,7 +390,7 @@ export function ExamMonitor({ examId }: { examId: string }) {
                           {t("secViewSnapshots")}
                         </Button>
                       ) : null}
-                      {run.status === "ACTIVE" ? (
+                      {!readOnly && run.status === "ACTIVE" ? (
                         <>
                           <Button
                             size="sm"

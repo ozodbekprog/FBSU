@@ -42,6 +42,7 @@ const ROLE_LABEL_KEY: Record<Role, keyof Dictionary> = {
   STUDENT: "mscRoleStudent",
   XODIM: "mscRoleStaff",
   OTA_ONA: "mscRoleParent",
+  NAZORATCHI: "roleNazoratchi",
 };
 
 const TAB_BASE =

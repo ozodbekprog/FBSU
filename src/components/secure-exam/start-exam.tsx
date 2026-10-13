@@ -16,6 +16,13 @@ export function StartExamButton({ code }: { code: string }) {
     if (busy) return;
     setBusy(true);
     setError(null);
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch {
+      void 0;
+    }
     const result = await apiFetch<{ runId: string }>(
       "/api/secure-exams/join",
       "POST",

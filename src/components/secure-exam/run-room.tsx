@@ -10,6 +10,7 @@ import { SYNC_INTERVAL_MS } from "@/modules/secure-exam/config";
 import { severityOf, type SecureEventType } from "@/modules/secure-exam/events";
 import type { RunState } from "@/modules/secure-exam/types";
 import { EVENT_LABEL_KEY } from "@/components/secure-exam/labels";
+import { ensureFaceModels } from "@/components/face/face-scan";
 import {
   QUESTION_TYPE_KEY,
   QUESTION_TYPE_SOFT,
@@ -100,6 +101,7 @@ export function RunRoom({
   const [fullscreenActive, setFullscreenActive] = useState(false);
   const [multiMonitor, setMultiMonitor] = useState(false);
   const [duplicateTab, setDuplicateTab] = useState(false);
+  const [faceAlert, setFaceAlert] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState(false);
   const [toast, setToast] = useState<{ label: string; tone: "amber" | "rose" } | null>(null);
@@ -110,6 +112,8 @@ export function RunRoom({
   const multiRaisedRef = useRef(false);
   const dupRaisedRef = useRef(false);
   const darkCountRef = useRef(0);
+  const faceCooldownRef = useRef(0);
+  const faceMissingStreakRef = useRef(0);
   const phaseRef = useRef(phase);
   const finishedRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -458,6 +462,80 @@ export function RunRoom({
     };
   }, [cameraReady, phase, runId, t]);
 
+  useEffect(() => {
+    if (!cameraReady || phase !== "running") return;
+    let cancelled = false;
+    let interval: number | null = null;
+    const startMonitoring = async () => {
+      try {
+        const faceapi = await ensureFaceModels();
+        if (cancelled) return;
+        const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 });
+        interval = window.setInterval(async () => {
+          const video = videoRef.current;
+          if (!video || video.readyState < 2) return;
+          const now = Date.now();
+          try {
+            const detections = await faceapi
+              .detectAllFaces(video, options)
+              .withFaceLandmarks();
+            if (cancelled) return;
+            if (detections.length === 0) {
+              faceMissingStreakRef.current += 1;
+              setFaceAlert(true);
+              if (
+                faceMissingStreakRef.current >= 2 &&
+                now - faceCooldownRef.current > 25_000
+              ) {
+                faceCooldownRef.current = now;
+                faceMissingStreakRef.current = 0;
+                pushEvent("FACE_MISSING");
+              }
+              return;
+            }
+            faceMissingStreakRef.current = 0;
+            if (detections.length > 1) {
+              setFaceAlert(true);
+              if (now - faceCooldownRef.current > 25_000) {
+                faceCooldownRef.current = now;
+                pushEvent("MULTIPLE_FACES", { count: detections.length });
+              }
+              return;
+            }
+            const landmarks = detections[0].landmarks;
+            const leftEye = landmarks.getLeftEye();
+            const rightEye = landmarks.getRightEye();
+            const nose = landmarks.getNose();
+            const leftCenter = leftEye.reduce((sum, p) => sum + p.x, 0) / leftEye.length;
+            const rightCenter = rightEye.reduce((sum, p) => sum + p.x, 0) / rightEye.length;
+            const eyeDistance = Math.abs(rightCenter - leftCenter) || 1;
+            const noseTip = nose[nose.length - 1];
+            const eyeMid = (leftCenter + rightCenter) / 2;
+            const yaw = (noseTip.x - eyeMid) / eyeDistance;
+            if (Math.abs(yaw) > 0.28) {
+              setFaceAlert(true);
+              if (now - faceCooldownRef.current > 25_000) {
+                faceCooldownRef.current = now;
+                pushEvent("FACE_TURNED", { direction: yaw > 0 ? "right" : "left" });
+              }
+              return;
+            }
+            setFaceAlert(false);
+          } catch {
+            void 0;
+          }
+        }, 6000);
+      } catch {
+        void 0;
+      }
+    };
+    void startMonitoring();
+    return () => {
+      cancelled = true;
+      if (interval !== null) window.clearInterval(interval);
+    };
+  }, [cameraReady, phase, pushEvent]);
+
   async function start() {
     setError(null);
     setCameraError(false);
@@ -539,10 +617,16 @@ export function RunRoom({
               </li>
             ) : null}
             {settings.webcamEnabled ? (
-              <li className="flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-brand-600" />
-                {t("secGateCameraTitle")}
-              </li>
+              <>
+                <li className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-brand-600" />
+                  {t("secGateCameraTitle")}
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-brand-600" />
+                  {t("secFaceHint")}
+                </li>
+              </>
             ) : null}
             <li className="flex items-center gap-2">
               <span className="size-1.5 rounded-full bg-brand-600" />
@@ -783,7 +867,14 @@ export function RunRoom({
       </div>
 
       {cameraReady ? (
-        <div className="fixed bottom-24 right-4 z-40 overflow-hidden rounded-xl border border-slate-200 bg-black shadow-lg">
+        <div
+          className={cn(
+            "fixed bottom-24 right-4 z-40 overflow-hidden rounded-xl border bg-black shadow-lg transition-[border-color,box-shadow] duration-300",
+            faceAlert
+              ? "border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.35)]"
+              : "border-slate-200",
+          )}
+        >
           <video ref={videoRef} autoPlay muted playsInline className="h-28 w-40 object-cover" />
           <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white">
             <span className="size-1.5 animate-pulse rounded-full bg-rose-500" />

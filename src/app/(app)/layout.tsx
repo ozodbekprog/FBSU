@@ -161,6 +161,9 @@ export default async function AppLayout({
         ...(isStaff(user.role) || user.role === "TYUTOR"
           ? [{ href: "/curator", label: dictionary.navCurator }]
           : []),
+        ...(user.role === "ADMIN" || user.role === "NAZORATCHI"
+          ? [{ href: "/nazorat", label: dictionary.navNazorat }]
+          : []),
         ...(user.role === "REGISTRAR"
           ? [
               { href: "/admin/users", label: dictionary.admNavUsers },
@@ -225,6 +228,9 @@ export default async function AppLayout({
       "/dashboard", "/assistant", "/staff", "/tasks", "/my-qr", "/access", "/schedule", "/calendar",
       "/academic-calendar", "/messages", "/rooms", "/bookings", "/search", "/help", "/settings",
     ],
+    NAZORATCHI: [
+      "/dashboard", "/nazorat", "/messages", "/search", "/help", "/settings",
+    ],
     // Buxgalter: moliyaviy vazifa uchun faqat kerakli bo'limlar.
     // Jadval, davomat va xodimlar davomati olib tashlandi — ular oylik
     // hisobiga to'g'ridan-to'g'ri kirmaydi, `/payroll` ichida o'z
@@ -267,6 +273,8 @@ export default async function AppLayout({
                     ? dictionary.roleStaff
                     : user.role === "OTA_ONA"
                       ? dictionary.roleParent
+                    : user.role === "NAZORATCHI"
+                      ? dictionary.roleNazoratchi
                     : user.role === "TEACHER"
                   ? dictionary.roleTeacher
                   : user.group?.name ?? dictionary.roleStudent;
