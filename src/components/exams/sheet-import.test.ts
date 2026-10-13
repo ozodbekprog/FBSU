@@ -77,10 +77,14 @@ describe("matchStudents", () => {
     expect(r.unmatched).toEqual(["Mavjud Emas"]);
   });
 
+  it("faqat familiya bo'yicha ham topadi", () => {
+    // Familiya ismning OXIRIDA turadi — faqat birinchi so'z bo'yicha
+    // izlash bu holatni o'tkazib yuborardi.
+    const r = matchStudents([{ input: "G'ulomov" }], ENROLLED);
+    expect(r.matched.map((m) => m.studentId)).toEqual(["s3"]);
+  });
+
   it("bir nechta mos kelsa — ambiguous", () => {
-    // "Karimov" → Aziz Karimov (ism) va Dilnoza Karimova (familiya emas,
-    // lekin birinchi so'z bo'yicha mos kelmaydi) — shuning uchun
-    // sun'iy holat yaratamiz
     const enrolled = [
       { id: "a", name: "Karimov Aziz" },
       { id: "b", name: "Karimov Bekzod" },

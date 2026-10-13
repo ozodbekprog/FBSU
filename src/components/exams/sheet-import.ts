@@ -109,7 +109,10 @@ export function parseNameList(text: string): ImportedRow[] {
 export function matchStudents(imported: ImportedRow[], enrolled: EnrolledStudent[]): MatchResult {
   const byExact = new Map<string, EnrolledStudent[]>();
   const byTokens = new Map<string, EnrolledStudent[]>();
-  const byFirstWord = new Map<string, EnrolledStudent[]>();
+  // Har bir SO'Z bo'yicha indeks: foydalanuvchi faqat familiyani yozishi
+  // mumkin ("Tursunov"), familiya esa ismning oxirida turadi. Faqat
+  // birinchi so'z bo'yicha izlash bunday holatni o'tkazib yuborardi.
+  const byWord = new Map<string, EnrolledStudent[]>();
 
   function push(map: Map<string, EnrolledStudent[]>, key: string, student: EnrolledStudent) {
     if (!key) return;
@@ -122,7 +125,7 @@ export function matchStudents(imported: ImportedRow[], enrolled: EnrolledStudent
     const exact = normalizeName(student.name);
     push(byExact, exact, student);
     push(byTokens, tokenKey(student.name), student);
-    push(byFirstWord, exact.split(" ")[0] ?? "", student);
+    for (const word of exact.split(" ")) push(byWord, word, student);
   }
 
   const matched: MatchedRow[] = [];
@@ -137,9 +140,11 @@ export function matchStudents(imported: ImportedRow[], enrolled: EnrolledStudent
     let candidates = byExact.get(exact) ?? [];
     if (candidates.length === 0) candidates = byTokens.get(tokenKey(row.input)) ?? [];
 
-    // Faqat bitta so'z kiritilgan bo'lsa (masalan familiya) — u bo'yicha izlaymiz
+    // Faqat bitta so'z kiritilgan bo'lsa (ism yoki familiya) — shu so'z
+    // bo'yicha izlaymiz. Bir nechta talabaga mos kelsa, pastda
+    // "noaniq" ro'yxatiga tushadi va foydalanuvchi o'zi tanlaydi.
     if (candidates.length === 0 && exact.split(" ").length === 1) {
-      candidates = byFirstWord.get(exact) ?? [];
+      candidates = byWord.get(exact) ?? [];
     }
 
     // Allaqachon qo'shilganlarni chiqarib tashlaymiz (takroriy qatorlar uchun)
