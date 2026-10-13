@@ -18,6 +18,7 @@ import {
 import { cn, fmtDateTime } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/components/i18n/LocaleProvider";
+import { remainingAfterPayment, studentTotals } from "./debt";
 
 export type FinanceStudentOption = {
   id: string;
@@ -55,6 +56,8 @@ export type FinanceStats = {
   contractTotal: number;
   paidTotal: number;
   debtTotal: number;
+  overpaidTotal: number;
+  debtorCount: number;
 };
 
 const YEARS = [2024, 2025, 2026, 2027];
@@ -125,6 +128,16 @@ export default function FinanceBoard({
       .map((contract) => contract.studentId),
   );
   const availableStudents = students.filter((student) => !contractedIds.has(student.id));
+
+  // Tanlangan talabaning jami shartnoma / to'lov / qarz ko'rsatkichlari
+  const paymentTotals = paymentStudent
+    ? studentTotals(contracts, paymentStudent.id)
+    : null;
+
+  // Kiritilayotgan summa hisobga olingandan keyingi qarz (jonli)
+  const debtAfterPayment = paymentTotals
+    ? remainingAfterPayment(paymentTotals.debt, Number(payAmount))
+    : null;
 
   async function createContract(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -207,14 +220,19 @@ export default function FinanceBoard({
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat
           label={t("finContract")}
           value={money(stats.contractCount)}
           hint={money(stats.contractTotal)}
         />
         <Stat label={t("finPaid")} value={money(stats.paidTotal)} />
-        <Stat label={t("finDebt")} value={money(stats.debtTotal)} />
+        <Stat
+          label={t("finCurrentDebt")}
+          value={money(stats.debtTotal)}
+          hint={`${stats.debtorCount} / ${stats.contractCount}`}
+        />
+        <Stat label={t("finOverpaid")} value={money(stats.overpaidTotal)} />
       </div>
 
       {canManage ? (
@@ -286,6 +304,27 @@ export default function FinanceBoard({
         <Card>
           <CardHeader title={t("finAddPayment")} subtitle={paymentStudent.name} />
           <CardBody>
+            {paymentTotals ? (
+              <div className="mb-5 grid gap-3 sm:grid-cols-3">
+                <Stat
+                  label={t("finAmount")}
+                  value={money(paymentTotals.amount)}
+                  hint={String(paymentTotals.count)}
+                />
+                <Stat label={t("finPaid")} value={money(paymentTotals.paid)} />
+                <Stat
+                  label={t("finCurrentDebt")}
+                  value={money(paymentTotals.debt)}
+                  hint={
+                    paymentTotals.debt > 0
+                      ? undefined
+                      : paymentTotals.debt < 0
+                        ? t("finOverpaid")
+                        : undefined
+                  }
+                />
+              </div>
+            ) : null}
             <form
               id="finance-payment-form"
               className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
@@ -329,6 +368,22 @@ export default function FinanceBoard({
                 </Button>
               </div>
             </form>
+            {debtAfterPayment !== null ? (
+              <p
+                className={cn(
+                  "mt-3 rounded-xl px-3.5 py-2.5 text-sm",
+                  debtAfterPayment > 0
+                    ? "bg-rose-50 text-rose-700"
+                    : "bg-emerald-50 text-emerald-700",
+                )}
+              >
+                {t("finAfterPayment")}:{" "}
+                <span className="font-semibold">
+                  {debtAfterPayment > 0 ? money(debtAfterPayment) : t("finOverpaid")}
+                  {debtAfterPayment <= 0 ? ` (${money(Math.abs(debtAfterPayment))})` : ""}
+                </span>
+              </p>
+            ) : null}
             {paySaved ? (
               <p className="mt-3 rounded-xl bg-emerald-50 px-3.5 py-2.5 text-sm text-emerald-700">
                 {t("finSaved")}

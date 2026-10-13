@@ -10,6 +10,7 @@ import FinanceBoard, {
   type FinancePaymentItem,
   type FinanceStudentOption,
 } from "@/components/finance/finance-board";
+import { debtorCount, totalDebt, totalOverpaid } from "@/components/finance/debt";
 
 const VIEW_ROLES: Role[] = ["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"];
 
@@ -232,7 +233,10 @@ export default async function FinancePage() {
   const contractTotal = contractItems.reduce((sum, contract) => sum + contract.amount, 0);
   const paidTotalAgg = await prisma.payment.aggregate({ _sum: { amount: true } });
   const paidTotal = paidTotalAgg._sum.amount ?? 0;
-  const debtTotal = Math.max(0, contractTotal - paidTotal);
+  // Faqat haqiqiy qarz (musbat) yig'iladi — ortiqcha to'lov qarzni kamaytirmaydi,
+  // aks holda bir talabaning ortig'i boshqasining qarzini yashirardi.
+  const debtTotal = totalDebt(contractItems);
+  const overpaidTotal = totalOverpaid(contractItems);
 
   return (
     <>
@@ -242,7 +246,14 @@ export default async function FinancePage() {
         students={studentOptions}
         payments={paymentItems}
         canManage={canManage}
-        stats={{ contractCount: contractItems.length, contractTotal, paidTotal, debtTotal }}
+        stats={{
+          contractCount: contractItems.length,
+          contractTotal,
+          paidTotal,
+          debtTotal,
+          overpaidTotal,
+          debtorCount: debtorCount(contractItems),
+        }}
       />
     </>
   );

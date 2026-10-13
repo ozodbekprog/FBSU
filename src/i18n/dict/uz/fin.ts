@@ -15,4 +15,8 @@ export const fin = {
   finEmpty: "Ma'lumot yo'q",
   finMyContract: "Mening shartnomam",
   finSaved: "Saqlandi",
+  finStudentDebt: "Talaba qarzi",
+  finAfterPayment: "To'lovdan keyin qarz",
+  finOverpaid: "Ortiqcha to'langan",
+  finCurrentDebt: "Joriy qarz",
 };

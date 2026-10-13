@@ -15,4 +15,8 @@ export const fin = {
   finEmpty: "No data",
   finMyContract: "My contract",
   finSaved: "Saved",
+  finStudentDebt: "Student debt",
+  finAfterPayment: "Debt after payment",
+  finOverpaid: "Overpaid",
+  finCurrentDebt: "Current debt",
 };
