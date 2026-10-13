@@ -142,7 +142,7 @@ const EXAM_HOSTS = (process.env.EXAM_HOSTS ?? "fbsu-exam.vercel.app")
   .filter(Boolean);
 
 const EXAM_ALLOWED_EXACT = new Set(["/login", "/register", "/forgot-password", "/reset-password"]);
-const EXAM_ALLOWED_SECTIONS = ["/e", "/exam", "/secure-exams"];
+const EXAM_ALLOWED_SECTIONS = ["/e", "/exam", "/secure-exams", "/quizzes"];
 const EXAM_ALLOWED_PREFIXES = ["/api/", "/_next/", "/uploads/", "/verify/"];
 
 function isExamHost(host: string | null): boolean {
@@ -212,6 +212,12 @@ export async function proxy(request: NextRequest) {
     }
     if (!isExamHostPath(pathname)) {
       return NextResponse.redirect(new URL("/", request.url), 307);
+    }
+    if (pathname === "/secure-exams" || pathname.startsWith("/secure-exams/")) {
+      const role = await sessionRole(request.cookies.get(SESSION_COOKIE)?.value ?? "");
+      if (role !== "TEACHER" && role !== "ADMIN") {
+        return NextResponse.redirect(new URL("/", request.url), 307);
+      }
     }
   }
 
