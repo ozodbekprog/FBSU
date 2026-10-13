@@ -2,6 +2,7 @@ import { z } from "zod";
 import { randomInt } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { canManageCourse } from "@/components/courses/course-access";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { finalizeExpiredAttendanceSessions } from "@/modules/attendance/auto-close";
@@ -45,6 +46,11 @@ export async function POST(request: Request) {
   }
   if (user.role !== "TEACHER" && user.role !== "ADMIN") {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
+
+  const csrfValid = await verifyCsrfFromRequest(request);
+  if (!csrfValid) {
+    return Response.json({ ok: false, error: "CSRF token yaroqsiz" }, { status: 403 });
   }
 
   const sessionRateLimit = await checkRateLimit(`attendance:session:${user.id}`, {

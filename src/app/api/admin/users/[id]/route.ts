@@ -151,7 +151,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   }
 
   if (parsed.data.password !== undefined) {
-    data.passwordHash = await bcrypt.hash(parsed.data.password, 10);
+    data.passwordHash = await bcrypt.hash(parsed.data.password, 12);
     data.sessionEpoch = { increment: 1 };
   }
 

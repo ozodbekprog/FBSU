@@ -256,7 +256,7 @@ export async function generateBaseData(opts: GenerateOptions = {}): Promise<Gene
   const groupCount = Math.min(Math.max(Math.trunc(opts.groups ?? 5), 1), GROUP_NAMES.length);
   const perGroup = Math.min(Math.max(Math.trunc(opts.studentsPerGroup ?? 8), 4), 20);
   const password = generatePassword();
-  const passwordHash = await bcrypt.hash(password, 10);
+  const passwordHash = await bcrypt.hash(password, 12);
 
   let subjectsCreated = 0;
   const subjectRecords: Subject[] = [];

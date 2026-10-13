@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { verifyCsrfFromRequest } from "@/lib/csrf";
 
 const updateSchema = z.object({
   title: z.string().trim().min(1).max(200).optional(),
@@ -10,20 +11,25 @@ const updateSchema = z.object({
   description: z.string().trim().max(500).nullish(),
 });
 
-async function requireStaff() {
+async function requireAdmin() {
   const user = await getCurrentUser();
   if (!user) {
     return { user: null, error: Response.json({ ok: false, error: "Unauthorized" }, { status: 401 }) };
   }
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (user.role !== "ADMIN") {
     return { user: null, error: Response.json({ ok: false, error: "Forbidden" }, { status: 403 }) };
   }
   return { user, error: null };
 }
 
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
-  const guard = await requireStaff();
+  const guard = await requireAdmin();
   if (guard.error) return guard.error;
+
+  const csrfValid = await verifyCsrfFromRequest(request);
+  if (!csrfValid) {
+    return Response.json({ ok: false, error: "CSRF token yaroqsiz" }, { status: 403 });
+  }
 
   const { id } = await ctx.params;
   const body = await request.json().catch(() => null);
@@ -58,9 +64,14 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   return Response.json({ ok: true, data: event });
 }
 
-export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
-  const guard = await requireStaff();
+export async function DELETE(request: Request, ctx: { params: Promise<{ id: string }> }) {
+  const guard = await requireAdmin();
   if (guard.error) return guard.error;
+
+  const csrfValid = await verifyCsrfFromRequest(request);
+  if (!csrfValid) {
+    return Response.json({ ok: false, error: "CSRF token yaroqsiz" }, { status: 403 });
+  }
 
   const { id } = await ctx.params;
   const existing = await prisma.academicEvent.findUnique({ where: { id }, select: { id: true } });

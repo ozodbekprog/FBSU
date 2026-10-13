@@ -27,20 +27,20 @@
     "@prisma/client": "^6.19.3",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.1",
-    "@tensorflow/tfjs": "^4.22.0",
     "@types/nodemailer": "^8.0.2",
     "@types/qrcode": "^1.5.6",
     "@vladmandic/face-api": "^1.7.15",
     "bcryptjs": "^3.0.3",
     "framer-motion": "^14.1.0",
     "ioredis": "^6.0.0",
+    "isomorphic-dompurify": "^4.5.0",
     "jose": "^6.2.12",
     "jsqr": "^1.4.0",
-    "katex": "^0.16.47",
+    "katex": "^0.19.0",
     "mathjs": "^15.2.0",
     "matter-js": "^0.20.0",
     "motion": "^14.0.0",
-    "next": "16.3.6",
+    "next": "16.4.0",
     "nodemailer": "^10.0.10",
     "qrcode": "^1.5.4",
     "react": "19.2.8",
@@ -52,16 +52,31 @@
     "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/matter-js": "^0.20.2",
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.186.0",
-    "@vitest/coverage-v8": "^3.2.7",
+    "@vitest/coverage-v8": "^5.0.4",
     "eslint": "^9",
-    "eslint-config-next": "16.3.5",
+    "eslint-config-next": "16.4.0",
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^3.2.7"
+    "vitest": "^5.0.4"
+  },
+  "overrides": {
+    "lodash-es": "4.18.1",
+    "deepmerge-ts": "8.0.2",
+    "sass": "1.105.1",
+    "sharp": "0.35.5",
+    "source-map-js": "1.2.2",
+    "argparse": "2.0.1",
+    "nanoid@^3": "3.3.20",
+    "@excalidraw/mermaid-to-excalidraw": {
+      "nanoid": "5.1.16"
+    },
+    "mermaid": {
+      "katex": "0.19.0"
+    }
   }
 }

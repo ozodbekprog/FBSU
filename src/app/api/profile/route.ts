@@ -62,7 +62,7 @@ export async function PATCH(request: Request) {
       return Response.json({ ok: false, error: "Joriy parol noto'g'ri" }, { status: 400 });
     }
 
-    const passwordHash = await bcrypt.hash(parsed.data.newPassword, 10);
+    const passwordHash = await bcrypt.hash(parsed.data.newPassword, 12);
     const updated = await prisma.user.update({
       where: { id: user.id },
       data: { passwordHash, sessionEpoch: { increment: 1 } },

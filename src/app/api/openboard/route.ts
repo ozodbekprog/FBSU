@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { openboardDataSchema, OPENBOARD_LIMITS } from "@/lib/openboard/types";
 import { payloadBytes } from "@/lib/openboard/store";
+import { sanitizeHtml } from "@/lib/openboard/sanitize";
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -37,7 +38,22 @@ export async function PUT(request: Request) {
   if (!parsed.success) {
     return Response.json({ ok: false, error: "Ma'lumotlar noto'g'ri" }, { status: 400 });
   }
-  const boardData = parsed.data as unknown as Prisma.InputJsonValue;
+  const sanitizedData = {
+    ...parsed.data,
+    notes: parsed.data.notes.map((note) => ({
+      ...note,
+      blocks: note.blocks.map((block) => {
+        if (block.type === "text") {
+          return { ...block, html: sanitizeHtml(block.html) };
+        }
+        if (block.type === "heading") {
+          return { ...block, html: sanitizeHtml(block.html) };
+        }
+        return block;
+      }),
+    })),
+  };
+  const boardData = sanitizedData as unknown as Prisma.InputJsonValue;
   if (payloadBytes(boardData) > OPENBOARD_LIMITS.maxPayloadBytes) {
     return Response.json({ ok: false, error: "Dosha ma'lumotlari juda katta" }, { status: 413 });
   }

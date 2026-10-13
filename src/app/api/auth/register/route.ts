@@ -53,7 +53,7 @@ export async function POST(request: Request) {
   const email = parsed.data.email.toLowerCase().trim();
   const exists = await prisma.user.findUnique({ where: { email } });
 
-  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+  const passwordHash = await bcrypt.hash(parsed.data.password, 12);
 
   if (exists) {
     // Anti-enumeration: identical response to a successful registration.

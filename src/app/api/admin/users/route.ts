@@ -128,7 +128,7 @@ export async function POST(request: Request) {
     if (!group) return Response.json({ ok: false, error: "Guruh topilmadi" }, { status: 400 });
   }
 
-  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+  const passwordHash = await bcrypt.hash(parsed.data.password, 12);
   const created = await prisma.user.create({
     data: {
       name: parsed.data.name,
