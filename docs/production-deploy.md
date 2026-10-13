@@ -20,6 +20,8 @@ Migratsiya uchun `DATABASE_URL` qiymati `DATABASE_URL_UNPOOLED` dan olinadi (Neo
 
 ## Agar build migratsiya xatosi bilan to'xtasa
 
+Migratsiya xatosi build'ni to'xtatmaydi: `[vercel-build]` ogohlantirish chiqaradi, `next build` davom etadi (sayt yangi kod bilan chiqadi, lekin DB sxemasi eskirgan bo'lib qoladi). Migratsiyani alohida qo'lda qo'llash kerak:
+
 - Vercel build log'idagi `[vercel-build]` va Prisma xatolarini o'qing (qaysi migratsiya, qanday xato).
 - Migratsiya holatini tekshirish:
 
@@ -34,3 +36,13 @@ DATABASE_URL=<to'g'ridan-to'g'ri ulanish URL> npx prisma migrate deploy
 ```
 
 - Agar xato `P1001`/timeout bo'lsa — DB to'g'ri ishlamayapti yoki URL noto'g'ri. Vercel'da `DATABASE_URL_UNPOOLED` ni tekshiring (Settings → Environment Variables).
+- Migratsiyani build ichida butunlay o'tkazib yuborish kerak bo'lsa: `SKIP_MIGRATE=1` environment variable'ini qo'ying.
+
+## Deploy umuman ishlamayapti bo'lsa
+
+Repo'dagi `.github/workflows/vercel-deploy.yml` `VERCEL_TOKEN` secreti bekor bo'lgani uchun fail qiladi (`vercel pull` → "token is not valid"). Bu workflow'ni yoqish uchun:
+
+1. `fbsu.vercel.app` ni xizmat qilayotgan Vercel akkauntidan yangi token yarating (Settings → Tokens).
+2. Repo's GitHub secret'larida `VERCEL_TOKEN` ni yangilang (token egalari `ozodbekprog/FBSU` repo adminsi bo'lishi kerak).
+
+Token yangilangan bo'lsa, workflow migratsiyani ham, deploy'ni ham o'zi qiladi va `vercel-build`ga zarurat qolmaydi.

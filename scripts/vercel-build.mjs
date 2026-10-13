@@ -31,16 +31,18 @@ const npx = process.platform === "win32" ? "npx.cmd" : "npx";
 
 run("prisma generate", npx, ["prisma", "generate"], env);
 
-log("prisma migrate deploy — migratsiyalar production DB ga qo'llanadi");
-const migrate = spawnSync(npx, ["prisma", "migrate", "deploy"], { stdio: "inherit", env });
-if (migrate.status !== 0) {
-  log("XATO: prisma migrate deploy muvaffaqiyatsiz tugadi (yog'origidagi Prisma xatolarini tekshiring).");
-  log("Ko'pincha sabab: DATABASE_URL pooler (pgbouncer) orqali ulanish — bunday holatda DATABASE_URL_UNPOOLED saqlang.");
-  log("Qo'lda bajarish:");
-  log("  DATABASE_URL=<to'g'ridan-to'g'ri ulanish URL> npx prisma migrate deploy");
-  log("Migratsiya holatini tekshirish:");
-  log("  DATABASE_URL=<URL> npx prisma migrate status");
-  process.exit(migrate.status ?? 1);
+if (process.env.SKIP_MIGRATE === "1") {
+  log("SKIP_MIGRATE=1 — prisma migrate deploy o'tkazildi.");
+} else {
+  log("prisma migrate deploy — migratsiyalar production DB ga qo'llanadi");
+  const migrate = spawnSync(npx, ["prisma", "migrate", "deploy"], { stdio: "inherit", env });
+  if (migrate.status !== 0) {
+    log("OGOHLANTIRISH: prisma migrate deploy muvaffaqiyatsiz tugadi.");
+    log("Build davom etadi (sayt yangilanadi), lekin DB sxemasi eskirgan bo'lib qoladi.");
+    log("Sabab ko'pincha: DATABASE_URL pooler (pgbouncer) — bunday holatda DATABASE_URL_UNPOOLED saqlang.");
+    log("Qo'lda bajarish: DATABASE_URL=<to'g'ridan-to'g'ri ulanish URL> npx prisma migrate deploy");
+    log("Holatni tekshirish: DATABASE_URL=<URL> npx prisma migrate status");
+  }
 }
 
 run("next build", npx, ["next", "build"], env);
