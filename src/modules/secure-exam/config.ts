@@ -1,0 +1,11 @@
+export const EXAM_CODE_LENGTH = 6;
+export const EXAM_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+export const EXAM_CODE_MAX_RETRIES = 8;
+export const DEFAULT_MAX_WARNINGS = 3;
+export const MAX_WARNINGS_LIMIT = 10;
+export const MAX_EXTRA_MINUTES = 120;
+export const MAX_DURATION_MIN = 600;
+export const SYNC_INTERVAL_MS = 10_000;
+export const MONITOR_POLL_MS = 5_000;
+export const RUN_STALE_MS = 45_000;
+export const MAX_EVENTS_PER_SYNC = 50;
