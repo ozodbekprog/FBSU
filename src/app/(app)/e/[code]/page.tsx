@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import { isStaff, requireUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { ButtonLink, Card, PageHeader } from "@/components/ui";
-import { JoinForm } from "@/components/secure-exam/join-form";
-import { isValidExamCode, normalizeExamCode } from "@/modules/secure-exam/code";
-import { getDictionary, getLocale } from "@/i18n";
+import { Badge, ButtonLink, Card, PageHeader } from "@/components/ui";
+import { StartExamButton } from "@/components/secure-exam/start-exam";
+import { inspectSecureJoin } from "@/server/secure-exam";
+import { normalizeExamCode } from "@/modules/secure-exam/code";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 export default async function ExamLinkPage({
   params,
@@ -19,25 +19,11 @@ export default async function ExamLinkPage({
   const { code: raw } = await params;
   const code = normalizeExamCode(raw);
 
-  const exam = isValidExamCode(code)
-    ? await prisma.secureExam.findUnique({
-        where: { code },
-        select: {
-          title: true,
-          status: true,
-          startsAt: true,
-          endsAt: true,
-        },
-      })
-    : null;
+  const inspection = await inspectSecureJoin({ id: user.id, role: user.role }, code);
 
-  const now = new Date();
-  const open =
-    exam !== null &&
-    exam.status !== "CLOSED" &&
-    now.getTime() <= exam.endsAt.getTime();
+  if (inspection.kind === "RESUME") redirect(`/exam/${inspection.runId}`);
 
-  if (!open) {
+  if (inspection.kind === "ERROR") {
     return (
       <div className="mx-auto max-w-md">
         <PageHeader
@@ -50,18 +36,56 @@ export default async function ExamLinkPage({
           }
         />
         <Card className="p-6 text-center">
-          <p className="font-medium text-slate-800">
-            {exam ? dictionary.secLinkClosed : dictionary.secLinkNotFound}
-          </p>
+          <p className="font-medium text-slate-800">{inspection.message}</p>
+          {inspection.quizId ? (
+            <ButtonLink
+              href={`/quizzes/${inspection.quizId}/results`}
+              size="sm"
+              variant="secondary"
+              className="mt-4"
+            >
+              {dictionary.secResultsLink}
+            </ButtonLink>
+          ) : null}
         </Card>
       </div>
     );
   }
 
+  const { exam } = inspection;
+
   return (
     <div className="mx-auto max-w-md">
       <PageHeader title={dictionary.secTitle} subtitle={dictionary.secSubtitleStudent} />
-      <JoinForm initialCode={code} />
+      <Card className="p-6">
+        <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">
+          {dictionary.secYourExam}
+        </p>
+        <h1 className="mt-1 text-xl font-semibold tracking-tight text-brand-950">{exam.title}</h1>
+        <p className="mt-1 text-sm text-slate-500">{exam.quizTitle}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {exam.durationMin !== null ? (
+            <Badge tone="blue">{translate(locale, "secMinutes", { count: exam.durationMin })}</Badge>
+          ) : null}
+          <Badge tone="amber">
+            {translate(locale, "secWarningLimit", { max: exam.maxWarnings })}
+          </Badge>
+          {exam.requireFullscreen ? (
+            <Badge tone="slate">{dictionary.secFieldFullscreen}</Badge>
+          ) : null}
+          {exam.blockCopy ? <Badge tone="slate">{dictionary.secFieldBlockCopy}</Badge> : null}
+          {exam.webcamEnabled ? (
+            <Badge tone="rose">{dictionary.secGateCameraTitle}</Badge>
+          ) : null}
+        </div>
+        <p className="mt-4 text-sm leading-relaxed text-slate-600">{dictionary.secGateText}</p>
+        <p className="mt-3 text-xs text-slate-500">
+          {dictionary.secAccount}: {user.email}
+        </p>
+        <div className="mt-5">
+          <StartExamButton code={code} />
+        </div>
+      </Card>
     </div>
   );
 }

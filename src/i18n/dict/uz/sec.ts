@@ -140,4 +140,6 @@ export const sec = {
   secLinkNotFound: "Bunday kodli imtihon topilmadi",
   secLinkClosed: "Imtihon yopilgan yoki vaqti tugagan",
   secCreateForQuiz: "Xavfsiz imtihon",
+  secYourExam: "Sizning imtihoningiz",
+  secAccount: "Hisob",
 };

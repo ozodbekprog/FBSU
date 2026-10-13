@@ -140,4 +140,6 @@ export const sec = {
   secLinkNotFound: "Экзамен с таким кодом не найден",
   secLinkClosed: "Экзамен закрыт или время истекло",
   secCreateForQuiz: "Безопасный экзамен",
+  secYourExam: "Ваш экзамен",
+  secAccount: "Аккаунт",
 };

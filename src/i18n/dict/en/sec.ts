@@ -140,4 +140,6 @@ export const sec = {
   secLinkNotFound: "No exam found with this code",
   secLinkClosed: "The exam is closed or the window has ended",
   secCreateForQuiz: "Secure Exam",
+  secYourExam: "Your exam",
+  secAccount: "Account",
 };

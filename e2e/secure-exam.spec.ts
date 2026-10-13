@@ -105,7 +105,7 @@ test("xavfsiz imtihon: yaratish, kirish, topshirish va monitor", async ({ browse
   }
 });
 
-test("xavfsiz imtihon: o'qituvchi urinishni to'xtatadi", async ({ browser }) => {
+test("xavfsiz imtihon: to'g'ridan-to'g'ri havola va o'qituvchi to'xtatishi", async ({ browser }) => {
   const teacherContext = await browser.newContext();
   const studentContext = await browser.newContext();
   try {
@@ -116,9 +116,17 @@ test("xavfsiz imtihon: o'qituvchi urinishni to'xtatadi", async ({ browser }) => 
     const { id, code } = await createExam(teacher, `E2E to'xtatish ${Date.now()}`);
 
     await login(student, "ozodbek@ttpu.uz");
-    await joinExam(student, code);
+    await student.goto(`/e/${code}`);
+    await expect(student.getByText("Sizning imtihoningiz")).toBeVisible({ timeout: 15_000 });
+    await student.getByRole("button", { name: "Kirish" }).click();
+    await expect(student).toHaveURL(/\/exam\//, { timeout: 20_000 });
     await student.getByRole("button", { name: "Imtihonni boshlash" }).click();
     await expect(student.getByText("print()", { exact: true })).toBeVisible({ timeout: 15_000 });
+
+    const resume = await studentContext.newPage();
+    await resume.goto(`/e/${code}`);
+    await expect(resume).toHaveURL(/\/exam\//, { timeout: 15_000 });
+    await resume.close();
 
     await teacher.goto(`/secure-exams/${id}`);
     await expect(teacher.getByText("Ozodbek Hoshimov").first()).toBeVisible({ timeout: 20_000 });
