@@ -79,10 +79,14 @@ export default async function AppLayout({
       label: dictionary.navGroupStudy,
       links: [
         { href: "/exams", label: dictionary.navExams },
+        ...(modules.secure_exams
+          ? [{ href: "/secure-exams", label: dictionary.navSecureExams }]
+          : []),
         { href: "/grades", label: isStaff(user.role) ? dictionary.navGradesStaff : dictionary.navGradesStudent },
         { href: "/gpa", label: dictionary.navGpa },
         { href: "/transcript", label: dictionary.navTranscript },
         { href: "/attendance", label: dictionary.navAttendance },
+        { href: "/board", label: dictionary.brdTitle },
         ...(isStaff(user.role) ? [{ href: "/journal", label: dictionary.navJournal }] : []),
         ...(modules.certificates ? [{ href: "/certificates", label: dictionary.navCertificates }] : []),
         ...(isStaff(user.role) ? [{ href: "/journals", label: dictionary.navJournals }] : []),
@@ -125,6 +129,9 @@ export default async function AppLayout({
         ...(["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR", "STUDENT"].includes(user.role)
           ? [{ href: "/finance", label: dictionary.finTitle }]
           : []),
+        ...(["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"].includes(user.role)
+          ? [{ href: "/finance/rates", label: dictionary.finNavRates }]
+          : []),
         { href: "/my-qr", label: dictionary.accMyQr },
         ...(["ADMIN", "REGISTRAR", "XODIM", "REKTOR", "PRO_RECTOR"].includes(user.role)
           ? [{ href: "/access", label: dictionary.accTitle }]
@@ -154,6 +161,9 @@ export default async function AppLayout({
           : []),
         ...(isStaff(user.role) || user.role === "TYUTOR"
           ? [{ href: "/curator", label: dictionary.navCurator }]
+          : []),
+        ...(user.role === "ADMIN" || user.role === "NAZORATCHI"
+          ? [{ href: "/nazorat", label: dictionary.navNazorat }]
           : []),
         ...(user.role === "REGISTRAR"
           ? [
@@ -204,20 +214,23 @@ export default async function AppLayout({
       "/tasks", "/staff", "/my-qr", "/messages", "/search", "/help", "/bounty", "/settings",
     ],
     TEACHER: [
-      "/dashboard", "/assistant", "/courses", "/journal", "/journals",
-      "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/attendance",
+      "/dashboard", "/assistant", "/courses", "/board", "/journal", "/journals",
+      "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/secure-exams", "/attendance",
       "/reports", "/workload", "/staff", "/tasks", "/my-qr", "/messages", "/bookings", "/rooms",
       "/research", "/search", "/help", "/bounty", "/settings",
     ],
     STUDENT: [
-      "/dashboard", "/assistant", "/courses", "/schedule", "/calendar",
-      "/academic-calendar", "/exams", "/grades", "/gpa", "/transcript", "/attendance",
+      "/dashboard", "/assistant", "/courses", "/board", "/schedule", "/calendar",
+      "/academic-calendar", "/exams", "/secure-exams", "/grades", "/gpa", "/transcript", "/attendance",
       "/certificates", "/finance", "/my-qr", "/messages", "/orders", "/bookings", "/rooms",
       "/search", "/help", "/bounty", "/settings",
     ],
     XODIM: [
       "/dashboard", "/assistant", "/staff", "/tasks", "/my-qr", "/access", "/schedule", "/calendar",
       "/academic-calendar", "/messages", "/rooms", "/bookings", "/search", "/help", "/bounty", "/settings",
+    ],
+    NAZORATCHI: [
+      "/dashboard", "/nazorat", "/messages", "/search", "/help", "/settings",
     ],
     // Buxgalter: moliyaviy vazifa uchun faqat kerakli bo'limlar.
     // Jadval, davomat va xodimlar davomati olib tashlandi — ular oylik
@@ -261,6 +274,8 @@ export default async function AppLayout({
                     ? dictionary.roleStaff
                     : user.role === "OTA_ONA"
                       ? dictionary.roleParent
+                    : user.role === "NAZORATCHI"
+                      ? dictionary.roleNazoratchi
                     : user.role === "TEACHER"
                   ? dictionary.roleTeacher
                   : user.group?.name ?? dictionary.roleStudent;

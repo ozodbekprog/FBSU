@@ -249,6 +249,7 @@ export default async function PayrollPage() {
         roleTeacher: d.payRoleTeacher,
         roleStudent: d.payRoleStudent,
         roleParent: d.payRoleParent,
+        roleNazoratchi: d.roleNazoratchi,
       }}
     />
   );
