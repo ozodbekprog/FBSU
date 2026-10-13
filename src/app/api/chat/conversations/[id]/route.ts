@@ -146,11 +146,31 @@ export async function DELETE(
     return Response.json({ ok: false, error: "Ruxsat yo'q" }, { status: 403 });
   }
 
+  // Telegram uslubi: suhbatni o'chirish = FAQAT shu foydalanuvchi
+  // ro'yxatidan yashirish.
+  //
+  //  - `deletedAt` — ro'yxatdan yashirish belgisi. Yashirin hisoblanadi
+  //    faqat `deletedAt > lastMessageAt` bo'lganda, ya'ni o'chirilgandan
+  //    keyin yangi xabar kelmagan bo'lsa. Qarshi tomon yozsa, suhbat
+  //    o'z-o'zidan qaytadi.
+  //  - `clearedAt` — tarixni ham tozalaymiz: qaytganda eski xabarlar
+  //    ko'rinmasin (Telegram'dagi kabi), faqat yangilari chiqsin.
+  //
+  // Yozuvlar bazadan O'CHIRILMAYDI: qarshi tomon uchun hech narsa
+  // o'zgarmaydi va audit izi saqlanib qoladi.
+  const now = new Date();
+  await prisma.conversationSetting.upsert({
+    where: { conversationId_userId: { conversationId: id, userId: user.id } },
+    create: { conversationId: id, userId: user.id, deletedAt: now, clearedAt: now },
+    update: { deletedAt: now, clearedAt: now, pinnedAt: null, archivedAt: null },
+  });
+
   const clientInfo = getClientInfo(request);
   await createAuditLog({
     action: "CHAT_DELETE",
     entity: "Conversation",
     entityId: id,
+    meta: { scope: "for_me" },
     ip: clientInfo.ip,
     userAgent: clientInfo.userAgent,
   });

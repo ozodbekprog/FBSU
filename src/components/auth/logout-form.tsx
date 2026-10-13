@@ -2,6 +2,7 @@
 
 import { logoutAction } from "@/server/logout-action";
 import { useI18n } from "@/components/i18n/LocaleProvider";
+import { clearOfflineCaches } from "@/lib/offline-cache";
 
 /**
  * Logout is a server action: it verifies the double-submit CSRF token
@@ -12,8 +13,22 @@ import { useI18n } from "@/components/i18n/LocaleProvider";
  */
 export function LogoutForm() {
   const { t } = useI18n();
+
+  /**
+   * Chiqishdan oldin oflayn keshni tozalaymiz.
+   *
+   * Kesh brauzer darajasida saqlanadi va foydalanuvchilararo umumiy.
+   * Tozalamasa, keyingi foydalanuvchi (yoki oiladagi kishi) tarmoq
+   * yo'q holda avvalgi foydalanuvchining baholari va xabarlarini ko'rishi
+   * mumkin — sessiya cookie'si o'chganiga qaramay. Shuning uchun bu
+   * majburiy, "qulaylik" emas.
+   */
+  async function handleSubmit() {
+    await clearOfflineCaches();
+  }
+
   return (
-    <form action={logoutAction}>
+    <form action={logoutAction} onSubmit={handleSubmit}>
       <button
         type="submit"
         className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600"

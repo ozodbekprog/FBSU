@@ -172,6 +172,17 @@
 
 html {
   scroll-behavior: smooth;
+  /* Запрет double-tap zoom на мобильных устройствах.
+   * `manipulation` = `pan-x pan-y pinch-zoom`: прокрутка (pan) и
+   * pinch-zoom РАБОТАЮТ, а увеличение двойным тапом отключено.
+   *
+   * Почему не `pan-x pan-y` (который блокирует и pinch): это слишком
+   * агрессивно — оно заблокировало бы pinch-zoom внутри карт, изображений
+   * и других компонентов, которым он нужен. `manipulation` — точечное
+   * решение, которое не ломает остальные жесты.
+   *
+   * Прокрутка, клики, выделение и ввод текста НЕ затрагиваются. */
+  touch-action: manipulation;
 }
 
 body {
@@ -372,6 +383,62 @@ body:has([data-nav-shell][data-collapsed="true"]) {
     /* Yon menyu bilan bir xil tezlikda siljiydi — yig'ilganda panel
        bo'sh joy qoldirmasdan orqasidan ergashadi. */
     transition: left 360ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+}
+
+/* Haqiqiy telefonlar (touch, pointer: coarse): desktop sidebar butunlay
+   yashiriladi — mobil navigatsiya yon menyu (hamburger drawer) va pastdagi
+   tab panel orqali bo'ladi. Avval bu yerda rail ko'rsatilardi: telefonda
+   nuqtalardan iborat yaroqsiz ustun paydo bo'lib, kontentni siqib, yozuvlar
+   kesilib qolardi (3D ikonkalar mobil uchun o'chirilgan). */
+@media (max-width: 767px) and (pointer: coarse) {
+  aside:has(> [data-nav-shell]) {
+    display: none;
+  }
+}
+
+/* Sichqonchali (pointer: fine) tor ekranlar (brauzer zoom'i yoki
+   kichraytirilgan oyna) uchun sidebar icon-only rail bo'ladi — lekin
+   umuman YO'QOLMAYDI.
+
+   Avval `hidden md:flex` ishlatilgandi, shuning uchun brauzer zoom'ida
+   (CSS kenglik 768px dan pastga tushganda) sidebar butunlay yo'qolardi.
+   Endi u faqat torayadi: matnlar yashiriladi, ikonkalar qoladi.
+
+   `:not([data-collapsed="true"])` — foydalanuvchi qo'lda yopgan holatga
+   (5rem) bu qoida tegmaydi, u o'z holatini saqlaydi.
+
+   Telefonlar (pointer: coarse) uchun esa yuqoridagi qoida sidebar'ni
+   butunlay yashiradi — mobil navigatsiya drawer + tab panel orqali. */
+@media (max-width: 767px) and (pointer: fine) {
+  aside:has(> [data-nav-shell]):not([data-collapsed="true"]) {
+    width: 4.5rem;
+  }
+
+  aside:has(> [data-nav-shell]):not([data-collapsed="true"]) .nav-label,
+  aside:has(> [data-nav-shell]):not([data-collapsed="true"]) .nav-badge {
+    max-width: 0;
+    opacity: 0;
+  }
+
+  aside:has(> [data-nav-shell]):not([data-collapsed="true"]) .nav-link {
+    gap: 0;
+    padding-inline: 0.5rem;
+  }
+
+  aside:has(> [data-nav-shell]):not([data-collapsed="true"]) .nav-link .nav-icon {
+    margin-inline: auto;
+  }
+
+  aside:has(> [data-nav-shell]):not([data-collapsed="true"]) .nav-group-label {
+    max-height: 0;
+  }
+
+  /* Sidebar'dagi foydalanuvchi kartasi va til almashtirgich kichik ekranda
+     siqiladi — ularni ham yashirib, faqat kerakliarni qoldiramiz. */
+  aside:has(> [data-nav-shell]):not([data-collapsed="true"]) > div:last-child > a,
+  aside:has(> [data-nav-shell]):not([data-collapsed="true"]) > div:last-child > form {
+    display: none;
   }
 }
 

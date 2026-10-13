@@ -4,6 +4,7 @@ import {
   bountyLeaders,
   bountyPoints,
   fixerStats,
+  parseBountyFilter,
   readFix,
   readReporter,
   readSeverity,
@@ -80,5 +81,16 @@ describe("readReporter", () => {
       role: "STUDENT",
     });
     expect(readReporter(null)).toEqual({ name: null, role: null });
+  });
+});
+
+describe("parseBountyFilter", () => {
+  it("faqat ma'lum filtrlarni qabul qiladi, qolganini all ga qaytaradi", () => {
+    expect(parseBountyFilter("open")).toBe("open");
+    expect(parseBountyFilter("fixed")).toBe("fixed");
+    expect(parseBountyFilter("rejected")).toBe("rejected");
+    expect(parseBountyFilter("all")).toBe("all");
+    expect(parseBountyFilter("boshqa")).toBe("all");
+    expect(parseBountyFilter(undefined)).toBe("all");
   });
 });

@@ -161,6 +161,12 @@ const S: Record<string, ReactNode> = {
       <path d="m20 20-4.3-4.3" />
     </>
   ),
+"/assistant": (
+    <>
+      {/* Fariza — 4 qirrali AI uchquni (sparkle) */}
+      <path d="M12 3l2 7 7 2-7 2-2 7-2-7-7-2 7-2z" />
+    </>
+  ),
 "/help": (
     <>
       <circle cx="12" cy="12" r="9" />
@@ -186,6 +192,14 @@ const S: Record<string, ReactNode> = {
       <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
     </>
   ),
+"/research": (
+    <>
+      <circle cx="12" cy="12" r="1.6" />
+      <ellipse cx="12" cy="12" rx="9" ry="3.6" />
+      <ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(60 12 12)" />
+      <ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(120 12 12)" />
+    </>
+  ),
 "/workload": (
     <>
       <circle cx="12" cy="12" r="9" />
@@ -196,6 +210,28 @@ const S: Record<string, ReactNode> = {
     <>
       <path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6z" />
       <path d="m9 12 2 2 4-4" />
+    </>
+  ),
+"/admin/users": (
+    <>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </>
+  ),
+"/admin/groups": (
+    <>
+      <path d="m12 2 9 5-9 5-9-5 9-5" />
+      <path d="m3 12 9 5 9-5" />
+      <path d="m3 17 9 5 9-5" />
+    </>
+  ),
+"/admissions": (
+    <>
+      <path d="m12 4 9 4.5-9 4.5-9-4.5L12 4Z" />
+      <path d="M6 10.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-5.5" />
+      <path d="M21 8.5V14" />
     </>
   ),
 "/approvals": (
@@ -242,6 +278,15 @@ const S: Record<string, ReactNode> = {
       <circle cx="19" cy="12" r="1.5" />
     </>
   ),
+"/turniket": (
+    <>
+      <circle cx="12" cy="10" r="2" />
+      <path d="M12 10 5 6" />
+      <path d="M12 10l7-4" />
+      <path d="M12 10v11" />
+      <path d="M7 21h10" />
+    </>
+  ),
 "/documents": (
     <>
       <path d="M4 5a2 2 0 0 1 2-2h5l2 3h5a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
@@ -281,6 +326,12 @@ const S: Record<string, ReactNode> = {
     <>
       <circle cx="12" cy="9" r="5" />
       <path d="M8.5 13.5 7 22l5-2.5L17 22l-1.5-8.5" />
+    </>
+  ),
+"/bounty": (
+    <>
+      <circle cx="12" cy="9" r="5" />
+      <path d="M8.5 13.3 7 22l5-2.6L17 22l-1.5-8.7" />
     </>
   ),
 };

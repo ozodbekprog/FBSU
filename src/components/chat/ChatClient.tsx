@@ -438,7 +438,17 @@ export function ChatClient({ currentUserId, initialUserId }: Props) {
   );
 
   return (
-    <Card className="flex h-[calc(100vh-15rem)] min-h-[480px] animate-fade-up overflow-hidden md:h-full md:min-h-0 md:rounded-none md:border-0 md:shadow-none">
+    /* Balandlik `100dvh` dan olinadi, `100vh` dan emas:
+     telefonda `100vh` brauzer panelini (URL/panel tugmalari) ham
+     hisobga oladi va yashirilganda/qaytanda o'zgaradi — foydalanuvchi
+     karta pastini ko'rmasligi yoki chetlab ketishi mumkin edi.
+     `dvh` esa har doim KO'RINADIGAN maydonni beradi, shuning uchun
+     telefon brauzeri yoki bosh boshqa qurilmada kattalashtirish
+     (pinch-zoom / +-) qilinganda ham panel joyida qoladi.
+     `min-h` esa kichik ekranlarda ekranga sig'sin, kattalarida 480px.
+     Bo'shliq `_` bilan yozilgan — Tailwind uni `calc(100dvh - 15rem)`
+     ga aylantiradi (aniq va boshqa vositalarda ham to'g'ri o'qiladi). */
+    <Card className="flex h-[calc(100dvh_-_15rem)] min-h-[60vh] animate-fade-up overflow-hidden sm:min-h-[480px] md:h-full md:min-h-0 md:rounded-none md:border-0 md:shadow-none">
       <div
         className={cn(
           // md (768–1023px) da sidebar 256px ni yeb ketadi va kartada

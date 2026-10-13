@@ -24,7 +24,7 @@ const DEMO_ACCOUNTS = [
   },
   {
     roleKey: "roleProRector" as const,
-    email: "prorektor-oquv@ttpu.uz",
+    email: "prorektor@ttpu.uz",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-4">
         <path d="m12 3 2.7 5.4 6 .9-4.3 4.2 1 6-5.4-2.9-5.4 2.9 1-6-4.3-4.2 6-.9L12 3Z" />
@@ -33,7 +33,7 @@ const DEMO_ACCOUNTS = [
   },
   {
     roleKey: "roleDean" as const,
-    email: "dekan-ki@ttpu.uz",
+    email: "dekan@ttpu.uz",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-4">
         <rect x="4" y="3" width="16" height="18" rx="2" />
@@ -44,7 +44,7 @@ const DEMO_ACCOUNTS = [
   },
   {
     roleKey: "roleHead" as const,
-    email: "kafedra-di@ttpu.uz",
+    email: "kafedra@ttpu.uz",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-4">
         <rect x="8" y="2" width="8" height="4" rx="1" />
@@ -55,7 +55,7 @@ const DEMO_ACCOUNTS = [
   },
   {
     roleKey: "roleRegistrar" as const,
-    email: "registrator@ttpu.uz",
+    email: "registrar@ttpu.uz",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-4">
         <path d="M4 4h5l2 3h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
@@ -76,7 +76,7 @@ const DEMO_ACCOUNTS = [
   },
   {
     roleKey: "roleTutor" as const,
-    email: "tyutor-1@ttpu.uz",
+    email: "tyutor@ttpu.uz",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-4">
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -88,7 +88,7 @@ const DEMO_ACCOUNTS = [
   },
   {
     roleKey: "roleStaff" as const,
-    email: "kutubxona@ttpu.uz",
+    email: "xodim@ttpu.uz",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-4">
         <rect x="2" y="7" width="20" height="14" rx="2" />
@@ -117,7 +117,7 @@ const DEMO_ACCOUNTS = [
   },
   {
     roleKey: "authRoleTeacher" as const,
-    email: "fizika@ttpu.uz",
+    email: "o.ismoilova@ttpu.uz",
     icon: (
       <svg
         viewBox="0 0 24 24"

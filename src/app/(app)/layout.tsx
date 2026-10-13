@@ -14,6 +14,7 @@ import { Logo } from "@/components/brand/logo";
 import { MobileTabBar, NavLinks, type MobileTab, type MobileTabIcon } from "./nav-links";
 import { MobileNav } from "@/components/nav/mobile-nav";
 import { BugAssistant } from "@/components/bugs/bug-assistant";
+import { OfflineBanner } from "@/components/pwa/OfflineBanner";
 import { TourGuide } from "@/components/tour/tour-guide";
 import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 
@@ -139,6 +140,7 @@ export default async function AppLayout({
           : []),
         { href: "/search", label: dictionary.navSearch },
         { href: "/help", label: dictionary.navHelp },
+        { href: "/bounty", label: dictionary.navBounty },
         { href: "/settings", label: dictionary.navSettings },
       ],
     },
@@ -174,52 +176,52 @@ export default async function AppLayout({
     REKTOR: [
       "/dashboard", "/assistant", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
       "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar", "/research",
-      "/messages", "/search", "/help", "/settings", "/access",
+      "/messages", "/search", "/help", "/bounty", "/settings", "/access",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     PRO_RECTOR: [
       "/dashboard", "/assistant", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
       "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar", "/research",
-      "/messages", "/search", "/help", "/settings", "/access",
+      "/messages", "/search", "/help", "/bounty", "/settings", "/access",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     DEKAN: [
       "/dashboard", "/assistant", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
-      "/schedule", "/calendar", "/academic-calendar", "/research", "/messages", "/search", "/help", "/settings",
+      "/schedule", "/calendar", "/academic-calendar", "/research", "/messages", "/search", "/help", "/bounty", "/settings",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     KAFEDRA_MUDIRI: [
       "/dashboard", "/assistant", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
-      "/schedule", "/calendar", "/academic-calendar", "/research", "/messages", "/search", "/help", "/settings",
+      "/schedule", "/calendar", "/academic-calendar", "/research", "/messages", "/search", "/help", "/bounty", "/settings",
     ],
     REGISTRAR: [
       "/dashboard", "/assistant", "/monitoring", "/admissions", "/approvals", "/finance", "/documents", "/diplomas", "/staff",
       "/tasks", "/admin/users", "/admin/groups", "/admin/import", "/admin/hemis", "/schedule",
-      "/calendar", "/academic-calendar", "/rooms", "/messages", "/search", "/help", "/settings",
+      "/calendar", "/academic-calendar", "/rooms", "/messages", "/search", "/help", "/bounty", "/settings",
       "/my-qr", "/access",
     ],
     TYUTOR: [
       "/dashboard", "/assistant", "/curator", "/attendance", "/schedule", "/calendar", "/academic-calendar",
-      "/tasks", "/staff", "/my-qr", "/messages", "/search", "/help", "/settings",
+      "/tasks", "/staff", "/my-qr", "/messages", "/search", "/help", "/bounty", "/settings",
     ],
     TEACHER: [
       "/dashboard", "/assistant", "/courses", "/board", "/journal", "/journals",
       "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/secure-exams", "/attendance",
       "/reports", "/workload", "/staff", "/tasks", "/my-qr", "/messages", "/bookings", "/rooms",
-      "/research", "/search", "/help", "/settings",
+      "/research", "/search", "/help", "/bounty", "/settings",
     ],
     STUDENT: [
       "/dashboard", "/assistant", "/courses", "/board", "/schedule", "/calendar",
       "/academic-calendar", "/exams", "/secure-exams", "/grades", "/gpa", "/transcript", "/attendance",
       "/certificates", "/finance", "/my-qr", "/messages", "/orders", "/bookings", "/rooms",
-      "/search", "/help", "/settings",
+      "/search", "/help", "/bounty", "/settings",
     ],
     XODIM: [
       "/dashboard", "/assistant", "/staff", "/tasks", "/my-qr", "/access", "/schedule", "/calendar",
-      "/academic-calendar", "/messages", "/rooms", "/bookings", "/search", "/help", "/settings",
+      "/academic-calendar", "/messages", "/rooms", "/bookings", "/search", "/help", "/bounty", "/settings",
     ],
     // Buxgalter: moliyaviy vazifa uchun faqat kerakli bo'limlar.
     // Jadval, davomat va xodimlar davomati olib tashlandi — ular oylik
@@ -227,9 +229,9 @@ export default async function AppLayout({
     // lavozim/navbar/grafik boshqaruvi bor.
     BUXGALTER: [
       "/dashboard", "/assistant", "/payroll", "/turniket", "/calendar",
-      "/messages", "/my-qr", "/search", "/help", "/settings",
+      "/messages", "/my-qr", "/search", "/help", "/bounty", "/settings",
     ],
-    OTA_ONA: ["/assistant", "/parent", "/messages", "/help", "/settings"],
+    OTA_ONA: ["/assistant", "/parent", "/messages", "/help", "/bounty", "/settings"],
   };
 
   const allowedHrefs = ROLE_MENU[user.role];
@@ -293,7 +295,11 @@ export default async function AppLayout({
   return (
     <LocaleProvider locale={locale} dictionary={dictionary}>
       <div className="flex min-h-screen">
-      <aside className="app-shell-sidebar sticky top-0 z-30 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-200/60 bg-white/85 backdrop-blur-xl md:flex">
+      {/* Sidebar HAR DOIM ko'rinadi. Avval `hidden md:flex` edi — brauzerda
+          kattalashtirganda (Ctrl/Cmd + yoki pinch-zoom) CSS kenglik 768px
+          dan pastga tushardi va sidebar butunlay yo'qolardi (videodagi
+          holat). Endi u faqat kichrayadi (icon rail), lekin yo'qolmaydi. */}
+      <aside className="app-shell-sidebar sticky top-0 z-30 flex h-dvh w-64 shrink-0 flex-col border-r border-slate-200/60 bg-white/85 backdrop-blur-xl">
         <div className="flex h-16 items-center justify-between border-b border-slate-100 px-5">
           <Link href="/dashboard" className="transition-opacity hover:opacity-80">
             <Logo />
@@ -346,6 +352,7 @@ export default async function AppLayout({
       <MobileTabBar tabs={visibleTabs} />
       <BugAssistant />
       <TourGuide role={user.role} />
+      <OfflineBanner />
     </div>
     </LocaleProvider>
   );

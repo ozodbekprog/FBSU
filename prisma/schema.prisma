@@ -1341,6 +1341,15 @@ model ConversationSetting {
   /// "Tarixni tozalash" — shu vaqtdan keyingi xabarlar ko'rinmaydi
   /// (yozuvlar bazada saqlanib qoladi).
   clearedAt      DateTime?
+  /// "Suhbatni o'chirish" — Telegram uslubi: suhbat FAQAT shu
+  /// foydalanuvchi ro'yxatidan yashiriladi. Yozuvlar va qarshi tomon
+  /// uchun hech narsa o'zgarmaydi.
+  ///
+  /// Yashirin hisoblanadi faqat `deletedAt > lastMessageAt` bo'lganda —
+  /// ya'ni o'chirilgandan KEYIN yangi xabar kelmagan bo'lsa. Qarshi
+  /// tomon yozsa, suhbat o'z-o'zidan ro'yxatga qaytadi (Telegram'dagi
+  /// kabi) — buning uchun alohida kod kerak emas.
+  deletedAt      DateTime?
   createdAt      DateTime @default(now())
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
@@ -1348,6 +1357,7 @@ model ConversationSetting {
 
   @@unique([conversationId, userId])
   @@index([userId, archivedAt])
+  @@index([userId, deletedAt])
 }
 
 /// Bloklash — ikki tomonlama: yozish yuborilmaydi, suhbat yopiladi.

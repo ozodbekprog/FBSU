@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
+import {
+  getDeferredInstallPrompt,
+  setDeferredInstallPrompt,
+  subscribeDeferredInstallPrompt,
+  type BeforeInstallPromptEvent,
+} from "./install-prompt";
 
 const DISMISS_KEY = "ttpu-pwa-install-dismissed";
 
@@ -62,14 +63,20 @@ export function PwaRegister() {
       }
     }
 
+    const unsubscribe = subscribeDeferredInstallPrompt((event) => {
+      if (!event) return;
+      if (window.localStorage.getItem(DISMISS_KEY) === "1") return;
+      setPromptEvent(event);
+      setVisible(true);
+    });
+
     const handlePrompt = (event: Event) => {
       event.preventDefault();
-      if (window.localStorage.getItem(DISMISS_KEY) === "1") return;
-      setPromptEvent(event as BeforeInstallPromptEvent);
-      setVisible(true);
+      setDeferredInstallPrompt(event as BeforeInstallPromptEvent);
     };
 
     const handleInstalled = () => {
+      setDeferredInstallPrompt(null);
       setVisible(false);
       setPromptEvent(null);
     };
@@ -77,6 +84,7 @@ export function PwaRegister() {
     window.addEventListener("beforeinstallprompt", handlePrompt);
     window.addEventListener("appinstalled", handleInstalled);
     return () => {
+      unsubscribe();
       window.removeEventListener("beforeinstallprompt", handlePrompt);
       window.removeEventListener("appinstalled", handleInstalled);
     };
@@ -89,10 +97,14 @@ export function PwaRegister() {
   };
 
   const install = async () => {
-    if (!promptEvent) return;
-    await promptEvent.prompt();
-    const choice = await promptEvent.userChoice;
-    if (choice.outcome === "accepted") setVisible(false);
+    const event = promptEvent ?? getDeferredInstallPrompt();
+    if (!event) return;
+    await event.prompt();
+    const choice = await event.userChoice;
+    if (choice.outcome === "accepted") {
+      setVisible(false);
+      setDeferredInstallPrompt(null);
+    }
     setPromptEvent(null);
   };
 

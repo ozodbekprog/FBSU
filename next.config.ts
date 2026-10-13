@@ -85,6 +85,9 @@ const nextConfig: NextConfig = {
         source: "/models/:path*",
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
       },
+      // Oflayn rejim belgisi (`X-FBSU-Offline-Cache`) **proxy** da qo'yiladi
+      // (`src/proxy.ts`): shu yerda `source` regex'i bilan chiqarib
+      // tashlash ishlamadi (path-to-regexp negative-lookahead).
     ];
   },
 };
