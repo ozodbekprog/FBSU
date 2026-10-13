@@ -1312,6 +1312,12 @@ enum CallStatus {
   MISSED
 }
 
+/// Qo'ng'iroq turi — ovozli yoki video.
+enum CallMedia {
+  AUDIO
+  VIDEO
+}
+
 /// WebRTC signal turi. Media oqimi P2P; server faqat bu signallarni
 /// almashtiradi (polling orqali — Vercel serverless WebSocket serverini
 /// qo'llab-quvvatlamaydi).
@@ -1328,6 +1334,7 @@ model CallSession {
   callerId       String
   calleeId       String
   status         CallStatus @default(RINGING)
+  media          CallMedia  @default(VIDEO)
   startedAt      DateTime?
   endedAt        DateTime?
   createdAt      DateTime   @default(now())

@@ -6,6 +6,8 @@ import { createAuditLog, getClientInfo } from "@/lib/audit";
 
 const startSchema = z.object({
   conversationId: z.string().min(1).max(64),
+  /** Qo'ng'iroq turi: ovozli yoki video (default — video). */
+  media: z.enum(["audio", "video"]).optional(),
 });
 
 /**
@@ -55,6 +57,7 @@ export async function POST(request: Request) {
       callerId: user.id,
       calleeId: callee.id,
       status: "RINGING",
+      media: parsed.data.media === "audio" ? "AUDIO" : "VIDEO",
     },
     include: {
       caller: { select: { id: true, name: true, avatarUrl: true, role: true } },

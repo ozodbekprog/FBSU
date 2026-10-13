@@ -45,12 +45,21 @@ export function lastSeenLabel(value: string | null | undefined, t: Translate) {
   return t("msgLastSeenDate", { date: fmtDate(value) });
 }
 
+export type ChatCall = {
+  id: string;
+  status: "RINGING" | "ACTIVE" | "ENDED" | "DECLINED" | "MISSED";
+  media: "AUDIO" | "VIDEO";
+  callerId: string;
+  calleeId: string;
+  durationSec: number | null;
+};
+
 export type ChatMessage = {
   id: string;
   conversationId: string;
   senderId: string;
   body: string;
-  type?: "TEXT" | "VOICE" | "FILE";
+  type?: "TEXT" | "VOICE" | "FILE" | "CALL";
   isRead: boolean;
   createdAt: string;
   forwardedFromId?: string;
@@ -58,6 +67,7 @@ export type ChatMessage = {
   deletedAt?: string | null;
   replyToId?: string | null;
   replyTo?: { id: string; senderId: string; body: string } | null;
+  call?: ChatCall;
   attachments?: {
     id: string;
     kind: "VOICE" | "IMAGE" | "FILE";
@@ -68,6 +78,54 @@ export type ChatMessage = {
     fileName?: string;
   }[];
 };
+
+/**
+ * Qo'ng'iroq yozuvining sarlavha kaliti.
+ *
+ * `viewerIsCaller` — joriy foydalanuvchi qo'ng'iroq qilgan tomonmi.
+ * Chiquvchi qo'ng'iroq bekor qilinganda (javob berilmasdan) chaqiruvchi
+ * uchun "bekor qilindi", chaqirilgan uchun "javob berilmadi" ko'rinadi.
+ */
+export function callTitleKey(call: ChatCall, viewerIsCaller: boolean): keyof Dictionary {
+  const video = call.media === "VIDEO";
+  switch (call.status) {
+    case "RINGING":
+      return viewerIsCaller ? "callLogRinging" : video ? "callLogIncomingVideo" : "callLogIncoming";
+    case "ACTIVE":
+      return "callLogActive";
+    case "DECLINED":
+      return "callLogDeclined";
+    case "MISSED":
+      return viewerIsCaller
+        ? video
+          ? "callLogCancelledVideo"
+          : "callLogCancelled"
+        : "callLogMissed";
+    default:
+      return viewerIsCaller
+        ? video
+          ? "callLogOutgoingVideo"
+          : "callLogOutgoing"
+        : video
+          ? "callLogIncomingVideo"
+          : "callLogIncoming";
+  }
+}
+
+/** Javobsiz/rad etilgan qo'ng'iroqni qizil rangda ko'rsatish kerakmi. */
+export function callMissedTone(call: ChatCall, viewerIsCaller: boolean): boolean {
+  if (call.status === "DECLINED") return true;
+  return call.status === "MISSED" && !viewerIsCaller;
+}
+
+/** Qo'ng'iroq davomiyligi — "8 s", "1 daq 5 s", "3 daq". */
+export function fmtCallDuration(seconds: number, t: Translate): string {
+  if (seconds < 60) return t("callLogDurSeconds", { seconds });
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  if (rest === 0) return t("callLogDurMinutesOnly", { minutes });
+  return t("callLogDurMinutes", { minutes, seconds: rest });
+}
 
 export function roleLabel(role: ChatParticipant["role"], t: Translate) {
   if (role === "ADMIN") return t("roleAdmin");

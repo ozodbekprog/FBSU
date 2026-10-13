@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Avatar, EmptyState, Skeleton } from "@/components/ui";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { ChatMenu, type ChatMenuState } from "./ChatMenu";
+import { ChatSearch } from "./ChatSearch";
 import { EmojiPicker } from "./EmojiPicker";
 import { MessageBubble } from "./MessageBubble";
 import type { ChatConversation, ChatMessage } from "./shared";
@@ -20,6 +21,8 @@ export type MenuAction =
   | { type: "delete" }
   | { type: "block"; value: boolean }
   | { type: "search" };
+
+const MENU_FALLBACK: ChatMenuState = { pinned: false, archived: false, muted: false, blocked: false };
 
 type Props = {
   conversation: ChatConversation | null;
@@ -42,6 +45,8 @@ type Props = {
   /** Telegram uslubidagi suhbat menyusi (mahkamlash, arxiv, blok ...). */
   menuState?: ChatMenuState;
   onMenuAction?: (action: MenuAction) => Promise<void> | void;
+  /** Menyudagi amal xatosi (composer ustida ko'rsatiladi). */
+  menuNotice?: string | null;
   blocked?: boolean;
   blockedByThem?: boolean;
 };
@@ -62,6 +67,7 @@ export function MessageThread({
   callBusy,
   menuState,
   onMenuAction,
+  menuNotice,
   blocked,
   blockedByThem,
 }: Props) {
@@ -69,6 +75,7 @@ export function MessageThread({
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
@@ -81,8 +88,29 @@ export function MessageThread({
   const emojiBtnRef = useRef<HTMLButtonElement>(null);
   const chatMenuBtnRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const conversationId = conversation?.id ?? null;
   const MAX_FILE_MB = 5;
+
+  useEffect(
+    () => () => {
+      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    },
+    [],
+  );
+
+  /** Qidiruvdan topilgan xabarni ko'rsatadi va biroz ajratib qo'yadi. */
+  function jumpToMessage(messageId: string) {
+    const node = listRef.current?.querySelector<HTMLElement>(`[data-message-id="${messageId}"]`);
+    if (!node) return;
+    node.scrollIntoView({ block: "center", behavior: "smooth" });
+    node.classList.add("ring-2", "ring-brand-400");
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    highlightTimerRef.current = setTimeout(() => {
+      node.classList.remove("ring-2", "ring-brand-400");
+      highlightTimerRef.current = null;
+    }, 1500);
+  }
 
   useEffect(() => {
     const el = listRef.current;
@@ -279,8 +307,9 @@ export function MessageThread({
           {/* Qidirish */}
           <button
             type="button"
-            onClick={() => onMenuAction?.({ type: "search" })}
+            onClick={() => setSearchOpen((v) => !v)}
             aria-label={t("msgSearchInChat")}
+            aria-expanded={searchOpen}
             title={t("msgSearchInChat")}
             data-chat-search=""
             className="relative inline-flex size-9 items-center justify-center rounded-full text-slate-500 transition-colors duration-150 after:absolute after:-inset-1 after:content-[''] hover:bg-slate-100 hover:text-brand-900"
@@ -342,29 +371,49 @@ export function MessageThread({
         </div>
       </div>
 
-      {menuState && onMenuAction ? (
-        <ChatMenu
-          open={menuOpen}
-          onClose={() => setMenuOpen(false)}
-          state={menuState}
-          partnerName={participant.name}
-          onPin={(value) => onMenuAction({ type: "pin", value })}
-          onArchive={(value) => onMenuAction({ type: "archive", value })}
-          onMute={(preset) => onMenuAction({ type: "mute", preset })}
-          onClearHistory={() => onMenuAction({ type: "clear" })}
-          onClearForEveryone={() => onMenuAction({ type: "clearForEveryone" })}
-          onDeleteChat={() => onMenuAction({ type: "delete" })}
-          onBlock={(value) => onMenuAction({ type: "block", value })}
-          onSearch={() => onMenuAction({ type: "search" })}
-          anchorRef={chatMenuBtnRef}
-        />
-      ) : null}
+      <ChatMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        state={menuState ?? MENU_FALLBACK}
+        partnerName={participant.name}
+        onPin={async (value) => {
+          await onMenuAction?.({ type: "pin", value });
+        }}
+        onArchive={async (value) => {
+          await onMenuAction?.({ type: "archive", value });
+        }}
+        onMute={async (preset) => {
+          await onMenuAction?.({ type: "mute", preset });
+        }}
+        onClearHistory={async () => {
+          await onMenuAction?.({ type: "clear" });
+        }}
+        onClearForEveryone={async () => {
+          await onMenuAction?.({ type: "clearForEveryone" });
+        }}
+        onDeleteChat={async () => {
+          await onMenuAction?.({ type: "delete" });
+        }}
+        onBlock={async (value) => {
+          await onMenuAction?.({ type: "block", value });
+        }}
+        onSearch={() => setSearchOpen(true)}
+        anchorRef={chatMenuBtnRef}
+      />
 
       <EmojiPicker
         open={emojiOpen}
         onClose={() => setEmojiOpen(false)}
         onPick={(emoji) => setDraft((d) => d + emoji)}
         anchorRef={emojiBtnRef}
+      />
+
+      <ChatSearch
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        messages={messages}
+        currentUserId={currentUserId}
+        onSelect={(messageId: string) => jumpToMessage(messageId)}
       />
 
       <div
@@ -403,15 +452,21 @@ export function MessageThread({
                   </span>
                 </div>
                 {group.items.map((message) => (
-                  <MessageBubble
-                    key={message.id}
-                    message={message}
-                    own={message.senderId === currentUserId}
-                    currentUserId={currentUserId}
-                    onReply={startReply}
-                    onEdit={startEdit}
-                    onDelete={(m) => setDeleteTarget(m)}
-                  />
+                  <div key={message.id} data-message-id={message.id}>
+                    <MessageBubble
+                      message={message}
+                      own={message.senderId === currentUserId}
+                      currentUserId={currentUserId}
+                      onReply={startReply}
+                      onEdit={startEdit}
+                      onDelete={(m) => setDeleteTarget(m)}
+                      onCallBack={
+                        onStartCall && conversation
+                          ? (media) => onStartCall(conversation.id, media === "AUDIO" ? "audio" : "video")
+                          : undefined
+                      }
+                    />
+                  </div>
                 ))}
               </div>
             ))}
@@ -421,6 +476,11 @@ export function MessageThread({
 
       <div className="border-t border-slate-100 bg-white p-3 sm:p-4">
         {error ? <p className="mb-2 px-1 text-xs text-rose-600">{error}</p> : null}
+        {menuNotice ? (
+          <p className="mb-2 px-1 text-xs text-rose-600" data-menu-notice="">
+            {menuNotice}
+          </p>
+        ) : null}
 
         {(replyTo || editing) && !blocked ? (
           <div className="mb-2 flex items-center gap-2 rounded-2xl border border-brand-200 bg-brand-50 px-3 py-2 dark:border-brand-800/50 dark:bg-brand-950/50">
