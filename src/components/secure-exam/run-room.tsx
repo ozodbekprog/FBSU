@@ -102,6 +102,7 @@ export function RunRoom({
   const [multiMonitor, setMultiMonitor] = useState(false);
   const [duplicateTab, setDuplicateTab] = useState(false);
   const [faceAlert, setFaceAlert] = useState(false);
+  const [faceStatus, setFaceStatus] = useState<"off" | "ok" | "away" | "turned" | "multi">("off");
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState(false);
   const [toast, setToast] = useState<{ label: string; tone: "amber" | "rose" } | null>(null);
@@ -483,9 +484,10 @@ export function RunRoom({
             if (detections.length === 0) {
               faceMissingStreakRef.current += 1;
               setFaceAlert(true);
+              setFaceStatus("away");
               if (
                 faceMissingStreakRef.current >= 2 &&
-                now - faceCooldownRef.current > 25_000
+                now - faceCooldownRef.current > 12_000
               ) {
                 faceCooldownRef.current = now;
                 faceMissingStreakRef.current = 0;
@@ -496,7 +498,8 @@ export function RunRoom({
             faceMissingStreakRef.current = 0;
             if (detections.length > 1) {
               setFaceAlert(true);
-              if (now - faceCooldownRef.current > 25_000) {
+              setFaceStatus("multi");
+              if (now - faceCooldownRef.current > 12_000) {
                 faceCooldownRef.current = now;
                 pushEvent("MULTIPLE_FACES", { count: detections.length });
               }
@@ -511,20 +514,28 @@ export function RunRoom({
             const eyeDistance = Math.abs(rightCenter - leftCenter) || 1;
             const noseTip = nose[nose.length - 1];
             const eyeMid = (leftCenter + rightCenter) / 2;
-            const yaw = (noseTip.x - eyeMid) / eyeDistance;
-            if (Math.abs(yaw) > 0.28) {
+            const yaw = Math.abs(noseTip.x - eyeMid) / eyeDistance;
+            const dLeft = Math.abs(noseTip.x - leftCenter);
+            const dRight = Math.abs(noseTip.x - rightCenter);
+            const asym = Math.abs(dLeft - dRight) / (dLeft + dRight || 1);
+            if (yaw > 0.18 || asym > 0.28) {
               setFaceAlert(true);
-              if (now - faceCooldownRef.current > 25_000) {
+              setFaceStatus("turned");
+              if (now - faceCooldownRef.current > 12_000) {
                 faceCooldownRef.current = now;
-                pushEvent("FACE_TURNED", { direction: yaw > 0 ? "right" : "left" });
+                pushEvent("FACE_TURNED", {
+                  yaw: Number(yaw.toFixed(2)),
+                  asym: Number(asym.toFixed(2)),
+                });
               }
               return;
             }
             setFaceAlert(false);
+            setFaceStatus("ok");
           } catch {
             void 0;
           }
-        }, 6000);
+        }, 3000);
       } catch {
         void 0;
       }
@@ -877,8 +888,25 @@ export function RunRoom({
         >
           <video ref={videoRef} autoPlay muted playsInline className="h-28 w-40 object-cover" />
           <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white">
-            <span className="size-1.5 animate-pulse rounded-full bg-rose-500" />
-            {t("secCamera")}
+            <span
+              className={cn(
+                "size-1.5 rounded-full",
+                faceStatus === "ok"
+                  ? "bg-emerald-400"
+                  : faceStatus === "off"
+                    ? "animate-pulse bg-rose-500"
+                    : "animate-pulse bg-rose-500",
+              )}
+            />
+            {faceStatus === "ok"
+              ? t("secFaceOk")
+              : faceStatus === "away"
+                ? t("secFaceAway")
+                : faceStatus === "turned"
+                  ? t("secFaceTurned")
+                  : faceStatus === "multi"
+                    ? t("secFaceMulti")
+                    : t("secCamera")}
           </span>
         </div>
       ) : null}

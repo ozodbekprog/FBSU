@@ -165,4 +165,8 @@ export const sec = {
   secNazoratNoExams: "Hozirda faol imtihon yo'q",
   secNazoratOpen: "Kuzatish",
   secFaceHint: "Kameraga to'g'ri qarang — yuz burilishi, orqaga/yonga qarash qayd etiladi",
+  secFaceOk: "Yuz aniqlandi",
+  secFaceAway: "Yuz yo'q",
+  secFaceTurned: "Yuz burilgan",
+  secFaceMulti: "Bir nechta yuz",
 };
