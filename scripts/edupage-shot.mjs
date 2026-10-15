@@ -29,17 +29,18 @@ async function main() {
   mkdirSync(OUT_DIR, { recursive: true });
   const browser = await chromium.launch();
   try {
-    const admin = await browser.newContext({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 2 });
-    await shot(await admin.newPage(), "admin@ttpu.uz", "edupage-admin.png");
-
-    const student = await browser.newContext({ viewport: { width: 420, height: 900 }, deviceScaleFactor: 2 });
-    await shot(await student.newPage(), "ozodbek@ttpu.uz", "edupage-student-mobile.png");
+    const admin = await browser.newContext({ viewport: { width: 1600, height: 1150 }, deviceScaleFactor: 2 });
+    await shot(await admin.newPage(), "admin@ttpu.uz", "admin-import-edupage.png", "/admin/import");
+    await shot(await admin.newPage(), "admin@ttpu.uz", "admin-schedule.png", "/schedule");
 
     const studentSchedule = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2 });
     await shot(await studentSchedule.newPage(), "ozodbek@ttpu.uz", "fbsu-schedule-student.png", "/schedule");
 
     const staff = await browser.newContext({ viewport: { width: 1440, height: 1100 }, deviceScaleFactor: 2 });
     await shot(await staff.newPage(), "admin@ttpu.uz", "fbsu-admin-users.png", "/admin/users");
+
+    const teacher = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2 });
+    await shot(await teacher.newPage(), "n.mahamatov@ttpu.uz", "teacher-schedule.png", "/schedule");
     console.log("saved to", OUT_DIR);
   } finally {
     await browser.close();

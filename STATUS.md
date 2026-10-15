@@ -9,9 +9,13 @@ Oxirgi yangilanish: EduPage avto jadval integratsiyasi (2026-10-15)
 - [x] `src/lib/edupage.ts` — yuklab olish + normallashtirish (sinflar, fanlar,
       o'qituvchilar, xonalar, kun/par, hafta juftligi); 15 daqiqalik kesh
       (`unstable_cache`, tag `edupage-timetable`) + 3 marta qayta urinish
-- [x] `/schedule/edupage` — jonli jadval sahifasi: sinf tanlash, hafta/ro'yxat
-      ko'rinishi, bugun ustuni, EduPage ranglari, "Yangilangan HH:MM" + har 15 daqiqada
-      avtomatik yangilanish (client `router.refresh`)
+- [x] Integratsiya **o'z sahifalarimizda**: `/schedule` (dars jadvali, rol bo'yicha),
+      `/admin/users` (o'qituvchilar), `/admin/groups` (guruhlar),
+      `/admin/dictionaries` (fanlar + o'qituvchilar), `/rooms` (xonalar).
+      Alohida "Avto jadval" sahifasi olib tashlandi — kerak emas edi
+- [x] Sinxron boshqaruvi `/admin/import` dagi "EduPage sinxronizatsiyasi" kartasida
+      (oxirgi sinxron, statistika, "Hozir yangilash"); `Jadval` sahifasi ochilganda
+      30 daqiqadan eski bo'lsa fonda avtomatik yangilanadi
 - [x] `GET /api/edupage/timetable?class=AI2-26` — normallashtirilgan JSON (auth kerak)
 - [x] **O'qituvchilar/ fanlar / xonalar ham ko'chiriladi**: 201 yangi o'qituvchi
       (`TEACHER`, `a.mamanazarov@ttpu.uz` ko'rinishidagi email, tasodifiy parol —
