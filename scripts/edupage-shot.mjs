@@ -37,6 +37,9 @@ async function main() {
 
     const studentSchedule = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2 });
     await shot(await studentSchedule.newPage(), "ozodbek@ttpu.uz", "fbsu-schedule-student.png", "/schedule");
+
+    const staff = await browser.newContext({ viewport: { width: 1440, height: 1100 }, deviceScaleFactor: 2 });
+    await shot(await staff.newPage(), "admin@ttpu.uz", "fbsu-admin-users.png", "/admin/users");
     console.log("saved to", OUT_DIR);
   } finally {
     await browser.close();
