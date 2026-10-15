@@ -392,10 +392,12 @@ export function RunRoom({
   }, [phase]);
 
   useEffect(() => {
-    if (cameraReady && videoRef.current && streamRef.current) {
-      videoRef.current.srcObject = streamRef.current;
-    }
-  }, [cameraReady]);
+    const video = videoRef.current;
+    const stream = streamRef.current;
+    if (!cameraReady || !video || !stream) return;
+    if (video.srcObject !== stream) video.srcObject = stream;
+    void video.play().catch(() => void 0);
+  }, [cameraReady, phase]);
 
   useEffect(() => {
     const stream = streamRef.current;

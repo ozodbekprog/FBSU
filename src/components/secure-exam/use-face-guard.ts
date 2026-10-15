@@ -36,6 +36,8 @@ export function useFaceGuard(options: {
     let timer = 0;
     let errors = 0;
     let ticks = 0;
+    let noVideoSkips = 0;
+    let noVideoReported = false;
     let lastDescriptorAt = Date.now();
 
     async function run() {
@@ -50,10 +52,21 @@ export function useFaceGuard(options: {
       async function tick() {
         if (cancelled) return;
         const video = videoRef.current;
-        if (!video || document.hidden || video.readyState < 2 || video.videoWidth === 0) {
+        const videoNotReady = !video || video.readyState < 2 || video.videoWidth === 0;
+        if (videoNotReady || document.hidden) {
+          if (videoNotReady) {
+            noVideoSkips += 1;
+            if (noVideoSkips >= 10 && !noVideoReported) {
+              noVideoReported = true;
+              onEventRef.current("CLIENT_INFO", { guard: "face", state: "no-video" });
+            }
+          }
           timer = window.setTimeout(() => void tick(), TICK_INTERVAL_MS);
           return;
         }
+        if (!video) return;
+        noVideoSkips = 0;
+        noVideoReported = false;
         try {
           const results = await faceapi.detectAllFaces(video, detectorOptions).withFaceLandmarks();
           if (cancelled) return;
