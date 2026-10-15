@@ -165,4 +165,8 @@ export const sec = {
   secNazoratNoExams: "Сейчас нет активных экзаменов",
   secNazoratOpen: "Наблюдать",
   secFaceHint: "Смотрите прямо в камеру — поворот лица фиксируется",
+  secFaceOk: "Лицо обнаружено",
+  secFaceAway: "Лицо не видно",
+  secFaceTurned: "Лицо повёрнуто",
+  secFaceMulti: "Несколько лиц",
 };

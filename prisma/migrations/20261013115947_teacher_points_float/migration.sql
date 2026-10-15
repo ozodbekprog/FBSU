@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "TeacherPoint" ALTER COLUMN "points" SET DATA TYPE DOUBLE PRECISION;

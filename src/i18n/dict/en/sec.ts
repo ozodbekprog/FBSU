@@ -165,4 +165,8 @@ export const sec = {
   secNazoratNoExams: "No active exams right now",
   secNazoratOpen: "Watch",
   secFaceHint: "Look straight into the camera — turning away is recorded",
+  secFaceOk: "Face detected",
+  secFaceAway: "Face missing",
+  secFaceTurned: "Face turned",
+  secFaceMulti: "Multiple faces",
 };

@@ -942,6 +942,7 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/diplomas": Diplomas,
   "/finance": Finance,
   "/finance/rates": FacultyRates,
+  "/teacher-points": FacultyRates,
   "/payroll": Payroll,
 };
 
