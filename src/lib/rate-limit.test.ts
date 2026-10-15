@@ -1,20 +1,22 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const { RedisConstructor } = vi.hoisted(() => {
-  const RedisConstructor = vi.fn(() => ({
-    on: vi.fn(),
-    status: "wait",
-    connect: vi.fn().mockResolvedValue(undefined),
-    disconnect: vi.fn(),
-    multi: vi.fn(),
-    zremrangebyscore: vi.fn(),
-    zadd: vi.fn(),
-    zcard: vi.fn(),
-    expire: vi.fn(),
-    zrange: vi.fn(),
-    zrem: vi.fn(),
-    del: vi.fn(),
-  }));
+  const RedisConstructor = vi.fn(function () {
+    return {
+      on: vi.fn(),
+      status: "wait",
+      connect: vi.fn().mockResolvedValue(undefined),
+      disconnect: vi.fn(),
+      multi: vi.fn(),
+      zremrangebyscore: vi.fn(),
+      zadd: vi.fn(),
+      zcard: vi.fn(),
+      expire: vi.fn(),
+      zrange: vi.fn(),
+      zrem: vi.fn(),
+      del: vi.fn(),
+    };
+  });
   return { RedisConstructor };
 });
 

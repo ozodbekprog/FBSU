@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   if (!user) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (user.role !== "ADMIN") {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

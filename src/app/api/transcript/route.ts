@@ -25,6 +25,15 @@ export async function GET(request: Request) {
     return Response.json({ ok: false, error: "studentId parametri kerak" }, { status: 400 });
   }
 
+  if (
+    user.role !== "ADMIN" &&
+    user.role !== "TEACHER" &&
+    user.role !== "DEKAN" &&
+    user.role !== "KAFEDRA_MUDIRI"
+  ) {
+    return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
+
   const student = await prisma.user.findUnique({
     where: { id: requestedId },
     select: { id: true, role: true },

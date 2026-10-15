@@ -20,6 +20,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    clearMocks: false,
     include: ["tests/**/*.test.ts", "src/**/*.test.ts"],
   },
 });

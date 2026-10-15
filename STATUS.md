@@ -1,6 +1,37 @@
 # STATUS — qurilish holati
 
-Oxirgi yangilanish: OpenBoard 2.0 — "Onlayn daftar" (2026-10-12)
+Oxirgi yangilanish: EduPage avto jadval integratsiyasi (2026-10-15)
+
+## EduPage avto jadval (2026-10-15)
+
+- [x] Manba: `https://ttpu.edupage.org/timetable/` — ommaviy aSc EduPage RPC
+      (`getTTViewerData` → `regularttGetData`); login talab qilmaydi
+- [x] `src/lib/edupage.ts` — yuklab olish + normallashtirish (sinflar, fanlar,
+      o'qituvchilar, xonalar, kun/par, hafta juftligi); 15 daqiqalik kesh
+      (`unstable_cache`, tag `edupage-timetable`) + 3 marta qayta urinish
+- [x] `/schedule/edupage` — jonli jadval sahifasi: sinf tanlash, hafta/ro'yxat
+      ko'rinishi, bugun ustuni, EduPage ranglari, "Yangilangan HH:MM" + har 15 daqiqada
+      avtomatik yangilanish (client `router.refresh`)
+- [x] `GET /api/edupage/timetable?class=AI2-26` — normallashtirilgan JSON (auth kerak)
+- [x] **O'qituvchilar/ fanlar / xonalar ham ko'chiriladi**: 201 yangi o'qituvchi
+      (`TEACHER`, `a.mamanazarov@ttpu.uz` ko'rinishidagi email, tasodifiy parol —
+      parolni faqat admin yangilaydi), 292 fan (rang bilan), 70 xona;
+      jadval yozuvlari `teacherId`/`subjectId` ga bog'lanadi, 234 ta fan-o'qituvchi
+      juftligi (`TeacherSubject`) yaratildi
+- [x] Sinf↔guruh: mos kelmagan sinflar uchun guruh **avtomatik yaratiladi**
+      (nom + `edupageName` + yil), 96 ta yangi guruh — 1 475 dars import qilindi
+- [x] Sinxron paytida EduPage'ga bog'langan guruhlardagi **eski qo'lda/seed
+      yozuvlar avtomatik tozalanadi** (`source = null`), jadval manbaga mos qoladi
+- [x] Bazaga sinxronlash: `Group.edupageName` bilan sinf↔guruh bog'lanishi,
+      o'qituvchi ismlari bo'yicha moslashtirish (F.I.Sh. ↔ "A. Mamanazarov"),
+      `ScheduleEntry.source="edupage"` + `externalId` (karta:kun:guruh) — takror
+      import qilinmaydi, o'zgarganlari yangilanadi, manbadan o'chganlari o'chiriladi
+- [x] `POST /api/edupage/sync` (ADMIN/REGISTRAR + CSRF; `Bearer CRON_SECRET` bilan cron)
+      va sahifa ochilganda fon rejimida avto-sinxron (oxirgi sinxron 30 daqiqadan eski bo'lsa)
+- [x] Admin uchun bir bosishda bog'lash: `/schedule/edupage` sahifasida "Bu sinfni
+      guruhga bog'lash" (PATCH `/api/admin/groups/[id]` → `edupageName`)
+- [x] Tekshiruv: 10/10 yangi unit test (jami 386), `tsc` 0 xato, `next build` yashil,
+      jonli sinov: AI2-26 ← AI2-26 (17 dars), 4 o'qituvchi profilga bog'landi
 
 ## OpenBoard 2.0 — onlayn doska va daftar
 

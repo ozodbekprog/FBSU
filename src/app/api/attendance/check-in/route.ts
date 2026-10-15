@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { lookupQrLocation, verifyQrToken } from "@/modules/attendance-security/qr-token";
 import {
@@ -32,6 +33,11 @@ export async function POST(request: Request) {
   }
   if (user.role !== "STUDENT") {
     return Response.json({ ok: false, error: "Faqat talabalar belgilanishi mumkin" }, { status: 403 });
+  }
+
+  const csrfValid = await verifyCsrfFromRequest(request);
+  if (!csrfValid) {
+    return Response.json({ ok: false, error: "CSRF token yaroqsiz" }, { status: 403 });
   }
 
   const ip = clientIpFromHeaders(request.headers);

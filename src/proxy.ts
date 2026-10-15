@@ -64,16 +64,18 @@ const CSRF_SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
  */
 const CSRF_EXEMPT_API = ["/api/csrf", "/api/health"];
 
-function csrfSecret(): Uint8Array {
+function csrfSecret(): Uint8Array | null {
   const secret = process.env.CSRF_SECRET || process.env.AUTH_SECRET;
-  if (!secret) return new TextEncoder().encode("");
+  if (!secret) return null;
   return new TextEncoder().encode(secret);
 }
 
 async function isValidCsrf(token: string | undefined, cookie: string | undefined): Promise<boolean> {
   if (!token || !cookie || token !== cookie) return false;
+  const secret = csrfSecret();
+  if (!secret) return false;
   try {
-    await jwtVerify(token, csrfSecret());
+    await jwtVerify(token, secret, { algorithms: ["HS256"] });
     return true;
   } catch {
     return false;
@@ -93,7 +95,7 @@ async function enforceCsrf(request: NextRequest): Promise<NextResponse | null> {
 
   const { pathname } = request.nextUrl;
   if (!pathname.startsWith("/api/")) return null;
-  if (CSRF_EXEMPT_API.some((prefix) => pathname.startsWith(prefix))) return null;
+  if (CSRF_EXEMPT_API.some((prefix) => pathname === prefix)) return null;
 
   const ok = await isValidCsrf(
     request.headers.get("x-csrf-token") ?? undefined,
@@ -181,15 +183,17 @@ const ROLE_GATED: Record<string, string[]> = {
   "/nazorat": ["ADMIN", "NAZORATCHI"],
 };
 
-function sessionSecret(): Uint8Array {
+function sessionSecret(): Uint8Array | null {
   const secret = process.env.AUTH_SECRET;
-  if (!secret) return new TextEncoder().encode("");
+  if (!secret) return null;
   return new TextEncoder().encode(secret);
 }
 
 async function sessionRole(token: string): Promise<string | null> {
+  const secret = sessionSecret();
+  if (!secret) return null;
   try {
-    const { payload } = await jwtVerify(token, sessionSecret());
+    const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] });
     return typeof payload.role === "string" ? payload.role : null;
   } catch {
     return null;
@@ -257,10 +261,10 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   /**
-   * `/api/**` is now matched too: the proxy enforces CSRF on state-changing API
-   * calls before any handler runs, and returns `NextResponse.next()` for public
-   * API paths so it never interferes with routing. `.*\..*` still excludes
-   * static files, which need no gate.
+   * Every `/api/` path is matched now — even ones containing dots — so the
+   * proxy can enforce CSRF on state-changing API calls before any handler
+   * runs. Non-API static files (`.*\..*`) are still excluded: they need no
+   * gate.
    */
-  matcher: ["/((?!_next|favicon.ico|.*\\..*).*)"],
+  matcher: ["/(api/.*|(?!_next|favicon.ico|.*\\..*).*)"],
 };

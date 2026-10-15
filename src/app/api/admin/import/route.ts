@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import type { Role } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
+import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -323,7 +324,7 @@ async function importStudents(rows: string[][], userRole: Role): Promise<ImportS
       }
 
       const password = generatePassword();
-      const passwordHash = await bcrypt.hash(password, 10);
+      const passwordHash = await bcrypt.hash(password, 12);
       await prisma.user.create({
         data: {
           name: parsed.data.name,
@@ -512,6 +513,11 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
+  const csrfValid = await verifyCsrfFromRequest(request);
+  if (!csrfValid) {
+    return Response.json({ ok: false, error: "CSRF token yaroqsiz" }, { status: 403 });
+  }
+
   const contentLength = request.headers.get("content-length");
   const declaredSize = contentLength === null ? Number.NaN : Number(contentLength);
   if (Number.isFinite(declaredSize) && declaredSize > MAX_FILE_SIZE + 1024 * 1024) {
@@ -544,5 +550,5 @@ export async function POST(request: Request) {
         ? await importGroups(rows, user.role)
         : await importSubjects(rows, user.role);
 
-  return Response.json({ ok: true, data: summary });
+  return Response.json({ ok: true, data: summary }, { headers: { "Cache-Control": "no-store" } });
 }

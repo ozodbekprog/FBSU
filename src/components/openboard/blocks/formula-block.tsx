@@ -5,6 +5,7 @@ import "katex/contrib/mhchem";
 
 import { useMemo } from "react";
 import katex from "katex";
+import DOMPurify from "isomorphic-dompurify";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { Textarea } from "@/components/ui";
 import type { ChemBlock, FormulaBlock } from "@/lib/openboard/types";
@@ -45,11 +46,13 @@ function TexEditor({
     if (empty) return null;
     const source = wrapCe && !tex.includes("\\ce") ? `\\ce{${tex}}` : tex;
     try {
-      return katex.renderToString(source, {
+      const rendered = katex.renderToString(source, {
         displayMode: true,
         throwOnError: false,
         strict: false,
+        trust: false,
       });
+      return DOMPurify.sanitize(rendered);
     } catch {
       return null;
     }

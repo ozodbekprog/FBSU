@@ -38,7 +38,7 @@ export async function getCsrfToken(): Promise<string | null> {
 export async function validateCsrfToken(token: string): Promise<boolean> {
   if (!token) return false;
   try {
-    await jwtVerify(token, csrfSecret());
+    await jwtVerify(token, csrfSecret(), { algorithms: ["HS256"] });
     return true;
   } catch {
     return false;

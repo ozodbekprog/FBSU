@@ -74,9 +74,19 @@ export default async function Page() {
 }
 ```
 
+## EduPage avto jadval (majburiy bilim)
+
+- Manba: `https://ttpu.edupage.org/timetable/` — `src/lib/edupage.ts` (yuklab olish,
+  normallashtirish, 15 daqiqalik kesh), `src/lib/edupage-sync.ts` (guruh/o'qituvchi/fan
+  moslashtirish va DB sinxron).
+- Sahifa `/schedule/edupage`, API `/api/edupage/timetable`, sinxron `/api/edupage/sync`.
+- Sinf ↔ guruh bog'lanishi `Group.edupageName` orqali; bog'lanmagan guruhlar sinxronlanmaydi.
+- Import qilingan yozuvlar `ScheduleEntry.source = "edupage"` + `externalId` bilan belgilanadi —
+  ularni qo'lda tahrirlash mumkin, lekin keyingi sinxron yangilaydi/o'chiradi.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
+## This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 

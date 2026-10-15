@@ -20,10 +20,8 @@ function isRunMessage(data: unknown): data is RunMessage {
   );
 }
 
-const HOST_VARIABLE = "openboardUserCode";
-
-function escapeHostLiteral(source: string): string {
-  return JSON.stringify(source)
+function escapeScriptBody(source: string): string {
+  return source
     .replace(/<\/script/gi, "<\\/script")
     .replace(/<!--/g, "<\\!--");
 }
@@ -32,23 +30,28 @@ function buildSrcdoc(source: string): string {
   return [
     "<!doctype html><html><body>",
     "<script>",
-    `var ${HOST_VARIABLE} = ${escapeHostLiteral(source)};`,
-    "var lines = [];",
-    "function fmt(args) {",
+    "window.__obLines = [];",
+    "window.__obError = null;",
+    "function __obFmt(args) {",
     "return Array.prototype.map.call(args, function (a) {",
     "if (typeof a === 'string') return a;",
     "try { return JSON.stringify(a); } catch (e) { return String(a); }",
     "}).join(' ');",
     "}",
     "['log', 'warn', 'error'].forEach(function (name) {",
-    "console[name] = function () { lines.push(fmt(arguments)); };",
+    "console[name] = function () { window.__obLines.push(__obFmt(arguments)); };",
     "});",
-    "try {",
-    `eval(${HOST_VARIABLE});`,
-    "} catch (err) {",
-    "lines.push(String(err && err.message ? err.message : err));",
-    "}",
-    `window.parent.postMessage({ type: "${MESSAGE_TYPE}", lines: lines }, '*');`,
+    "window.addEventListener('error', function (e) { window.__obError = String(e.message || e.error || 'Error'); });",
+    "window.addEventListener('unhandledrejection', function (e) { window.__obError = String(e.reason || 'Unhandled rejection'); });",
+    "</script>",
+    "<script>",
+    escapeScriptBody(source),
+    "</script>",
+    "<script>",
+    "window.setTimeout(function () {",
+    "if (window.__obError) window.__obLines.push(window.__obError);",
+    `window.parent.postMessage({ type: "${MESSAGE_TYPE}", lines: window.__obLines }, '*');`,
+    "}, 10);",
     "</script>",
     "</body></html>",
   ].join("\n");
@@ -81,6 +84,7 @@ export async function runJavaScript(
       resolve({ ok: false, lines: [] });
     }, timeoutMs);
     const onMessage = (event: MessageEvent<unknown>) => {
+      if (event.source !== iframe.contentWindow) return;
       if (!isRunMessage(event.data)) return;
       cleanup();
       resolve({ ok: true, lines: event.data.lines });
