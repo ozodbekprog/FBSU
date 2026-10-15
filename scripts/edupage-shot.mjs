@@ -17,9 +17,9 @@ async function login(page, email) {
   }
 }
 
-async function shot(page, email, name) {
+async function shot(page, email, name, path = "/schedule/edupage") {
   await login(page, email);
-  await page.goto(`${BASE_URL}/schedule/edupage`);
+  await page.goto(`${BASE_URL}${path}`);
   await page.waitForLoadState("networkidle", { timeout: 25_000 }).catch(() => {});
   await page.waitForTimeout(2500);
   await page.screenshot({ path: join(OUT_DIR, name), fullPage: false });
@@ -34,6 +34,9 @@ async function main() {
 
     const student = await browser.newContext({ viewport: { width: 420, height: 900 }, deviceScaleFactor: 2 });
     await shot(await student.newPage(), "ozodbek@ttpu.uz", "edupage-student-mobile.png");
+
+    const studentSchedule = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2 });
+    await shot(await studentSchedule.newPage(), "ozodbek@ttpu.uz", "fbsu-schedule-student.png", "/schedule");
     console.log("saved to", OUT_DIR);
   } finally {
     await browser.close();
