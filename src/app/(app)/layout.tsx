@@ -170,6 +170,7 @@ export default async function AppLayout({
       "/dashboard", "/courses", "/journal", "/journals",
       "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/attendance",
       "/reports", "/workload", "/staff", "/tasks", "/my-qr", "/messages", "/bookings", "/rooms",
+      "/teacher-points",
       "/search", "/help", "/settings",
     ],
     STUDENT: [
