@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FACE_EVENT_COOLDOWN_MS, FaceGuardTracker, LOOK_AWAY_COOLDOWN_MS, faceMetrics } from "./face-guard";
+import { FACE_EVENT_COOLDOWN_MS, FaceGuardTracker, faceMetrics } from "./face-guard";
 import type { LandmarkPoint, LandmarksLike } from "./face-guard";
 
 function eye(cx: number, cy: number, open: boolean): LandmarkPoint[] {
@@ -71,14 +71,15 @@ describe("faceMetrics", () => {
 });
 
 describe("FaceGuardTracker: absent", () => {
-  it("5s bo'sh kadr bitta FACE_ABSENT chiqaradi, keyingisi chiqmaydi", () => {
+  it("2s bo'sh kadr bitta FACE_ABSENT chiqaradi, keyingisi chiqmaydi", () => {
     const tracker = new FaceGuardTracker();
     expect(tracker.tick({ metrics: [], ts: 0 })).toEqual([]);
-    const events = tracker.tick({ metrics: [], ts: 5000 });
+    expect(tracker.tick({ metrics: [], ts: 1999 })).toEqual([]);
+    const events = tracker.tick({ metrics: [], ts: 2000 });
     expect(events).toHaveLength(1);
     expect(events[0].type).toBe("FACE_ABSENT");
-    expect(events[0].meta.seconds).toBe(5);
-    expect(tracker.tick({ metrics: [], ts: 5100 })).toEqual([]);
+    expect(events[0].meta.seconds).toBe(2);
+    expect(tracker.tick({ metrics: [], ts: 2100 })).toEqual([]);
   });
 });
 
@@ -96,42 +97,30 @@ describe("FaceGuardTracker: multiple", () => {
 });
 
 describe("FaceGuardTracker: look away", () => {
-  it("barqaror baseline buzilganda 1.4s dan keyin LOOK_AWAY beradi", () => {
+  it("baseline buzilganda birinchi beyond-delta tickdanoq LOOK_AWAY beradi", () => {
     const tracker = new FaceGuardTracker();
     for (let index = 0; index < 5; index += 1) {
       expect(tracker.tick({ metrics: [face(0.1)], ts: index * 100 })).toEqual([]);
     }
     expect(tracker.status()).toBe("monitoring");
-    tracker.tick({ metrics: [face(0.5)], ts: 1000 });
-    const events = tracker.tick({ metrics: [face(0.5)], ts: 2400 });
+    const events = tracker.tick({ metrics: [face(0.5)], ts: 1000 });
     expect(events).toHaveLength(1);
     expect(events[0].type).toBe("LOOK_AWAY");
     expect(events[0].meta.side).toBe("right");
-    expect(events[0].meta.seconds).toBe(1);
-
-    tracker.tick({ metrics: [face(0.1)], ts: 2500 });
-    const far = 2500 + LOOK_AWAY_COOLDOWN_MS;
-    tracker.tick({ metrics: [face(0.1)], ts: far });
-    tracker.tick({ metrics: [face(0.5)], ts: far + 100 });
-    const again = tracker.tick({ metrics: [face(0.5)], ts: far + 1500 });
-    expect(again).toHaveLength(1);
-    expect(again[0].type).toBe("LOOK_AWAY");
+    expect(events[0].meta.seconds).toBe(0);
   });
 
   it("10s cooldown ichida ikkinchi qarash chiqmaydi, undan keyin chiqadi", () => {
     const tracker = new FaceGuardTracker();
     tracker.tick({ metrics: [face(0.1)], ts: 0 });
-    tracker.tick({ metrics: [face(0.5)], ts: 1000 });
-    const first = tracker.tick({ metrics: [face(0.5)], ts: 2400 });
+    const first = tracker.tick({ metrics: [face(0.5)], ts: 1000 });
     expect(first).toHaveLength(1);
 
-    tracker.tick({ metrics: [face(0.1)], ts: 2500 });
     tracker.tick({ metrics: [face(0.5)], ts: 5000 });
-    expect(tracker.tick({ metrics: [face(0.5)], ts: 6400 })).toEqual([]);
+    expect(tracker.tick({ metrics: [face(0.5)], ts: 10900 })).toEqual([]);
 
     tracker.tick({ metrics: [face(0.1)], ts: 12000 });
-    tracker.tick({ metrics: [face(0.5)], ts: 12500 });
-    const later = tracker.tick({ metrics: [face(0.5)], ts: 13900 });
+    const later = tracker.tick({ metrics: [face(0.5)], ts: 12500 });
     expect(later).toHaveLength(1);
     expect(later[0].type).toBe("LOOK_AWAY");
   });

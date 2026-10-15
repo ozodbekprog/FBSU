@@ -5,7 +5,7 @@ import { ensureFaceModels } from "@/components/face/face-scan";
 import { FaceGuardTracker, faceMetrics } from "@/modules/secure-exam/face-guard";
 import type { SecureEventType } from "@/modules/secure-exam/events";
 
-const TICK_INTERVAL_MS = 600;
+const TICK_INTERVAL_MS = 500;
 const DESCRIPTOR_EVERY_TICKS = 20;
 const DESCRIPTOR_EVERY_MS = 30_000;
 const MAX_CONSECUTIVE_ERRORS = 5;

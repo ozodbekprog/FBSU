@@ -104,8 +104,9 @@ Darvoza (gate):
 - Face ID bo'lmasa imtihon davom etadi, lekin yuz nazoratisiz.
 
 Imtihon davomida:
-- har ~0.6s da `useFaceGuard`: yuz yo'q (2.5s+) → FACE_ABSENT; 2+ shaxs → FACE_MULTIPLE;
-  yonga qarash (yaw Δ>0.24, 0.5s+, 10s cooldown) → LOOK_AWAY; 60s ichida blink bo'lmasa →
+- har ~0.5s da `useFaceGuard`: yuz yo'q (2s+) → FACE_ABSENT; 2+ shaxs → FACE_MULTIPLE;
+  yonga qarash (yaw Δ>0.15 — sal burilishdanoq darhol, 0.5s tick, 10s cooldown) → LOOK_AWAY;
+  60s ichida blink bo'lmasa →
   FACE_LIVENESS; tab yopilib qaytganda tracker `reset()` bo'ladi (vaqt sun'iy o'smaydi);
 - WARNING/CRITICAL hodisa yuz berganda 400ms ichida shoshilinch `sync` rejalashtiriladi
   (2s throttle) — monitor deyarli darhol yangilanadi;

@@ -12,10 +12,10 @@ export type FaceMetrics = { yaw: number; ear: number };
 export type FaceGuardEventType = "FACE_ABSENT" | "FACE_MULTIPLE" | "LOOK_AWAY" | "FACE_LIVENESS";
 export type FaceGuardEvent = { type: FaceGuardEventType; meta: Record<string, string | number | boolean> };
 
-export const FACE_ABSENT_AFTER_MS = 2_500;
+export const FACE_ABSENT_AFTER_MS = 2_000;
 export const FACE_MULTIPLE_AFTER_TICKS = 2;
-export const LOOK_AWAY_AFTER_MS = 500;
-export const LOOK_AWAY_YAW_DELTA = 0.24;
+export const LOOK_AWAY_AFTER_MS = 0;
+export const LOOK_AWAY_YAW_DELTA = 0.15;
 export const FACE_EVENT_COOLDOWN_MS = 30_000;
 export const LOOK_AWAY_COOLDOWN_MS = 10_000;
 export const LIVENESS_WINDOW_MS = 60_000;
@@ -134,7 +134,10 @@ export class FaceGuardTracker {
       if (ts - this.lookSince >= LOOK_AWAY_AFTER_MS && this.cooldownReady("LOOK_AWAY", ts)) {
         events.push({
           type: "LOOK_AWAY",
-          meta: { side: yawDelta > 0 ? "right" : "left", seconds: Math.round((ts - this.lookSince) / 1000) },
+          meta: {
+            side: yawDelta > 0 ? "right" : "left",
+            seconds: Math.max(0, Math.round((ts - this.lookSince) / 1000)),
+          },
         });
         this.cooldowns.set("LOOK_AWAY", ts);
       }
