@@ -14,9 +14,10 @@ export type FaceGuardEvent = { type: FaceGuardEventType; meta: Record<string, st
 
 export const FACE_ABSENT_AFTER_MS = 5_000;
 export const FACE_MULTIPLE_AFTER_TICKS = 2;
-export const LOOK_AWAY_AFTER_MS = 1_800;
-export const LOOK_AWAY_YAW_DELTA = 0.28;
+export const LOOK_AWAY_AFTER_MS = 1_400;
+export const LOOK_AWAY_YAW_DELTA = 0.24;
 export const FACE_EVENT_COOLDOWN_MS = 30_000;
+export const LOOK_AWAY_COOLDOWN_MS = 10_000;
 export const LIVENESS_WINDOW_MS = 60_000;
 
 const EAR_FALLBACK = 0.3;
@@ -172,6 +173,8 @@ export class FaceGuardTracker {
 
   private cooldownReady(type: FaceGuardEventType, ts: number): boolean {
     const last = this.cooldowns.get(type);
-    return last === undefined || ts - last >= FACE_EVENT_COOLDOWN_MS;
+    if (last === undefined) return true;
+    const window = type === "LOOK_AWAY" ? LOOK_AWAY_COOLDOWN_MS : FACE_EVENT_COOLDOWN_MS;
+    return ts - last >= window;
   }
 }

@@ -2,13 +2,10 @@
 
 import { useEffect, useRef, type RefObject } from "react";
 import { ensureFaceModels } from "@/components/face/face-scan";
-import {
-  FaceGuardTracker,
-  faceMetrics,
-  type FaceGuardEventType,
-} from "@/modules/secure-exam/face-guard";
+import { FaceGuardTracker, faceMetrics } from "@/modules/secure-exam/face-guard";
+import type { SecureEventType } from "@/modules/secure-exam/events";
 
-const TICK_INTERVAL_MS = 1_500;
+const TICK_INTERVAL_MS = 1_200;
 const DESCRIPTOR_EVERY_TICKS = 20;
 const DESCRIPTOR_EVERY_MS = 30_000;
 const MAX_CONSECUTIVE_ERRORS = 5;
@@ -16,7 +13,7 @@ const MAX_CONSECUTIVE_ERRORS = 5;
 export function useFaceGuard(options: {
   videoRef: RefObject<HTMLVideoElement | null>;
   active: boolean;
-  onEvent: (type: FaceGuardEventType, meta?: Record<string, string | number | boolean>) => void;
+  onEvent: (type: SecureEventType, meta?: Record<string, string | number | boolean>) => void;
   onDescriptor: (descriptor: number[]) => void;
   onStatus: (status: "monitoring" | "absent" | "multi") => void;
 }): void {
@@ -48,6 +45,7 @@ export function useFaceGuard(options: {
         inputSize: 160,
         scoreThreshold: 0.4,
       });
+      onEventRef.current("CLIENT_INFO", { guard: "face", state: "active" });
 
       async function tick() {
         if (cancelled) return;
@@ -83,7 +81,10 @@ export function useFaceGuard(options: {
           errors = 0;
         } catch {
           errors += 1;
-          if (errors >= MAX_CONSECUTIVE_ERRORS) return;
+          if (errors >= MAX_CONSECUTIVE_ERRORS) {
+            onEventRef.current("CLIENT_INFO", { guard: "face", state: "stopped" });
+            return;
+          }
         }
         timer = window.setTimeout(() => void tick(), TICK_INTERVAL_MS);
       }

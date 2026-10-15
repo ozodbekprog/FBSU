@@ -113,11 +113,14 @@ export function RunRoom({
   const eventsRef = useRef<QueuedEvent[]>([]);
   const screenCountRef = useRef<number | null>(null);
   const multiRaisedRef = useRef(false);
+  const blurredRef = useRef(false);
+  const wasHiddenRef = useRef(false);
   const phaseRef = useRef(phase);
   const finishedRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const toastTimerRef = useRef<number | null>(null);
+  const blurTimerRef = useRef<number | null>(null);
   const faceDescriptorRef = useRef<number[] | null>(null);
   const clientIdRef = useRef<string>(
     typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : "web",
@@ -284,19 +287,51 @@ export function RunRoom({
   useEffect(() => {
     if (phase !== "running") return;
     const onVisibility = () => {
-      pushEvent(document.visibilityState === "hidden" ? "TAB_HIDDEN" : "TAB_VISIBLE");
+      if (document.visibilityState === "hidden") {
+        wasHiddenRef.current = true;
+        pushEvent("TAB_HIDDEN");
+      } else {
+        pushEvent("TAB_VISIBLE");
+        if (wasHiddenRef.current) {
+          wasHiddenRef.current = false;
+          showToast("TAB_HIDDEN");
+        }
+      }
     };
-    const onBlur = () => pushEvent("WINDOW_BLUR");
-    const onFocus = () => pushEvent("WINDOW_FOCUS");
+    const onBlur = () => {
+      if (blurTimerRef.current !== null) window.clearTimeout(blurTimerRef.current);
+      blurTimerRef.current = window.setTimeout(() => {
+        blurTimerRef.current = null;
+        if (document.visibilityState === "visible") {
+          pushEvent("WINDOW_BLUR");
+          blurredRef.current = true;
+        }
+      }, 150);
+    };
+    const onFocus = () => {
+      if (blurTimerRef.current !== null) {
+        window.clearTimeout(blurTimerRef.current);
+        blurTimerRef.current = null;
+      }
+      pushEvent("WINDOW_FOCUS");
+      if (blurredRef.current) {
+        blurredRef.current = false;
+        showToast("WINDOW_BLUR");
+      }
+    };
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("blur", onBlur);
     window.addEventListener("focus", onFocus);
     return () => {
+      if (blurTimerRef.current !== null) {
+        window.clearTimeout(blurTimerRef.current);
+        blurTimerRef.current = null;
+      }
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("blur", onBlur);
       window.removeEventListener("focus", onFocus);
     };
-  }, [phase, pushEvent]);
+  }, [phase, pushEvent, showToast]);
 
   useEffect(() => {
     if (phase !== "running" || !settings.blockCopy) return;
@@ -330,7 +365,14 @@ export function RunRoom({
         pushEvent("PRINT_ATTEMPT");
         return;
       }
-      if (event.key === "F12" || (combo && event.shiftKey && ["I", "J", "C"].includes(key))) {
+      if (event.key === "F12") {
+        event.preventDefault();
+        pushEvent("KEY_BLOCKED", { key: event.key });
+        return;
+      }
+      const shiftCombo = combo && event.shiftKey && ["I", "J", "C", "K", "U"].includes(key);
+      const macCombo = event.metaKey && event.altKey && ["I", "J", "C", "U"].includes(key);
+      if (shiftCombo || macCombo) {
         event.preventDefault();
         pushEvent("KEY_BLOCKED", { key: event.key });
       }
@@ -753,7 +795,7 @@ export function RunRoom({
       </div>
 
       {cameraReady ? (
-        <div className="fixed bottom-24 right-4 z-40 overflow-hidden rounded-xl border border-slate-200 bg-black shadow-lg">
+        <div className="fixed right-3 top-20 z-40 overflow-hidden rounded-xl border border-slate-200 bg-black shadow-lg md:right-4 md:top-24">
           <video ref={videoRef} autoPlay muted playsInline className="h-28 w-40 object-cover" />
           <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white">
             <span className="size-1.5 animate-pulse rounded-full bg-rose-500" />

@@ -14,6 +14,10 @@ Oxirgi yangilanish: Xavfsiz imtihon — yuz nazorati + kiritma anomaliyasi (2026
 - [x] Yangi sof modullar: `face-guard.ts`, `input-anomaly.ts` + 19 yangi unit test;
       E2E `e2e/secure-exam.spec.ts` 2/2 yashil; tsc 0 xato; `next build` yashil
 - [x] Kamera preview yonida holat chipi; i18n uz/ru/en to'liq
+- [x] v2 yaxshilanishlar: kamera panel imtihon tepasida; LOOK_AWAY sezgirroq (1.4s / 0.24,
+      10s cooldown); WINDOW_BLUR → WARNING + talabaga toast; DevTools kombinatsiyalari
+      kengaytirildi (Ctrl/Cmd+Shift+I/J/C/K/U, Cmd+Opt+I/J/C/U); WARNING+ hodisalar
+      o'qituvchiga Notification orqali boradi
 
 ## EduPage avto jadval (2026-10-15)
 

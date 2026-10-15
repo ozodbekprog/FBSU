@@ -104,15 +104,19 @@ Darvoza (gate):
 - Face ID bo'lmasa imtihon davom etadi, lekin yuz nazoratisiz.
 
 Imtihon davomida:
-- har ~1.5s da `useFaceGuard`: yuz yo'q (5s+) → FACE_ABSENT; 2+ shaxs → FACE_MULTIPLE;
-  yonga qarash (yaw Δ>0.28, 1.8s+) → LOOK_AWAY; 60s ichida blink bo'lmasa → FACE_LIVENESS;
+- har ~1.2s da `useFaceGuard`: yuz yo'q (5s+) → FACE_ABSENT; 2+ shaxs → FACE_MULTIPLE;
+  yonga qarash (yaw Δ>0.24, 1.4s+, 10s cooldown) → LOOK_AWAY; 60s ichida blink bo'lmasa →
+  FACE_LIVENESS;
 - har ~30s da deskriptor serverga yuboriladi: mos kelsa bir marta FACE_OK (INFO),
   kelmasa FACE_MISMATCH (WARNING, 30s cooldown) — ogohlantirish limitiga hisoblanadi;
 - `useInputGuard`: robot yozish (tez/uniform intervallar) → KEY_ANOMALY; avtoklik/sakrash →
   MOUSE_ANOMALY; soxta hodisalar (isTrusted=false) yoki navigator.webdriver →
   AUTOMATION_DETECTED (CRITICAL);
 - holat kamera preview yonida chip sifatida ko'rinadi; o'qituvchi monitorda barcha
-  hodisalarni jonli ko'radi.
+  hodisalarni jonli ko'radi;
+- kamera paneli imtihon ekranining yuqori qismida (o'ng burchakda) turadi;
+- WARNING va CRITICAL hodisalar o'qituvchiga Notification (qo'ng'iroq) orqali boradi,
+  ixtiyoriy Telegram/email kanallari ham ishlaydi (`notifyUser`).
 
 Sozlamalar `config.ts` da: FACE_ABSENT_AFTER_MS, LOOK_AWAY_AFTER_MS, LOOK_AWAY_YAW_DELTA,
 FACE_MISMATCH_COOLDOWN_MS, ANOMALY_COOLDOWN_MS va h.k. Testlar:

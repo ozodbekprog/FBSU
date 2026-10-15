@@ -12,6 +12,7 @@ describe("SECURE_EVENT_TYPES", () => {
 describe("severityOf", () => {
   it("nazorat hodisalarini to'g'ri darajalaydi", () => {
     expect(severityOf("TAB_HIDDEN")).toBe("WARNING");
+    expect(severityOf("WINDOW_BLUR")).toBe("WARNING");
     expect(severityOf("FULLSCREEN_EXIT")).toBe("WARNING");
     expect(severityOf("COPY")).toBe("WARNING");
     expect(severityOf("MULTI_MONITOR")).toBe("CRITICAL");

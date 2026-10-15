@@ -1,15 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import {
-  KeyboardAnomalyTracker,
-  MouseAnomalyTracker,
-  type InputAnomalyType,
-} from "@/modules/secure-exam/input-anomaly";
+import { KeyboardAnomalyTracker, MouseAnomalyTracker } from "@/modules/secure-exam/input-anomaly";
+import type { SecureEventType } from "@/modules/secure-exam/events";
 
 export function useInputGuard(options: {
   active: boolean;
-  onEvent: (type: InputAnomalyType, meta?: Record<string, string | number | boolean>) => void;
+  onEvent: (type: SecureEventType, meta?: Record<string, string | number | boolean>) => void;
 }): void {
   const { active, onEvent } = options;
   const kbRef = useRef<KeyboardAnomalyTracker | null>(null);
@@ -27,6 +24,8 @@ export function useInputGuard(options: {
     const kb = kbRef.current;
     const mv = mvRef.current;
     if (!kb || !mv) return;
+
+    onEventRef.current("CLIENT_INFO", { guard: "input", state: "active" });
 
     if (navigator.webdriver === true) {
       onEventRef.current("AUTOMATION_DETECTED", { source: "webdriver" });
