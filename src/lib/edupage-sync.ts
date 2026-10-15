@@ -1,18 +1,25 @@
+import { randomUUID } from "node:crypto";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import {
   EDU_PAGE_SOURCE,
   fetchEduPageTimetable,
   findEduPageClass,
+  formatTeacherName,
   normalizeClassName,
   staffGivenKey,
   teacherGivenKey,
-  teacherKeyMatches,
   teacherMatchKey,
   type EduPageLesson,
+  type EduPageTimetable,
 } from "@/lib/edupage";
 
 const MAX_REPORTED = 25;
 const WRITE_CHUNK = 200;
+const SYNC_STATE_KEY = "edupage:last-sync";
+const AUTO_SYNC_MAX_AGE_MINUTES = 30;
+const AUTO_SYNC_MIN_GAP_MS = 10 * 60 * 1000;
+const DEFAULT_SUBJECT_COLOR = "#3f5a9d";
 
 export type EduPageSyncResult = {
   ttNum: string;
@@ -23,13 +30,20 @@ export type EduPageSyncResult = {
   groupsSynced: string[];
   groupsWithoutClass: string[];
   classesWithoutGroup: string[];
+  teachersTotal: number;
+  teachersCreated: number;
+  teachersLinked: number;
+  subjectsTotal: number;
+  subjectsCreated: number;
+  subjectsLinked: number;
+  roomsTotal: number;
+  roomsCreated: number;
+  teacherSubjectLinks: number;
   lessonsImported: number;
   created: number;
   updated: number;
   removed: number;
   manualRemoved: number;
-  teachersLinked: number;
-  subjectsLinked: number;
 };
 
 type IncomingEntry = {
@@ -50,11 +64,38 @@ type IncomingEntry = {
   approval: "APPROVED";
 };
 
+type NameMatch = { surname: string; initials: string };
+
+function toNameMatch(key: string): NameMatch | null {
+  const [surname, initials] = key.split("|");
+  if (!surname || !initials) return null;
+  return { surname, initials };
+}
+
+function matches(a: NameMatch, b: NameMatch): boolean {
+  if (a.surname !== b.surname) return false;
+  return a.initials.startsWith(b.initials) || b.initials.startsWith(a.initials);
+}
+
 function classYear(name: string): number | null {
   const match = /-(\d{2})$/.exec(name.trim());
   if (!match) return null;
   const year = Number(match[1]);
   return Number.isFinite(year) ? 2000 + year : null;
+}
+
+function emailFor(name: string, taken: Set<string>): string {
+  const parts = name.split(/[\s.]+/).filter((part) => part.length > 0);
+  const initial = (parts[0] ?? "").replace(/[^A-Za-z]/g, "").toLowerCase();
+  const surname = (parts[parts.length - 1] ?? "").replace(/[^A-Za-z]/g, "").toLowerCase();
+  const base = `${initial}${surname ? `.${surname}` : ""}` || "teacher";
+  let candidate = `${base}@ttpu.uz`;
+  let index = 1;
+  while (taken.has(candidate)) {
+    index += 1;
+    candidate = `${base}${index}@ttpu.uz`;
+  }
+  return candidate;
 }
 
 function entryDiffers(existing: Record<string, unknown>, incoming: IncomingEntry): boolean {
@@ -73,17 +114,50 @@ function entryDiffers(existing: Record<string, unknown>, incoming: IncomingEntry
   return keys.some((key) => (existing[key] ?? null) !== (incoming[key] ?? null));
 }
 
-export async function syncEduPageSchedule(): Promise<EduPageSyncResult> {
-  const timetable = await fetchEduPageTimetable();
+type StaffIndex = { bySurname: Map<string, NameMatch & { ids: string[] }>; byGiven: Map<string, NameMatch & { ids: string[] }> };
 
+function indexStaff(staff: { id: string; name: string }[]): StaffIndex {
+  const bySurname = new Map<string, NameMatch & { ids: string[] }>();
+  const byGiven = new Map<string, NameMatch & { ids: string[] }>();
+
+  const push = (map: Map<string, NameMatch & { ids: string[] }>, key: string, id: string) => {
+    const parsed = toNameMatch(key);
+    if (!parsed) return;
+    const entry = map.get(key) ?? { ...parsed, ids: [] };
+    entry.ids.push(id);
+    map.set(key, entry);
+  };
+
+  for (const member of staff) {
+    push(bySurname, teacherMatchKey(member.name), member.id);
+    push(byGiven, staffGivenKey(member.name), member.id);
+  }
+
+  return { bySurname, byGiven };
+}
+
+function lookupStaff(index: StaffIndex, eduName: string): string | null {
+  const candidates: { map: Map<string, NameMatch & { ids: string[] }>; key: string }[] = [
+    { map: index.bySurname, key: teacherMatchKey(eduName) },
+    { map: index.byGiven, key: teacherGivenKey(eduName) },
+  ];
+
+  for (const candidate of candidates) {
+    const parsed = toNameMatch(candidate.key);
+    if (!parsed) continue;
+    for (const entry of candidate.map.values()) {
+      if (entry.ids.length !== 1) continue;
+      if (matches(entry, parsed)) return entry.ids[0] ?? null;
+    }
+  }
+  return null;
+}
+
+async function ensureGroups(timetable: EduPageTimetable) {
   let groups = await prisma.group.findMany({
     select: { id: true, name: true, edupageName: true },
     orderBy: { name: "asc" },
   });
-
-  const groupsSynced: string[] = [];
-  const groupsWithoutClass: string[] = [];
-  const groupByClassId = new Map<string, string>();
 
   const groupsToCreate = timetable.classes.filter(
     (item) =>
@@ -109,7 +183,96 @@ export async function syncEduPageSchedule(): Promise<EduPageSyncResult> {
     });
   }
 
-  const groupsCreated = groupsToCreate.length;
+  return { groups, groupsCreated: groupsToCreate.length };
+}
+
+async function ensureTeachers(timetable: EduPageTimetable) {
+  const staff = await prisma.user.findMany({
+    where: { isActive: true, role: { notIn: ["STUDENT", "OTA_ONA"] } },
+    select: { id: true, name: true },
+  });
+
+  const index = indexStaff(staff);
+  const missing: { name: string; email: string }[] = [];
+  const takenEmails = new Set(
+    (await prisma.user.findMany({ select: { email: true } })).map((row) => row.email),
+  );
+
+  for (const teacher of timetable.teachers) {
+    if (lookupStaff(index, teacher.name)) continue;
+    const name = teacher.display || formatTeacherName(teacher.name);
+    if (!name) continue;
+    if (staff.some((member) => member.name === name)) continue;
+    const email = emailFor(name, takenEmails);
+    takenEmails.add(email);
+    missing.push({ name, email });
+  }
+
+  if (missing.length > 0) {
+    const passwordHash = await bcrypt.hash(randomUUID(), 10);
+    for (let index2 = 0; index2 < missing.length; index2 += WRITE_CHUNK) {
+      await prisma.user.createMany({
+        data: missing.slice(index2, index2 + WRITE_CHUNK).map((item) => ({
+          email: item.email,
+          name: item.name,
+          role: "TEACHER" as const,
+          passwordHash,
+          isActive: true,
+        })),
+        skipDuplicates: true,
+      });
+    }
+  }
+
+  const allStaff = await prisma.user.findMany({
+    where: { isActive: true, role: { notIn: ["STUDENT", "OTA_ONA"] } },
+    select: { id: true, name: true },
+  });
+
+  return { index: indexStaff(allStaff), created: missing.length };
+}
+
+async function ensureSubjects(timetable: EduPageTimetable) {
+  const existing = await prisma.subject.findMany({ select: { id: true, name: true } });
+  const byName = new Map(existing.map((item) => [normalizeClassName(item.name), item.id]));
+
+  const missing = timetable.subjects.filter((item) => !byName.has(normalizeClassName(item.name)));
+  if (missing.length > 0) {
+    await prisma.subject.createMany({
+      data: missing.map((item) => ({ name: item.name, color: item.color ?? DEFAULT_SUBJECT_COLOR })),
+      skipDuplicates: true,
+    });
+    const created = await prisma.subject.findMany({
+      where: { name: { in: missing.map((item) => item.name) } },
+      select: { id: true, name: true },
+    });
+    for (const item of created) byName.set(normalizeClassName(item.name), item.id);
+  }
+
+  return { byName, created: missing.length };
+}
+
+async function ensureRooms(timetable: EduPageTimetable) {
+  const existing = await prisma.room.findMany({ select: { name: true } });
+  const known = new Set(existing.map((item) => item.name));
+  const missing = timetable.rooms.filter((item) => !known.has(item.name));
+  if (missing.length > 0) {
+    await prisma.room.createMany({
+      data: missing.map((item) => ({ name: item.name.slice(0, 100) })),
+      skipDuplicates: true,
+    });
+  }
+  return { created: missing.length, total: timetable.rooms.length };
+}
+
+export async function syncEduPageSchedule(): Promise<EduPageSyncResult> {
+  const timetable = await fetchEduPageTimetable();
+
+  const { groups, groupsCreated } = await ensureGroups(timetable);
+
+  const groupsSynced: string[] = [];
+  const groupsWithoutClass: string[] = [];
+  const groupByClassId = new Map<string, string>();
 
   for (const group of groups) {
     const matched = findEduPageClass(timetable.classes, [group.edupageName, group.name]);
@@ -126,50 +289,17 @@ export async function syncEduPageSchedule(): Promise<EduPageSyncResult> {
     .filter((item) => !syncedClassIds.has(item.id) && item.lessonCount > 0)
     .map((item) => item.name);
 
-  const staff = await prisma.user.findMany({
-    where: { isActive: true, role: { notIn: ["STUDENT", "OTA_ONA"] } },
-    select: { id: true, name: true },
-  });
-
-  const staffByKey = new Map<string, string[]>();
-  const staffByGiven = new Map<string, string[]>();
-  for (const member of staff) {
-    const key = teacherMatchKey(member.name);
-    if (key) {
-      const list = staffByKey.get(key) ?? [];
-      list.push(member.id);
-      staffByKey.set(key, list);
-    }
-    const givenKey = staffGivenKey(member.name);
-    if (givenKey) {
-      const list = staffByGiven.get(givenKey) ?? [];
-      list.push(member.id);
-      staffByGiven.set(givenKey, list);
-    }
-  }
-
-  const subjects = await prisma.subject.findMany({ select: { id: true, name: true } });
-  const subjectByName = new Map(subjects.map((item) => [normalizeClassName(item.name), item.id]));
+  const { index: staffIndex, created: teachersCreated } = await ensureTeachers(timetable);
+  const { byName: subjectsByName, created: subjectsCreated } = await ensureSubjects(timetable);
+  const { created: roomsCreated, total: roomsTotal } = await ensureRooms(timetable);
 
   const linkedTeacherIds = new Set<string>();
-  let subjectsLinked = 0;
-
-  function uniqueMatch(map: Map<string, string[]>, eduKey: string): string | null {
-    if (!eduKey.endsWith("|")) {
-      for (const [appKey, ids] of map) {
-        if (ids.length !== 1) continue;
-        if (teacherKeyMatches(appKey, eduKey)) return ids[0] ?? null;
-      }
-    }
-    return null;
-  }
+  const linkedSubjectIds = new Set<string>();
 
   function matchTeacher(raw: string | null): string | null {
     if (!raw) return null;
     for (const candidate of raw.split(",").map((item) => item.trim()).filter(Boolean)) {
-      const matched =
-        uniqueMatch(staffByKey, teacherMatchKey(candidate)) ??
-        uniqueMatch(staffByGiven, teacherGivenKey(candidate));
+      const matched = lookupStaff(staffIndex, candidate);
       if (matched) {
         linkedTeacherIds.add(matched);
         return matched;
@@ -180,9 +310,9 @@ export async function syncEduPageSchedule(): Promise<EduPageSyncResult> {
 
   function matchSubject(lesson: EduPageLesson): string | null {
     for (const candidate of [lesson.subject, lesson.subjectRaw, lesson.subjectShort]) {
-      const id = subjectByName.get(normalizeClassName(candidate));
+      const id = subjectsByName.get(normalizeClassName(candidate));
       if (id) {
-        subjectsLinked += 1;
+        linkedSubjectIds.add(id);
         return id;
       }
     }
@@ -272,7 +402,9 @@ export async function syncEduPageSchedule(): Promise<EduPageSyncResult> {
     }
   }
 
-  const removals = existing.filter((row) => !row.externalId || !incomingIds.has(row.externalId)).map((row) => row.id);
+  const removals = existing
+    .filter((row) => !row.externalId || !incomingIds.has(row.externalId))
+    .map((row) => row.id);
 
   for (let index = 0; index < toCreate.length; index += WRITE_CHUNK) {
     await prisma.scheduleEntry.createMany({ data: toCreate.slice(index, index + WRITE_CHUNK) });
@@ -285,6 +417,22 @@ export async function syncEduPageSchedule(): Promise<EduPageSyncResult> {
   }
   if (removals.length > 0) {
     await prisma.scheduleEntry.deleteMany({ where: { id: { in: removals } } });
+  }
+
+  const teacherSubjectPairs = new Map<string, { teacherId: string; subjectId: string }>();
+  for (const entry of incoming) {
+    if (!entry.teacherId || !entry.subjectId) continue;
+    teacherSubjectPairs.set(`${entry.teacherId}:${entry.subjectId}`, {
+      teacherId: entry.teacherId,
+      subjectId: entry.subjectId,
+    });
+  }
+  const pairs = [...teacherSubjectPairs.values()];
+  for (let index = 0; index < pairs.length; index += WRITE_CHUNK) {
+    await prisma.teacherSubject.createMany({
+      data: pairs.slice(index, index + WRITE_CHUNK),
+      skipDuplicates: true,
+    });
   }
 
   const manualRemoved =
@@ -311,21 +459,22 @@ export async function syncEduPageSchedule(): Promise<EduPageSyncResult> {
     groupsSynced,
     groupsWithoutClass: groupsWithoutClass.slice(0, MAX_REPORTED),
     classesWithoutGroup: classesWithoutGroup.slice(0, MAX_REPORTED),
+    teachersTotal: timetable.teachers.length,
+    teachersCreated,
+    teachersLinked: linkedTeacherIds.size,
+    subjectsTotal: timetable.subjects.length,
+    subjectsCreated,
+    subjectsLinked: linkedSubjectIds.size,
+    roomsTotal,
+    roomsCreated,
+    teacherSubjectLinks: pairs.length,
     lessonsImported: incoming.length,
     created: toCreate.length,
     updated: updates.length,
     removed: removals.length,
     manualRemoved,
-    teachersLinked: linkedTeacherIds.size,
-    subjectsLinked,
   };
 }
-
-const SYNC_STATE_KEY = "edupage:last-sync";
-const AUTO_SYNC_MAX_AGE_MINUTES = 30;
-const AUTO_SYNC_MIN_GAP_MS = 10 * 60 * 1000;
-
-let lastAutoSyncAttempt = 0;
 
 export type EduPageSyncState = {
   at: string | null;
@@ -359,7 +508,11 @@ export async function isEduPageSyncStale(maxAgeMinutes = AUTO_SYNC_MAX_AGE_MINUT
   return Date.now() - stamp > maxAgeMinutes * 60_000;
 }
 
-export async function autoSyncEduPageSchedule(maxAgeMinutes = AUTO_SYNC_MAX_AGE_MINUTES): Promise<void> {
+let lastAutoSyncAttempt = 0;
+
+export async function autoSyncEduPageSchedule(
+  maxAgeMinutes = AUTO_SYNC_MAX_AGE_MINUTES,
+): Promise<void> {
   const now = Date.now();
   if (now - lastAutoSyncAttempt < AUTO_SYNC_MIN_GAP_MS) return;
   lastAutoSyncAttempt = now;

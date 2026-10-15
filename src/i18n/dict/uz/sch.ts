@@ -486,7 +486,7 @@ export const sch = {
   schEduPageSync: "Bazaga sinxronlash",
   schEduPageSyncing: "Sinxronlanmoqda…",
   schEduPageSyncDone:
-    "Sinxronlandi: +{created} yangi, {updated} yangilangan, {removed} o'chirilgan, {groups} guruh qo'shildi, {manual} eski qo'lda yozuv tozalandi",
+    "Sinxronlandi: {created} yangi dars, {updated} yangilangan, {removed} o'chirilgan · {groups} guruh, {teachers} o'qituvchi, {subjects} fan, {rooms} xona · {manual} eski yozuv tozalandi",
   schEduPageSyncError: "Sinxronlashda xatolik",
   schEduPageUnavailable: "EduPage jadvali hozircha mavjud emas",
   schEduPageUnavailableDesc: "Manba sayt javob bermadi. Bir necha daqiqadan so'ng qayta urinib ko'ring.",

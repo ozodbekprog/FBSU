@@ -183,6 +183,9 @@ Manba: `https://ttpu.edupage.org/timetable/` (aSc EduPage, ommaviy jadval — lo
 - Sinxron mos kelmagan sinflar uchun guruhni **o'zi yaratadi** va o'sha guruhlardagi
   eski qo'lda/seed jadval yozuvlarini tozalaydi (`source = null`) — manba (EduPage)
   yagona haqiqat bo'lib qoladi
+- O'qituvchilar (role `TEACHER`), fanlar (rang bilan) va xonalar ham ko'chiriladi;
+  jadval yozuvlari `teacherId` / `subjectId` ga bog'lanadi.
+  Import qilingan o'qituvchi paroli tasodifiy — admin parolni yangilaguncha kira olmaydi
 - Sozlamalar (ixtiyoriy): `EDUPAGE_BASE_URL` — boshqa maktab domeni uchun;
   `EDUPAGE_SYNC_SECRET` / `CRON_SECRET` — cron endpoint himoyasi
 

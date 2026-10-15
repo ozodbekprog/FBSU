@@ -13,6 +13,11 @@ Oxirgi yangilanish: EduPage avto jadval integratsiyasi (2026-10-15)
       ko'rinishi, bugun ustuni, EduPage ranglari, "Yangilangan HH:MM" + har 15 daqiqada
       avtomatik yangilanish (client `router.refresh`)
 - [x] `GET /api/edupage/timetable?class=AI2-26` — normallashtirilgan JSON (auth kerak)
+- [x] **O'qituvchilar/ fanlar / xonalar ham ko'chiriladi**: 201 yangi o'qituvchi
+      (`TEACHER`, `a.mamanazarov@ttpu.uz` ko'rinishidagi email, tasodifiy parol —
+      parolni faqat admin yangilaydi), 292 fan (rang bilan), 70 xona;
+      jadval yozuvlari `teacherId`/`subjectId` ga bog'lanadi, 234 ta fan-o'qituvchi
+      juftligi (`TeacherSubject`) yaratildi
 - [x] Sinf↔guruh: mos kelmagan sinflar uchun guruh **avtomatik yaratiladi**
       (nom + `edupageName` + yil), 96 ta yangi guruh — 1 475 dars import qilindi
 - [x] Sinxron paytida EduPage'ga bog'langan guruhlardagi **eski qo'lda/seed

@@ -16,6 +16,9 @@ type SyncOutcome = {
   removed: number;
   groupsCreated: number;
   manualRemoved: number;
+  teachersCreated: number;
+  subjectsCreated: number;
+  roomsCreated: number;
 };
 
 function timeLabel(iso: string) {
@@ -134,6 +137,9 @@ export function EduPageBoard({
           updated: payload.data.updated,
           removed: payload.data.removed,
           groups: payload.data.groupsCreated,
+          teachers: payload.data.teachersCreated,
+          subjects: payload.data.subjectsCreated,
+          rooms: payload.data.roomsCreated,
           manual: payload.data.manualRemoved,
         }),
       );

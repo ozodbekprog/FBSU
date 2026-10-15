@@ -13,6 +13,12 @@ export type EduPagePeriod = { period: number; start: string | null; end: string 
 
 export type EduPageClass = { id: string; name: string; lessonCount: number };
 
+export type EduPageTeacher = { id: string; name: string; display: string };
+
+export type EduPageRoom = { id: string; name: string };
+
+export type EduPageSubject = { name: string; color: string | null };
+
 export type EduPageLesson = {
   id: string;
   classId: string;
@@ -43,10 +49,13 @@ export type EduPageTimetable = {
   periods: EduPagePeriod[];
   days: string[];
   classes: EduPageClass[];
+  teachers: EduPageTeacher[];
+  rooms: EduPageRoom[];
+  subjects: EduPageSubject[];
   lessons: EduPageLesson[];
 };
 
-export type EduPageClassTimetable = Omit<EduPageTimetable, "lessons" | "classes"> & {
+export type EduPageClassTimetable = Omit<EduPageTimetable, "lessons" | "classes" | "teachers" | "rooms" | "subjects"> & {
   className: string;
   classId: string;
   lessons: EduPageLesson[];
@@ -343,6 +352,24 @@ export async function fetchEduPageTimetable(): Promise<EduPageTimetable> {
 
   const days = rows("days").map((row) => fieldText(row, "name"));
 
+  const teacherList: EduPageTeacher[] = [...teacherById.entries()]
+    .map(([id, name]) => ({ id, name, display: formatTeacherName(name) }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const roomList: EduPageRoom[] = [...roomById.entries()]
+    .map(([id, name]) => ({ id, name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const subjectCatalog = new Map<string, EduPageSubject>();
+  for (const [id, subject] of subjectById) {
+    if (!id || !subject.name) continue;
+    const base = splitSubjectType(subject.name).subject;
+    const key = normalizeClassName(base);
+    if (!key || subjectCatalog.has(key)) continue;
+    subjectCatalog.set(key, { name: base, color: subject.color });
+  }
+  const subjectList = [...subjectCatalog.values()].sort((a, b) => a.name.localeCompare(b.name));
+
   const lessons: EduPageLesson[] = [];
   const lessonCountByClass = new Map<string, number>();
 
@@ -432,6 +459,9 @@ export async function fetchEduPageTimetable(): Promise<EduPageTimetable> {
     periods,
     days,
     classes,
+    teachers: teacherList,
+    rooms: roomList,
+    subjects: subjectList,
     lessons,
   };
 }

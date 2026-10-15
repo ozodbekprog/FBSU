@@ -205,6 +205,12 @@ describe("EduPage jadvalini o'qish", () => {
     expect(timetable.validity).toContain("11/10/2026");
     expect(timetable.periods.map((item) => item.period)).toEqual([1, 2]);
     expect(timetable.days[0]).toBe("Monday");
+    expect(timetable.teachers.map((item) => item.display)).toEqual([
+      "K. Khabibullaev",
+      "A. Mamanazarov",
+    ]);
+    expect(timetable.rooms.map((item) => item.name)).toEqual(["LAB 403", "Yellow Hall"]);
+    expect(timetable.subjects.map((item) => item.name)).toEqual(["Physics I", "Programming"]);
     expect(timetable.classes.map((item) => item.name)).toEqual(["AI2-26", "IT2-26"]);
 
     const ai = timetable.lessons.filter((lesson) => lesson.className === "AI2-26");
