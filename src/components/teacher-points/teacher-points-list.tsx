@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState, useTransition, type ReactNode } from "react";
-import { Button, Input, Select } from "@/components/ui";
+import { Button, Card, CardBody, CardHeader, Input, Label, Select } from "@/components/ui";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 
 type TeacherPoint = {
@@ -135,11 +135,11 @@ const IconAlert = ({ className }: IconProps) => (
 );
 
 const CATEGORIES = [
-  { value: "davomat", label: "Davamot", Icon: IconAttendance, tint: "from-sky-500 to-blue-600" },
-  { value: "faollik", label: "Darsdagi faollik", Icon: IconActivity, tint: "from-amber-400 to-orange-500" },
-  { value: "aloqadirilish", label: "Aloqadirilish", Icon: IconHandshake, tint: "from-violet-500 to-purple-600" },
-  { value: "homework", label: "Vazifalar", Icon: IconBook, tint: "from-emerald-400 to-teal-600" },
-  { value: "test", label: "Testlar", Icon: IconTarget, tint: "from-rose-400 to-pink-600" },
+  { value: "davomat", label: "Davamot", Icon: IconAttendance },
+  { value: "faollik", label: "Darsdagi faollik", Icon: IconActivity },
+  { value: "aloqadirilish", label: "Aloqadirilish", Icon: IconHandshake },
+  { value: "homework", label: "Vazifalar", Icon: IconBook },
+  { value: "test", label: "Testlar", Icon: IconTarget },
 ];
 
 export function TeacherPointsList({ courses, teacherRole }: Props) {
@@ -293,171 +293,85 @@ export function TeacherPointsList({ courses, teacherRole }: Props) {
     }
   }
 
+
   if (courses.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="rounded-2xl border border-slate-200 bg-white p-8 text-center"
-      >
-        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-slate-100 text-3xl">
-          <IconCap className="size-8" />
-        </div>
-        <h3 className="text-base font-semibold text-slate-800">{t("tchNoSubjectAssigned")}</h3>
-        <p className="mt-1 text-sm text-slate-400">{t("tchNoSubjectAssignedDesc")}</p>
-      </motion.div>
+      <Card>
+        <CardHeader title={t("tchNoSubjectAssigned")} subtitle={t("tchNoSubjectAssignedDesc")} />
+        <CardBody>
+          <p className="text-sm text-slate-500">{t("tchNoSubjectAssignedDesc")}</p>
+        </CardBody>
+      </Card>
     );
   }
 
   const activeCategory = CATEGORIES.find((c) => c.value === category) ?? CATEGORIES[0];
+  const CategoryIcon = activeCategory.Icon;
   const percent = Math.min((totalPoints / MAX_POINTS) * 100, 100);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.35 }}
-      className="space-y-6"
-    >
-      {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 120, damping: 18 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-900 via-brand-800 to-indigo-700 p-6 text-white shadow-xl"
-      >
-        <div className="pointer-events-none absolute -right-16 -top-16 size-56 rounded-full bg-gold-400/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-10 size-52 rounded-full bg-sky-400/20 blur-3xl" />
+    <div className="space-y-5">
+      {/* ── Kurs ─────────────────────────────────────────────────────── */}
+      <Card>
+        <CardHeader
+          title={t("tchSubject")}
+          subtitle={selectedCourse ? `${students.length} ${t("tchStudents")}` : undefined}
+        />
+        <CardBody className="pt-5">
+          <Select value={courseId} onChange={(e) => setCourseId(e.target.value)}>
+            {courses.map((course) => (
+              <option key={course.id} value={course.id}>
+                {course.title}
+              </option>
+            ))}
+          </Select>
+        </CardBody>
+      </Card>
 
-        <div className="relative flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
-              {t("tchPointsTitle")}
-            </p>
-            <h2 className="mt-1 text-2xl font-bold">{t("tchGivePoints")}</h2>
-            <p className="mt-1 max-w-md text-sm text-white/70">
-              {selectedCourse?.title ?? t("tchNoSubjectAssignedDesc")}
-            </p>
-          </div>
-
-          <div className="relative grid size-20 shrink-0 place-items-center">
-            <motion.span
-              key={totalPoints}
-              initial={{ scale: 1.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 260, damping: 14 }}
-              className="absolute text-2xl font-bold"
-            >
-              {totalPoints.toFixed(1)}
-            </motion.span>
-            <svg viewBox="0 0 36 36" className="size-20 -rotate-90">
-              <circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(255,255,255,.18)" strokeWidth="3" />
-              <motion.circle
-                cx="18"
-                cy="18"
-                r="15.5"
-                fill="none"
-                stroke="url(#tchGrad)"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeDasharray={97.4}
-                initial={{ strokeDashoffset: 97.4 }}
-                animate={{ strokeDashoffset: 97.4 - (97.4 * percent) / 100 }}
-                transition={{ type: "spring", stiffness: 60, damping: 18 }}
-              />
-              <defs>
-                <linearGradient id="tchGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#fbbf24" />
-                  <stop offset="100%" stopColor="#fb923c" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-        </div>
-
-        <div className="relative mt-5 h-2 overflow-hidden rounded-full bg-white/15">
-          <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-gold-400 to-orange-400"
-            initial={{ width: 0 }}
-            animate={{ width: `${percent}%` }}
-            transition={{ type: "spring", stiffness: 70, damping: 18 }}
-          />
-        </div>
-        <p className="relative mt-2 text-xs text-white/60">
-          {`${t("tchMaxPoints")} ${String(MAX_POINTS)}`}: {totalPoints.toFixed(1)} / {MAX_POINTS}
-        </p>
-      </motion.div>
-
-      {/* ── Kurs tanlash ─────────────────────────────────────────────── */}
-      <motion.label
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.06 }}
-        className="grid gap-1.5"
-      >
-        <span className="text-sm font-medium text-slate-700">{t("tchSubject")}</span>
-        <Select value={courseId} onChange={(e) => setCourseId(e.target.value)}>
-          {courses.map((course) => (
-            <option key={course.id} value={course.id}>
-              {course.title}
-            </option>
-          ))}
-        </Select>
-      </motion.label>
-
-      {/* ── Davamat balli sozlamalari ────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
-      >
-        <div className="flex items-center gap-2.5">
-          <span className="grid size-9 place-items-center rounded-xl bg-sky-50 text-sky-600">
-            <IconAttendance className="size-5" />
-          </span>
-          <div>
-            <h3 className="text-sm font-semibold text-slate-800">Davamat balli</h3>
-            <p className="text-xs text-slate-400">
-              Har bir sinf uchun alohida belgilang — darsga kelgan talaba shuncha ball oladi
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-4 space-y-4">
-          {/* Har bir sinf */}
+      {/* ── Davamat balli ─────────────────────────────────────────────── */}
+      <Card>
+        <CardHeader
+          title={t("tchAttendanceTitle")}
+          subtitle={t("tchAttendanceSubtitle")}
+          action={
+            <span className="inline-flex size-9 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+              <IconAttendance className="size-[18px]" />
+            </span>
+          }
+        />
+        <CardBody className="space-y-4 pt-5">
           {groups.length === 0 ? (
-            <p className="text-sm text-slate-400">Bu kursga yozilgan sinf topilmadi.</p>
+            <p className="text-sm text-slate-500">{t("tchNoGroups")}</p>
           ) : (
             groups.map((group) => {
               const key = group.id;
               const value = drafts[key] ?? 1;
               const saving = savingGroup === key;
+              const saved = savedGroup === key;
               return (
-                <motion.div
-                  key={group.id}
-                  layout
-                  className="rounded-2xl border border-slate-100 bg-slate-50/60 p-3"
-                >
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="text-sm font-semibold text-slate-700">{group.name}</span>
-                    <div className="flex items-center gap-2">
-                      <motion.span
-                        key={value}
-                        initial={{ scale: 1.25, opacity: 0.5 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.18 }}
-                        className="text-lg font-bold text-sky-600"
-                      >
-                        +{Number(value).toFixed(1)}
-                      </motion.span>
+                <div key={group.id} className="rounded-xl border border-slate-200 bg-slate-50/60 p-3.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-sm font-medium text-slate-800">{group.name}</span>
+                    <div className="flex items-center gap-2.5">
+                      <AnimatePresence mode="popLayout" initial={false}>
+                        <motion.span
+                          key={value}
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          transition={{ duration: 0.15 }}
+                          className="font-semibold tabular-nums text-brand-700"
+                        >
+                          +{Number(value).toFixed(1)}
+                        </motion.span>
+                      </AnimatePresence>
                       <Button
+                        variant={saved ? "gold" : "secondary"}
+                        size="sm"
                         onClick={() => saveAttendance(key, group.id, value)}
                         disabled={saving || pending}
-                        className="!px-3 !py-1.5 !text-xs !bg-sky-600 hover:!bg-sky-700"
                       >
-                        {saving ? "…" : "Saqlash"}
+                        {saving ? "…" : saved ? "Saqlandi" : t("tchSave")}
                       </Button>
                     </div>
                   </div>
@@ -471,49 +385,31 @@ export function TeacherPointsList({ courses, teacherRole }: Props) {
                       setDrafts((prev) => ({ ...prev, [key]: Number(e.target.value) }));
                       setSavedGroup(null);
                     }}
-                    aria-label={`${group.name} davamat balli`}
-                    className="mt-2 w-full accent-sky-500"
+                    aria-label={`${group.name} — ${t("tchAttendanceTitle")}`}
+                    className="mt-3 w-full accent-brand-600"
                   />
-                  <div className="flex justify-between text-[11px] text-slate-400">
-                    <span>0.1</span>
-                    <span>7.5</span>
-                    <span>15</span>
-                  </div>
-                  <AnimatePresence>
-                    {savedGroup === key ? (
-                      <motion.p
-                        initial={{ opacity: 0, y: -6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        className="mt-1 text-xs font-medium text-emerald-600"
-                      >
-                        <IconCheck className="mr-1 inline size-3.5 align-[-1px]" />
-                        Saqlandi
-                      </motion.p>
-                    ) : null}
-                  </AnimatePresence>
-                </motion.div>
+                </div>
               );
             })
           )}
 
-          {/* Boshqa/umumiy qiymat */}
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-3">
-            <div className="flex items-baseline justify-between gap-3">
+          <div className="rounded-xl border border-slate-200 p-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <span className="text-sm font-semibold text-slate-700">Boshqa hollarda</span>
-                <p className="text-[11px] text-slate-400">Sinfsiz kelganlar uchun</p>
+                <p className="text-sm font-medium text-slate-800">{t("tchNoGroupTitle")}</p>
+                <p className="text-xs text-slate-500">{t("tchNoGroupSubtitle")}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-slate-600">
+              <div className="flex items-center gap-2.5">
+                <span className="font-semibold tabular-nums text-slate-700">
                   +{Number(drafts.__all__ ?? 1).toFixed(1)}
                 </span>
                 <Button
+                  variant={savedGroup === "__all__" ? "gold" : "secondary"}
+                  size="sm"
                   onClick={() => saveAttendance("__all__", null, drafts.__all__ ?? 1)}
                   disabled={!!savingGroup || pending}
-                  className="!px-3 !py-1.5 !text-xs"
                 >
-                  {savingGroup === "__all__" ? "…" : "Saqlash"}
+                  {savingGroup === "__all__" ? "…" : savedGroup === "__all__" ? "Saqlandi" : t("tchSave")}
                 </Button>
               </div>
             </div>
@@ -527,31 +423,28 @@ export function TeacherPointsList({ courses, teacherRole }: Props) {
                 setDrafts((prev) => ({ ...prev, __all__: Number(e.target.value) }));
                 setSavedGroup(null);
               }}
-              aria-label="Sinfsiz davamat balli"
-              className="mt-2 w-full accent-slate-400"
+              aria-label={t("tchNoGroupTitle")}
+              className="mt-3 w-full accent-slate-400"
             />
           </div>
-        </div>
-      </motion.div>
+        </CardBody>
+      </Card>
 
-      {/* ── Ball berish paneli ───────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.16 }}
-        className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
-      >
-        <div className={`bg-gradient-to-r ${activeCategory.tint} px-5 py-3 text-white`}>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/70">Kategoriya</p>
-          <p className="mt-0.5 text-base font-semibold">
-            <activeCategory.Icon className="mr-1.5 inline size-4 align-[-2px]" />
-            {activeCategory.label}
-          </p>
-        </div>
-
-        <div className="grid gap-4 p-5">
-          <label className="grid gap-1.5">
-            <span className="text-sm font-medium text-slate-700">{t("tchPupil")}</span>
+      {/* ── Ball berish ──────────────────────────────────────────────── */}
+      <Card>
+        <CardHeader
+          title={t("tchGivePoints")}
+          subtitle={t("tchGivePointsSubtitle")}
+          action={
+            <span className="inline-flex size-9 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+              <CategoryIcon className="size-[18px]" />
+            </span>
+          }
+        />
+        <CardBody className="space-y-5 pt-5">
+          {/* Talaba */}
+          <div>
+            <Label>{t("tchPupil")}</Label>
             <Select value={activeStudent?.id ?? ""} onChange={(e) => setStudentId(e.target.value)}>
               {students.map((student) => (
                 <option key={student.id} value={student.id}>
@@ -560,46 +453,42 @@ export function TeacherPointsList({ courses, teacherRole }: Props) {
                 </option>
               ))}
             </Select>
-          </label>
+          </div>
 
-          {/* Kategoriya tanlash */}
-          <div className="grid gap-1.5">
-            <span className="text-sm font-medium text-slate-700">{t("tchCategory")}</span>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          {/* Kategoriya */}
+          <div>
+            <Label>{t("tchCategory")}</Label>
+            <div className="flex flex-wrap gap-2">
               {CATEGORIES.map((cat) => {
                 const active = cat.value === category;
+                const CatIcon = cat.Icon;
                 return (
                   <motion.button
                     key={cat.value}
-                    whileTap={{ scale: 0.95 }}
+                    whileTap={{ scale: 0.97 }}
                     onClick={() => setCategory(cat.value)}
-                    className={`relative flex flex-col items-center gap-1 rounded-2xl border px-2 py-3 text-xs font-medium transition-colors ${
+                    aria-pressed={active}
+                    className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
                       active
-                        ? "border-transparent bg-gradient-to-br text-white shadow-md " + cat.tint
-                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                        ? "border-brand-900 bg-brand-900 text-white"
+                        : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
                     }`}
                   >
-                    <cat.Icon className="size-5" />
-                    <span className="text-center leading-tight">{cat.label}</span>
+                    <CatIcon className="size-4" />
+                    {cat.label}
                   </motion.button>
                 );
               })}
             </div>
           </div>
 
-          {/* Ball slider */}
-          <div className="grid gap-1.5">
-            <div className="flex items-baseline justify-between">
-              <span className="text-sm font-medium text-slate-700">{t("tchScoreLabelColon")}</span>
-              <motion.span
-                key={newPoints}
-                initial={{ scale: 1.25, opacity: 0.5 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.18 }}
-                className="text-xl font-bold text-brand-700"
-              >
-                +{newPoints.toFixed(1)}
-              </motion.span>
+          {/* Ball */}
+          <div>
+            <div className="mb-1.5 flex items-baseline justify-between">
+              <Label className="mb-0">{t("tchScoreLabelColon")}</Label>
+              <span className="text-sm font-semibold tabular-nums text-brand-700">
+                +{newPoints.toFixed(1)} / {MAX_POINTS.toFixed(1)}
+              </span>
             </div>
             <input
               type="range"
@@ -609,98 +498,111 @@ export function TeacherPointsList({ courses, teacherRole }: Props) {
               value={newPoints}
               onChange={(e) => setNewPoints(Number(e.target.value))}
               aria-label={t("tchScoreLabelColon")}
-              className="w-full accent-blue-500"
+              className="w-full accent-brand-600"
             />
-            <div className="flex justify-between text-[11px] text-slate-400">
-              <span>0.1</span>
-              <span>15</span>
+            <div className="mt-2">
+              <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
+                <motion.div
+                  className="h-full rounded-full bg-brand-900"
+                  initial={false}
+                  animate={{ width: `${(newPoints / MAX_POINTS) * 100}%` }}
+                  transition={{ type: "spring", stiffness: 180, damping: 24 }}
+                />
+              </div>
+              <p className="mt-1.5 text-xs text-slate-500">
+                {t("tchTotalForStudent")}:{" "}
+                <span className="font-medium tabular-nums text-slate-800">
+                  {(totalPoints + newPoints).toFixed(1)} / {MAX_POINTS.toFixed(1)}
+                </span>
+              </p>
             </div>
           </div>
 
-          <label className="grid gap-1.5">
-            <span className="text-sm font-medium text-slate-700">{t("tchReason")}</span>
+          {/* Sabab */}
+          <div>
+            <Label>{t("tchReason")}</Label>
             <Input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder={t("tchReasonPlaceholder")}
               maxLength={300}
             />
-          </label>
+          </div>
 
           <Button
             disabled={disabled}
             onClick={() => startTransition(submit)}
-            className={`!bg-gradient-to-r ${activeCategory.tint} text-white`}
+            className="w-full"
           >
             {t("tchGivePointsAction")}
           </Button>
 
           <AnimatePresence mode="popLayout">
             {message ? (
-              <motion.p
-                initial={{ opacity: 0, y: -8 }}
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
+                exit={{ opacity: 0, y: -6 }}
                 role="status"
-                className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium ${
-                  message.tone === "ok" ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                className={`flex items-start gap-2 rounded-xl px-3.5 py-2.5 text-sm ${
+                  message.tone === "ok"
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-rose-50 text-rose-700"
                 }`}
               >
                 {message.tone === "ok" ? (
-                  <IconCheck className="size-4 shrink-0" />
+                  <IconCheck className="mt-0.5 size-4 shrink-0" />
                 ) : (
-                  <IconAlert className="size-4 shrink-0" />
+                  <IconAlert className="mt-0.5 size-4 shrink-0" />
                 )}
-                {message.text}
-              </motion.p>
+                <span>{message.text}</span>
+              </motion.div>
             ) : null}
           </AnimatePresence>
-        </div>
-      </motion.div>
+        </CardBody>
+      </Card>
 
       {/* ── Tarix ────────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {points.length > 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
-          >
-            <h3 className="mb-3 text-sm font-semibold text-slate-800">
-              Berilgan balllar ({points.length})
-            </h3>
-            <div className="space-y-2">
+      {points.length > 0 ? (
+        <Card>
+          <CardHeader
+            title={t("tchHistory")}
+            subtitle={`${points.length} ${t("tchHistorySubtitle")}`}
+          />
+          <CardBody className="pt-5">
+            <ul className="divide-y divide-slate-100">
               {points.map((p, i) => {
                 const cat = CATEGORIES.find((c) => c.value === p.category);
+                const CatIcon = cat?.Icon ?? IconStar;
                 return (
-                  <motion.div
+                  <motion.li
                     key={p.id}
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.04 }}
-                    className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 px-3 py-2.5"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: Math.min(i * 0.03, 0.3) }}
+                    className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
                   >
-                    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white text-slate-500 shadow-sm">
-                      {cat ? <cat.Icon className="size-5" /> : <IconStar className="size-5" />}
+                    <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+                      <CatIcon className="size-[18px]" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-slate-700">
+                      <p className="truncate text-sm font-medium text-slate-800">
                         {cat?.label ?? p.category}
                       </p>
-                      {p.reason ? (
-                        <p className="truncate text-xs text-slate-400">{p.reason}</p>
-                      ) : null}
+                      <p className="truncate text-xs text-slate-500">
+                        {p.reason || p.awardedBy.name}
+                      </p>
                     </div>
-                    <span className="shrink-0 text-sm font-bold text-brand-700">
+                    <span className="shrink-0 text-sm font-semibold tabular-nums text-brand-700">
                       +{p.points.toFixed(1)}
                     </span>
-                  </motion.div>
+                  </motion.li>
                 );
               })}
-            </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-    </motion.div>
+            </ul>
+          </CardBody>
+        </Card>
+      ) : null}
+    </div>
   );
 }
