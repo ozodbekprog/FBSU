@@ -15,7 +15,7 @@ type TeacherPoint = {
   createdAt: string;
   course: { id: string; title: string };
   student: { id: string; name: string };
-  awardedBy: { id: string; name: string };
+  awardedBy?: { id: string; name: string } | null;
 };
 
 type AttendanceConfig = {
@@ -590,7 +590,7 @@ export function TeacherPointsList({ courses, teacherRole }: Props) {
                         {cat?.label ?? p.category}
                       </p>
                       <p className="truncate text-xs text-slate-500">
-                        {p.reason || p.awardedBy.name}
+                        {p.reason || p.awardedBy?.name || ""}
                       </p>
                     </div>
                     <span className="shrink-0 text-sm font-semibold tabular-nums text-brand-700">

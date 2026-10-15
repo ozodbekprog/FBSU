@@ -8,7 +8,7 @@ datasource db {
 }
 
 model AcademicEvent {
-  id          String    @id
+  id          String    @id @default(cuid())
   title       String
   type        String
   startDate   DateTime
@@ -20,7 +20,7 @@ model AcademicEvent {
 }
 
 model AccessLog {
-  id        String          @id
+  id        String          @id @default(cuid())
   userId    String?
   direction AccessDirection
   gate      String          @default("Asosiy kirish")
@@ -32,7 +32,7 @@ model AccessLog {
 }
 
 model AdmissionApplication {
-  id               String           @id
+  id               String           @id @default(cuid())
   programId        String
   applicantName    String
   phone            String
@@ -53,7 +53,7 @@ model AdmissionApplication {
 }
 
 model AdmissionProgram {
-  id                   String                 @id
+  id                   String                 @id @default(cuid())
   name                 String
   code                 String?
   degree               String                 @default("BAKALAVR")
@@ -67,7 +67,7 @@ model AdmissionProgram {
 }
 
 model Announcement {
-  id        String   @id
+  id        String   @id @default(cuid())
   courseId  String?
   authorId  String
   title     String
@@ -87,7 +87,7 @@ model AppSetting {
 }
 
 model Assignment {
-  id          String        @id
+  id          String        @id @default(cuid())
   courseId    String
   title       String
   description String?
@@ -105,7 +105,7 @@ model Assignment {
 }
 
 model Attendance {
-  id         String           @id
+  id         String           @id @default(cuid())
   courseId   String
   studentId  String
   date       DateTime
@@ -121,7 +121,7 @@ model Attendance {
 }
 
 model AttendancePointConfig {
-  id        String   @id
+  id        String   @id @default(cuid())
   courseId  String
   groupId   String?
   points    Float    @default(1)
@@ -138,7 +138,7 @@ model AttendancePointConfig {
 }
 
 model AttendanceSession {
-  id          String                @id
+  id          String                @id @default(cuid())
   courseId    String
   date        DateTime
   code        String                @unique
@@ -155,7 +155,7 @@ model AttendanceSession {
 }
 
 model AuditLog {
-  id        String   @id
+  id        String   @id @default(cuid())
   actorId   String?
   action    String
   entity    String?
@@ -169,7 +169,7 @@ model AuditLog {
 }
 
 model BankQuestion {
-  id         String       @id
+  id         String       @id @default(cuid())
   courseId   String?
   subjectId  String?
   text       String
@@ -185,7 +185,7 @@ model BankQuestion {
 }
 
 model Board {
-  id           String      @id
+  id           String      @id @default(cuid())
   userId       String
   assignmentId String?
   data         Json        @default("{}")
@@ -199,7 +199,7 @@ model Board {
 }
 
 model BonusPoint {
-  id                                String   @id
+  id                                String   @id @default(cuid())
   courseId                          String
   studentId                         String
   awardedById                       String
@@ -216,7 +216,7 @@ model BonusPoint {
 }
 
 model BugReport {
-  id        String    @id
+  id        String    @id @default(cuid())
   userId    String?
   url       String?
   message   String
@@ -232,7 +232,7 @@ model BugReport {
 }
 
 model CallSession {
-  id                              String       @id
+  id                              String       @id @default(cuid())
   conversationId                  String
   callerId                        String
   calleeId                        String
@@ -251,7 +251,7 @@ model CallSession {
 }
 
 model CallSignal {
-  id          String         @id
+  id          String         @id @default(cuid())
   callId      String
   fromId      String
   type        CallSignalType
@@ -263,7 +263,7 @@ model CallSignal {
 }
 
 model Certificate {
-  id                                String   @id
+  id                                String   @id @default(cuid())
   courseId                          String
   studentId                         String
   issuedById                        String
@@ -278,7 +278,7 @@ model Certificate {
 }
 
 model ChatBlock {
-  id                             String   @id
+  id                             String   @id @default(cuid())
   blockerId                      String
   blockedId                      String
   createdAt                      DateTime @default(now())
@@ -290,7 +290,7 @@ model ChatBlock {
 }
 
 model Contract {
-  id        String   @id
+  id        String   @id @default(cuid())
   studentId String
   year      Int
   amount    Int
@@ -303,7 +303,7 @@ model Contract {
 }
 
 model Conversation {
-  id                                     String                @id
+  id                                     String                @id @default(cuid())
   participantAId                         String
   participantBId                         String
   lastMessageAt                          DateTime              @default(now())
@@ -335,7 +335,7 @@ model ConversationSetting {
 }
 
 model Course {
-  id                    String                  @id
+  id                    String                  @id @default(cuid())
   title                 String
   slug                  String                  @unique
   description           String?
@@ -369,7 +369,7 @@ model Course {
 }
 
 model CourseReview {
-  id        String   @id
+  id        String   @id @default(cuid())
   courseId  String
   userId    String
   rating    Int
@@ -382,7 +382,7 @@ model CourseReview {
 }
 
 model Department {
-  id            String          @id
+  id            String          @id @default(cuid())
   name          String          @unique
   code          String?
   facultyId     String?
@@ -394,7 +394,7 @@ model Department {
 }
 
 model Diploma {
-  id         String   @id
+  id         String   @id @default(cuid())
   number     String   @unique
   studentId  String
   program    String
@@ -408,7 +408,7 @@ model Diploma {
 }
 
 model Document {
-  id                              String         @id
+  id                              String         @id @default(cuid())
   kind                            DocumentKind
   number                          String?        @unique
   title                           String
@@ -432,7 +432,7 @@ model Document {
 }
 
 model Enrollment {
-  id        String           @id
+  id        String           @id @default(cuid())
   courseId  String
   userId    String
   createdAt DateTime         @default(now())
@@ -446,7 +446,7 @@ model Enrollment {
 }
 
 model ExamSession {
-  id                String      @id
+  id                String      @id @default(cuid())
   courseId          String
   termId            String?
   title             String
@@ -468,7 +468,7 @@ model ExamSession {
 }
 
 model ExamSheet {
-  id          String      @id
+  id          String      @id @default(cuid())
   sessionId   String
   studentId   String
   seat        String?
@@ -483,7 +483,7 @@ model ExamSheet {
 }
 
 model Faculty {
-  id                  String                @id
+  id                  String                @id @default(cuid())
   name                String                @unique
   code                String?
   Department          Department[]
@@ -493,7 +493,7 @@ model Faculty {
 }
 
 model FacultyContractRate {
-  id        String   @id
+  id        String   @id @default(cuid())
   facultyId String
   year      Int
   amount    Int
@@ -507,7 +507,7 @@ model FacultyContractRate {
 }
 
 model ForumReply {
-  id         String     @id
+  id         String     @id @default(cuid())
   topicId    String
   authorId   String
   body       String
@@ -519,7 +519,7 @@ model ForumReply {
 }
 
 model ForumTopic {
-  id         String       @id
+  id         String       @id @default(cuid())
   courseId   String
   authorId   String
   title      String
@@ -534,7 +534,7 @@ model ForumTopic {
 }
 
 model GradeChangeRequest {
-  id                                          String            @id
+  id                                          String            @id @default(cuid())
   submissionId                                String
   requestedById                               String
   oldScore                                    Int?
@@ -555,7 +555,7 @@ model GradeChangeRequest {
 }
 
 model Group {
-  id                         String                  @id
+  id                         String                  @id @default(cuid())
   name                       String                  @unique
   year                       Int?
   facultyId                  String?
@@ -572,13 +572,13 @@ model Group {
 }
 
 model LessonType {
-  id    String @id
+  id    String @id @default(cuid())
   name  String @unique
   color String @default("#5373b8")
 }
 
 model Material {
-  id        String       @id
+  id        String       @id @default(cuid())
   sectionId String
   title     String
   type      MaterialType @default(TEXT)
@@ -590,7 +590,7 @@ model Material {
 }
 
 model Message {
-  id                                             String              @id
+  id                                             String              @id @default(cuid())
   conversationId                                 String
   senderId                                       String
   body                                           String
@@ -617,7 +617,7 @@ model Message {
 }
 
 model MessageAttachment {
-  id          String         @id
+  id          String         @id @default(cuid())
   messageId   String
   kind        AttachmentKind
   mimeType    String
@@ -632,7 +632,7 @@ model MessageAttachment {
 }
 
 model Notification {
-  id        String   @id
+  id        String   @id @default(cuid())
   userId    String
   title     String
   body      String?
@@ -646,7 +646,7 @@ model Notification {
 }
 
 model OralDefense {
-  id                                   String             @id
+  id                                   String             @id @default(cuid())
   assignmentId                         String
   studentId                            String
   requestedById                        String
@@ -666,7 +666,7 @@ model OralDefense {
 }
 
 model Order {
-  id           String   @id
+  id           String   @id @default(cuid())
   userId       String
   type         String
   subject      String?
@@ -682,7 +682,7 @@ model Order {
 }
 
 model ParentLink {
-  id                              String         @id
+  id                              String         @id @default(cuid())
   parentId                        String
   studentId                       String
   relation                        ParentRelation @default(OTHER)
@@ -695,7 +695,7 @@ model ParentLink {
 }
 
 model PasswordResetToken {
-  id        String    @id
+  id        String    @id @default(cuid())
   userId    String
   tokenHash String    @unique
   expiresAt DateTime
@@ -707,7 +707,7 @@ model PasswordResetToken {
 }
 
 model Payment {
-  id                             String   @id
+  id                             String   @id @default(cuid())
   studentId                      String
   contractId                     String?
   amount                         Int
@@ -724,7 +724,7 @@ model Payment {
 }
 
 model Publication {
-  id        String              @id
+  id        String              @id @default(cuid())
   userId    String
   title     String
   kind      PublicationKind     @default(ARTICLE)
@@ -746,7 +746,7 @@ model Publication {
 }
 
 model Question {
-  id       String       @id
+  id       String       @id @default(cuid())
   quizId   String
   text     String
   type     QuestionType @default(SINGLE)
@@ -758,7 +758,7 @@ model Question {
 }
 
 model Quiz {
-  id           String        @id
+  id           String        @id @default(cuid())
   courseId     String
   title        String
   description  String?
@@ -774,7 +774,7 @@ model Quiz {
 }
 
 model QuizAttempt {
-  id            String         @id
+  id            String         @id @default(cuid())
   quizId        String
   studentId     String
   startedAt     DateTime       @default(now())
@@ -790,7 +790,7 @@ model QuizAttempt {
 }
 
 model Room {
-  id        String   @id
+  id        String   @id @default(cuid())
   name      String   @unique
   building  String?
   capacity  Int?
@@ -799,7 +799,7 @@ model Room {
 }
 
 model RoomBooking {
-  id        String   @id
+  id        String   @id @default(cuid())
   roomName  String
   date      DateTime
   slot      Int
@@ -814,7 +814,7 @@ model RoomBooking {
 }
 
 model SalaryGrant {
-  id          String    @id
+  id          String    @id @default(cuid())
   role        Role      @unique
   canView     Boolean   @default(true)
   grantedById String
@@ -824,7 +824,7 @@ model SalaryGrant {
 }
 
 model SalaryRecord {
-  id                                   String       @id
+  id                                   String       @id @default(cuid())
   userId                               String
   month                                DateTime
   baseAmount                           Int          @default(0)
@@ -847,7 +847,7 @@ model SalaryRecord {
 }
 
 model ScheduleEntry {
-  id         String           @id
+  id         String           @id @default(cuid())
   groupId    String
   dayOfWeek  Int
   slot       Int
@@ -876,7 +876,7 @@ model ScheduleEntry {
 }
 
 model Section {
-  id            String          @id
+  id            String          @id @default(cuid())
   courseId      String
   title         String
   position      Int             @default(0)
@@ -887,7 +887,7 @@ model Section {
 }
 
 model SecureExam {
-  id                String                @id
+  id                String                @id @default(cuid())
   quizId            String
   courseId          String
   createdById       String
@@ -914,7 +914,7 @@ model SecureExam {
 }
 
 model SecureExamEvent {
-  id            String        @id
+  id            String        @id @default(cuid())
   runId         String
   type          String
   severity      String        @default("INFO")
@@ -926,7 +926,7 @@ model SecureExamEvent {
 }
 
 model SecureExamRun {
-  id                 String               @id
+  id                 String               @id @default(cuid())
   examId             String
   studentId          String
   attemptId          String               @unique
@@ -952,7 +952,7 @@ model SecureExamRun {
 }
 
 model SecureExamSnapshot {
-  id            String        @id
+  id            String        @id @default(cuid())
   runId         String
   at            DateTime      @default(now())
   mime          String        @default("image/jpeg")
@@ -963,7 +963,7 @@ model SecureExamSnapshot {
 }
 
 model Shift {
-  id                   String                 @id
+  id                   String                 @id @default(cuid())
   name                 String                 @unique
   code                 String?                @unique
   startMinutes         Int
@@ -976,7 +976,7 @@ model Shift {
 }
 
 model StaffAttendance {
-  id         String    @id
+  id         String    @id @default(cuid())
   userId     String
   date       DateTime
   checkInAt  DateTime?
@@ -990,7 +990,7 @@ model StaffAttendance {
 }
 
 model StaffPosition {
-  id           String      @id
+  id           String      @id @default(cuid())
   name         String      @unique
   code         String?     @unique
   baseSalary   Int         @default(0)
@@ -1005,7 +1005,7 @@ model StaffPosition {
 }
 
 model StaffShiftAssignment {
-  id        String    @id
+  id        String    @id @default(cuid())
   userId    String
   shiftId   String
   weekday   Int
@@ -1021,7 +1021,7 @@ model StaffShiftAssignment {
 }
 
 model StudyPlan {
-  id          String   @id
+  id          String   @id @default(cuid())
   groupId     String
   courseId    String
   termId      String?
@@ -1036,7 +1036,7 @@ model StudyPlan {
 }
 
 model SubGroup {
-  id      String @id
+  id      String @id @default(cuid())
   groupId String
   name    String
   group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
@@ -1046,7 +1046,7 @@ model SubGroup {
 }
 
 model Subject {
-  id             String           @id
+  id             String           @id @default(cuid())
   name           String           @unique
   code           String?
   color          String           @default("#3f5a9d")
@@ -1060,7 +1060,7 @@ model Subject {
 }
 
 model Submission {
-  id                 String               @id
+  id                 String               @id @default(cuid())
   assignmentId       String
   studentId          String
   text               String?
@@ -1080,7 +1080,7 @@ model Submission {
 }
 
 model TeacherPoint {
-  id                                  String   @id
+  id                                  String   @id @default(cuid())
   courseId                            String
   studentId                           String
   awardedById                         String
@@ -1098,7 +1098,7 @@ model TeacherPoint {
 }
 
 model TeacherSubject {
-  id        String   @id
+  id        String   @id @default(cuid())
   teacherId String
   subjectId String
   createdAt DateTime @default(now())
@@ -1110,7 +1110,7 @@ model TeacherSubject {
 }
 
 model Term {
-  id          String        @id
+  id          String        @id @default(cuid())
   name        String        @unique
   startDate   DateTime
   endDate     DateTime
@@ -1121,14 +1121,14 @@ model Term {
 }
 
 model TimeSlot {
-  id        String @id
+  id        String @id @default(cuid())
   slot      Int    @unique
   startTime String
   endTime   String
 }
 
 model UpdateLog {
-  id        String   @id
+  id        String   @id @default(cuid())
   title     String
   summary   String?
   commit    String?
@@ -1143,7 +1143,7 @@ model UpdateLog {
 }
 
 model User {
-  id                                                        String                  @id
+  id                                                        String                  @id @default(cuid())
   email                                                     String                  @unique
   passwordHash                                              String
   name                                                      String
@@ -1243,7 +1243,7 @@ model User {
 }
 
 model UserReport {
-  id                               String   @id
+  id                               String   @id @default(cuid())
   reporterId                       String
   reportedId                       String
   reason                           String
@@ -1256,7 +1256,7 @@ model UserReport {
 }
 
 model WorkTask {
-  id                               String         @id
+  id                               String         @id @default(cuid())
   title                            String
   description                      String?
   assignedToId                     String
