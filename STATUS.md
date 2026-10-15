@@ -13,6 +13,10 @@ Oxirgi yangilanish: EduPage avto jadval integratsiyasi (2026-10-15)
       ko'rinishi, bugun ustuni, EduPage ranglari, "Yangilangan HH:MM" + har 15 daqiqada
       avtomatik yangilanish (client `router.refresh`)
 - [x] `GET /api/edupage/timetable?class=AI2-26` — normallashtirilgan JSON (auth kerak)
+- [x] Sinf↔guruh: mos kelmagan sinflar uchun guruh **avtomatik yaratiladi**
+      (nom + `edupageName` + yil), 96 ta yangi guruh — 1 475 dars import qilindi
+- [x] Sinxron paytida EduPage'ga bog'langan guruhlardagi **eski qo'lda/seed
+      yozuvlar avtomatik tozalanadi** (`source = null`), jadval manbaga mos qoladi
 - [x] Bazaga sinxronlash: `Group.edupageName` bilan sinf↔guruh bog'lanishi,
       o'qituvchi ismlari bo'yicha moslashtirish (F.I.Sh. ↔ "A. Mamanazarov"),
       `ScheduleEntry.source="edupage"` + `externalId` (karta:kun:guruh) — takror

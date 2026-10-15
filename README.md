@@ -180,6 +180,9 @@ Manba: `https://ttpu.edupage.org/timetable/` (aSc EduPage, ommaviy jadval — lo
   avtomatik ishlaydi (oxirgi sinxron 30 daqiqadan eski bo'lsa)
 - Guruh bog'lash: `/schedule/edupage` da "Bu sinfni guruhga bog'lash" tugmasi
   (`Group.edupageName`), yoki `PATCH /api/admin/groups/<id> { "edupageName": "AI2-26" }`
+- Sinxron mos kelmagan sinflar uchun guruhni **o'zi yaratadi** va o'sha guruhlardagi
+  eski qo'lda/seed jadval yozuvlarini tozalaydi (`source = null`) — manba (EduPage)
+  yagona haqiqat bo'lib qoladi
 - Sozlamalar (ixtiyoriy): `EDUPAGE_BASE_URL` — boshqa maktab domeni uchun;
   `EDUPAGE_SYNC_SECRET` / `CRON_SECRET` — cron endpoint himoyasi
 

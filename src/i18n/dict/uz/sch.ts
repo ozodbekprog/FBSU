@@ -485,7 +485,8 @@ export const sch = {
   schEduPageAuto: "Har {minutes} daqiqada avtomatik yangilanadi",
   schEduPageSync: "Bazaga sinxronlash",
   schEduPageSyncing: "Sinxronlanmoqda…",
-  schEduPageSyncDone: "Sinxronlandi: +{created} yangi, {updated} yangilangan, {removed} o'chirilgan",
+  schEduPageSyncDone:
+    "Sinxronlandi: +{created} yangi, {updated} yangilangan, {removed} o'chirilgan, {groups} guruh qo'shildi, {manual} eski qo'lda yozuv tozalandi",
   schEduPageSyncError: "Sinxronlashda xatolik",
   schEduPageUnavailable: "EduPage jadvali hozircha mavjud emas",
   schEduPageUnavailableDesc: "Manba sayt javob bermadi. Bir necha daqiqadan so'ng qayta urinib ko'ring.",

@@ -10,7 +10,13 @@ import { cn } from "@/lib/utils";
 import type { EduPageClass, EduPageLesson, EduPagePeriod } from "@/lib/edupage";
 import { DAY_KEYS } from "./week-utils";
 
-type SyncOutcome = { created: number; updated: number; removed: number; lang?: string };
+type SyncOutcome = {
+  created: number;
+  updated: number;
+  removed: number;
+  groupsCreated: number;
+  manualRemoved: number;
+};
 
 function timeLabel(iso: string) {
   const date = new Date(iso);
@@ -127,6 +133,8 @@ export function EduPageBoard({
           created: payload.data.created,
           updated: payload.data.updated,
           removed: payload.data.removed,
+          groups: payload.data.groupsCreated,
+          manual: payload.data.manualRemoved,
         }),
       );
       router.refresh();

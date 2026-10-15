@@ -12,12 +12,14 @@ import {
 } from "@/lib/edupage";
 
 const MAX_REPORTED = 25;
+const WRITE_CHUNK = 200;
 
 export type EduPageSyncResult = {
   ttNum: string;
   label: string;
   classesTotal: number;
   groupsTotal: number;
+  groupsCreated: number;
   groupsSynced: string[];
   groupsWithoutClass: string[];
   classesWithoutGroup: string[];
@@ -25,6 +27,7 @@ export type EduPageSyncResult = {
   created: number;
   updated: number;
   removed: number;
+  manualRemoved: number;
   teachersLinked: number;
   subjectsLinked: number;
 };
@@ -47,6 +50,13 @@ type IncomingEntry = {
   approval: "APPROVED";
 };
 
+function classYear(name: string): number | null {
+  const match = /-(\d{2})$/.exec(name.trim());
+  if (!match) return null;
+  const year = Number(match[1]);
+  return Number.isFinite(year) ? 2000 + year : null;
+}
+
 function entryDiffers(existing: Record<string, unknown>, incoming: IncomingEntry): boolean {
   const keys: (keyof IncomingEntry)[] = [
     "dayOfWeek",
@@ -66,7 +76,7 @@ function entryDiffers(existing: Record<string, unknown>, incoming: IncomingEntry
 export async function syncEduPageSchedule(): Promise<EduPageSyncResult> {
   const timetable = await fetchEduPageTimetable();
 
-  const groups = await prisma.group.findMany({
+  let groups = await prisma.group.findMany({
     select: { id: true, name: true, edupageName: true },
     orderBy: { name: "asc" },
   });
@@ -74,6 +84,32 @@ export async function syncEduPageSchedule(): Promise<EduPageSyncResult> {
   const groupsSynced: string[] = [];
   const groupsWithoutClass: string[] = [];
   const groupByClassId = new Map<string, string>();
+
+  const groupsToCreate = timetable.classes.filter(
+    (item) =>
+      item.lessonCount > 0 &&
+      !groups.some(
+        (group) =>
+          normalizeClassName(group.edupageName || group.name) === normalizeClassName(item.name),
+      ),
+  );
+
+  if (groupsToCreate.length > 0) {
+    await prisma.group.createMany({
+      data: groupsToCreate.map((item) => ({
+        name: item.name,
+        edupageName: item.name,
+        year: classYear(item.name),
+      })),
+      skipDuplicates: true,
+    });
+    groups = await prisma.group.findMany({
+      select: { id: true, name: true, edupageName: true },
+      orderBy: { name: "asc" },
+    });
+  }
+
+  const groupsCreated = groupsToCreate.length;
 
   for (const group of groups) {
     const matched = findEduPageClass(timetable.classes, [group.edupageName, group.name]);
@@ -238,15 +274,27 @@ export async function syncEduPageSchedule(): Promise<EduPageSyncResult> {
 
   const removals = existing.filter((row) => !row.externalId || !incomingIds.has(row.externalId)).map((row) => row.id);
 
-  if (toCreate.length > 0) {
-    await prisma.scheduleEntry.createMany({ data: toCreate });
+  for (let index = 0; index < toCreate.length; index += WRITE_CHUNK) {
+    await prisma.scheduleEntry.createMany({ data: toCreate.slice(index, index + WRITE_CHUNK) });
   }
-  if (updates.length > 0) {
-    await prisma.$transaction(updates.map((item) => prisma.scheduleEntry.update({ where: { id: item.id }, data: item.data })));
+  for (let index = 0; index < updates.length; index += WRITE_CHUNK) {
+    const chunk = updates.slice(index, index + WRITE_CHUNK);
+    await prisma.$transaction(
+      chunk.map((item) => prisma.scheduleEntry.update({ where: { id: item.id }, data: item.data })),
+    );
   }
   if (removals.length > 0) {
     await prisma.scheduleEntry.deleteMany({ where: { id: { in: removals } } });
   }
+
+  const manualRemoved =
+    groupIds.length === 0
+      ? 0
+      : (
+          await prisma.scheduleEntry.deleteMany({
+            where: { groupId: { in: groupIds }, source: null },
+          })
+        ).count;
 
   await writeEduPageSyncState({
     at: new Date().toISOString(),
@@ -259,6 +307,7 @@ export async function syncEduPageSchedule(): Promise<EduPageSyncResult> {
     label: timetable.label,
     classesTotal: timetable.classes.length,
     groupsTotal: groups.length,
+    groupsCreated,
     groupsSynced,
     groupsWithoutClass: groupsWithoutClass.slice(0, MAX_REPORTED),
     classesWithoutGroup: classesWithoutGroup.slice(0, MAX_REPORTED),
@@ -266,6 +315,7 @@ export async function syncEduPageSchedule(): Promise<EduPageSyncResult> {
     created: toCreate.length,
     updated: updates.length,
     removed: removals.length,
+    manualRemoved,
     teachersLinked: linkedTeacherIds.size,
     subjectsLinked,
   };

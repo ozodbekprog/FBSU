@@ -485,7 +485,8 @@ export const sch = {
   schEduPageAuto: "Автообновление каждые {minutes} минут",
   schEduPageSync: "Синхронизировать с базой",
   schEduPageSyncing: "Синхронизация…",
-  schEduPageSyncDone: "Синхронизировано: +{created} новых, {updated} обновлено, {removed} удалено",
+  schEduPageSyncDone:
+    "Синхронизировано: +{created} новых, {updated} обновлено, {removed} удалено, добавлено групп: {groups}, очищено ручных записей: {manual}",
   schEduPageSyncError: "Ошибка синхронизации",
   schEduPageUnavailable: "Расписание EduPage недоступно",
   schEduPageUnavailableDesc: "Сайт-источник не ответил. Попробуйте через несколько минут.",

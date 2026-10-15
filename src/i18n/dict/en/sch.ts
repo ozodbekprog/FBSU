@@ -484,7 +484,8 @@ export const sch = {
   schEduPageAuto: "Refreshes automatically every {minutes} minutes",
   schEduPageSync: "Sync to database",
   schEduPageSyncing: "Syncing…",
-  schEduPageSyncDone: "Synced: +{created} new, {updated} updated, {removed} removed",
+  schEduPageSyncDone:
+    "Synced: +{created} new, {updated} updated, {removed} removed, {groups} groups added, {manual} manual entries cleaned",
   schEduPageSyncError: "Sync failed",
   schEduPageUnavailable: "EduPage timetable is unavailable",
   schEduPageUnavailableDesc: "The source site did not respond. Try again in a few minutes.",
