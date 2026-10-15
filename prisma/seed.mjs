@@ -84,18 +84,18 @@ async function main() {
   const users = [
     { email: "admin@ttpu.uz", name: "Administrator", role: "ADMIN", groupId: null },
     { email: "rektor@ttpu.uz", name: "Rektor", role: "REKTOR", groupId: null },
-    { email: "dekan@ttpu.uz", name: "Dekan", role: "DEKAN", groupId: null },
-    { email: "kafedra@ttpu.uz", name: "Kafedra mudiri", role: "KAFEDRA_MUDIRI", groupId: null },
-    { email: "registrar@ttpu.uz", name: "O'quv bo'limi", role: "REGISTRAR", groupId: null },
+    { email: "dekan-ki@ttpu.uz", name: "Dekan", role: "DEKAN", groupId: null },
+    { email: "kafedra-di@ttpu.uz", name: "Kafedra mudiri", role: "KAFEDRA_MUDIRI", groupId: null },
+    { email: "registrator@ttpu.uz", name: "O'quv bo'limi", role: "REGISTRAR", groupId: null },
     // Oylik bo'yicha birinchi bo'lib mas'ul rol: oylik kiritadi, tasdiqlaydi
     // va boshqa rollarga ko'rish ruxsati beradi.
     { email: "buxgalter@ttpu.uz", name: "Buxgalter", role: "BUXGALTER", groupId: null },
-    { email: "prorektor@ttpu.uz", name: "Prorektor", role: "PRO_RECTOR", groupId: null },
-    { email: "tyutor@ttpu.uz", name: "Tyutor", role: "TYUTOR", groupId: null },
+    { email: "prorektor-oquv@ttpu.uz", name: "Prorektor", role: "PRO_RECTOR", groupId: null },
+    { email: "tyutor-1@ttpu.uz", name: "Tyutor", role: "TYUTOR", groupId: null },
     // Login sahifasidagi demo tugmalar shu hisoblarga ulanadi.
-    { email: "xodim@ttpu.uz", name: "Xodim", role: "XODIM", groupId: null },
+    { email: "kutubxona@ttpu.uz", name: "Xodim", role: "XODIM", groupId: null },
     { email: "ota-ona@ttpu.uz", name: "Ota-ona", role: "OTA_ONA", groupId: null },
-    { email: "n.mahamatov@ttpu.uz", name: "N. Mahamatov", role: "TEACHER", groupId: null },
+    { email: "fizika@ttpu.uz", name: "N. Mahamatov", role: "TEACHER", groupId: null },
     { email: "a.mamanazarov@ttpu.uz", name: "A. Mamanazarov", role: "TEACHER", groupId: null },
     { email: "o.ismoilova@ttpu.uz", name: "O. Ismoilova", role: "TEACHER", groupId: null },
     { email: "l.nazarova@ttpu.uz", name: "L. Nazarova", role: "TEACHER", groupId: null },
@@ -128,7 +128,7 @@ async function main() {
     create: { name: "Matematika va tabiiy fanlar kafedrasi", code: "MTFK" },
   });
   await prisma.user.updateMany({
-    where: { email: { in: ["n.mahamatov@ttpu.uz", "o.makhmudov@ttpu.uz"] } },
+    where: { email: { in: ["fizika@ttpu.uz", "o.makhmudov@ttpu.uz"] } },
     data: { departmentId: programmingDept.id },
   });
   await prisma.user.updateMany({
@@ -144,16 +144,16 @@ async function main() {
   await prisma.department.updateMany({ data: { facultyId: faculty.id } });
   await prisma.group.updateMany({ data: { facultyId: faculty.id } });
   await prisma.user.update({
-    where: { email: "dekan@ttpu.uz" },
+    where: { email: "dekan-ki@ttpu.uz" },
     data: { facultyId: faculty.id },
   });
   await prisma.user.update({
-    where: { email: "kafedra@ttpu.uz" },
+    where: { email: "kafedra-di@ttpu.uz" },
     data: { departmentId: programmingDept.id },
   });
   await prisma.group.updateMany({
     where: { name: { in: ["AI2-26", "AI2-25"] } },
-    data: { curatorId: created["tyutor@ttpu.uz"].id },
+    data: { curatorId: created["tyutor-1@ttpu.uz"].id },
   });
 
   const courses = [
@@ -162,7 +162,7 @@ async function main() {
       title: "Programming Fundamentals (PROG)",
       description: "Dasturlash asoslari: algoritmlar, C/Python, amaliy mashg'ulotlar.",
       coverColor: "#2563eb",
-      teacherId: created["n.mahamatov@ttpu.uz"].id,
+      teacherId: created["fizika@ttpu.uz"].id,
     },
     {
       slug: "math1",
@@ -668,8 +668,8 @@ async function main() {
   }
 
   console.log("Seed tayyor. Demo loginlar (parol: ttpu1234):");
-  console.log("  admin@ttpu.uz | rektor@ttpu.uz | dekan@ttpu.uz | kafedra@ttpu.uz");
-  console.log("  registrar@ttpu.uz | tyutor@ttpu.uz | n.mahamatov@ttpu.uz | ozodbek@ttpu.uz");
+  console.log("  admin@ttpu.uz | rektor@ttpu.uz | dekan-ki@ttpu.uz | kafedra-di@ttpu.uz");
+  console.log("  registrator@ttpu.uz | tyutor-1@ttpu.uz | fizika@ttpu.uz | ozodbek@ttpu.uz");
 }
 
 main()
