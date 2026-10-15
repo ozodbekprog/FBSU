@@ -1,7 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(request: Request) {
   const user = await getCurrentUser();
   if (!user || (user.role !== "TEACHER" && user.role !== "ADMIN")) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
@@ -32,7 +32,8 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: "courseId va points shart" }, { status: 400 });
   }
 
-  if (points < 0.1 || points > 15) {
+  const value = Number(points);
+  if (!Number.isFinite(value) || value < 0.1 || value > 15) {
     return Response.json({ ok: false, error: "Ball 0.1 dan 15 gacha" }, { status: 400 });
   }
 
@@ -60,13 +61,13 @@ export async function POST(request: Request) {
   const config = existing
     ? await prisma.attendancePointConfig.update({
         where: { id: existing.id },
-        data: { points },
+        data: { points: value },
       })
     : await prisma.attendancePointConfig.create({
         data: {
           courseId,
           groupId: normalizedGroupId,
-          points,
+          points: value,
           teacherId: user.id,
         },
       });

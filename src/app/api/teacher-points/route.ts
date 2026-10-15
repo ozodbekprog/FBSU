@@ -51,6 +51,7 @@ export async function GET(request: Request) {
     include: {
       course: { select: { id: true, title: true } },
       student: { select: { id: true, name: true } },
+      awardedBy: { select: { id: true, name: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -68,9 +69,12 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { courseId, studentId, points, category, reason } = body;
+  const { courseId, studentId, category, reason } = body;
+  // JSON'dan kelgan qiymat `any` — Prisma Float talab qiladi, shuning uchun
+  // aniq raqamga aylantiramiz va chegaraviy tekshiramiz.
+  const points = Number(body.points);
 
-  if (!courseId || !studentId || points === undefined || !category) {
+  if (!courseId || !studentId || !Number.isFinite(points) || !category) {
     return Response.json({ ok: false, error: "Kerakli ma'lumotlar yo'q" }, { status: 400 });
   }
 
@@ -91,7 +95,7 @@ export async function POST(request: Request) {
 
   // Validate student is enrolled in the course
   const enrollment = await prisma.enrollment.findFirst({
-    where: { courseId, userId: studentId, status: "ACTIVE" },
+    where: { courseId, userId: studentId, user: { role: "STUDENT" } },
   });
   if (!enrollment) {
     return Response.json({ ok: false, error: "Talaba bu kursga ro'yxatdan o'tmagan" }, { status: 400 });
@@ -108,12 +112,12 @@ export async function POST(request: Request) {
 
   const point = await prisma.teacherPoint.create({
     data: {
-      courseId,
-      studentId,
+      courseId: String(courseId),
+      studentId: String(studentId),
       awardedById: user.id,
       points,
-      category,
-      reason: reason || "",
+      category: String(category),
+      reason: typeof reason === "string" ? reason : "",
     },
   });
 

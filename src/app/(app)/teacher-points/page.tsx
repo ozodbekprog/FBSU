@@ -35,7 +35,7 @@ export default async function TeacherPointsPage() {
       id: true,
       title: true,
       enrollments: {
-        where: { status: "ACTIVE" },
+        where: { user: { role: "STUDENT" } },
         select: {
           user: {
             select: { id: true, name: true, groupId: true, group: { select: { id: true, name: true } } },

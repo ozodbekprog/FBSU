@@ -221,7 +221,7 @@ export default async function AppLayout({
       "/dashboard", "/assistant", "/courses", "/board", "/journal", "/journals",
       "/question-bank", "/schedule", "/schedule/edupage", "/calendar", "/academic-calendar", "/exams", "/secure-exams", "/attendance",
       "/reports", "/workload", "/staff", "/tasks", "/my-qr", "/messages", "/bookings", "/rooms",
-      "/research", "/search", "/help", "/bounty", "/settings",
+      "/research", "/teacher-points", "/search", "/help", "/bounty", "/settings",
     ],
     STUDENT: [
       "/dashboard", "/assistant", "/courses", "/board", "/schedule", "/schedule/edupage", "/calendar",
