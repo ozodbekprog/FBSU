@@ -24,4 +24,5 @@ export type RunState = {
   endsAt: string | null;
   serverNow: string;
   timeLeftSec: number | null;
+  face?: { check: "ok" | "missing" | "mismatch" | "not_enrolled" };
 };

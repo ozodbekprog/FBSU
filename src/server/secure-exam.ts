@@ -68,6 +68,7 @@ export function buildRunState(input: {
   sittingEndsAt: Date;
   extraMin: number;
   now: Date;
+  face?: RunState["face"];
 }): RunState {
   const deadline = effectiveDeadline({
     startedAt: input.startedAt,
@@ -85,6 +86,7 @@ export function buildRunState(input: {
     endsAt: deadline ? deadline.toISOString() : null,
     serverNow: input.now.toISOString(),
     timeLeftSec: finished ? 0 : remainingSeconds(deadline, input.now),
+    face: input.face,
   };
 }
 

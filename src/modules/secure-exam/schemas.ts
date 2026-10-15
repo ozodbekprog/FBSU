@@ -36,6 +36,7 @@ export const syncSchema = z.object({
   events: z.array(secureEventSchema).max(MAX_EVENTS_PER_SYNC).optional(),
   answers: answersSchema.optional(),
   submit: z.boolean().optional(),
+  face: z.object({ descriptor: z.array(z.number().finite()).max(256) }).optional(),
 });
 
 export const secureExamCreateSchema = z.object({

@@ -16,6 +16,10 @@ describe("severityOf", () => {
     expect(severityOf("COPY")).toBe("WARNING");
     expect(severityOf("MULTI_MONITOR")).toBe("CRITICAL");
     expect(severityOf("SUBMIT")).toBe("INFO");
+    expect(severityOf("FACE_ABSENT")).toBe("WARNING");
+    expect(severityOf("FACE_MULTIPLE")).toBe("CRITICAL");
+    expect(severityOf("AUTOMATION_DETECTED")).toBe("CRITICAL");
+    expect(severityOf("FACE_OK")).toBe("INFO");
   });
 });
 

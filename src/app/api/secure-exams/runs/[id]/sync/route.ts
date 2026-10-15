@@ -7,6 +7,9 @@ import { severityOf, warningWeight } from "@/modules/secure-exam/events";
 import { remapAnswersToOriginal } from "@/modules/secure-exam/order";
 import { effectiveDeadline, shouldTerminate } from "@/modules/secure-exam/policy";
 import { syncSchema } from "@/modules/secure-exam/schemas";
+import { FACE_MISMATCH_COOLDOWN_MS } from "@/modules/secure-exam/config";
+import type { RunState } from "@/modules/secure-exam/types";
+import { checkFace } from "@/modules/attendance/face";
 import { buildRunState, finalizeRun } from "@/server/secure-exam";
 
 export async function POST(request: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -38,6 +41,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
             durationMin: true,
           },
         },
+        student: { select: { faceDescriptor: true } },
         attempt: {
           include: {
             quiz: {
@@ -64,6 +68,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
       options: Array.isArray(question.options) ? question.options : [],
     }));
 
+    let faceCheck: RunState["face"] | undefined;
     const outcome = await prisma.$transaction(async (tx) => {
       const current = await tx.secureExamRun.findUnique({ where: { id } });
       if (!current) return null;
@@ -153,6 +158,40 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
         }
       }
 
+      if (parsed.data.face?.descriptor) {
+        const check = checkFace(run.student.faceDescriptor, parsed.data.face.descriptor);
+        faceCheck = { check };
+        if (check === "ok") {
+          const existingOk = await tx.secureExamEvent.count({
+            where: { runId: id, type: "FACE_OK" },
+          });
+          if (existingOk === 0) {
+            await tx.secureExamEvent.create({
+              data: { runId: id, type: "FACE_OK", severity: "INFO" },
+            });
+          }
+        } else if (check === "mismatch") {
+          const recent = await tx.secureExamEvent.count({
+            where: {
+              runId: id,
+              type: "FACE_MISMATCH",
+              at: { gte: new Date(now.getTime() - FACE_MISMATCH_COOLDOWN_MS) },
+            },
+          });
+          if (recent === 0) {
+            await tx.secureExamEvent.create({
+              data: {
+                runId: id,
+                type: "FACE_MISMATCH",
+                severity: "WARNING",
+                meta: { source: "sync" },
+              },
+            });
+            addedWarnings += warningWeight("WARNING", run.exam.maxWarnings);
+          }
+        }
+      }
+
       if (addedWarnings > 0) {
         await tx.secureExamRun.update({
           where: { id },
@@ -202,6 +241,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
       sittingEndsAt: run.exam.endsAt,
       extraMin: outcome.extraMin,
       now,
+      face: faceCheck,
     });
 
     return Response.json({ ok: true, data: state });

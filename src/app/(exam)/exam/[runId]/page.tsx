@@ -16,6 +16,7 @@ import {
   shuffledQuestions,
 } from "@/modules/secure-exam/order";
 import { effectiveDeadline } from "@/modules/secure-exam/policy";
+import { isValidFaceDescriptor } from "@/modules/attendance/face";
 
 export const metadata: Metadata = {
   title: "Xavfsiz imtihon",
@@ -67,6 +68,11 @@ export default async function SecureRunPage({
     run.attemptId,
   );
 
+  const faceRow = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { faceDescriptor: true },
+  });
+
   return (
     <RunRoom
       runId={run.id}
@@ -83,6 +89,7 @@ export default async function SecureRunPage({
         webcamEnabled: run.exam.webcamEnabled,
         maxWarnings: run.exam.maxWarnings,
         limitAction: run.exam.limitAction,
+        faceEnrolled: isValidFaceDescriptor(faceRow?.faceDescriptor),
       }}
     />
   );

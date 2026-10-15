@@ -1,6 +1,19 @@
 # STATUS — qurilish holati
 
-Oxirgi yangilanish: EduPage avto jadval integratsiyasi (2026-10-15)
+Oxirgi yangilanish: Xavfsiz imtihon — yuz nazorati + kiritma anomaliyasi (2026-10-15)
+
+## Xavfsiz imtihon — yuz nazorati + kiritma anomaliyasi (2026-10-15)
+
+- [x] **Face guard**: imtihon davomida yuz kuzatuvi — yuz yo'qligi (FACE_ABSENT),
+      2+ shaxs (FACE_MULTIPLE), yonga qarash (LOOK_AWAY), blink yo'qligi (FACE_LIVENESS);
+      darvoza'da FaceScan jonli tekshiruvi va shaxs tasdiqlash (FACE_MISMATCH bo'lsa
+      imtihon boshlanmaydi); davomida har ~30s deskriptor solishtiruvi (FACE_OK/FACE_MISMATCH)
+- [x] **Kiritma anomaliyasi**: robot yozish (KEY_ANOMALY), avtoklik/sakrash (MOUSE_ANOMALY),
+      soxta hodisa/webdriver (AUTOMATION_DETECTED); hammasi mavjud ogohlantirish → monitor
+      quvuriga tushadi (DB o'zgarmagan)
+- [x] Yangi sof modullar: `face-guard.ts`, `input-anomaly.ts` + 19 yangi unit test;
+      E2E `e2e/secure-exam.spec.ts` 2/2 yashil; tsc 0 xato; `next build` yashil
+- [x] Kamera preview yonida holat chipi; i18n uz/ru/en to'liq
 
 ## EduPage avto jadval (2026-10-15)
 

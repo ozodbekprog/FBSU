@@ -9,3 +9,4 @@ export const SYNC_INTERVAL_MS = 10_000;
 export const MONITOR_POLL_MS = 5_000;
 export const RUN_STALE_MS = 45_000;
 export const MAX_EVENTS_PER_SYNC = 50;
+export const FACE_MISMATCH_COOLDOWN_MS = 30_000;

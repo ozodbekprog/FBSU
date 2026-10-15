@@ -21,6 +21,15 @@ export const SECURE_EVENT_TYPES = [
   "SUBMIT",
   "TERMINATED",
   "TIMEOUT",
+  "FACE_OK",
+  "FACE_ABSENT",
+  "FACE_MULTIPLE",
+  "LOOK_AWAY",
+  "FACE_MISMATCH",
+  "FACE_LIVENESS",
+  "KEY_ANOMALY",
+  "MOUSE_ANOMALY",
+  "AUTOMATION_DETECTED",
 ] as const;
 
 export type SecureEventType = (typeof SECURE_EVENT_TYPES)[number];
@@ -46,6 +55,15 @@ export const EVENT_SEVERITY: Record<SecureEventType, EventSeverity> = {
   SUBMIT: "INFO",
   TERMINATED: "INFO",
   TIMEOUT: "INFO",
+  FACE_OK: "INFO",
+  FACE_ABSENT: "WARNING",
+  FACE_MULTIPLE: "CRITICAL",
+  LOOK_AWAY: "WARNING",
+  FACE_MISMATCH: "WARNING",
+  FACE_LIVENESS: "WARNING",
+  KEY_ANOMALY: "WARNING",
+  MOUSE_ANOMALY: "WARNING",
+  AUTOMATION_DETECTED: "CRITICAL",
 };
 
 export function severityOf(type: SecureEventType): EventSeverity {

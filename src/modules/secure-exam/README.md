@@ -47,10 +47,16 @@ Modul: `src/modules/secure-exam/`
 - `events.ts` — hodisa turlari va og'irliklari (INFO/WARNING/CRITICAL);
 - `policy.ts` — deadline (oyna ∩ davomiylik + qo'shimcha daqiqa), limit, online;
 - `order.ts` — aralashtirish va javoblarni original/ko'rsatiladigan indekslar orasida qaytarish;
-- `schemas.ts` — zod sxemalar (API uchun).
+- `schemas.ts` — zod sxemalar (API uchun);
+- `input-anomaly.ts` — klaviatura/sichqoncha anomaliyalari (robot kiritish, avtoklik, sakrash)
+  sof tracker'lar;
+- `face-guard.ts` — yuz kuzatuvi qarorlari (yuz yo'q, bir nechta yuz, yonga qarash, jonli
+  harakat) sof tracker.
 
 Hodisalar og'irligi: WARNING = 1 ogohlantirish; CRITICAL (masalan, ikkinchi monitor) =
-butun limitni to'ldiradi; INFO faqat yozib boriladi. Limitdan keyingi amal:
+butun limitni to'ldiradi; INFO faqat yozib boriladi. Yangi turlar: FACE_OK (INFO);
+FACE_ABSENT / LOOK_AWAY / FACE_MISMATCH / FACE_LIVENESS / KEY_ANOMALY / MOUSE_ANOMALY
+(WARNING); FACE_MULTIPLE / AUTOMATION_DETECTED (CRITICAL). Limitdan keyingi amal:
 `TERMINATE` (avtomatik topshirish) yoki `WARN` (faqat qayd).
 
 ## API
@@ -84,3 +90,30 @@ kamera. Webdan chetlab o'tish odatda seziladi, lekin to'liq to'sib bo'lmaydi.
 `src/modules/secure-exam/*.test.ts` — kod, hodisalar, siyosat, aralashtirish (vitest).
 `e2e/secure-exam.spec.ts` — o'qituvchi tezkor rejimda yaratadi → talaba kiradi → savol
 belgilanadi → kontekst menyu hodisasi → topshirish → monitor natijani ko'rsatadi (Playwright).
+
+## Yuz va kiritma nazorati (nazorat qatlami)
+
+Kamera yoqilgan va talabada Face ID (User.faceDescriptor) mavjud bo'lsa, imtihon
+qo'shimcha nazorat bilan o'tadi. DB o'zgarmaydi — barchasi mavjud hodisalar
+quvuri orqali yozib boriladi.
+
+Darvoza (gate):
+- boshlashdan oldin `FaceScan` jonli tekshiruvi (blink/smile/burilish) o'tkaziladi;
+- olingan deskriptor birinchi `sync` bilan serverga yuboriladi;
+- `checkFace` mos kelmasa (`mismatch`) imtihon boshlanmaydi, xato ko'rsatiladi;
+- Face ID bo'lmasa imtihon davom etadi, lekin yuz nazoratisiz.
+
+Imtihon davomida:
+- har ~1.5s da `useFaceGuard`: yuz yo'q (5s+) → FACE_ABSENT; 2+ shaxs → FACE_MULTIPLE;
+  yonga qarash (yaw Δ>0.28, 1.8s+) → LOOK_AWAY; 60s ichida blink bo'lmasa → FACE_LIVENESS;
+- har ~30s da deskriptor serverga yuboriladi: mos kelsa bir marta FACE_OK (INFO),
+  kelmasa FACE_MISMATCH (WARNING, 30s cooldown) — ogohlantirish limitiga hisoblanadi;
+- `useInputGuard`: robot yozish (tez/uniform intervallar) → KEY_ANOMALY; avtoklik/sakrash →
+  MOUSE_ANOMALY; soxta hodisalar (isTrusted=false) yoki navigator.webdriver →
+  AUTOMATION_DETECTED (CRITICAL);
+- holat kamera preview yonida chip sifatida ko'rinadi; o'qituvchi monitorda barcha
+  hodisalarni jonli ko'radi.
+
+Sozlamalar `config.ts` da: FACE_ABSENT_AFTER_MS, LOOK_AWAY_AFTER_MS, LOOK_AWAY_YAW_DELTA,
+FACE_MISMATCH_COOLDOWN_MS, ANOMALY_COOLDOWN_MS va h.k. Testlar:
+`face-guard.test.ts`, `input-anomaly.test.ts`.
