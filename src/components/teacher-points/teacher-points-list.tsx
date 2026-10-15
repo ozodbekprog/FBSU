@@ -135,8 +135,7 @@ const IconAlert = ({ className }: IconProps) => (
 );
 
 const CATEGORIES = [
-  { value: "davomat", label: "Davamot", Icon: IconAttendance },
-  { value: "faollik", label: "Darsdagi faollik", Icon: IconActivity },
+  { value: "faollik", label: "Faollik", Icon: IconActivity },
   { value: "aloqadirilish", label: "Aloqadirilish", Icon: IconHandshake },
   { value: "homework", label: "Vazifalar", Icon: IconBook },
   { value: "test", label: "Testlar", Icon: IconTarget },
@@ -147,7 +146,7 @@ export function TeacherPointsList({ courses, teacherRole }: Props) {
   const [courseId, setCourseId] = useState(courses[0]?.id ?? "");
   const [points, setPoints] = useState<TeacherPoint[]>([]);
   const [newPoints, setNewPoints] = useState(1);
-  const [category, setCategory] = useState("davomat");
+  const [category, setCategory] = useState("faollik");
   const [reason, setReason] = useState("");
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
@@ -458,7 +457,7 @@ export function TeacherPointsList({ courses, teacherRole }: Props) {
           {/* Kategoriya */}
           <div>
             <Label>{t("tchCategory")}</Label>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {CATEGORIES.map((cat) => {
                 const active = cat.value === category;
                 const CatIcon = cat.Icon;
@@ -468,14 +467,14 @@ export function TeacherPointsList({ courses, teacherRole }: Props) {
                     whileTap={{ scale: 0.97 }}
                     onClick={() => setCategory(cat.value)}
                     aria-pressed={active}
-                    className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
                       active
                         ? "border-brand-900 bg-brand-900 text-white"
                         : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
                     }`}
                   >
-                    <CatIcon className="size-4" />
-                    {cat.label}
+                    <CatIcon className="size-4 shrink-0" />
+                    <span className="truncate">{cat.label}</span>
                   </motion.button>
                 );
               })}
