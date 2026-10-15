@@ -64,6 +64,9 @@ model User {
   groupId String?
   group   Group?  @relation(fields: [groupId], references: [id])
 
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
   taughtCourses Course[]       @relation("CourseTeacher")
   enrollments   Enrollment[]
   submissions   Submission[]
@@ -557,12 +560,26 @@ model SubGroup {
   @@unique([groupId, name])
 }
 
+model Department {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  code      String?
+  facultyId String?
+  createdAt DateTime  @default(now())
+
+  faculty Faculty? @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  users    User[]
+
+  @@index([facultyId])
+}
+
 model Faculty {
-  id     String  @id @default(cuid())
-  name   String  @unique
-  code   String?
-  groups Group[]
-  users  User[]
+  id          String       @id @default(cuid())
+  name        String       @unique
+  code        String?
+  groups      Group[]
+  users       User[]
+  departments Department[]
 }
 
 model Term {
