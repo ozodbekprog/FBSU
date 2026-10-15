@@ -5,7 +5,7 @@ import { ensureFaceModels } from "@/components/face/face-scan";
 import { FaceGuardTracker, faceMetrics } from "@/modules/secure-exam/face-guard";
 import type { SecureEventType } from "@/modules/secure-exam/events";
 
-const TICK_INTERVAL_MS = 1_200;
+const TICK_INTERVAL_MS = 600;
 const DESCRIPTOR_EVERY_TICKS = 20;
 const DESCRIPTOR_EVERY_MS = 30_000;
 const MAX_CONSECUTIVE_ERRORS = 5;
@@ -38,6 +38,7 @@ export function useFaceGuard(options: {
     let ticks = 0;
     let noVideoSkips = 0;
     let noVideoReported = false;
+    let wasHidden = false;
     let lastDescriptorAt = Date.now();
 
     async function run() {
@@ -54,6 +55,14 @@ export function useFaceGuard(options: {
         const video = videoRef.current;
         const videoNotReady = !video || video.readyState < 2 || video.videoWidth === 0;
         if (videoNotReady || document.hidden) {
+          if (document.hidden) {
+            if (!wasHidden) {
+              wasHidden = true;
+              trackerRef.current?.reset();
+            }
+          } else {
+            wasHidden = false;
+          }
           if (videoNotReady) {
             noVideoSkips += 1;
             if (noVideoSkips >= 10 && !noVideoReported) {
@@ -65,6 +74,7 @@ export function useFaceGuard(options: {
           return;
         }
         if (!video) return;
+        wasHidden = false;
         noVideoSkips = 0;
         noVideoReported = false;
         try {

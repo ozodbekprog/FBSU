@@ -148,6 +148,23 @@ describe("FaceGuardTracker: look away", () => {
   });
 });
 
+describe("FaceGuardTracker: reset", () => {
+  it("look-away holatida reset lookSince ni tozalaydi va darhol qayta emit bo'lmaydi", () => {
+    const tracker = new FaceGuardTracker();
+    tracker.tick({ metrics: [face(0.1)], ts: 0 });
+    tracker.tick({ metrics: [face(0.5)], ts: 1000 });
+    tracker.reset();
+    expect(tracker.tick({ metrics: [face(0.5)], ts: 1600 })).toEqual([]);
+  });
+
+  it("absent holatida reset absentSince ni tozalaydi va darhol qayta emit bo'lmaydi", () => {
+    const tracker = new FaceGuardTracker();
+    tracker.tick({ metrics: [], ts: 0 });
+    tracker.reset();
+    expect(tracker.tick({ metrics: [], ts: 2600 })).toEqual([]);
+  });
+});
+
 describe("FaceGuardTracker: status", () => {
   it("kadr soni bo'yicha holat qaytaradi", () => {
     const tracker = new FaceGuardTracker();

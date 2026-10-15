@@ -63,7 +63,7 @@ FACE_ABSENT / LOOK_AWAY / FACE_MISMATCH / FACE_LIVENESS / KEY_ANOMALY / MOUSE_AN
 
 - `POST /api/secure-exams` — sessiya yaratish (TEACHER/ADMIN).
 - `POST /api/secure-exams/join` — kod bilan kirish (STUDENT, rate-limit 12/daq).
-- `GET /api/secure-exams/[id]` — monitor ma'lumoti (5 s poll).
+- `GET /api/secure-exams/[id]` — monitor ma'lumoti (3 s poll).
 - `PATCH /api/secure-exams/[id]` — `ACTIVE` / `CLOSED` (yopishda faol urinishlar topshiriladi).
 - `DELETE /api/secure-exams/[id]` — ishtirokchisiz sessiyani o'chirish.
 - `POST /api/secure-exams/runs/[id]/sync` — talaba: hodisalar + javoblar + heartbeat.
@@ -104,9 +104,11 @@ Darvoza (gate):
 - Face ID bo'lmasa imtihon davom etadi, lekin yuz nazoratisiz.
 
 Imtihon davomida:
-- har ~1.2s da `useFaceGuard`: yuz yo'q (5s+) → FACE_ABSENT; 2+ shaxs → FACE_MULTIPLE;
-  yonga qarash (yaw Δ>0.24, 1.4s+, 10s cooldown) → LOOK_AWAY; 60s ichida blink bo'lmasa →
-  FACE_LIVENESS;
+- har ~0.6s da `useFaceGuard`: yuz yo'q (2.5s+) → FACE_ABSENT; 2+ shaxs → FACE_MULTIPLE;
+  yonga qarash (yaw Δ>0.24, 0.5s+, 10s cooldown) → LOOK_AWAY; 60s ichida blink bo'lmasa →
+  FACE_LIVENESS; tab yopilib qaytganda tracker `reset()` bo'ladi (vaqt sun'iy o'smaydi);
+- WARNING/CRITICAL hodisa yuz berganda 400ms ichida shoshilinch `sync` rejalashtiriladi
+  (2s throttle) — monitor deyarli darhol yangilanadi;
 - har ~30s da deskriptor serverga yuboriladi: mos kelsa bir marta FACE_OK (INFO),
   kelmasa FACE_MISMATCH (WARNING, 30s cooldown) — ogohlantirish limitiga hisoblanadi;
 - `useInputGuard`: robot yozish (tez/uniform intervallar) → KEY_ANOMALY; avtoklik/sakrash →

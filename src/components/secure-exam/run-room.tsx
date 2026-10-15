@@ -122,6 +122,8 @@ export function RunRoom({
   const toastTimerRef = useRef<number | null>(null);
   const blurTimerRef = useRef<number | null>(null);
   const faceDescriptorRef = useRef<number[] | null>(null);
+  const lastUrgentSyncRef = useRef(0);
+  const syncRef = useRef<(() => Promise<unknown>) | null>(null);
   const clientIdRef = useRef<string>(
     typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : "web",
   );
@@ -148,7 +150,17 @@ export function RunRoom({
   const pushEvent = useCallback(
     (type: SecureEventType, meta?: Record<string, string | number | boolean>) => {
       eventsRef.current.push({ type, meta });
-      if (phaseRef.current === "running") showToast(type);
+      if (phaseRef.current !== "running") return;
+      showToast(type);
+      if (severityOf(type) !== "INFO") {
+        const now = Date.now();
+        if (now - lastUrgentSyncRef.current > 2000) {
+          lastUrgentSyncRef.current = now;
+          window.setTimeout(() => {
+            void syncRef.current?.();
+          }, 400);
+        }
+      }
     },
     [showToast],
   );
@@ -222,6 +234,10 @@ export function RunRoom({
     },
     [runId, t],
   );
+
+  useEffect(() => {
+    syncRef.current = sync;
+  }, [sync]);
 
   const enterRoom = useCallback(() => {
     setPhase("running");

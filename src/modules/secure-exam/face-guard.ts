@@ -12,9 +12,9 @@ export type FaceMetrics = { yaw: number; ear: number };
 export type FaceGuardEventType = "FACE_ABSENT" | "FACE_MULTIPLE" | "LOOK_AWAY" | "FACE_LIVENESS";
 export type FaceGuardEvent = { type: FaceGuardEventType; meta: Record<string, string | number | boolean> };
 
-export const FACE_ABSENT_AFTER_MS = 5_000;
+export const FACE_ABSENT_AFTER_MS = 2_500;
 export const FACE_MULTIPLE_AFTER_TICKS = 2;
-export const LOOK_AWAY_AFTER_MS = 1_400;
+export const LOOK_AWAY_AFTER_MS = 500;
 export const LOOK_AWAY_YAW_DELTA = 0.24;
 export const FACE_EVENT_COOLDOWN_MS = 30_000;
 export const LOOK_AWAY_COOLDOWN_MS = 10_000;
@@ -169,6 +169,15 @@ export class FaceGuardTracker {
 
   status(): "monitoring" | "absent" | "multi" {
     return this.statusState;
+  }
+
+  reset(): void {
+    this.absentSince = null;
+    this.absentActive = false;
+    this.lookSince = null;
+    this.multiTicks = 0;
+    this.eyeClosed = false;
+    this.statusState = "monitoring";
   }
 
   private cooldownReady(type: FaceGuardEventType, ts: number): boolean {
