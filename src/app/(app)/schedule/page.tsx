@@ -256,6 +256,11 @@ export default async function SchedulePage({
             ? translate(locale, "schScheduleSubtitle", { group: selectedGroup.name })
             : undefined
         }
+        action={
+          <ButtonLink href="/schedule/edupage" variant="secondary" size="sm">
+            {dictionary.schEduPageNavLabel}
+          </ButtonLink>
+        }
       />
       {pendingCount > 0 ? (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">

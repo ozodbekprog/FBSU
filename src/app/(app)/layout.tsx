@@ -72,6 +72,7 @@ export default async function AppLayout({
         ...(user.role === "OTA_ONA" ? [{ href: "/parent", label: dictionary.parentTitle }] : []),
         { href: "/courses", label: dictionary.navCourses },
         { href: "/schedule", label: dictionary.navSchedule },
+        { href: "/schedule/edupage", label: dictionary.schEduPageNavLabel },
         { href: "/calendar", label: dictionary.navCalendar },
       ],
     },
@@ -175,52 +176,52 @@ export default async function AppLayout({
   const ROLE_MENU: Record<string, string[]> = {
     REKTOR: [
       "/dashboard", "/assistant", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
-      "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar", "/research",
+      "/staff", "/tasks", "/my-qr", "/schedule", "/schedule/edupage", "/calendar", "/academic-calendar", "/research",
       "/messages", "/search", "/help", "/bounty", "/settings", "/access",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     PRO_RECTOR: [
       "/dashboard", "/assistant", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
-      "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar", "/research",
+      "/staff", "/tasks", "/my-qr", "/schedule", "/schedule/edupage", "/calendar", "/academic-calendar", "/research",
       "/messages", "/search", "/help", "/bounty", "/settings", "/access",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     DEKAN: [
       "/dashboard", "/assistant", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
-      "/schedule", "/calendar", "/academic-calendar", "/research", "/messages", "/search", "/help", "/bounty", "/settings",
+      "/schedule", "/schedule/edupage", "/calendar", "/academic-calendar", "/research", "/messages", "/search", "/help", "/bounty", "/settings",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     KAFEDRA_MUDIRI: [
       "/dashboard", "/assistant", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
-      "/schedule", "/calendar", "/academic-calendar", "/research", "/messages", "/search", "/help", "/bounty", "/settings",
+      "/schedule", "/schedule/edupage", "/calendar", "/academic-calendar", "/research", "/messages", "/search", "/help", "/bounty", "/settings",
     ],
     REGISTRAR: [
       "/dashboard", "/assistant", "/monitoring", "/admissions", "/approvals", "/finance", "/documents", "/diplomas", "/staff",
-      "/tasks", "/admin/users", "/admin/groups", "/admin/import", "/admin/hemis", "/schedule",
+      "/tasks", "/admin/users", "/admin/groups", "/admin/import", "/admin/hemis", "/schedule", "/schedule/edupage",
       "/calendar", "/academic-calendar", "/rooms", "/messages", "/search", "/help", "/bounty", "/settings",
       "/my-qr", "/access",
     ],
     TYUTOR: [
-      "/dashboard", "/assistant", "/curator", "/attendance", "/schedule", "/calendar", "/academic-calendar",
+      "/dashboard", "/assistant", "/curator", "/attendance", "/schedule", "/schedule/edupage", "/calendar", "/academic-calendar",
       "/tasks", "/staff", "/my-qr", "/messages", "/search", "/help", "/bounty", "/settings",
     ],
     TEACHER: [
       "/dashboard", "/assistant", "/courses", "/board", "/journal", "/journals",
-      "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/secure-exams", "/attendance",
+      "/question-bank", "/schedule", "/schedule/edupage", "/calendar", "/academic-calendar", "/exams", "/secure-exams", "/attendance",
       "/reports", "/workload", "/staff", "/tasks", "/my-qr", "/messages", "/bookings", "/rooms",
       "/research", "/search", "/help", "/bounty", "/settings",
     ],
     STUDENT: [
-      "/dashboard", "/assistant", "/courses", "/board", "/schedule", "/calendar",
+      "/dashboard", "/assistant", "/courses", "/board", "/schedule", "/schedule/edupage", "/calendar",
       "/academic-calendar", "/exams", "/secure-exams", "/grades", "/gpa", "/transcript", "/attendance",
       "/certificates", "/finance", "/my-qr", "/messages", "/orders", "/bookings", "/rooms",
       "/search", "/help", "/bounty", "/settings",
     ],
     XODIM: [
-      "/dashboard", "/assistant", "/staff", "/tasks", "/my-qr", "/access", "/schedule", "/calendar",
+      "/dashboard", "/assistant", "/staff", "/tasks", "/my-qr", "/access", "/schedule", "/schedule/edupage", "/calendar",
       "/academic-calendar", "/messages", "/rooms", "/bookings", "/search", "/help", "/bounty", "/settings",
     ],
     // Buxgalter: moliyaviy vazifa uchun faqat kerakli bo'limlar.

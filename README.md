@@ -33,6 +33,9 @@ Setup skripti: kutubxonalar + PostgreSQL (user-space, port 5433) + `.env` + migr
 - **Topshiriqlar** — topshirish, muddat, baholash, feedback
 - **Testlar** — 3 xil savol turi, avtomatik baholash, urinishlar
 - **Jadval** — haftalik dars jadvali, guruh bo'yicha
+- **EduPage avto jadval** — [ttpu.edupage.org](https://ttpu.edupage.org/timetable/) dan
+  avtomatik olinadi (har 15 daqiqada yangilanadi), `Group.edupageName` orqali guruhga
+  bog'lanadi va bazaga sinxronlanadi
 - **Davomat** — belgilash va statistika
 - **Baholar** — talaba va o'qituvchi jurnali
 - **Admin panel** — foydalanuvchilar, guruhlar, kurslar
@@ -165,6 +168,20 @@ curl -fsS https://lms.ttpu.uz/api/health
 
 Health javobi: `{"ok":true,"data":{"status":"healthy","db":true,...}}`. `enable` qilingani uchun
 rebootdan keyin servislar o'zi ko'tariladi.
+
+## EduPage integratsiyasi
+
+Manba: `https://ttpu.edupage.org/timetable/` (aSc EduPage, ommaviy jadval — login kerak emas).
+
+- Sahifa: `/schedule/edupage` — sinf tanlash, hafta/ro'yxat ko'rinishi, jonli yangilanish
+- API: `GET /api/edupage/timetable?class=<sinf>` (auth), `scope=all` bilan barcha sinflar
+- Sinxronlash: `POST /api/edupage/sync` — ADMIN/REGISTRAR (CSRF bilan) yoki
+  `Authorization: Bearer $CRON_SECRET` (cron uchun); sahifa ochilganda ham fonda
+  avtomatik ishlaydi (oxirgi sinxron 30 daqiqadan eski bo'lsa)
+- Guruh bog'lash: `/schedule/edupage` da "Bu sinfni guruhga bog'lash" tugmasi
+  (`Group.edupageName`), yoki `PATCH /api/admin/groups/<id> { "edupageName": "AI2-26" }`
+- Sozlamalar (ixtiyoriy): `EDUPAGE_BASE_URL` — boshqa maktab domeni uchun;
+  `EDUPAGE_SYNC_SECRET` / `CRON_SECRET` — cron endpoint himoyasi
 
 ## Hujjatlar
 

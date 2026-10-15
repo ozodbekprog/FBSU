@@ -182,6 +182,9 @@ model User {
 model Group {
   id        String          @id @default(cuid())
   name      String          @unique
+  /// EduPage (ttp u.edupage.org) sinf nomi — avto jadval sinxronizatsiyasi uchun.
+  /// Bo'sh bo'lsa `name` bilan solishtiriladi.
+  edupageName String?
   year      Int?
   facultyId String?
   faculty   Faculty?        @relation(fields: [facultyId], references: [id], onDelete: SetNull)
@@ -463,6 +466,10 @@ model ScheduleEntry {
   approval   ScheduleApproval @default(APPROVED)
   note       String?
   sectionId  String?
+  /// Manba: `null` — qo'lda kiritilgan, `"edupage"` — avto sinxronlangan.
+  source     String?
+  /// Manba tizimidagi identifikator (karta:kun:guruh) — takroriy importni oldini oladi.
+  externalId String?
   updatedAt  DateTime         @default(now()) @updatedAt
 
   group      Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
@@ -472,6 +479,7 @@ model ScheduleEntry {
 
   subGroup String?
 
+  @@unique([source, externalId])
   @@index([groupId, dayOfWeek])
   @@index([subjectId])
   @@index([teacherId])
