@@ -79,8 +79,14 @@ export default async function Page() {
 - Manba: `https://ttpu.edupage.org/timetable/` — `src/lib/edupage.ts` (yuklab olish,
   normallashtirish, 15 daqiqalik kesh), `src/lib/edupage-sync.ts` (guruh/o'qituvchi/fan
   moslashtirish va DB sinxron).
-- Sahifa `/schedule/edupage`, API `/api/edupage/timetable`, sinxron `/api/edupage/sync`.
-- Sinf ↔ guruh bog'lanishi `Group.edupageName` orqali; bog'lanmagan guruhlar sinxronlanmaydi.
+- Alohida sahifa yo'q: ma'lumot o'z bo'limlarida — `/schedule` (dars jadvali, rol bo'yicha),
+  `/admin/users` (o'qituvchilar), `/admin/groups` (guruhlar), `/admin/dictionaries` (fanlar),
+  `/rooms` (xonalar); sinxron boshqaruvi `/admin/import` da.
+- API: `GET /api/edupage/timetable`, sinxron `POST /api/edupage/sync`
+  (ADMIN/REGISTRAR + CSRF yoki `Bearer CRON_SECRET`). `Jadval` sahifasi ochilganda
+  30 daqiqadan eski bo'lsa fonda avtomatik sinxronlanadi.
+- Sinf ↔ guruh bog'lanishi `Group.edupageName` orqali; mos kelmagan sinf uchun guruh
+  avtomatik yaratiladi, bog'langan guruhdagi eski qo'lda yozuvlar tozalanadi.
 - Import qilingan yozuvlar `ScheduleEntry.source = "edupage"` + `externalId` bilan belgilanadi —
   ularni qo'lda tahrirlash mumkin, lekin keyingi sinxron yangilaydi/o'chiradi.
 

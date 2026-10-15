@@ -72,7 +72,6 @@ export default async function AppLayout({
         ...(user.role === "OTA_ONA" ? [{ href: "/parent", label: dictionary.parentTitle }] : []),
         { href: "/courses", label: dictionary.navCourses },
         { href: "/schedule", label: dictionary.navSchedule },
-        { href: "/schedule/edupage", label: dictionary.schEduPageNavLabel },
         { href: "/calendar", label: dictionary.navCalendar },
       ],
     },
@@ -176,52 +175,52 @@ export default async function AppLayout({
   const ROLE_MENU: Record<string, string[]> = {
     REKTOR: [
       "/dashboard", "/assistant", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
-      "/staff", "/tasks", "/my-qr", "/schedule", "/schedule/edupage", "/calendar", "/academic-calendar", "/research",
+      "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar", "/research",
       "/messages", "/search", "/help", "/bounty", "/settings", "/access",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     PRO_RECTOR: [
       "/dashboard", "/assistant", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
-      "/staff", "/tasks", "/my-qr", "/schedule", "/schedule/edupage", "/calendar", "/academic-calendar", "/research",
+      "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar", "/research",
       "/messages", "/search", "/help", "/bounty", "/settings", "/access",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     DEKAN: [
       "/dashboard", "/assistant", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
-      "/schedule", "/schedule/edupage", "/calendar", "/academic-calendar", "/research", "/messages", "/search", "/help", "/bounty", "/settings",
+      "/schedule", "/calendar", "/academic-calendar", "/research", "/messages", "/search", "/help", "/bounty", "/settings",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     KAFEDRA_MUDIRI: [
       "/dashboard", "/assistant", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
-      "/schedule", "/schedule/edupage", "/calendar", "/academic-calendar", "/research", "/messages", "/search", "/help", "/bounty", "/settings",
+      "/schedule", "/calendar", "/academic-calendar", "/research", "/messages", "/search", "/help", "/bounty", "/settings",
     ],
     REGISTRAR: [
       "/dashboard", "/assistant", "/monitoring", "/admissions", "/approvals", "/finance", "/documents", "/diplomas", "/staff",
-      "/tasks", "/admin/users", "/admin/groups", "/admin/import", "/admin/hemis", "/schedule", "/schedule/edupage",
+      "/tasks", "/admin/users", "/admin/groups", "/admin/import", "/admin/hemis", "/schedule",
       "/calendar", "/academic-calendar", "/rooms", "/messages", "/search", "/help", "/bounty", "/settings",
       "/my-qr", "/access",
     ],
     TYUTOR: [
-      "/dashboard", "/assistant", "/curator", "/attendance", "/schedule", "/schedule/edupage", "/calendar", "/academic-calendar",
+      "/dashboard", "/assistant", "/curator", "/attendance", "/schedule", "/calendar", "/academic-calendar",
       "/tasks", "/staff", "/my-qr", "/messages", "/search", "/help", "/bounty", "/settings",
     ],
     TEACHER: [
       "/dashboard", "/assistant", "/courses", "/board", "/journal", "/journals",
-      "/question-bank", "/schedule", "/schedule/edupage", "/calendar", "/academic-calendar", "/exams", "/secure-exams", "/attendance",
+      "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/secure-exams", "/attendance",
       "/reports", "/workload", "/staff", "/tasks", "/my-qr", "/messages", "/bookings", "/rooms",
       "/research", "/search", "/help", "/bounty", "/settings",
     ],
     STUDENT: [
-      "/dashboard", "/assistant", "/courses", "/board", "/schedule", "/schedule/edupage", "/calendar",
+      "/dashboard", "/assistant", "/courses", "/board", "/schedule", "/calendar",
       "/academic-calendar", "/exams", "/secure-exams", "/grades", "/gpa", "/transcript", "/attendance",
       "/certificates", "/finance", "/my-qr", "/messages", "/orders", "/bookings", "/rooms",
       "/search", "/help", "/bounty", "/settings",
     ],
     XODIM: [
-      "/dashboard", "/assistant", "/staff", "/tasks", "/my-qr", "/access", "/schedule", "/schedule/edupage", "/calendar",
+      "/dashboard", "/assistant", "/staff", "/tasks", "/my-qr", "/access", "/schedule", "/calendar",
       "/academic-calendar", "/messages", "/rooms", "/bookings", "/search", "/help", "/bounty", "/settings",
     ],
     // Buxgalter: moliyaviy vazifa uchun faqat kerakli bo'limlar.
@@ -296,6 +295,12 @@ export default async function AppLayout({
   return (
     <LocaleProvider locale={locale} dictionary={dictionary}>
       <div className="flex min-h-screen">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-brand-900 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white focus:shadow-lift"
+        >
+          {dictionary.landSkipToContent}
+        </a>
       {/* Sidebar HAR DOIM ko'rinadi. Avval `hidden md:flex` edi — brauzerda
           kattalashtirganda (Ctrl/Cmd + yoki pinch-zoom) CSS kenglik 768px
           dan pastga tushardi va sidebar butunlay yo'qolardi (videodagi
@@ -348,7 +353,7 @@ export default async function AppLayout({
             </Link>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 pt-6 pb-20 md:px-8 md:pt-8 md:pb-8">{children}</main>
+        <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-4 pt-6 pb-20 focus:outline-none md:px-8 md:pt-8 md:pb-8">{children}</main>
       </div>
       <MobileTabBar tabs={visibleTabs} />
       <BugAssistant />

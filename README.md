@@ -173,13 +173,15 @@ rebootdan keyin servislar o'zi ko'tariladi.
 
 Manba: `https://ttpu.edupage.org/timetable/` (aSc EduPage, ommaviy jadval — login kerak emas).
 
-- Sahifa: `/schedule/edupage` — sinf tanlash, hafta/ro'yxat ko'rinishi, jonli yangilanish
-- API: `GET /api/edupage/timetable?class=<sinf>` (auth), `scope=all` bilan barcha sinflar
-- Sinxronlash: `POST /api/edupage/sync` — ADMIN/REGISTRAR (CSRF bilan) yoki
-  `Authorization: Bearer $CRON_SECRET` (cron uchun); sahifa ochilganda ham fonda
-  avtomatik ishlaydi (oxirgi sinxron 30 daqiqadan eski bo'lsa)
-- Guruh bog'lash: `/schedule/edupage` da "Bu sinfni guruhga bog'lash" tugmasi
-  (`Group.edupageName`), yoki `PATCH /api/admin/groups/<id> { "edupageName": "AI2-26" }`
+- Ko'rinadigan joylar: `/schedule` (dars jadvali), `/admin/users` (o'qituvchilar),
+  `/admin/groups`, `/admin/dictionaries` (fanlar), `/rooms` (xonalar)
+- Sinxron boshqaruvi: `/admin/import` dagi "EduPage sinxronizatsiyasi" kartasi
+  (oxirgi sinxron, statistika, "Hozir yangilash"); `Jadval` sahifasi ochilganda
+  30 daqiqadan eski bo'lsa fonda avtomatik yangilanadi
+- API: `GET /api/edupage/timetable?class=<sinf>` (auth), `scope=all` bilan barcha sinflar;
+  `POST /api/edupage/sync` — ADMIN/REGISTRAR (CSRF) yoki `Authorization: Bearer $CRON_SECRET`
+- Guruh bog'lash: `PATCH /api/admin/groups/<id> { "edupageName": "AI2-26" }`
+  (mos kelmagan sinf uchun guruh avtomatik yaratiladi)
 - Sinxron mos kelmagan sinflar uchun guruhni **o'zi yaratadi** va o'sha guruhlardagi
   eski qo'lda/seed jadval yozuvlarini tozalaydi (`source = null`) — manba (EduPage)
   yagona haqiqat bo'lib qoladi
