@@ -42,8 +42,9 @@ tor (G3). Har yangi sahifa — yangi xavf.
 - ✅ 2-to'lqim: `api/quizzes` x2 → `quiz.manage`; `api/finance/contracts` + `payments` → `finance.view` + `academic.manage`; `api/diplomas` → `diplomas.view` + `academic.manage`; `api/transcript` → `transcript.view`; `api/certificates` + `certificate-access` → `certificates.issue`
 - ✅ 3-to'lqim: `layout.tsx` nav ruxsatlari → `parent.viewChild`, `documents.view`, `diplomas.view`, `finance.view`, `access.viewLogs`, `monitoring.view`, `approvals.decide`, `curator.manage` (24 capability)
 - ✅ 4-to'lqim: `api/schedule` → `schedule.manage`; `api/exams/sessions` + `api/secure-exams/[id]` + `server/secure-exam.ts` → `exams.manage`; `api/admin/groups/[id]` + `api/admin/study-plans` + `api/documents/[id]` → `academic.manage` (26 capability)
-- ℹ️ `dashboard/page.tsx` va `layout`dagi ROLE_MENU/label ternariylari — UI varianti, ruxsat emas: migratsiya talab qilinmaydi
-- ✅ Migratsiya (1–4 to'lqim, 26 fayl), audit: 596 → 523 xom tekshiruv (qolganlar asosan UI varianti va ownership scope qoidalari)
+- ✅ 5-to'lqim: `api/question-bank` → `quiz.manage`; `api/attendance/sessions` → `attendance.open`; `api/admin/import` → `academic.manage`; `course-access.ts` → `canManageCourse` delegatsiyasi (36 faylga ta'sir)
+- ℹ️ Qolgan qaror nuqtalari: `workload` API leadership'ni kiritmaydi (nav ko'rsatadi — G2 ziddiyati), `enrollments` 3-rolli gate, `publications`, BUXGALTER `finance.view`
+- ✅ Migratsiya (1–5 to'lqim), audit: 596 → 512 xom tekshiruv (qolganlar asosan UI varianti va ownership scope qoidalari)
 - 🕓 Katta to'lqinlar: `layout.tsx` (36), `dashboard/page.tsx` (35), `schedule/*`, `exams/*`, `documents/*`, `workload`, `attendance`
 - ⚠️ Qaror kerak: `BUXGALTER` hozir `finance.view`ga ega emas (eski kodda ham yo'q edi) — moliya bo'limi uchun ochish tavsiya etiladi
 - Qo'shildi: `src/modules/capabilities/server.ts` — `requireApiCapability` / `requirePageCapability` (yangi endpointlar uchun yagona nuqta)

@@ -6,6 +6,7 @@ import { questionTypeSchema } from "@/components/quiz/schema";
 import { bankQuestionCreateSchema } from "@/components/question-bank/schema";
 import { resolveBankTarget } from "@/components/question-bank/server";
 import { toBankQuestion } from "@/components/question-bank/shared";
+import { hasCapability } from "@/modules/capabilities";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 
 const bankInclude = {
@@ -16,7 +17,7 @@ const bankInclude = {
 export async function GET(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (!hasCapability(user.role, "quiz.manage")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -68,7 +69,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (!hasCapability(user.role, "quiz.manage")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
