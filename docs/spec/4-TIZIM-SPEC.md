@@ -68,6 +68,13 @@ logs hisoboti (filtr bilan), baho tarixi (`grade_grades_history`).
 - Muhim amallar majburiy: baho, o'chirish, ruxsat, login, eksport
 - Admin sahifasi: filtrlab ko'rish (user, tur, sana, kurs)
 
+**Holat (2026-10-16):**
+- ✅ `src/modules/events/` — katalog: 61 event × 14 kategoriya, `isEventName`, `eventsByCategory`, `eventLabel` + 5 test
+- ✅ `recordEvent` — yagona nuqta (mavjud `logAudit`ga delegatsiya qiladi — string'lar barqaror)
+- ✅ Pilot migratsiya: `api/grade-changes/[id]` (approve/reject)
+- ℹ️ `AuditLog` model va `/admin/audit` sahifasi (filtr + pagination) allaqachon mavjud edi — qayta qurilmadi, ustiga **standart qatlam** qo'shildi
+- 🕓 Keyingi: 58 fayldagi `logAudit` chaqiruvlarini bosqichma-bosqich `recordEvent`ga o'tkazish; admin sahifasiga kategoriya filtri
+
 **Out of scope:** real-time stream, tashqi logstore, observability.
 
 ---

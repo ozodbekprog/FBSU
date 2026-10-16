@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { hasCapability } from "@/modules/capabilities";
 import { notifyUser } from "@/server/notify";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 
 const actionSchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -94,9 +94,7 @@ export async function POST(
       });
     } catch {}
 
-    await logAudit({
-      actorId: user.id,
-      action: "grade_change.approve",
+    await recordEvent(user.id, "grade_change.approve", {
       entity: "GradeChangeRequest",
       entityId: id,
       meta: {
@@ -122,9 +120,7 @@ export async function POST(
     });
   } catch {}
 
-  await logAudit({
-    actorId: user.id,
-    action: "grade_change.reject",
+  await recordEvent(user.id, "grade_change.reject", {
     entity: "GradeChangeRequest",
     entityId: id,
     meta: {
