@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Button, Card, CardBody, Input, PageHeader, Select } from "@/components/ui";
 import UsersManager from "@/components/admin/UsersManager";
+import UserBulkBar from "@/components/admin/UserBulkBar";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { cn } from "@/lib/utils";
 
@@ -150,6 +151,15 @@ export default async function AdminUsersPage({
           </CardBody>
         </Card>
       </form>
+
+      <UserBulkBar
+        users={users.map((user) => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          isActive: user.isActive,
+        }))}
+      />
 
       <UsersManager
         users={users}

@@ -84,6 +84,7 @@ export default async function AppLayout({
           ? [{ href: "/secure-exams", label: dictionary.navSecureExams }]
           : []),
         { href: "/grades", label: isStaff(user.role) ? dictionary.navGradesStaff : dictionary.navGradesStudent },
+        ...(hasCapability(user.role, "course.grade") ? [{ href: "/gradebook", label: "Baholar jurnali" }] : []),
         { href: "/gpa", label: dictionary.navGpa },
         { href: "/transcript", label: dictionary.navTranscript },
         { href: "/attendance", label: dictionary.navAttendance },

@@ -92,6 +92,12 @@ const S: Record<string, ReactNode> = {
       <path d="M8 8h8M8 12h8M8 16h4" />
     </>
   ),
+"/gradebook": (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M3 10h18M9 10v10" />
+    </>
+  ),
 "/gpa": (
     <>
       <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
