@@ -462,7 +462,7 @@ export default async function AdminPage() {
                           {log.entity ? ` · ${log.entity}` : ""}
                         </p>
                       </div>
-                      <span className="shrink-0 text-[11px] tabular-nums text-slate-400">
+                      <span className="shrink-0 text-[11px] tabular-nums text-slate-500">
                         {fmtDateTime(log.createdAt)}
                       </span>
                     </div>

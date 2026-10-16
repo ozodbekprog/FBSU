@@ -22,7 +22,10 @@ export function BuilderToast({
   if (!toast) return null;
 
   return (
-    <div className="pointer-events-none fixed left-1/2 top-4 z-50 -translate-x-1/2 px-4">
+    <div
+      role={toast.tone === "error" ? "alert" : "status"}
+      className="pointer-events-none fixed left-1/2 top-4 z-50 -translate-x-1/2 px-4"
+    >
       <div
         className={cn(
           "pointer-events-auto flex items-center gap-3 rounded-2xl border px-4 py-2.5 text-sm font-medium shadow-lg",

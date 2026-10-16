@@ -66,19 +66,6 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  // Запрет масштабирования страницы стандартными жестами браузера
-  // (pinch-to-zoom, double-tap zoom).
-  //
-  // ЗАЧЕМ: при масштабировании интерфейс ломается — sidebar исчезает
-  // (был `hidden md:flex`), панели `position: fixed` уходят за экран,
-  // ломается раскладка. Это подтверждено видеозаписью.
-  //
-  // ОГРАНИЧЕНИЕ: iOS Safari намеренно ИГНОРИРУЕТ `user-scalable=no`
-  // (политика доступности), поэтому на iOS pinch-to-zoom может
-  // продолжать работать. На Android/Chrome и большинстве браузеров
-  // жест блокируется.
-  maximumScale: 1,
-  userScalable: false,
   themeColor: "#1d3460",
 };
 
@@ -95,28 +82,6 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
-        {/*
-          Запрет масштабирования на ПК (Ctrl+колесо, Ctrl++/−, pinch на
-          трекпаде). Это INLINE-скрипт: он выполняется сразу при парсинге
-          HTML, ДО гидратации React — поэтому работает даже если React
-          не смонтировался (что и происходит в headless-браузере).
-
-          Обычная прокрутка (wheel без ctrlKey) не затрагивается.
-        */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){
-              function onWheel(e){ if(e.ctrlKey||e.metaKey) e.preventDefault(); }
-              function onKeyDown(e){
-                if(!e.ctrlKey && !e.metaKey) return;
-                var k=e.key;
-                if(k==='+'||k==='='||k==='-'||k==='_'||k==='0') e.preventDefault();
-              }
-              window.addEventListener('wheel', onWheel, { passive:false });
-              window.addEventListener('keydown', onKeyDown);
-            })();`,
-          }}
-        />
         <LocaleProvider locale={locale} dictionary={dictionary}>
           {children}
         </LocaleProvider>

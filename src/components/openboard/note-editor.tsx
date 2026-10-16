@@ -114,7 +114,7 @@ export function NoteEditor({
             placeholder={t("brdNoteTitlePlaceholder")}
             className="w-full bg-transparent text-2xl font-semibold tracking-tight text-slate-900 placeholder:text-slate-300 focus:outline-none"
           />
-          <p className="mt-1 text-[11px] text-slate-400">
+          <p className="mt-1 text-[11px] text-slate-500">
             {formatter.format(Number.isNaN(updated.getTime()) ? new Date() : updated)}
           </p>
         </div>
@@ -124,7 +124,7 @@ export function NoteEditor({
             onClick={() => onDuplicate(note.id)}
             title={t("brdNoteDuplicate")}
             aria-label={t("brdNoteDuplicate")}
-            className="inline-flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            className="inline-flex size-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <rect x="9" y="9" width="12" height="12" rx="2" />
@@ -138,7 +138,7 @@ export function NoteEditor({
             }}
             title={t("brdNoteDelete")}
             aria-label={t("brdNoteDelete")}
-            className="inline-flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
+            className="inline-flex size-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
@@ -168,7 +168,7 @@ export function NoteEditor({
                 onClick={() => moveBlock(block.id, -1)}
                 title={t("brdMoveUp")}
                 aria-label={t("brdMoveUp")}
-                className="inline-flex size-6 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                className="inline-flex size-6 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m18 15-6-6-6 6" />
@@ -179,7 +179,7 @@ export function NoteEditor({
                 onClick={() => moveBlock(block.id, 1)}
                 title={t("brdMoveDown")}
                 aria-label={t("brdMoveDown")}
-                className="inline-flex size-6 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                className="inline-flex size-6 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m6 9 6 6 6-6" />
@@ -190,7 +190,7 @@ export function NoteEditor({
                 onClick={() => removeBlock(block.id)}
                 title={t("brdBlockDelete")}
                 aria-label={t("brdBlockDelete")}
-                className="inline-flex size-6 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
+                className="inline-flex size-6 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6 6 18M6 6l12 12" />
@@ -202,7 +202,7 @@ export function NoteEditor({
       </div>
 
       <div className="border-t border-slate-100 px-4 py-3">
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
           {t("brdAddBlock")}
         </p>
         <div className="flex flex-wrap gap-1.5">

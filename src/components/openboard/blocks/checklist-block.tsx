@@ -80,7 +80,7 @@ export function ChecklistBlockEditor({
             onKeyDown={onKeyDown(index)}
             className={
               item.done
-                ? "w-full border-b border-transparent text-sm text-slate-400 line-through focus:border-blue-300 focus:outline-none"
+                ? "w-full border-b border-transparent text-sm text-slate-500 line-through focus:border-blue-300 focus:outline-none"
                 : "w-full border-b border-transparent text-sm text-slate-800 focus:border-blue-300 focus:outline-none"
             }
           />
@@ -88,7 +88,7 @@ export function ChecklistBlockEditor({
             type="button"
             onClick={() => removeItem(index)}
             aria-label={t("brdBlockDelete")}
-            className="shrink-0 rounded-md px-1 text-sm leading-4 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+            className="shrink-0 rounded-md px-1 text-sm leading-4 text-slate-500 hover:bg-rose-50 hover:text-rose-600"
           >
             ×
           </button>

@@ -88,8 +88,9 @@ export default function ResetPasswordForm({ token }: { token: string }) {
       </div>
       <form onSubmit={onSubmit} className="mt-8 space-y-5">
         <div>
-          <Label>{t("authResetPasswordLabel")}</Label>
+          <Label htmlFor="reset-password">{t("authResetPasswordLabel")}</Label>
           <Input
+            id="reset-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -99,8 +100,9 @@ export default function ResetPasswordForm({ token }: { token: string }) {
           />
         </div>
         <div>
-          <Label>{t("authResetConfirmLabel")}</Label>
+          <Label htmlFor="reset-confirm">{t("authResetConfirmLabel")}</Label>
           <Input
+            id="reset-confirm"
             type="password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}

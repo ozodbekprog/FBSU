@@ -81,7 +81,7 @@ function TexEditor({
       </div>
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
         {empty ? (
-          <p className="text-sm text-slate-400">{t("brdFormulaEmpty")}</p>
+          <p className="text-sm text-slate-500">{t("brdFormulaEmpty")}</p>
         ) : html !== null ? (
           <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: html }} />
         ) : (

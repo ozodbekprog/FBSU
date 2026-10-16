@@ -102,7 +102,11 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        aria-label={t("shellNotifications")}
+        aria-label={
+          unreadCount > 0
+            ? `${t("shellNotifications")} (${unreadCount > 99 ? "99+" : unreadCount})`
+            : t("shellNotifications")
+        }
         aria-expanded={open}
         className={cn(
           "relative inline-flex size-9 items-center justify-center rounded-xl transition-colors duration-150 after:absolute after:-inset-1 after:content-['']",

@@ -304,7 +304,7 @@ function StatTile({
   );
   if (!href) return tile;
   return (
-    <Link href={href} className="block h-full" aria-label={label}>
+    <Link href={href} className="block h-full">
       {tile}
     </Link>
   );
@@ -407,9 +407,9 @@ function GradeTrendHero({ data, locale }: { data: StudentAnalytics; locale: Loca
       <Card className="flex flex-col overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 pb-3 pt-3.5 sm:px-5">
           <div className="min-w-0">
-            <h3 className="text-base font-semibold tracking-tight text-brand-950">
+            <h2 className="text-base font-semibold tracking-tight text-brand-950">
               {translate(locale, "dashGradeTrendTitle")}
-            </h3>
+            </h2>
             <p className="mt-0.5 text-xs text-slate-500">
               {translate(locale, "dashGradeTrendSubtitle")}
             </p>
@@ -1362,7 +1362,7 @@ export default async function DashboardPage() {
                             {range?.start ?? translate(locale, "dashPairShort", { slot: s.slot })}
                           </span>
                           {range ? (
-                            <span className="text-[11px] tabular-nums text-slate-400">{range.end}</span>
+                            <span className="text-[11px] tabular-nums text-slate-500">{range.end}</span>
                           ) : null}
                         </span>
                         <span className="relative flex w-3 shrink-0 justify-center">

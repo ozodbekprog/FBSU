@@ -91,7 +91,7 @@ export function ImageBlockEditor({
         placeholder={t("brdImageCaption")}
         maxLength={2000}
         onChange={(e) => onChange({ ...block, caption: e.target.value })}
-        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none"
+        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-800 placeholder:text-slate-500 focus:border-blue-400 focus:outline-none"
       />
     </div>
   );

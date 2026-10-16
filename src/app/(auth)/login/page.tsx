@@ -309,8 +309,9 @@ export default function LoginPage() {
             </div>
             <form onSubmit={onSubmit} className="mt-8 space-y-5">
               <div>
-                <Label>{t("authEmail")}</Label>
+                <Label htmlFor="login-email">{t("authEmail")}</Label>
                 <Input
+                  id="login-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -320,9 +321,10 @@ export default function LoginPage() {
                 />
               </div>
               <div>
-                <Label>{t("authPassword")}</Label>
+                <Label htmlFor="login-password">{t("authPassword")}</Label>
                 <div className="relative">
                   <Input
+                    id="login-password"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

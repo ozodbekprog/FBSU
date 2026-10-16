@@ -96,7 +96,7 @@ export function TextBlockEditor({
           const text = event.clipboardData.getData("text/plain");
           document.execCommand("insertText", false, text);
         }}
-        className="text-sm leading-6 text-slate-800 focus:outline-none empty:before:block empty:before:content-[attr(data-placeholder)] empty:before:text-slate-400"
+        className="text-sm leading-6 text-slate-800 focus:outline-none empty:before:block empty:before:content-[attr(data-placeholder)] empty:before:text-slate-500"
       />
     </div>
   );
