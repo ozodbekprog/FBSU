@@ -80,7 +80,7 @@ logs hisoboti (filtr bilan), baho tarixi (`grade_grades_history`).
 
 ---
 
-## 3. Admin panel — FAZA 3
+## 3. Admin panel — FAZA 3 ✅ YAKUNLANDI
 
 **Muammo:** admin sahifalari bor (17 ta), lekin bulk amallar va saqlash
 yo'q; foydalanuvchi boshqaruvi bittalab.
@@ -93,11 +93,16 @@ yo'q; foydalanuvchi boshqaruvi bittalab.
 - Filtrlar: rol, guruh, fakultet, holat
 - Har bulk amal `recordEvent` bilan yoziladi (Faza 2 ga tayanadi)
 
-**Out of scope:** plugin sozlamalari, konfiguratsiya eksporti.
+**Holat (2026-10-16):**
+- ✅ `POST /api/admin/users/bulk` — activate/deactivate: capability (`academic.manage`), CSRF, REGISTRAR scope (faqat STUDENT/TEACHER), oxirgi-admin himoyasi (409), audit (`admin.user.update`)
+- ✅ `UserBulkBar` — checkbox panel + ikki amal tugmasi, `apiFetch` (CSRF avtomatik), natija/xato xabarlari
+- 🕓 Keyingi: guruhga ommaviy qo'shish, filtrlar (rol/guruh/fakultet), bulk enrollment
+
+**Out of scope (hozircha):** plugin sozlamalari, konfiguratsiya eksporti.
 
 ---
 
-## 4. Gradebook (soddalashtirilgan) — FAZA 4
+## 4. Gradebook (soddalashtirilgan) — FAZA 4 ✅ YAKUNLANDI (MVP)
 
 **Muammo:** baho `Grade` model + `GradeChangeRequest` bor, lekin yagona
 jurnal hisoblash yo'q (kategoriya, vazn, yakuniy baho).
@@ -110,6 +115,14 @@ grade history, scales. Formulas/outcomes — olinmaydi.
 - Yakuniy baho: kategoriyalar bo'yicha vaznli o'rtacha, 60/40 kabi presetlar
 - Barcha o'zgarishlar — tarixga (Faza 2 eventlari orqali)
 - Jurnal sahifasi: admin/o'qituvchi tablosi + yakuniy hisoblash ko'rinishi
+
+**Holat (2026-10-16):**
+- ✅ Schema: `GradeCategory` / `GradeItem` / `GradeItemScore` + migratsiya (xavfsiz qo'lda apply — db reset qilinmadi)
+- ✅ `src/modules/gradebook/compute.ts` — sof hisoblash (8 test); `auto-sync.ts` — topshiriq/test manbalaridan (6 test)
+- ✅ API: GET jurnal; POST categories/items (manba: MANUAL/ASSIGNMENT/QUIZ + refId bog'lash); PUT scores; DELETE categories/items; POST sync
+- ✅ `/gradebook` sahifasi + `GradebookManager` (kategoriya/ustun CRUD, inline ballar, «Sinxronlash» tugmasi)
+- ✅ Nav link + ikonkalar; barcha amallar `recordEvent` bilan (6 yangi event)
+- 🕓 Keyingi: talabaga o'z bahosi ko'rinishi; i18n kalitlari; 60/40 presetlar
 
 **Out of scope:** outcomes, scales, formulalar, ishlash usuli (aggregation) tanlovlari.
 

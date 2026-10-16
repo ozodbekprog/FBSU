@@ -11,6 +11,8 @@ const createSchema = z.object({
   name: z.string().trim().min(1).max(120),
   weight: z.number().int().min(0).optional(),
   maxScore: z.number().positive().optional(),
+  source: z.enum(["MANUAL", "ASSIGNMENT", "QUIZ"]).optional(),
+  refId: z.string().min(1).optional(),
 });
 
 export async function POST(request: Request) {
@@ -36,6 +38,30 @@ export async function POST(request: Request) {
     }
   }
 
+  const source = parsed.data.source ?? "MANUAL";
+  let refId: string | null = null;
+  if (source === "ASSIGNMENT") {
+    const refIdValue = parsed.data.refId;
+    if (!refIdValue) {
+      return Response.json({ ok: false, error: "Topshiriq tanlanmagan" }, { status: 400 });
+    }
+    const assignment = await prisma.assignment.findFirst({ where: { id: refIdValue, courseId: course.id } });
+    if (!assignment) {
+      return Response.json({ ok: false, error: "Topshiriq bu kursda topilmadi" }, { status: 400 });
+    }
+    refId = assignment.id;
+  } else if (source === "QUIZ") {
+    const refIdValue = parsed.data.refId;
+    if (!refIdValue) {
+      return Response.json({ ok: false, error: "Test tanlanmagan" }, { status: 400 });
+    }
+    const quiz = await prisma.quiz.findFirst({ where: { id: refIdValue, courseId: course.id } });
+    if (!quiz) {
+      return Response.json({ ok: false, error: "Test bu kursda topilmadi" }, { status: 400 });
+    }
+    refId = quiz.id;
+  }
+
   const created = await prisma.gradeItem.create({
     data: {
       courseId: course.id,
@@ -43,6 +69,8 @@ export async function POST(request: Request) {
       name: parsed.data.name,
       weight: parsed.data.weight ?? 0,
       maxScore: parsed.data.maxScore ?? 100,
+      source,
+      refId,
     },
   });
 
@@ -55,6 +83,8 @@ export async function POST(request: Request) {
       name: created.name,
       weight: created.weight,
       maxScore: created.maxScore,
+      source: created.source,
+      refId: created.refId,
     },
   });
 

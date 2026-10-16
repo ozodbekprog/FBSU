@@ -47,13 +47,23 @@ export default async function GradebookPage({
   const selected = courses.find((course) => course.id === requestedId) ?? courses[0];
   if (!canManageCourse(user, selected)) redirect("/dashboard");
 
-  const [categories, items, enrollments] = await Promise.all([
+  const [categories, items, enrollments, assignments, quizzes] = await Promise.all([
     prisma.gradeCategory.findMany({ where: { courseId: selected.id }, orderBy: { position: "asc" } }),
     prisma.gradeItem.findMany({ where: { courseId: selected.id }, orderBy: { name: "asc" } }),
     prisma.enrollment.findMany({
       where: { courseId: selected.id },
       include: { user: { select: { id: true, name: true } } },
       orderBy: { createdAt: "asc" },
+    }),
+    prisma.assignment.findMany({
+      where: { courseId: selected.id },
+      select: { id: true, title: true },
+      orderBy: { title: "asc" },
+    }),
+    prisma.quiz.findMany({
+      where: { courseId: selected.id },
+      select: { id: true, title: true },
+      orderBy: { title: "asc" },
     }),
   ]);
 
@@ -186,6 +196,8 @@ export default async function GradebookPage({
           studentId: score.studentId,
           score: score.score,
         }))}
+        assignments={assignments}
+        quizzes={quizzes}
       />
     </>
   );

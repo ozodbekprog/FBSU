@@ -9,6 +9,8 @@ type Category = { id: string; name: string; weight: number };
 type Item = { id: string; name: string; categoryId: string | null; maxScore: number; weight: number };
 type Student = { id: string; name: string };
 type Score = { itemId: string; studentId: string; score: number };
+type RefOption = { id: string; title: string };
+type ItemSource = "manual" | "assignment" | "quiz";
 
 type Props = {
   courseId: string;
@@ -16,6 +18,8 @@ type Props = {
   items: Item[];
   students: Student[];
   scores: Score[];
+  assignments: RefOption[];
+  quizzes: RefOption[];
 };
 
 type ApiResponse = { ok: boolean; data?: unknown; error?: string };
@@ -28,7 +32,15 @@ function buildValues(scores: Score[]): Record<string, string> {
   return values;
 }
 
-export default function GradebookManager({ courseId, categories, items, students, scores }: Props) {
+export default function GradebookManager({
+  courseId,
+  categories,
+  items,
+  students,
+  scores,
+  assignments,
+  quizzes,
+}: Props) {
   const router = useRouter();
 
   const [categoryName, setCategoryName] = useState("");
@@ -40,6 +52,8 @@ export default function GradebookManager({ courseId, categories, items, students
 
   const [itemName, setItemName] = useState("");
   const [itemCategoryId, setItemCategoryId] = useState("");
+  const [itemSource, setItemSource] = useState<ItemSource>("manual");
+  const [itemRefId, setItemRefId] = useState("");
   const [itemWeight, setItemWeight] = useState("0");
   const [itemMaxScore, setItemMaxScore] = useState("100");
   const [itemBusy, setItemBusy] = useState(false);
@@ -131,19 +145,36 @@ export default function GradebookManager({ courseId, categories, items, students
       setItemError("Maksimal ball noldan katta bo'lishi kerak");
       return;
     }
+    if (itemSource !== "manual") {
+      const options = itemSource === "assignment" ? assignments : quizzes;
+      const label = itemSource === "assignment" ? "topshiriq" : "test";
+      if (options.length === 0) {
+        setItemError(`Bu kursda ${label} mavjud emas`);
+        return;
+      }
+      if (!itemRefId) {
+        setItemError(`${label.charAt(0).toUpperCase()}${label.slice(1)} tanlanishi shart`);
+        return;
+      }
+    }
     setItemBusy(true);
     setItemError(null);
     setItemNotice(null);
     try {
+      const payload: Record<string, unknown> = {
+        courseId,
+        categoryId: itemCategoryId || null,
+        name,
+        weight,
+        maxScore,
+      };
+      if (itemSource !== "manual") {
+        payload.source = itemSource === "assignment" ? "ASSIGNMENT" : "QUIZ";
+        payload.refId = itemRefId;
+      }
       const res = await apiFetch("/api/gradebook/items", {
         method: "POST",
-        body: JSON.stringify({
-          courseId,
-          categoryId: itemCategoryId || null,
-          name,
-          weight,
-          maxScore,
-        }),
+        body: JSON.stringify(payload),
       });
       const json = (await res.json().catch(() => null)) as ApiResponse | null;
       if (!res.ok || !json?.ok) {
@@ -152,6 +183,8 @@ export default function GradebookManager({ courseId, categories, items, students
       }
       setItemName("");
       setItemCategoryId("");
+      setItemSource("manual");
+      setItemRefId("");
       setItemWeight("0");
       setItemMaxScore("100");
       setItemNotice("Ustun qo'shildi");
@@ -396,6 +429,42 @@ export default function GradebookManager({ courseId, categories, items, students
                   ))}
                 </Select>
               </div>
+              <div>
+                <Label htmlFor="item-source">Manba</Label>
+                <Select
+                  id="item-source"
+                  value={itemSource}
+                  disabled={itemBusy}
+                  onChange={(event) => {
+                    setItemSource(event.target.value as ItemSource);
+                    setItemRefId("");
+                  }}
+                >
+                  <option value="manual">Qo&apos;lda</option>
+                  <option value="assignment">Topshiriq</option>
+                  <option value="quiz">Test</option>
+                </Select>
+              </div>
+              {itemSource !== "manual" ? (
+                <div>
+                  <Label htmlFor="item-ref">
+                    {itemSource === "assignment" ? "Topshiriq" : "Test"}
+                  </Label>
+                  <Select
+                    id="item-ref"
+                    value={itemRefId}
+                    disabled={itemBusy}
+                    onChange={(event) => setItemRefId(event.target.value)}
+                  >
+                    <option value="">Tanlang</option>
+                    {(itemSource === "assignment" ? assignments : quizzes).map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.title}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              ) : null}
               <div>
                 <Label htmlFor="item-weight">Vazn</Label>
                 <Input
