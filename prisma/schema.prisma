@@ -173,6 +173,8 @@ model User {
   curatedGroups Group[]   @relation("GroupCurator")
 
   @@index([groupId])
+  gradeItemScores    GradeItemScore[]
+
   @@index([subGroupId])
   @@index([role])
   @@index([facultyId])
@@ -230,6 +232,8 @@ model Course {
   bankQuestions      BankQuestion[]
   bonusPoints        BonusPoint[]
   studyPlans         StudyPlan[]
+  gradeCategories    GradeCategory[]
+  gradeItems         GradeItem[]
 
   @@index([teacherId])
 }
@@ -1579,4 +1583,55 @@ model Publication {
   @@index([userId])
   @@index([year])
   @@index([kind])
+}
+
+enum GradeItemSource {
+  MANUAL
+  ASSIGNMENT
+  QUIZ
+}
+
+model GradeCategory {
+  id       String @id @default(cuid())
+  courseId String
+  name     String
+  weight   Int
+  position Int    @default(0)
+
+  course Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  items  GradeItem[]
+
+  @@index([courseId])
+}
+
+model GradeItem {
+  id         String          @id @default(cuid())
+  courseId   String
+  categoryId String?
+  name       String
+  weight     Int             @default(0)
+  maxScore   Float           @default(100)
+  source     GradeItemSource @default(MANUAL)
+  refId      String?
+
+  course   Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  category GradeCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  scores   GradeItemScore[]
+
+  @@index([courseId])
+  @@index([categoryId])
+}
+
+model GradeItemScore {
+  id        String   @id @default(cuid())
+  itemId    String
+  studentId String
+  score     Float
+  updatedAt DateTime @updatedAt
+
+  item    GradeItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  student User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, studentId])
+  @@index([studentId])
 }

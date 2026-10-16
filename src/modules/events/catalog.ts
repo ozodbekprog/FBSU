@@ -56,6 +56,12 @@ export const EVENTS = {
   "submission.regrade_request": { category: "grades", label: "Qayta baholash so'rovi" },
   "grade_change.approve": { category: "grades", label: "Baho o'zgarishi tasdiqlandi" },
   "grade_change.reject": { category: "grades", label: "Baho o'zgarishi rad etildi" },
+  "gradebook.category.create": { category: "grades", label: "Baho kategoriyasi yaratildi" },
+  "gradebook.category.delete": { category: "grades", label: "Baho kategoriyasi o'chirildi" },
+  "gradebook.item.create": { category: "grades", label: "Baho ustuni yaratildi" },
+  "gradebook.item.update": { category: "grades", label: "Baho ustuni tahrirlandi" },
+  "gradebook.item.delete": { category: "grades", label: "Baho ustuni o'chirildi" },
+  "gradebook.score.set": { category: "grades", label: "Baho kiritildi" },
 
   "schedule.approve": { category: "schedule", label: "Jadval yozuvi tasdiqlandi" },
   "schedule.approve_all": { category: "schedule", label: "Jadval ommaviy tasdiqlandi" },
