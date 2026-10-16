@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { logAudit } from "@/server/audit";
+import { hasCapability } from "@/modules/capabilities";
 
 const patchSchema = z.object({
   name: z.string().trim().min(2).max(60).optional(),
@@ -14,7 +15,7 @@ const patchSchema = z.object({
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (!hasCapability(user.role, "academic.manage")) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const csrfValid = await verifyCsrfFromRequest(request);
   if (!csrfValid) {
@@ -96,7 +97,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 export async function DELETE(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (!hasCapability(user.role, "academic.manage")) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const csrfValid = await verifyCsrfFromRequest(request);
   if (!csrfValid) {

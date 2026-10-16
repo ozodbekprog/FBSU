@@ -141,6 +141,22 @@ describe("capability: 2-to'lqim (hujjatlar, moliya, testlar)", () => {
     expect(hasCapability("TYUTOR", "documents.view")).toBe(false);
   });
 
+  it("dars jadvalini admin, registrator va o'qituvchi boshqaradi", () => {
+    for (const role of ["ADMIN", "REGISTRAR", "TEACHER"]) {
+      expect(hasCapability(role, "schedule.manage"), role).toBe(true);
+    }
+    for (const role of ["DEKAN", "TYUTOR", "STUDENT", "XODIM"]) {
+      expect(hasCapability(role, "schedule.manage"), role).toBe(false);
+    }
+  });
+
+  it("imtihonlarni faqat admin va o'qituvchi boshqaradi", () => {
+    expect(hasCapability("ADMIN", "exams.manage")).toBe(true);
+    expect(hasCapability("TEACHER", "exams.manage")).toBe(true);
+    expect(hasCapability("REGISTRAR", "exams.manage")).toBe(false);
+    expect(hasCapability("DEKAN", "exams.manage")).toBe(false);
+  });
+
   it("transkriptlarni ko'rish doirasi", () => {
     for (const role of ["ADMIN", "TEACHER", "DEKAN", "KAFEDRA_MUDIRI"]) {
       expect(hasCapability(role, "transcript.view"), role).toBe(true);

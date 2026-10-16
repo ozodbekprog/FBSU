@@ -3,6 +3,7 @@ import { Prisma, type DocumentKind } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
+import { hasCapability } from "@/modules/capabilities";
 
 const documentInclude = {
   createdBy: { select: { id: true, name: true } },
@@ -40,7 +41,7 @@ async function runAction(action: Action, documentId: string, input: z.infer<type
   const document = await prisma.document.findUnique({ where: { id: documentId } });
   if (!document) return Response.json({ ok: false, error: "Hujjat topilmadi" }, { status: 404 });
 
-  const isManager = role === "ADMIN" || role === "REGISTRAR";
+  const isManager = hasCapability(role, "academic.manage");
   const isCreator = document.createdById === userId;
 
   if (action === "submit") {
@@ -190,7 +191,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   const document = await prisma.document.findUnique({ where: { id } });
   if (!document) return Response.json({ ok: false, error: "Hujjat topilmadi" }, { status: 404 });
 
-  const isManager = user.role === "ADMIN" || user.role === "REGISTRAR";
+  const isManager = hasCapability(user.role, "academic.manage");
   const isCreator = document.createdById === user.id;
   const hasFieldEdit =
     parsed.data.title !== undefined || parsed.data.body !== undefined || parsed.data.signerId !== undefined;

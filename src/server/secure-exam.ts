@@ -5,6 +5,7 @@ import { asAnswers, autoScore, toQuestionFull } from "@/components/quiz/shared";
 import { EXAM_CODE_MAX_RETRIES } from "@/modules/secure-exam/config";
 import { generateExamCode, isValidExamCode, normalizeExamCode } from "@/modules/secure-exam/code";
 import { isEnrolled } from "@/components/quiz/server";
+import { hasCapability } from "@/modules/capabilities";
 import { EVENT_LABEL_KEY } from "@/components/secure-exam/labels";
 import { uz } from "@/i18n/uz";
 import { effectiveDeadline, remainingSeconds } from "@/modules/secure-exam/policy";
@@ -26,8 +27,8 @@ export function canManageSecureExam(
   exam: { createdById: string; courseTeacherId: string },
   user: { id: string; role: Role },
 ): boolean {
+  if (!hasCapability(user.role, "exams.manage")) return false;
   if (user.role === "ADMIN") return true;
-  if (user.role !== "TEACHER") return false;
   return exam.createdById === user.id || exam.courseTeacherId === user.id;
 }
 
