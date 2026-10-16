@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { hasCapability } from "@/modules/capabilities";
 import { notifyUser } from "@/server/notify";
 import { logAudit } from "@/server/audit";
 
@@ -16,11 +17,7 @@ export async function POST(
   if (!user) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-  if (
-    user.role !== "ADMIN" &&
-    user.role !== "REGISTRAR" &&
-    user.role !== "REKTOR"
-  ) {
+  if (!hasCapability(user.role, "gradeChanges.review")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

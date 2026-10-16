@@ -1,3 +1,5 @@
+import { hasCapability } from "@/modules/capabilities";
+
 export type AppRole =
   | "ADMIN"
   | "REKTOR"
@@ -10,38 +12,18 @@ export type AppRole =
   | "STUDENT"
   | "XODIM";
 
-const MONITORING_ROLES: readonly string[] = [
-  "ADMIN",
-  "REKTOR",
-  "PRO_RECTOR",
-  "DEKAN",
-  "KAFEDRA_MUDIRI",
-  "REGISTRAR",
-];
-
-const APPROVER_ROLES: readonly string[] = ["ADMIN", "REGISTRAR"];
-
 const LEADERSHIP_ROLES: readonly string[] = ["REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI"];
 
-const ANALYSIS_ROLES: readonly string[] = [
-  "ADMIN",
-  "TEACHER",
-  "REKTOR",
-  "PRO_RECTOR",
-  "DEKAN",
-  "KAFEDRA_MUDIRI",
-];
-
 export function canViewMonitoring(role: string): boolean {
-  return MONITORING_ROLES.includes(role);
+  return hasCapability(role, "monitoring.view");
 }
 
 export function canViewAnalysis(role: string): boolean {
-  return ANALYSIS_ROLES.includes(role);
+  return hasCapability(role, "analysis.view");
 }
 
 export function canApprove(role: string): boolean {
-  return APPROVER_ROLES.includes(role);
+  return hasCapability(role, "approvals.decide");
 }
 
 export function isLeadership(role: string): boolean {
@@ -53,10 +35,9 @@ export function isTyutor(role: string): boolean {
 }
 
 export function canScanAccess(role: string): boolean {
-  // Buxgalter skanerlamaydi — u faqat o'tish tarihini ko'radi.
-  return ["ADMIN", "REGISTRAR", "XODIM"].includes(role);
+  return hasCapability(role, "access.scan");
 }
 
 export function canViewAccessLogs(role: string): boolean {
-  return ["ADMIN", "REGISTRAR", "XODIM", "REKTOR", "PRO_RECTOR", "BUXGALTER"].includes(role);
+  return hasCapability(role, "access.viewLogs");
 }

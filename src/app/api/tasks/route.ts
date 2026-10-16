@@ -1,19 +1,9 @@
 import { z } from "zod";
-import type { Role } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
+import { hasCapability } from "@/modules/capabilities";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
-
-const MANAGER_ROLES: Role[] = [
-  "ADMIN",
-  "REKTOR",
-  "PRO_RECTOR",
-  "DEKAN",
-  "KAFEDRA_MUDIRI",
-  "REGISTRAR",
-  "TYUTOR",
-];
 
 const dueAtSchema = z
   .string()
@@ -33,7 +23,7 @@ export async function GET() {
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   if (user.role === "STUDENT") return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
-  const isManager = MANAGER_ROLES.includes(user.role);
+  const isManager = hasCapability(user.role, "tasks.manage");
 
   const tasks = await prisma.workTask.findMany({
     where: isManager ? {} : { assignedToId: user.id },
@@ -50,7 +40,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (!MANAGER_ROLES.includes(user.role)) {
+  if (!hasCapability(user.role, "tasks.manage")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

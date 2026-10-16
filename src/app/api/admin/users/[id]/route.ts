@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/server/audit";
 import { userSelect } from "../select";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
+import { hasCapability } from "@/modules/capabilities";
 
 const patchSchema = z.object({
   name: z.string().trim().min(2).max(100).optional(),
@@ -23,10 +24,6 @@ const patchSchema = z.object({
 const LAST_ADMIN_ERROR = "Oxirgi adminni o'chirib/pasaytirib bo'lmaydi";
 const REGISTRAR_MANAGED_ROLES: readonly Role[] = ["STUDENT", "TEACHER"];
 
-function canManageUsers(role: Role) {
-  return role === "ADMIN" || role === "REGISTRAR";
-}
-
 async function countActiveAdmins() {
   return prisma.user.count({ where: { role: "ADMIN", isActive: true } });
 }
@@ -34,7 +31,7 @@ async function countActiveAdmins() {
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (!canManageUsers(user.role)) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (!hasCapability(user.role, "academic.manage")) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const csrfValid = await verifyCsrfFromRequest(request);
   if (!csrfValid) {
@@ -184,7 +181,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (!canManageUsers(user.role)) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (!hasCapability(user.role, "academic.manage")) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const csrfValid = await verifyCsrfFromRequest(_request);
   if (!csrfValid) {

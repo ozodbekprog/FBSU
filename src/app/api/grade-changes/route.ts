@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { hasCapability } from "@/modules/capabilities";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
@@ -7,8 +8,7 @@ export async function GET(request: Request) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const isReviewer =
-    user.role === "ADMIN" || user.role === "REGISTRAR" || user.role === "REKTOR";
+  const isReviewer = hasCapability(user.role, "gradeChanges.review");
   const url = new URL(request.url);
   const statusParam = url.searchParams.get("status");
   const status =
