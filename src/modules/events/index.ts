@@ -1,6 +1,7 @@
 export {
   EVENTS,
   EVENT_CATEGORIES,
+  EVENT_CATEGORY_LABELS,
   eventLabel,
   eventsByCategory,
   isEventName,

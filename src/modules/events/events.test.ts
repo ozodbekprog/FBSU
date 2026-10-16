@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   EVENTS,
   EVENT_CATEGORIES,
+  EVENT_CATEGORY_LABELS,
   eventLabel,
   eventsByCategory,
   isEventName,
@@ -13,6 +14,12 @@ describe("event katalogi: butunlik", () => {
     for (const [name, definition] of Object.entries(EVENTS)) {
       expect(definition.label.length, name).toBeGreaterThan(3);
       expect(EVENT_CATEGORIES, name).toContain(definition.category);
+    }
+  });
+
+  it("har bir kategoriya uchun o'zbekcha label bor", () => {
+    for (const category of EVENT_CATEGORIES) {
+      expect(EVENT_CATEGORY_LABELS[category].length, category).toBeGreaterThan(3);
     }
   });
 

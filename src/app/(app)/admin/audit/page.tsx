@@ -6,13 +6,21 @@ import { Button, Card, CardBody, Input, Label, PageHeader, Select } from "@/comp
 import AuditLogTable, { type AuditLogItem } from "@/components/admin/AuditLogTable";
 import { auditActionLabel } from "./labels";
 import { getDictionary, getLocale, t as translate, type Dictionary } from "@/i18n";
+import {
+  EVENT_CATEGORIES,
+  EVENT_CATEGORY_LABELS,
+  EVENTS,
+  eventsByCategory,
+  isEventName,
+  type EventCategory,
+} from "@/modules/events";
 
 const PAGE_SIZE = 100;
 
 export default async function AdminAuditPage({
   searchParams,
 }: {
-  searchParams: Promise<{ action?: string; date?: string; page?: string }>;
+  searchParams: Promise<{ action?: string; date?: string; category?: string; page?: string }>;
 }) {
   await requireRole(["ADMIN"]);
   const locale = await getLocale();
@@ -22,6 +30,10 @@ export default async function AdminAuditPage({
 
   const action = typeof params.action === "string" ? params.action.trim() : "";
   const date = typeof params.date === "string" ? params.date.trim() : "";
+  const categoryRaw = typeof params.category === "string" ? params.category.trim() : "";
+  const category = (EVENT_CATEGORIES as readonly string[]).includes(categoryRaw)
+    ? (categoryRaw as EventCategory)
+    : "";
   const pageParam = Number(params.page);
   const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
 
@@ -29,7 +41,11 @@ export default async function AdminAuditPage({
   const dayEnd = dayStart ? new Date(dayStart.getTime() + 24 * 60 * 60 * 1000) : null;
 
   const where: Prisma.AuditLogWhereInput = {};
-  if (action) where.action = action;
+  if (action) {
+    where.action = action;
+  } else if (category) {
+    where.action = { in: eventsByCategory(category) };
+  }
   if (dayStart && dayEnd) where.createdAt = { gte: dayStart, lt: dayEnd };
 
   const [total, logs, actionGroups] = await Promise.all([
@@ -48,6 +64,13 @@ export default async function AdminAuditPage({
     }),
   ]);
 
+  const categoryCounts = new Map<EventCategory, number>();
+  for (const group of actionGroups) {
+    if (!isEventName(group.action)) continue;
+    const key = EVENTS[group.action].category;
+    categoryCounts.set(key, (categoryCounts.get(key) ?? 0) + group._count._all);
+  }
+
   const items: AuditLogItem[] = logs.map((log) => ({
     id: log.id,
     action: log.action,
@@ -58,7 +81,7 @@ export default async function AdminAuditPage({
     actor: log.actor,
   }));
 
-  const hasFilters = Boolean(action || date);
+  const hasFilters = Boolean(action || category || date);
 
   return (
     <>
@@ -76,6 +99,19 @@ export default async function AdminAuditPage({
                     {auditActionLabel(group.action, tr)} ({group._count._all})
                   </option>
                 ))}
+              </Select>
+            </div>
+            <div className="w-full sm:w-56">
+              <Label>Kategoriya</Label>
+              <Select name="category" defaultValue={category}>
+                <option value="">Barcha kategoriyalar</option>
+                {EVENT_CATEGORIES.map((item) =>
+                  categoryCounts.get(item) ? (
+                    <option key={item} value={item}>
+                      {EVENT_CATEGORY_LABELS[item]} ({categoryCounts.get(item)})
+                    </option>
+                  ) : null,
+                )}
               </Select>
             </div>
             <div className="w-full sm:w-48">
@@ -109,7 +145,7 @@ export default async function AdminAuditPage({
         total={total}
         page={page}
         pageCount={Math.max(1, Math.ceil(total / PAGE_SIZE))}
-        query={{ action, date }}
+        query={{ action, date, category }}
       />
     </>
   );

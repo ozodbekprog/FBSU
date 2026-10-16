@@ -120,6 +120,23 @@ export const EVENT_CATEGORIES: readonly EventCategory[] = [
   "system",
 ];
 
+export const EVENT_CATEGORY_LABELS: Record<EventCategory, string> = {
+  auth: "Autentifikatsiya",
+  users: "Foydalanuvchilar",
+  courses: "Kurslar",
+  enrollments: "Ro'yxatga olish",
+  attendance: "Davomat",
+  exams: "Imtihonlar",
+  grades: "Baholash",
+  schedule: "Jadval",
+  documents: "Hujjatlar",
+  finance: "Moliya",
+  salary: "Oylik",
+  chat: "Chat",
+  communication: "Aloqa",
+  system: "Tizim",
+};
+
 export function isEventName(value: string): value is EventName {
   return Object.hasOwn(EVENTS, value);
 }

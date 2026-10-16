@@ -69,11 +69,12 @@ logs hisoboti (filtr bilan), baho tarixi (`grade_grades_history`).
 - Admin sahifasi: filtrlab ko'rish (user, tur, sana, kurs)
 
 **Holat (2026-10-16):**
-- ✅ `src/modules/events/` — katalog: 61 event × 14 kategoriya, `isEventName`, `eventsByCategory`, `eventLabel` + 5 test
+- ✅ `src/modules/events/` — katalog: 61 event × 14 kategoriya, `isEventName`, `eventsByCategory`, `eventLabel`, `EVENT_CATEGORY_LABELS` + 7 test
 - ✅ `recordEvent` — yagona nuqta (mavjud `logAudit`ga delegatsiya qiladi — string'lar barqaror)
-- ✅ Pilot migratsiya: `api/grade-changes/[id]` (approve/reject)
+- ✅ To'liq migratsiya: barcha `await logAudit` chaqiruvlari (25 fayl, 32 chaqiruv) `recordEvent`ga o'tdi — codemod: `scripts/events-migrate.mjs` (dry-run + katalog validatsiyasi bilan)
+- ✅ Admin sahifada **kategoriya filtri** (uz label'lar, sonlar bilan, pagination'da saqlanadi)
 - ℹ️ `AuditLog` model va `/admin/audit` sahifasi (filtr + pagination) allaqachon mavjud edi — qayta qurilmadi, ustiga **standart qatlam** qo'shildi
-- 🕓 Keyingi: 58 fayldagi `logAudit` chaqiruvlarini bosqichma-bosqich `recordEvent`ga o'tkazish; admin sahifasiga kategoriya filtri
+- 🕓 Keyingi: login/logout eventlarini auth oqimiga ulash (hozir qisman), `createAuditLog` (lib) chaqiruvlarini ham bosqichma-bosqich o'tkazish
 
 **Out of scope:** real-time stream, tashqi logstore, observability.
 
