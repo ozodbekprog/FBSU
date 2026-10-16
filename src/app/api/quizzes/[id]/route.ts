@@ -5,6 +5,7 @@ import { quizUpdateSchema } from "@/components/quiz/schema";
 import { publicError } from "@/components/quiz/server";
 import { toQuestionFull, toQuestionPublic } from "@/components/quiz/shared";
 import { notifyCourseStudents } from "@/server/notify";
+import { hasCapability } from "@/modules/capabilities";
 
 const dueAtSchema = z.string().trim().min(1).nullable().optional();
 
@@ -31,7 +32,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
   });
   if (!quiz) return Response.json({ ok: false, error: "Test topilmadi" }, { status: 404 });
 
-  const staff = user.role === "ADMIN" || user.role === "TEACHER";
+  const staff = hasCapability(user.role, "quiz.manage");
   const questions = quiz.questions.map(toQuestionFull);
 
   if (staff) {
@@ -62,7 +63,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (!hasCapability(user.role, "quiz.manage")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -122,7 +123,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (!hasCapability(user.role, "quiz.manage")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

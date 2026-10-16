@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { buildTranscript } from "@/components/transcript/transcript-data";
+import { hasCapability } from "@/modules/capabilities";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
@@ -25,12 +26,7 @@ export async function GET(request: Request) {
     return Response.json({ ok: false, error: "studentId parametri kerak" }, { status: 400 });
   }
 
-  if (
-    user.role !== "ADMIN" &&
-    user.role !== "TEACHER" &&
-    user.role !== "DEKAN" &&
-    user.role !== "KAFEDRA_MUDIRI"
-  ) {
+  if (!hasCapability(user.role, "transcript.view")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

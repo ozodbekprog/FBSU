@@ -108,6 +108,41 @@ describe("capability: yangi migratsiya qatlamlari", () => {
   });
 });
 
+describe("capability: 2-to'lqim (hujjatlar, moliya, testlar)", () => {
+  it("moliya yozuvlarini ko'rish doirasi", () => {
+    for (const role of ["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"]) {
+      expect(hasCapability(role, "finance.view"), role).toBe(true);
+    }
+    for (const role of ["TEACHER", "DEKAN", "TYUTOR", "XODIM"]) {
+      expect(hasCapability(role, "finance.view"), role).toBe(false);
+    }
+  });
+
+  it("sertifikat chiqarish faqat admin va o'qituvchi", () => {
+    expect(hasCapability("ADMIN", "certificates.issue")).toBe(true);
+    expect(hasCapability("TEACHER", "certificates.issue")).toBe(true);
+    expect(hasCapability("DEKAN", "certificates.issue")).toBe(false);
+    expect(hasCapability("REGISTRAR", "certificates.issue")).toBe(false);
+  });
+
+  it("diplomlarni ko'rish doirasi", () => {
+    for (const role of ["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"]) {
+      expect(hasCapability(role, "diplomas.view"), role).toBe(true);
+    }
+    expect(hasCapability("TEACHER", "diplomas.view")).toBe(false);
+    expect(hasCapability("TYUTOR", "diplomas.view")).toBe(false);
+  });
+
+  it("transkriptlarni ko'rish doirasi", () => {
+    for (const role of ["ADMIN", "TEACHER", "DEKAN", "KAFEDRA_MUDIRI"]) {
+      expect(hasCapability(role, "transcript.view"), role).toBe(true);
+    }
+    for (const role of ["REGISTRAR", "TYUTOR", "STUDENT", "XODIM"]) {
+      expect(hasCapability(role, "transcript.view"), role).toBe(false);
+    }
+  });
+});
+
 describe("capability: umumiy qoidalar", () => {
   it("admin hamma capability'ga ega", () => {
     expect(hasAllCapabilities("ADMIN", ALL_CAPABILITIES)).toBe(true);

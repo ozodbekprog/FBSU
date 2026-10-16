@@ -39,7 +39,10 @@ tor (G3). Har yangi sahifa — yangi xavf.
 - ✅ `api/admin/users` + `[id]` → `academic.manage` (ADMIN, REGISTRAR parity)
 - ✅ `api/grade-changes` + `[id]` → `gradeChanges.review`
 - ✅ `api/tasks` + `[id]` → `tasks.manage`
-- 🕓 Qolgan fayllar: `node scripts/role-audit.mjs` hisobotiga qarab, to'lqinlab o'tiladi
+- ✅ 2-to'lqim: `api/quizzes` x2 → `quiz.manage`; `api/finance/contracts` + `payments` → `finance.view` + `academic.manage`; `api/diplomas` → `diplomas.view` + `academic.manage`; `api/transcript` → `transcript.view`; `api/certificates` + `certificate-access` → `certificates.issue`
+- ✅ 13 fayl migratsiya qilindi, audit: 596 → 565 xom tekshiruv
+- 🕓 Katta to'lqinlar: `layout.tsx` (36), `dashboard/page.tsx` (35), `schedule/*`, `exams/*`, `documents/*`, `workload`, `attendance`
+- ⚠️ Qaror kerak: `BUXGALTER` hozir `finance.view`ga ega emas (eski kodda ham yo'q edi) — moliya bo'limi uchun ochish tavsiya etiladi
 - Qo'shildi: `src/modules/capabilities/server.ts` — `requireApiCapability` / `requirePageCapability` (yangi endpointlar uchun yagona nuqta)
 
 **Out of scope (hozircha):** role override admin UI, custom rollar, per-user grant.

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { quizCreateSchema } from "@/components/quiz/schema";
 import { publicError } from "@/components/quiz/server";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
+import { hasCapability } from "@/modules/capabilities";
 
 const dueAtSchema = z.string().trim().min(1).nullable().optional();
 
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
       return Response.json({ ok: true, data: quizzes });
     }
 
-    if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+    if (!hasCapability(user.role, "quiz.manage")) {
       return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
 
@@ -69,7 +70,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (!hasCapability(user.role, "quiz.manage")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

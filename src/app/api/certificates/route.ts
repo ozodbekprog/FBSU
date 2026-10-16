@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canManageCertificate } from "@/components/certificates/certificate-access";
 import { logAudit } from "@/server/audit";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
+import { hasCapability } from "@/modules/capabilities";
 
 const createSchema = z.object({
   courseId: z.string().trim().min(1),
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
     return Response.json({ ok: true, data: certificates });
   }
 
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (!hasCapability(user.role, "certificates.issue")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
   if (!user) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (!hasCapability(user.role, "certificates.issue")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

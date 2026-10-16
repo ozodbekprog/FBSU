@@ -1,12 +1,11 @@
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
-import { Prisma, type Role } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { logAudit } from "@/server/audit";
-
-const VIEW_ROLES: Role[] = ["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"];
+import { hasCapability } from "@/modules/capabilities";
 
 const createSchema = z.object({
   studentId: z.string().trim().min(1),
@@ -32,7 +31,7 @@ export async function GET() {
     return Response.json({ ok: true, data: diplomas });
   }
 
-  if (!VIEW_ROLES.includes(user.role)) {
+  if (!hasCapability(user.role, "diplomas.view")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -47,7 +46,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") {
+  if (!hasCapability(user.role, "academic.manage")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
