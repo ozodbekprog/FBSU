@@ -65,7 +65,7 @@ export const ROLE_CAPABILITIES: Record<RoleName, readonly Capability[]> = {
     "documents.view",
     "schedule.manage",
   ],
-  BUXGALTER: ["finance.manage", "access.viewLogs"],
+  BUXGALTER: ["finance.manage", "finance.view", "access.viewLogs"],
   TYUTOR: ["curator.manage", "tasks.manage"],
   TEACHER: [
     "analysis.view",

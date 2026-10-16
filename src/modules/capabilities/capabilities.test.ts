@@ -110,7 +110,7 @@ describe("capability: yangi migratsiya qatlamlari", () => {
 
 describe("capability: 2-to'lqim (hujjatlar, moliya, testlar)", () => {
   it("moliya yozuvlarini ko'rish doirasi", () => {
-    for (const role of ["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"]) {
+    for (const role of ["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR", "BUXGALTER"]) {
       expect(hasCapability(role, "finance.view"), role).toBe(true);
     }
     for (const role of ["TEACHER", "DEKAN", "TYUTOR", "XODIM"]) {
