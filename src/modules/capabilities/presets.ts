@@ -39,6 +39,7 @@ export const ROLE_CAPABILITIES: Record<RoleName, readonly Capability[]> = {
     "tasks.manage",
     "finance.view",
     "diplomas.view",
+    "documents.view",
   ],
   PRO_RECTOR: [
     "monitoring.view",
@@ -47,6 +48,7 @@ export const ROLE_CAPABILITIES: Record<RoleName, readonly Capability[]> = {
     "tasks.manage",
     "finance.view",
     "diplomas.view",
+    "documents.view",
   ],
   DEKAN: ["monitoring.view", "analysis.view", "tasks.manage", "transcript.view"],
   KAFEDRA_MUDIRI: ["monitoring.view", "analysis.view", "tasks.manage", "transcript.view"],
@@ -60,6 +62,7 @@ export const ROLE_CAPABILITIES: Record<RoleName, readonly Capability[]> = {
     "tasks.manage",
     "finance.view",
     "diplomas.view",
+    "documents.view",
   ],
   BUXGALTER: ["finance.manage", "access.viewLogs"],
   TYUTOR: ["curator.manage", "tasks.manage"],

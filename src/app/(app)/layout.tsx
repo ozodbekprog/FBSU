@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser, isStaff, canViewSalary, canManageSalary } from "@/lib/auth";
 import { canViewAnalysis } from "@/modules/roles/access";
+import { hasCapability } from "@/modules/capabilities";
 import { getModuleFlags } from "@/server/settings";
 import { getMaintenanceMode } from "@/server/maintenance";
 import { getDictionary, getLocale } from "@/i18n";
@@ -69,7 +70,7 @@ export default async function AppLayout({
       links: [
         { href: "/dashboard", label: dictionary.navDashboard },
         { href: "/assistant", label: dictionary.navAssistant },
-        ...(user.role === "OTA_ONA" ? [{ href: "/parent", label: dictionary.parentTitle }] : []),
+        ...(hasCapability(user.role, "parent.viewChild") ? [{ href: "/parent", label: dictionary.parentTitle }] : []),
         { href: "/courses", label: dictionary.navCourses },
         { href: "/schedule", label: dictionary.navSchedule },
         { href: "/calendar", label: dictionary.navCalendar },
@@ -120,17 +121,17 @@ export default async function AppLayout({
               },
             ]
           : []),
-        ...(["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"].includes(user.role)
+        ...(hasCapability(user.role, "documents.view")
           ? [{ href: "/documents", label: dictionary.docTitle }]
           : []),
-        ...(["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"].includes(user.role)
+        ...(hasCapability(user.role, "diplomas.view")
           ? [{ href: "/diplomas", label: dictionary.dipTitle }]
           : []),
-        ...(["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR", "STUDENT"].includes(user.role)
+        ...(hasCapability(user.role, "finance.view") || user.role === "STUDENT"
           ? [{ href: "/finance", label: dictionary.finTitle }]
           : []),
         { href: "/my-qr", label: dictionary.accMyQr },
-        ...(["ADMIN", "REGISTRAR", "XODIM", "REKTOR", "PRO_RECTOR"].includes(user.role)
+        ...(hasCapability(user.role, "access.viewLogs")
           ? [{ href: "/access", label: dictionary.accTitle }]
           : []),
         // Buxgalter oylik hisobini qo'lda kiritadi — turniket qo'riqchisi
@@ -147,16 +148,16 @@ export default async function AppLayout({
     {
       label: dictionary.navGroupManage,
       links: [
-        ...(["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR"].includes(user.role)
+        ...(hasCapability(user.role, "monitoring.view")
           ? [{ href: "/monitoring", label: dictionary.navMonitoring }]
           : []),
         ...(["ADMIN", "REKTOR", "PRO_RECTOR", "REGISTRAR"].includes(user.role)
           ? [{ href: "/admissions", label: dictionary.qblTitle }]
           : []),
-        ...(user.role === "ADMIN" || user.role === "REGISTRAR"
+        ...(hasCapability(user.role, "approvals.decide")
           ? [{ href: "/approvals", label: dictionary.navApprovals }]
           : []),
-        ...(isStaff(user.role) || user.role === "TYUTOR"
+        ...(hasCapability(user.role, "curator.manage")
           ? [{ href: "/curator", label: dictionary.navCurator }]
           : []),
         ...(user.role === "REGISTRAR"

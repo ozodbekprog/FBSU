@@ -40,7 +40,9 @@ tor (G3). Har yangi sahifa — yangi xavf.
 - ✅ `api/grade-changes` + `[id]` → `gradeChanges.review`
 - ✅ `api/tasks` + `[id]` → `tasks.manage`
 - ✅ 2-to'lqim: `api/quizzes` x2 → `quiz.manage`; `api/finance/contracts` + `payments` → `finance.view` + `academic.manage`; `api/diplomas` → `diplomas.view` + `academic.manage`; `api/transcript` → `transcript.view`; `api/certificates` + `certificate-access` → `certificates.issue`
-- ✅ 13 fayl migratsiya qilindi, audit: 596 → 565 xom tekshiruv
+- ✅ 3-to'lqim: `layout.tsx` nav ruxsatlari → `parent.viewChild`, `documents.view`, `diplomas.view`, `finance.view`, `access.viewLogs`, `monitoring.view`, `approvals.decide`, `curator.manage` (24 capability)
+- ℹ️ `dashboard/page.tsx` va `layout`dagi ROLE_MENU/label ternariylari — UI varianti, ruxsat emas: migratsiya talab qilinmaydi
+- ✅ 13 fayl migratsiya qilindi (1–3 to'lqim jami 19 fayl), audit: 596 → 552 xom tekshiruv
 - 🕓 Katta to'lqinlar: `layout.tsx` (36), `dashboard/page.tsx` (35), `schedule/*`, `exams/*`, `documents/*`, `workload`, `attendance`
 - ⚠️ Qaror kerak: `BUXGALTER` hozir `finance.view`ga ega emas (eski kodda ham yo'q edi) — moliya bo'limi uchun ochish tavsiya etiladi
 - Qo'shildi: `src/modules/capabilities/server.ts` — `requireApiCapability` / `requirePageCapability` (yangi endpointlar uchun yagona nuqta)

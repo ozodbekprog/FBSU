@@ -18,6 +18,7 @@ export const CAPABILITIES = {
   "finance.manage": { scope: "global", label: "Moliya va to'lovlarni boshqarish" },
   "certificates.issue": { scope: "global", label: "Sertifikat chiqarish" },
   "diplomas.view": { scope: "global", label: "Diplomlarni ko'rish" },
+  "documents.view": { scope: "global", label: "Hujjatlarni ko'rish" },
   "transcript.view": { scope: "global", label: "Transkriptlarni ko'rish" },
   "staff.manage": { scope: "global", label: "Xodimlarni boshqarish" },
   "curator.manage": { scope: "global", label: "Kurator paneli" },

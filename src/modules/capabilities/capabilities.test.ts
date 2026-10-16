@@ -133,6 +133,14 @@ describe("capability: 2-to'lqim (hujjatlar, moliya, testlar)", () => {
     expect(hasCapability("TYUTOR", "diplomas.view")).toBe(false);
   });
 
+  it("hujjatlarni ko'rish doirasi", () => {
+    for (const role of ["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"]) {
+      expect(hasCapability(role, "documents.view"), role).toBe(true);
+    }
+    expect(hasCapability("TEACHER", "documents.view")).toBe(false);
+    expect(hasCapability("TYUTOR", "documents.view")).toBe(false);
+  });
+
   it("transkriptlarni ko'rish doirasi", () => {
     for (const role of ["ADMIN", "TEACHER", "DEKAN", "KAFEDRA_MUDIRI"]) {
       expect(hasCapability(role, "transcript.view"), role).toBe(true);
