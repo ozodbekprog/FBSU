@@ -62,6 +62,7 @@ export const EVENTS = {
   "gradebook.item.update": { category: "grades", label: "Baho ustuni tahrirlandi" },
   "gradebook.item.delete": { category: "grades", label: "Baho ustuni o'chirildi" },
   "gradebook.score.set": { category: "grades", label: "Baho kiritildi" },
+  "gradebook.sync": { category: "grades", label: "Baho avtomatik sinxronlandi" },
 
   "schedule.approve": { category: "schedule", label: "Jadval yozuvi tasdiqlandi" },
   "schedule.approve_all": { category: "schedule", label: "Jadval ommaviy tasdiqlandi" },

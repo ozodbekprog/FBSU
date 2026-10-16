@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { hasCapability } from "@/modules/capabilities";
 import { canManageCourse } from "@/components/courses/course-access";
 import { computeFinalGrades } from "@/modules/gradebook/compute";
+import GradebookManager from "@/components/gradebook/GradebookManager";
 import { Badge, Button, Card, CardBody, EmptyState, Label, PageHeader, Select, Table } from "@/components/ui";
 
 function finalTone(percent: number | null) {
@@ -164,6 +165,28 @@ export default async function GradebookPage({
           </Table>
         </Card>
       )}
+
+      <GradebookManager
+        courseId={selected.id}
+        categories={categories.map((category) => ({
+          id: category.id,
+          name: category.name,
+          weight: category.weight,
+        }))}
+        items={items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          categoryId: item.categoryId,
+          maxScore: item.maxScore,
+          weight: item.weight,
+        }))}
+        students={students}
+        scores={scores.map((score) => ({
+          itemId: score.itemId,
+          studentId: score.studentId,
+          score: score.score,
+        }))}
+      />
     </>
   );
 }
