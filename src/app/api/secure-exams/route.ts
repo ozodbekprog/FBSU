@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { publicError } from "@/components/quiz/server";
 import { secureExamCreateSchema } from "@/modules/secure-exam/schemas";
 import { generateUniqueExamCode } from "@/server/secure-exam";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 
 function parseDate(value: string): Date | null {
   const date = new Date(value);
@@ -71,9 +71,7 @@ export async function POST(request: Request) {
         status: "SCHEDULED",
       },
     });
-    await logAudit({
-      actorId: user.id,
-      action: "secure-exam.create",
+    await recordEvent(user.id, "secure-exam.create", {
       entity: "SecureExam",
       entityId: exam.id,
       meta: { quizId: quiz.id, courseId: quiz.courseId, code: exam.code },

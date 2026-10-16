@@ -2,7 +2,7 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 import { hasCapability } from "@/modules/capabilities";
 
 const createSchema = z.object({
@@ -121,9 +121,7 @@ export async function POST(request: Request) {
     },
   });
 
-  await logAudit({
-    actorId: user.id,
-    action: "finance.contract.create",
+  await recordEvent(user.id, "finance.contract.create", {
     entity: "Contract",
     entityId: contract.id,
     meta: { studentId: student.id, year: contract.year, amount: contract.amount },

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ORDER_STATUSES } from "@/components/orders/shared";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 
 const patchSchema = z.object({
   status: z.enum(ORDER_STATUSES),
@@ -41,9 +41,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     },
   });
 
-  await logAudit({
-    actorId: user.id,
-    action: "order.update",
+  await recordEvent(user.id, "order.update", {
     entity: "Order",
     entityId: order.id,
     meta: { from: existing.status, to: order.status },

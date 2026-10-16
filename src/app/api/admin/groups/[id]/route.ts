@@ -2,7 +2,7 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 import { hasCapability } from "@/modules/capabilities";
 
 const patchSchema = z.object({
@@ -78,9 +78,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     include: { _count: { select: { users: true } } },
   });
 
-  await logAudit({
-    actorId: user.id,
-    action: "admin.group.update",
+  await recordEvent(user.id, "admin.group.update", {
     entity: "Group",
     entityId: id,
     meta: {
@@ -118,9 +116,7 @@ export async function DELETE(request: Request, ctx: { params: Promise<{ id: stri
   }
 
   await prisma.group.delete({ where: { id } });
-  await logAudit({
-    actorId: user.id,
-    action: "admin.group.delete",
+  await recordEvent(user.id, "admin.group.delete", {
     entity: "Group",
     entityId: id,
     meta: { name: group.name, year: group.year },

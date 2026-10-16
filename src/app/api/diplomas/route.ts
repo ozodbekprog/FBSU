@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 import { hasCapability } from "@/modules/capabilities";
 
 const createSchema = z.object({
@@ -88,9 +88,7 @@ export async function POST(request: Request) {
         include: diplomaInclude,
       });
 
-      await logAudit({
-        actorId: user.id,
-        action: "diploma.create",
+      await recordEvent(user.id, "diploma.create", {
         entity: "Diploma",
         entityId: diploma.id,
         meta: { number: diploma.number, studentId: student.id },

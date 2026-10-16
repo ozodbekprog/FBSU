@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import type { Prisma, Role } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 import { userSelect } from "../select";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { hasCapability } from "@/modules/capabilities";
@@ -159,9 +159,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   const emailChanged = parsed.data.email !== undefined && parsed.data.email.toLowerCase() !== target.email;
   const passwordChanged = parsed.data.password !== undefined;
   if (roleChanged || activeChanged || emailChanged || passwordChanged) {
-    await logAudit({
-      actorId: user.id,
-      action: "admin.user.update",
+    await recordEvent(user.id, "admin.user.update", {
       entity: "User",
       entityId: id,
       meta: {
@@ -207,9 +205,7 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
   }
 
   await prisma.user.update({ where: { id }, data: { isActive: false } });
-  await logAudit({
-    actorId: user.id,
-    action: "admin.user.update",
+  await recordEvent(user.id, "admin.user.update", {
     entity: "User",
     entityId: id,
     meta: { role: target.role, isActive: false, previousIsActive: target.isActive },

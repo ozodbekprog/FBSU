@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canManageCertificate } from "@/components/certificates/certificate-access";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { hasCapability } from "@/modules/capabilities";
 
@@ -127,9 +127,7 @@ export async function POST(request: Request) {
       data: { courseId, studentId, grade, issuedById: user.id },
       include: certificateInclude,
     });
-    await logAudit({
-      actorId: user.id,
-      action: "certificate.issue",
+    await recordEvent(user.id, "certificate.issue", {
       entity: "Certificate",
       entityId: certificate.id,
       meta: { courseId, studentId, grade },

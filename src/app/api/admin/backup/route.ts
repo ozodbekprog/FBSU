@@ -1,7 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getClientInfo } from "@/lib/audit";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 import { getBackupSnapshot } from "./data";
 
 export async function GET(request: Request) {
@@ -18,9 +18,7 @@ export async function GET(request: Request) {
     return Response.json({ ok: true, data: { exportedAt: snapshot.exportedAt, counts: snapshot.counts } });
   }
 
-  await logAudit({
-    actorId: user.id,
-    action: "BACKUP_EXPORT",
+  await recordEvent(user.id, "BACKUP_EXPORT", {
     entity: "Backup",
     meta: { counts: snapshot.counts },
     ...getClientInfo(request),

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 import { canApproveSchedule } from "../_helpers";
 
 export async function POST(request: Request) {
@@ -24,9 +24,7 @@ export async function POST(request: Request) {
   });
 
   if (result.count > 0) {
-    await logAudit({
-      actorId: user.id,
-      action: "schedule.approve_all",
+    await recordEvent(user.id, "schedule.approve_all", {
       entity: "ScheduleEntry",
       meta: { count: result.count, groupId },
     });
