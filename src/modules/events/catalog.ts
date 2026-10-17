@@ -104,6 +104,7 @@ export const EVENTS = {
   ANNOUNCEMENT_DELETE: { category: "system", label: "E'lon o'chirildi" },
   MAINTENANCE_TOGGLE: { category: "system", label: "Texnik rejim o'zgardi" },
   "system.cron": { category: "system", label: "Fon vazifalari ishga tushdi" },
+  "system.ownerRecovery": { category: "system", label: "OWNER akkaunt tiklandi" },
   BACKUP_EXPORT: { category: "system", label: "Zaxira eksport qilindi" },
   "order.update": { category: "system", label: "Buyurtma holati o'zgardi" },
   BUG_REPORTED: { category: "system", label: "Xato haqida xabar" },

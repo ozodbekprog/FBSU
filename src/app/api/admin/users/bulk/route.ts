@@ -50,6 +50,10 @@ export async function POST(request: Request) {
     select: { id: true, role: true, isActive: true },
   });
 
+  if (targets.some((target) => target.role === "OWNER")) {
+    return Response.json({ ok: false, error: "OWNER akkauntiga tegib bo'lmaydi" }, { status: 403 });
+  }
+
   if (user.role === "REGISTRAR" && targets.some((target) => !REGISTRAR_MANAGED_ROLES.includes(target.role))) {
     return Response.json({ ok: false, error: "Ruxsat yo'q" }, { status: 403 });
   }

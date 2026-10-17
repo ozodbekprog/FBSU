@@ -136,3 +136,25 @@ Faza 1 Capability ──→ Faza 2 Event+Audit ──→ Faza 3 Admin bulk
 ```
 
 Faza 2 dan keyin 3 va 4 parallel bo'lishi mumkin (orkestr ishchilari bilan).
+
+---
+
+## OWNER va recovery
+
+**OWNER** — tizimning eng yuqori roli: barcha bo'limlarga to'liq huquq, rol cheklovlari
+va capability tekshiruvlari unga ta'sir qilmaydi. Akkaunt himoyalangan: UI/API orqali
+yaratilmaydi, tahrirlanmaydi va o'chirilmaydi — faqat server-side recovery skript bilan
+yaratiladi yoki tiklanadi.
+
+```bash
+OWNER_EMAIL=egasi@example.com OWNER_RECOVERY_SECRET=... node scripts/owner-recovery.mjs
+```
+
+- `OWNER_EMAIL` va `OWNER_RECOVERY_SECRET` majburiy; ikkalasi ham serverdagi env faylida
+  (`0600`) saqlanadi, repoga yoki logga tushmaydi.
+- Parol `--password <p>` bilan berilishi mumkin (kamida 12 belgi); berilmasa bir martalik
+  parol generatsiya qilinadi va **faqat bir marta** konsolga chiqadi — xavfsiz saqlang.
+- Mavjud akkaunt tiklanganda `role=OWNER`, `isActive=true`, yangi parol hash va
+  `sessionEpoch` oshiriladi (barcha eski sessiyalar bekor bo'ladi).
+- Har bir ishga tushirish `AuditLog` ga `action: "system.ownerRecovery"` bilan yoziladi
+  (`entity: "User"`, `meta: { email, mode }`).

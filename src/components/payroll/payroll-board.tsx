@@ -114,7 +114,7 @@ type Dict = {
   roleBuxgalter: string; roleXodim: string; roleTyutor: string;
   roleHead: string; roleDean: string; roleProRector: string; roleRector: string;
   roleAdmin: string; roleRegistrar: string; roleTeacher: string;
-  roleStudent: string; roleParent: string;
+  roleStudent: string; roleParent: string; roleOwner?: string;
 };
 
 type Tab = "records" | "grants";
@@ -179,6 +179,7 @@ export default function PayrollBoard({
       TEACHER: d.roleTeacher,
       STUDENT: d.roleStudent,
       OTA_ONA: d.roleParent,
+      OWNER: d.roleOwner ?? d.roleAdmin,
     }),
     [d],
   );

@@ -24,6 +24,10 @@ const patchSchema = z.object({
 const LAST_ADMIN_ERROR = "Oxirgi adminni o'chirib/pasaytirib bo'lmaydi";
 const REGISTRAR_MANAGED_ROLES: readonly Role[] = ["STUDENT", "TEACHER"];
 
+function isOwnerDemotion(role: Role | undefined) {
+  return role !== undefined && role !== "OWNER";
+}
+
 async function countActiveAdmins() {
   return prisma.user.count({ where: { role: "ADMIN", isActive: true } });
 }
@@ -46,6 +50,19 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json({ ok: false, error: "Ma'lumotlar xato" }, { status: 400 });
+  }
+
+  if (target.role === "OWNER") {
+    if (user.role !== "OWNER") {
+      return Response.json({ ok: false, error: "OWNER akkauntini o'zgartirishga ruxsat yo'q" }, { status: 403 });
+    }
+    const nextRole: Role | undefined = parsed.data.role;
+    if (isOwnerDemotion(nextRole)) {
+      return Response.json({ ok: false, error: "OWNER rolini pasaytirib bo'lmaydi" }, { status: 403 });
+    }
+    if (parsed.data.isActive === false) {
+      return Response.json({ ok: false, error: "OWNER akkauntini faolsizlantirib bo'lmaydi" }, { status: 403 });
+    }
   }
 
   if (user.role === "REGISTRAR") {
@@ -193,6 +210,10 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
 
   const target = await prisma.user.findUnique({ where: { id } });
   if (!target) return Response.json({ ok: false, error: "Foydalanuvchi topilmadi" }, { status: 404 });
+
+  if (target.role === "OWNER") {
+    return Response.json({ ok: false, error: "OWNER akkauntini o'chirib bo'lmaydi" }, { status: 403 });
+  }
 
   if (user.role === "REGISTRAR" && !REGISTRAR_MANAGED_ROLES.includes(target.role)) {
     return Response.json({ ok: false, error: "Bu foydalanuvchini o'chirishga ruxsat yo'q" }, { status: 403 });

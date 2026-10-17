@@ -27,6 +27,7 @@ const ROLE_LABEL_KEY: Record<Role, keyof Dictionary> = {
   STUDENT: "mscRoleStudent",
   XODIM: "mscRoleStaff",
   OTA_ONA: "mscRoleParent",
+  OWNER: "roleOwner",
 };
 
 const SEARCH_DEBOUNCE_MS = 350;

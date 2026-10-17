@@ -29,6 +29,7 @@ const ROLE_META: Record<Role, { label: string; color: string }> = {
   ADMIN: { label: "Adminlar", color: "#e11d48" },
   XODIM: { label: "Xodimlar", color: "#64748b" },
   OTA_ONA: { label: "Ota-onalar", color: "#0d9488" },
+  OWNER: { label: "Egasi", color: "#c9a227" },
 };
 
 function startOfDay(date: Date) {

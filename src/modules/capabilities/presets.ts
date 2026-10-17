@@ -1,6 +1,7 @@
 import { ALL_CAPABILITIES, type Capability } from "./registry";
 
 export type RoleName =
+  | "OWNER"
   | "ADMIN"
   | "REKTOR"
   | "PRO_RECTOR"
@@ -15,6 +16,7 @@ export type RoleName =
   | "OTA_ONA";
 
 export const ROLES: readonly RoleName[] = [
+  "OWNER",
   "ADMIN",
   "REKTOR",
   "PRO_RECTOR",
@@ -30,6 +32,7 @@ export const ROLES: readonly RoleName[] = [
 ];
 
 export const ROLE_CAPABILITIES: Record<RoleName, readonly Capability[]> = {
+  OWNER: ALL_CAPABILITIES,
   ADMIN: ALL_CAPABILITIES,
   REKTOR: [
     "monitoring.view",

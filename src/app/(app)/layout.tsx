@@ -256,8 +256,10 @@ export default async function AppLayout({
     : groups;
 
   const roleLabel =
-    user.role === "ADMIN"
-      ? dictionary.roleAdmin
+    user.role === "OWNER"
+      ? dictionary.roleOwner
+      : user.role === "ADMIN"
+        ? dictionary.roleAdmin
       : user.role === "REKTOR"
         ? dictionary.roleRector
         : user.role === "PRO_RECTOR"

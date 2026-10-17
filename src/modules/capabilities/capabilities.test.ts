@@ -172,6 +172,11 @@ describe("capability: umumiy qoidalar", () => {
     expect(hasAllCapabilities("ADMIN", ALL_CAPABILITIES)).toBe(true);
   });
 
+  it("owner hamma capability'ga ega", () => {
+    expect(hasAllCapabilities("OWNER", ALL_CAPABILITIES)).toBe(true);
+    expect(capabilitiesFor("OWNER")).toEqual(ALL_CAPABILITIES);
+  });
+
   it("talabada global huquq yo'q", () => {
     expect(capabilitiesFor("STUDENT")).toHaveLength(0);
   });
