@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Button, Card, CardBody, CardHeader, Input, Label, Select, Table } from "@/components/ui";
 import { apiFetch } from "@/lib/api";
+import { useI18n } from "@/components/i18n/LocaleProvider";
 
 type Category = { id: string; name: string; weight: number };
 type Item = { id: string; name: string; categoryId: string | null; maxScore: number; weight: number };
@@ -42,6 +43,7 @@ export default function GradebookManager({
   quizzes,
 }: Props) {
   const router = useRouter();
+  const { t } = useI18n();
 
   const [categoryName, setCategoryName] = useState("");
   const [categoryWeight, setCategoryWeight] = useState("10");
@@ -77,11 +79,11 @@ export default function GradebookManager({
     const name = categoryName.trim();
     const weight = Number(categoryWeight);
     if (!name) {
-      setCategoryError("Nom kiritilishi shart");
+      setCategoryError(t("gbErrNameRequired"));
       return;
     }
     if (!Number.isInteger(weight) || weight < 0 || weight > 100) {
-      setCategoryError("Vazn 0 va 100 orasida butun son bo'lishi kerak");
+      setCategoryError(t("gbErrWeightRange"));
       return;
     }
     setCategoryBusy(true);
@@ -94,22 +96,22 @@ export default function GradebookManager({
       });
       const json = (await res.json().catch(() => null)) as ApiResponse | null;
       if (!res.ok || !json?.ok) {
-        setCategoryError(json?.error ?? "Kategoriya qo'shilmadi");
+        setCategoryError(json?.error ?? t("gbErrCategoryAdd"));
         return;
       }
       setCategoryName("");
       setCategoryWeight("10");
-      setCategoryNotice("Kategoriya qo'shildi");
+      setCategoryNotice(t("gbCategoryAdded"));
       router.refresh();
     } catch {
-      setCategoryError("Tarmoq xatosi");
+      setCategoryError(t("gbErrNetwork"));
     } finally {
       setCategoryBusy(false);
     }
   }
 
   async function deleteCategory(id: string) {
-    if (!window.confirm("Kategoriya o'chirilsinmi? Ustunlar kategoriyasiz qoladi.")) return;
+    if (!window.confirm(t("gbCategoryDeleteConfirm"))) return;
     setCategoryDeleting(id);
     setCategoryError(null);
     setCategoryNotice(null);
@@ -117,13 +119,13 @@ export default function GradebookManager({
       const res = await apiFetch(`/api/gradebook/categories/${id}`, { method: "DELETE" });
       const json = (await res.json().catch(() => null)) as ApiResponse | null;
       if (!res.ok || !json?.ok) {
-        setCategoryError(json?.error ?? "Kategoriya o'chirilmadi");
+        setCategoryError(json?.error ?? t("gbErrCategoryDelete"));
         return;
       }
-      setCategoryNotice("Kategoriya o'chirildi");
+      setCategoryNotice(t("gbCategoryDeleted"));
       router.refresh();
     } catch {
-      setCategoryError("Tarmoq xatosi");
+      setCategoryError(t("gbErrNetwork"));
     } finally {
       setCategoryDeleting(null);
     }
@@ -134,26 +136,26 @@ export default function GradebookManager({
     const weight = Number(itemWeight);
     const maxScore = Number(itemMaxScore);
     if (!name) {
-      setItemError("Nom kiritilishi shart");
+      setItemError(t("gbErrNameRequired"));
       return;
     }
     if (!Number.isInteger(weight) || weight < 0) {
-      setItemError("Vazn noldan kichik bo'lmagan butun son bo'lishi kerak");
+      setItemError(t("gbErrWeightNonNegative"));
       return;
     }
     if (!Number.isFinite(maxScore) || maxScore <= 0) {
-      setItemError("Maksimal ball noldan katta bo'lishi kerak");
+      setItemError(t("gbErrMaxScore"));
       return;
     }
     if (itemSource !== "manual") {
       const options = itemSource === "assignment" ? assignments : quizzes;
-      const label = itemSource === "assignment" ? "topshiriq" : "test";
+      const kind = (itemSource === "assignment" ? t("gbSourceAssignment") : t("gbSourceQuiz")).toLowerCase();
       if (options.length === 0) {
-        setItemError(`Bu kursda ${label} mavjud emas`);
+        setItemError(t("gbErrRefMissing", { kind }));
         return;
       }
       if (!itemRefId) {
-        setItemError(`${label.charAt(0).toUpperCase()}${label.slice(1)} tanlanishi shart`);
+        setItemError(t("gbErrRefRequired", { kind }));
         return;
       }
     }
@@ -178,7 +180,7 @@ export default function GradebookManager({
       });
       const json = (await res.json().catch(() => null)) as ApiResponse | null;
       if (!res.ok || !json?.ok) {
-        setItemError(json?.error ?? "Ustun qo'shilmadi");
+        setItemError(json?.error ?? t("gbErrItemAdd"));
         return;
       }
       setItemName("");
@@ -187,17 +189,17 @@ export default function GradebookManager({
       setItemRefId("");
       setItemWeight("0");
       setItemMaxScore("100");
-      setItemNotice("Ustun qo'shildi");
+      setItemNotice(t("gbItemAdded"));
       router.refresh();
     } catch {
-      setItemError("Tarmoq xatosi");
+      setItemError(t("gbErrNetwork"));
     } finally {
       setItemBusy(false);
     }
   }
 
   async function deleteItem(id: string) {
-    if (!window.confirm("Ustun va unga tegishli barcha ballar o'chirilsinmi?")) return;
+    if (!window.confirm(t("gbItemDeleteConfirm"))) return;
     setItemDeleting(id);
     setItemError(null);
     setItemNotice(null);
@@ -205,13 +207,13 @@ export default function GradebookManager({
       const res = await apiFetch(`/api/gradebook/items/${id}`, { method: "DELETE" });
       const json = (await res.json().catch(() => null)) as ApiResponse | null;
       if (!res.ok || !json?.ok) {
-        setItemError(json?.error ?? "Ustun o'chirilmadi");
+        setItemError(json?.error ?? t("gbErrItemDelete"));
         return;
       }
-      setItemNotice("Ustun o'chirildi");
+      setItemNotice(t("gbItemDeleted"));
       router.refresh();
     } catch {
-      setItemError("Tarmoq xatosi");
+      setItemError(t("gbErrNetwork"));
     } finally {
       setItemDeleting(null);
     }
@@ -231,7 +233,7 @@ export default function GradebookManager({
     if (!Number.isFinite(score) || score < 0 || score > item.maxScore) {
       setScoreErrors((prev) => ({
         ...prev,
-        [key]: `0 - ${item.maxScore} orasida`,
+        [key]: t("gbErrScoreRange", { max: item.maxScore }),
       }));
       return;
     }
@@ -245,12 +247,12 @@ export default function GradebookManager({
       });
       const json = (await res.json().catch(() => null)) as ApiResponse | null;
       if (!res.ok || !json?.ok) {
-        setScoreErrors((prev) => ({ ...prev, [key]: json?.error ?? "Saqlanmadi" }));
+        setScoreErrors((prev) => ({ ...prev, [key]: json?.error ?? t("gbErrSave") }));
         return;
       }
       router.refresh();
     } catch {
-      setScoreErrors((prev) => ({ ...prev, [key]: "Tarmoq xatosi" }));
+      setScoreErrors((prev) => ({ ...prev, [key]: t("gbErrNetwork") }));
     } finally {
       setSaving(null);
     }
@@ -267,14 +269,14 @@ export default function GradebookManager({
       });
       const json = (await res.json().catch(() => null)) as ApiResponse | null;
       if (!res.ok || !json?.ok) {
-        setSyncError(json?.error ?? "Sinxronlash amalga oshmadi");
+        setSyncError(json?.error ?? t("gbErrSync"));
         return;
       }
       const data = json.data as { synced?: number } | undefined;
-      setSyncNotice(`${data?.synced ?? 0} ta baho sinxronlandi`);
+      setSyncNotice(t("gbSynced", { count: data?.synced ?? 0 }));
       router.refresh();
     } catch {
-      setSyncError("Tarmoq xatosi");
+      setSyncError(t("gbErrNetwork"));
     } finally {
       setSyncBusy(false);
     }
@@ -284,14 +286,12 @@ export default function GradebookManager({
     <div className="mt-6 space-y-6">
       <Card>
         <CardBody className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-slate-500">
-            Topshiriq va testlardan baholarni avtomatik sinxronlash.
-          </p>
+          <p className="text-sm text-slate-500">{t("gbSyncHint")}</p>
           <div className="flex items-center gap-3">
             {syncNotice ? <Badge tone="green">{syncNotice}</Badge> : null}
             {syncError ? <span className="text-sm text-rose-600">{syncError}</span> : null}
             <Button disabled={syncBusy} onClick={runSync}>
-              {syncBusy ? "Sinxronlanmoqda..." : "Sinxronlash"}
+              {syncBusy ? t("gbSyncing") : t("gbSync")}
             </Button>
           </div>
         </CardBody>
@@ -299,8 +299,8 @@ export default function GradebookManager({
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader
-            title="Kategoriyalar"
-            subtitle={`${categories.length} ta kategoriya`}
+            title={t("gbCategoriesTitle")}
+            subtitle={t("gbCategoriesCount", { count: categories.length })}
             action={categoryNotice ? <Badge tone="green">{categoryNotice}</Badge> : null}
           />
           <CardBody className="space-y-4">
@@ -321,18 +321,18 @@ export default function GradebookManager({
                       disabled={categoryDeleting === category.id}
                       onClick={() => deleteCategory(category.id)}
                     >
-                      O&apos;chirish
+                      {t("gbDelete")}
                     </Button>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-slate-500">Hali kategoriya yo&apos;q.</p>
+              <p className="text-sm text-slate-500">{t("gbNoCategories")}</p>
             )}
 
             <div className="grid gap-3 sm:grid-cols-[1fr_7rem]">
               <div>
-                <Label htmlFor="category-name">Nom</Label>
+                <Label htmlFor="category-name">{t("gbName")}</Label>
                 <Input
                   id="category-name"
                   value={categoryName}
@@ -342,7 +342,7 @@ export default function GradebookManager({
                 />
               </div>
               <div>
-                <Label htmlFor="category-weight">Vazn %</Label>
+                <Label htmlFor="category-weight">{t("gbWeightPercent")}</Label>
                 <Input
                   id="category-weight"
                   type="number"
@@ -357,7 +357,7 @@ export default function GradebookManager({
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <Button disabled={categoryBusy} onClick={submitCategory}>
-                Kategoriya qo&apos;shish
+                {t("gbAddCategory")}
               </Button>
               {categoryError ? <span className="text-sm text-rose-600">{categoryError}</span> : null}
             </div>
@@ -366,8 +366,8 @@ export default function GradebookManager({
 
         <Card>
           <CardHeader
-            title="Ustunlar"
-            subtitle={`${items.length} ta ustun`}
+            title={t("gbItemsTitle")}
+            subtitle={t("gbItemsCount", { count: items.length })}
             action={itemNotice ? <Badge tone="green">{itemNotice}</Badge> : null}
           />
           <CardBody className="space-y-4">
@@ -383,7 +383,10 @@ export default function GradebookManager({
                       <span className="min-w-0 truncate text-sm font-medium text-slate-800">
                         {item.name}
                         <span className="ml-1 font-normal text-slate-400">
-                          · {category ? category.name : "kategoriyasiz"} · maks {item.maxScore}
+                          {" · "}
+                          {category ? category.name : t("gbNoCategory")}
+                          {" · "}
+                          {t("gbMaxScoreInline", { score: item.maxScore })}
                         </span>
                       </span>
                       <Button
@@ -392,19 +395,19 @@ export default function GradebookManager({
                         disabled={itemDeleting === item.id}
                         onClick={() => deleteItem(item.id)}
                       >
-                        O&apos;chirish
+                        {t("gbDelete")}
                       </Button>
                     </li>
                   );
                 })}
               </ul>
             ) : (
-              <p className="text-sm text-slate-500">Hali ustun yo&apos;q.</p>
+              <p className="text-sm text-slate-500">{t("gbNoItems")}</p>
             )}
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <Label htmlFor="item-name">Nom</Label>
+                <Label htmlFor="item-name">{t("gbName")}</Label>
                 <Input
                   id="item-name"
                   value={itemName}
@@ -414,14 +417,14 @@ export default function GradebookManager({
                 />
               </div>
               <div>
-                <Label htmlFor="item-category">Kategoriya</Label>
+                <Label htmlFor="item-category">{t("gbCategory")}</Label>
                 <Select
                   id="item-category"
                   value={itemCategoryId}
                   disabled={itemBusy}
                   onChange={(event) => setItemCategoryId(event.target.value)}
                 >
-                  <option value="">Kategoriyasiz</option>
+                  <option value="">{t("gbUncategorized")}</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
@@ -430,7 +433,7 @@ export default function GradebookManager({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="item-source">Manba</Label>
+                <Label htmlFor="item-source">{t("gbItemSource")}</Label>
                 <Select
                   id="item-source"
                   value={itemSource}
@@ -440,15 +443,15 @@ export default function GradebookManager({
                     setItemRefId("");
                   }}
                 >
-                  <option value="manual">Qo&apos;lda</option>
-                  <option value="assignment">Topshiriq</option>
-                  <option value="quiz">Test</option>
+                  <option value="manual">{t("gbSourceManual")}</option>
+                  <option value="assignment">{t("gbSourceAssignment")}</option>
+                  <option value="quiz">{t("gbSourceQuiz")}</option>
                 </Select>
               </div>
               {itemSource !== "manual" ? (
                 <div>
                   <Label htmlFor="item-ref">
-                    {itemSource === "assignment" ? "Topshiriq" : "Test"}
+                    {itemSource === "assignment" ? t("gbSourceAssignment") : t("gbSourceQuiz")}
                   </Label>
                   <Select
                     id="item-ref"
@@ -456,7 +459,7 @@ export default function GradebookManager({
                     disabled={itemBusy}
                     onChange={(event) => setItemRefId(event.target.value)}
                   >
-                    <option value="">Tanlang</option>
+                    <option value="">{t("gbSelect")}</option>
                     {(itemSource === "assignment" ? assignments : quizzes).map((option) => (
                       <option key={option.id} value={option.id}>
                         {option.title}
@@ -466,7 +469,7 @@ export default function GradebookManager({
                 </div>
               ) : null}
               <div>
-                <Label htmlFor="item-weight">Vazn</Label>
+                <Label htmlFor="item-weight">{t("gbItemWeight")}</Label>
                 <Input
                   id="item-weight"
                   type="number"
@@ -478,7 +481,7 @@ export default function GradebookManager({
                 />
               </div>
               <div>
-                <Label htmlFor="item-max">Maksimal ball</Label>
+                <Label htmlFor="item-max">{t("gbItemMaxScore")}</Label>
                 <Input
                   id="item-max"
                   type="number"
@@ -492,7 +495,7 @@ export default function GradebookManager({
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <Button disabled={itemBusy} onClick={submitItem}>
-                Ustun qo&apos;shish
+                {t("gbAddItem")}
               </Button>
               {itemError ? <span className="text-sm text-rose-600">{itemError}</span> : null}
             </div>
@@ -501,13 +504,16 @@ export default function GradebookManager({
       </div>
 
       <Card className="overflow-hidden">
-        <CardHeader title="Ballar kiritish" subtitle={`${students.length} talaba · ${items.length} ustun`} />
+        <CardHeader
+          title={t("gbScoresTitle")}
+          subtitle={t("gbScoresSubtitle", { students: students.length, items: items.length })}
+        />
         {students.length > 0 && items.length > 0 ? (
           <Table className="max-h-[68vh] overflow-y-auto">
             <thead>
               <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
                 <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 text-left backdrop-blur">
-                  Talaba
+                  {t("gbStudent")}
                 </th>
                 {items.map((item) => (
                   <th
@@ -552,10 +558,7 @@ export default function GradebookManager({
           </Table>
         ) : (
           <CardBody>
-            <p className="text-sm text-slate-500">
-              Ballar kiritish uchun avval kategoriya va ustunlar qo&apos;shing, talabalar esa kursga
-              yozilgan bo&apos;lishi kerak.
-            </p>
+            <p className="text-sm text-slate-500">{t("gbScoresEmptyDesc")}</p>
           </CardBody>
         )}
       </Card>

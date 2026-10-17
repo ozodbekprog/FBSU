@@ -21,6 +21,8 @@ import { OralDefensePanel } from "@/components/courses/oral-defense-panel";
 import { DueChip, SubmissionBadge } from "@/components/courses/assignments-status";
 import { SimilarityPanel } from "@/components/courses/similarity-panel";
 import { AvailabilityEditor } from "@/components/courses/availability-editor";
+import { ActivityLockNotice } from "@/components/courses/activity-lock-notice";
+import { getRuleState } from "@/modules/course-rules/server";
 
 function DownloadIcon() {
   return (
@@ -220,6 +222,16 @@ export default async function AssignmentDetailPage({
   const graded = submission?.status === "GRADED";
   const percent = submission ? scorePercent(submission.score, assignment.maxScore) : null;
 
+  const ruleState = await getRuleState("ASSIGNMENT", assignment.id, now);
+  const ruleWindow = ruleState.open
+    ? null
+    : await prisma.activityRule.findUnique({
+        where: {
+          targetType_targetId: { targetType: "ASSIGNMENT", targetId: assignment.id },
+        },
+        select: { availableFrom: true, availableTo: true },
+      });
+
   return (
     <>
       <PageHeader title={assignment.title} subtitle={course.title} action={back} />
@@ -356,6 +368,12 @@ export default async function AssignmentDetailPage({
                   {translate(locale, "crsGradedAt", { date: fmtDateTime(submission.gradedAt) })}
                 </p>
               </>
+            ) : ruleState.reason ? (
+              <ActivityLockNotice
+                reason={ruleState.reason}
+                availableFrom={ruleWindow?.availableFrom ?? null}
+                availableTo={ruleWindow?.availableTo ?? null}
+              />
             ) : (
               <AssignmentsSubmit assignmentId={id} overdue={overdue} existing={submission} />
             )}

@@ -6,6 +6,7 @@ import { Badge, Button, Card, CardBody, EmptyState, Input, Label, Select, Textar
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/components/i18n/LocaleProvider";
+import { MaterialCompleteButton } from "./material-complete-button";
 
 export type MaterialTypeValue = "TEXT" | "FILE" | "VIDEO" | "LINK";
 
@@ -92,10 +93,14 @@ export function CourseMaterials({
   courseId,
   sections,
   canManage,
+  isStudent = false,
+  completedMaterialIds = [],
 }: {
   courseId: string;
   sections: CourseSection[];
   canManage: boolean;
+  isStudent?: boolean;
+  completedMaterialIds?: string[];
 }) {
   const router = useRouter();
   const { t } = useI18n();
@@ -346,6 +351,8 @@ export function CourseMaterials({
                   key={material.id}
                   material={material}
                   canManage={canManage}
+                  isStudent={isStudent}
+                  completed={completedMaterialIds.includes(material.id)}
                   busy={busy}
                   onEdit={() => setMaterialForm({ sectionId: section.id, material })}
                   onDelete={() => removeMaterial(material.id, material.title)}
@@ -395,12 +402,16 @@ export function CourseMaterials({
 function MaterialRow({
   material,
   canManage,
+  isStudent,
+  completed,
   busy,
   onEdit,
   onDelete,
 }: {
   material: CourseMaterial;
   canManage: boolean;
+  isStudent: boolean;
+  completed: boolean;
   busy: boolean;
   onEdit: () => void;
   onDelete: () => void;
@@ -464,6 +475,11 @@ function MaterialRow({
           <Button size="sm" variant="ghost" className="text-rose-600" disabled={busy} onClick={onDelete}>
             {t("crsDelete")}
           </Button>
+        </div>
+      ) : null}
+      {isStudent ? (
+        <div className="shrink-0 pt-0.5">
+          <MaterialCompleteButton materialId={material.id} initialCompleted={completed} />
         </div>
       ) : null}
     </div>

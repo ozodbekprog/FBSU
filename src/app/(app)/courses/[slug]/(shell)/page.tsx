@@ -31,6 +31,24 @@ export default async function CoursePage({
   const isEnrolled = course.enrollments.some((entry) => entry.userId === user.id);
   if (!canManage && !course.isPublished && !isEnrolled) notFound();
 
+  const isStudent = user.role === "STUDENT";
+  const materialIds = course.sections.flatMap((section) =>
+    section.materials.map((material) => material.id),
+  );
+  const completedMaterialIds =
+    isStudent && materialIds.length > 0
+      ? (
+          await prisma.activityCompletion.findMany({
+            where: {
+              studentId: user.id,
+              targetType: "MATERIAL",
+              targetId: { in: materialIds },
+            },
+            select: { targetId: true },
+          })
+        ).map((row) => row.targetId)
+      : [];
+
   return (
     <>
       {user.role === "STUDENT" && !isEnrolled && course.selfEnrollment ? (
@@ -38,7 +56,13 @@ export default async function CoursePage({
           <SelfEnrollButton courseId={course.id} />
         </div>
       ) : null}
-      <CourseMaterials courseId={course.id} sections={course.sections} canManage={canManage} />
+      <CourseMaterials
+        courseId={course.id}
+        sections={course.sections}
+        canManage={canManage}
+        isStudent={isStudent}
+        completedMaterialIds={completedMaterialIds}
+      />
       {canManage || isEnrolled ? (
         <div className="mt-6">
           <CourseReviews courseId={course.id} isEnrolled={isEnrolled} canManage={canManage} />

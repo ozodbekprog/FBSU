@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasCapability } from "@/modules/capabilities";
-import { getDictionary, getLocale } from "@/i18n";
+import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { canManageCourse } from "@/components/courses/course-access";
 import { computeFinalGrades } from "@/modules/gradebook/compute";
 import GradebookManager from "@/components/gradebook/GradebookManager";
@@ -17,7 +17,8 @@ function finalTone(percent: number | null) {
 }
 
 async function StudentGradebook({ studentId }: { studentId: string }) {
-  const dictionary = getDictionary(await getLocale());
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   const enrollments = await prisma.enrollment.findMany({
     where: { userId: studentId, status: "ACTIVE" },
     include: { course: { select: { id: true, title: true } } },
@@ -27,10 +28,10 @@ async function StudentGradebook({ studentId }: { studentId: string }) {
   if (enrollments.length === 0) {
     return (
       <>
-        <PageHeader title={dictionary.navMyGrades} subtitle="Kurslar topilmadi" />
+        <PageHeader title={dictionary.navMyGrades} subtitle={dictionary.gbCoursesNotFound} />
         <EmptyState
-          title="Kurslar yo'q"
-          description="Siz hali biror kursga yozilmagansiz. Administrator bilan bog'laning."
+          title={dictionary.gbNoCoursesTitle}
+          description={dictionary.gbNoCoursesStudentDesc}
         />
       </>
     );
@@ -60,7 +61,7 @@ async function StudentGradebook({ studentId }: { studentId: string }) {
     <>
       <PageHeader
         title={dictionary.navMyGrades}
-        subtitle={`${enrollments.length} ta kurs bo'yicha natijalar`}
+        subtitle={translate(locale, "gbStudentSubtitle", { count: enrollments.length })}
       />
 
       <div className="grid gap-4">
@@ -101,27 +102,34 @@ async function StudentGradebook({ studentId }: { studentId: string }) {
             <Card key={enrollment.course.id}>
               <CardHeader
                 title={enrollment.course.title}
-                subtitle={`${courseCategories.length} kategoriya · ${courseItems.length} baholash`}
+                subtitle={translate(locale, "gbCourseSubtitle", {
+                  categories: courseCategories.length,
+                  items: courseItems.length,
+                })}
                 action={
                   <Badge tone={finalTone(percent)}>
-                    {percent === null ? "Baho yo'q" : `${percent.toFixed(1)}%`}
+                    {percent === null ? dictionary.gbNoGrade : `${percent.toFixed(1)}%`}
                   </Badge>
                 }
               />
               <CardBody>
                 {percent === null ? (
-                  <p className="text-sm text-slate-500">Hali baho kiritilmagan</p>
+                  <p className="text-sm text-slate-500">{dictionary.gbNoGrades}</p>
                 ) : !hasCategories ? (
-                  <p className="text-sm text-slate-500">
-                    Baholar kategoriyalarga bo&apos;linmagan
-                  </p>
+                  <p className="text-sm text-slate-500">{dictionary.gbNoCategoriesSplit}</p>
                 ) : (
                   <Table>
                     <thead>
                       <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-                        <th className="border-b border-slate-100 px-0 py-2 text-left">Kategoriya</th>
-                        <th className="border-b border-slate-100 px-0 py-2 text-right">Vazn</th>
-                        <th className="border-b border-slate-100 px-0 py-2 text-right">Natija</th>
+                        <th className="border-b border-slate-100 px-0 py-2 text-left">
+                          {dictionary.gbCategory}
+                        </th>
+                        <th className="border-b border-slate-100 px-0 py-2 text-right">
+                          {dictionary.gbWeight}
+                        </th>
+                        <th className="border-b border-slate-100 px-0 py-2 text-right">
+                          {dictionary.gbResult}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -159,7 +167,8 @@ export default async function GradebookPage({
   searchParams: Promise<{ courseId?: string }>;
 }) {
   const user = await requireUser();
-  const dictionary = getDictionary(await getLocale());
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
   if (user.role === "STUDENT") return <StudentGradebook studentId={user.id} />;
   if (!hasCapability(user.role, "course.grade")) redirect("/dashboard");
 
@@ -175,10 +184,10 @@ export default async function GradebookPage({
   if (courses.length === 0) {
     return (
       <>
-        <PageHeader title={dictionary.navGradebook} subtitle="Kurslar topilmadi" />
+        <PageHeader title={dictionary.navGradebook} subtitle={dictionary.gbCoursesNotFound} />
         <EmptyState
-          title="Kurslar yo'q"
-          description="Sizga biriktirilgan kurslar mavjud emas. Administrator bilan bog'laning."
+          title={dictionary.gbNoCoursesTitle}
+          description={dictionary.gbNoCoursesStaffDesc}
         />
       </>
     );
@@ -239,14 +248,18 @@ export default async function GradebookPage({
     <>
       <PageHeader
         title={dictionary.navGradebook}
-        subtitle={`${selected.title} · ${students.length} talaba · ${items.length} ustun`}
+        subtitle={translate(locale, "gbPageSubtitle", {
+          course: selected.title,
+          students: students.length,
+          items: items.length,
+        })}
       />
 
       <form action="/gradebook" method="get" className="mb-4">
         <Card>
           <CardBody className="flex flex-wrap items-end gap-3">
             <div className="w-full sm:w-80">
-              <Label>Kurs</Label>
+              <Label>{dictionary.gbCourseLabel}</Label>
               <Select name="courseId" defaultValue={selected.id}>
                 {courses.map((course) => (
                   <option key={course.id} value={course.id}>
@@ -256,24 +269,21 @@ export default async function GradebookPage({
               </Select>
             </div>
             <Button type="submit" variant="secondary">
-              Ko&apos;rsatish
+              {dictionary.gbShow}
             </Button>
           </CardBody>
         </Card>
       </form>
 
       {!hasStructure ? (
-        <EmptyState
-          title="Baholar tuzilmasi kiritilmagan"
-          description="Bu kursda hali kategoriya va ustunlar yo'q. Baholash tuzilmasi keyingi bosqichda admin panelda sozlanadi."
-        />
+        <EmptyState title={dictionary.gbNoStructureTitle} description={dictionary.gbNoStructureDesc} />
       ) : (
         <Card className="overflow-hidden">
           <Table className="max-h-[68vh] overflow-y-auto">
             <thead>
               <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
                 <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 text-left backdrop-blur">
-                  Talaba
+                  {dictionary.gbStudent}
                 </th>
                 {categories.map((category) => (
                   <th
@@ -285,7 +295,7 @@ export default async function GradebookPage({
                   </th>
                 ))}
                 <th className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50/95 px-5 py-3 text-center backdrop-blur">
-                  Yakuniy
+                  {dictionary.gbFinal}
                 </th>
               </tr>
             </thead>

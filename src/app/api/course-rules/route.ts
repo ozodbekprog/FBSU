@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { canManageCourse } from "@/components/courses/course-access";
+import { isEnrolled } from "@/components/quiz/server";
 import { recordEvent } from "@/modules/events/record";
 
 const targetTypeSchema = z.enum(["MATERIAL", "ASSIGNMENT", "QUIZ"]);
@@ -71,7 +72,7 @@ export async function GET(request: Request) {
 
   const course = await prisma.course.findUnique({ where: { id: courseId } });
   if (!course) return Response.json({ ok: false, error: "Kurs topilmadi" }, { status: 404 });
-  if (!canManageCourse(user, course)) {
+  if (!canManageCourse(user, course) && !(await isEnrolled(course.id, user.id))) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
