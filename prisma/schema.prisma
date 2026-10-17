@@ -174,6 +174,7 @@ model User {
 
   @@index([groupId])
   gradeItemScores    GradeItemScore[]
+  activityCompletions ActivityCompletion[]
 
   @@index([subGroupId])
   @@index([role])
@@ -230,10 +231,12 @@ model Course {
   examSessions       ExamSession[]
   secureExams        SecureExam[]
   bankQuestions      BankQuestion[]
+  selfEnrollment     Boolean             @default(false)
   bonusPoints        BonusPoint[]
   studyPlans         StudyPlan[]
   gradeCategories    GradeCategory[]
   gradeItems         GradeItem[]
+  activityRules      ActivityRule[]
 
   @@index([teacherId])
 }
@@ -1634,4 +1637,37 @@ model GradeItemScore {
 
   @@unique([itemId, studentId])
   @@index([studentId])
+}
+
+enum ActivityTarget {
+  MATERIAL
+  ASSIGNMENT
+  QUIZ
+}
+
+model ActivityRule {
+  id            String         @id @default(cuid())
+  courseId      String
+  targetType    ActivityTarget
+  targetId      String
+  availableFrom DateTime?
+  availableTo   DateTime?
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([targetType, targetId])
+  @@index([courseId])
+}
+
+model ActivityCompletion {
+  id          String         @id @default(cuid())
+  studentId   String
+  targetType  ActivityTarget
+  targetId    String
+  completedAt DateTime       @default(now())
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, targetType, targetId])
+  @@index([targetId])
 }

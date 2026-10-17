@@ -63,7 +63,6 @@ export const EVENTS = {
   "gradebook.item.delete": { category: "grades", label: "Baho ustuni o'chirildi" },
   "gradebook.score.set": { category: "grades", label: "Baho kiritildi" },
   "gradebook.sync": { category: "grades", label: "Baho avtomatik sinxronlandi" },
-
   "schedule.approve": { category: "schedule", label: "Jadval yozuvi tasdiqlandi" },
   "schedule.approve_all": { category: "schedule", label: "Jadval ommaviy tasdiqlandi" },
   "schedule.status": { category: "schedule", label: "Jadval holati o'zgardi" },
@@ -102,6 +101,7 @@ export const EVENTS = {
   ANNOUNCEMENT_CREATE: { category: "system", label: "E'lon yaratildi" },
   ANNOUNCEMENT_DELETE: { category: "system", label: "E'lon o'chirildi" },
   MAINTENANCE_TOGGLE: { category: "system", label: "Texnik rejim o'zgardi" },
+  "system.cron": { category: "system", label: "Fon vazifalari ishga tushdi" },
   BACKUP_EXPORT: { category: "system", label: "Zaxira eksport qilindi" },
   "order.update": { category: "system", label: "Buyurtma holati o'zgardi" },
   BUG_REPORTED: { category: "system", label: "Xato haqida xabar" },
