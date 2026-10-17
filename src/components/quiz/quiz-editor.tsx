@@ -465,6 +465,38 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
                       <p className="mt-3 text-xs font-medium text-emerald-700">
                         {question.correct.map((value) => String(value)).join(", ")}
                       </p>
+                    ) : question.type === "MATCHING" ? (
+                      <ul className="mt-3 space-y-1.5">
+                        {question.options.map((left, index) => {
+                          const paired = question.correct[index];
+                          return (
+                            <li
+                              key={index}
+                              className="flex items-center gap-2 rounded-xl border border-teal-200 bg-teal-50/60 px-2.5 py-1.5 text-xs text-teal-900"
+                            >
+                              <span className="min-w-0 flex-1 truncate">{left}</span>
+                              <span className="shrink-0 text-teal-500">→</span>
+                              <span className="min-w-0 flex-1 truncate font-medium">
+                                {typeof paired === "string" ? paired : "—"}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : question.type === "ORDERING" ? (
+                      <ol className="mt-3 space-y-1.5">
+                        {question.options.map((value, index) => (
+                          <li
+                            key={index}
+                            className="flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/60 px-2.5 py-1.5 text-xs text-indigo-900"
+                          >
+                            <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-md bg-indigo-500 text-[10px] font-bold text-white">
+                              {index + 1}
+                            </span>
+                            <span className="min-w-0 flex-1 truncate">{value}</span>
+                          </li>
+                        ))}
+                      </ol>
                     ) : question.type !== "TEXT" ? (
                       <ul className="mt-3 grid gap-2 sm:grid-cols-2">
                         {question.options.map((option, index) => {

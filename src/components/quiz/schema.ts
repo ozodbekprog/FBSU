@@ -5,7 +5,16 @@ import {
   type QuestionType,
 } from "@/components/quiz/shared";
 
-export const questionTypeSchema = z.enum(["SINGLE", "MULTIPLE", "TEXT", "TRUE_FALSE", "SHORT_ANSWER", "NUMERIC"]);
+export const questionTypeSchema = z.enum([
+  "SINGLE",
+  "MULTIPLE",
+  "TEXT",
+  "TRUE_FALSE",
+  "SHORT_ANSWER",
+  "NUMERIC",
+  "MATCHING",
+  "ORDERING",
+]);
 
 export const correctValueSchema = z.union([
   z.number().finite(),
@@ -48,6 +57,29 @@ export function questionShapeError(input: {
     }
     return null;
   }
+  if (input.type === "MATCHING") {
+    if (input.options.length < 2) return "Kamida 2 ta juftlik kiriting";
+    if (input.options.length > 10) return "Ko'pi bilan 10 ta juftlik kiriting";
+    if (new Set(input.options).size !== input.options.length) {
+      return "Chap ustun elementlari takrorlanmasligi kerak";
+    }
+    if (input.correct.length !== input.options.length) {
+      return "Chap va o'ng ustun bir xil sonda bo'lishi kerak";
+    }
+    if (input.correct.some((item) => typeof item !== "string" || item.trim().length === 0)) {
+      return "O'ng ustun qiymatlari matn bo'lishi kerak";
+    }
+    return null;
+  }
+  if (input.type === "ORDERING") {
+    if (input.options.length < 2) return "Kamida 2 ta element kiriting";
+    if (input.options.length > 10) return "Ko'pi bilan 10 ta element kiriting";
+    if (input.correct.length > 0) return "Tartiblashda to'g'ri javob ro'yxati bo'sh bo'lishi kerak";
+    if (new Set(input.options).size !== input.options.length) {
+      return "Elementlar takrorlanmasligi kerak";
+    }
+    return null;
+  }
   if (input.options.length < 2) return "Kamida 2 ta variant kiriting";
   if (
     input.correct.some(
@@ -81,6 +113,7 @@ export const questionInputSchema = z
 export const answerValueSchema = z.union([
   z.number().finite(),
   z.array(z.number().int().min(0)).max(20),
+  z.array(z.string().max(500)).max(20),
   z.string().max(5000),
 ]);
 

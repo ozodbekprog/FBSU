@@ -76,6 +76,8 @@ enum QuestionType {
   TRUE_FALSE
   SHORT_ANSWER
   NUMERIC
+  MATCHING
+  ORDERING
 }
 
 model User {
@@ -181,6 +183,7 @@ model User {
   activityCompletions ActivityCompletion[]
   assignmentExtensions AssignmentExtension[]
   gradeItemHistory   GradeItemScoreHistory[]
+  choiceVotes        ChoiceVote[]
 
   @@index([subGroupId])
   @@index([role])
@@ -243,6 +246,7 @@ model Course {
   gradeCategories    GradeCategory[]
   gradeItems         GradeItem[]
   activityRules      ActivityRule[]
+  choicePolls        ChoicePoll[]
 
   @@index([teacherId])
 }
@@ -1723,4 +1727,34 @@ model GradeItemScoreHistory {
 
   @@index([itemId, studentId])
   @@index([createdAt])
+}
+
+
+model ChoicePoll {
+  id         String   @id @default(cuid())
+  courseId   String
+  question   String
+  options    Json     @default("[]")
+  isMultiple Boolean  @default(false)
+  isAnonymous Boolean @default(false)
+  createdAt  DateTime @default(now())
+
+  course Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  votes  ChoiceVote[]
+
+  @@index([courseId])
+}
+
+model ChoiceVote {
+  id          String   @id @default(cuid())
+  pollId      String
+  studentId   String
+  optionIndex Int
+  createdAt   DateTime @default(now())
+
+  poll    ChoicePoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  student User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, studentId, optionIndex])
+  @@index([pollId])
 }

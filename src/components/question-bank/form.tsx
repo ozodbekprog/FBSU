@@ -12,6 +12,7 @@ import {
   TRUE_FALSE_OPTIONS,
   isTrueFalseOptions,
   parseAcceptedAnswers,
+  parseLineItems,
   type QuestionType,
 } from "@/components/quiz/shared";
 import {
@@ -31,6 +32,8 @@ const TYPE_SHORT_KEY: Record<QuestionType, keyof Dictionary> = {
   TRUE_FALSE: "crsQuizTypeTrueFalseShort",
   SHORT_ANSWER: "crsQuizTypeShortAnswerShort",
   NUMERIC: "crsQuizTypeNumericShort",
+  MATCHING: "crsQuizTypeMatching",
+  ORDERING: "crsQuizTypeOrdering",
 };
 
 function letterOf(index: number): string {
@@ -65,7 +68,13 @@ export function BankQuestionForm({
   const [text, setText] = useState(initial?.text ?? "");
   const [type, setType] = useState<QuestionType>(initial?.type ?? "SINGLE");
   const [options, setOptions] = useState<string[]>(
-    initial && initial.type !== "TEXT" && initial.options.length > 0 ? initial.options : ["", ""],
+    initial &&
+      initial.type !== "TEXT" &&
+      initial.type !== "MATCHING" &&
+      initial.type !== "ORDERING" &&
+      initial.options.length > 0
+      ? initial.options
+      : ["", ""],
   );
   const [correct, setCorrect] = useState<number[]>(
     initialCorrect.filter((value): value is number => typeof value === "number"),
@@ -77,6 +86,17 @@ export function BankQuestionForm({
     typeof initialCorrect[0] === "number" && initial?.type === "NUMERIC"
       ? String(initialCorrect[0])
       : "",
+  );
+  const [matchLeft, setMatchLeft] = useState(
+    initial?.type === "MATCHING" ? initial.options.join("\n") : "",
+  );
+  const [matchRight, setMatchRight] = useState(
+    initial?.type === "MATCHING"
+      ? initialCorrect.filter((value): value is string => typeof value === "string").join("\n")
+      : "",
+  );
+  const [orderItems, setOrderItems] = useState(
+    initial?.type === "ORDERING" ? initial.options.join("\n") : "",
   );
   const [difficulty, setDifficulty] = useState(initial?.difficulty ?? 2);
   const [error, setError] = useState<string | null>(null);
@@ -113,6 +133,20 @@ export function BankQuestionForm({
         return t("crsQuizErrNumericAnswer");
       }
       return { ...base, options: [], correct: [value] };
+    }
+    if (type === "MATCHING") {
+      const left = parseLineItems(matchLeft);
+      const right = parseLineItems(matchRight);
+      if (left.length < 2) return t("crsQuizErrMatchingMin");
+      if (new Set(left).size !== left.length) return t("crsQuizErrDuplicates");
+      if (left.length !== right.length) return t("crsQuizErrMatchingCount");
+      return { ...base, options: left, correct: right };
+    }
+    if (type === "ORDERING") {
+      const items = parseLineItems(orderItems);
+      if (items.length < 2) return t("crsQuizErrOrderingMin");
+      if (new Set(items).size !== items.length) return t("crsQuizErrDuplicates");
+      return { ...base, options: items, correct: [] };
     }
     const cleaned = options.map((option) => option.trim());
     if (cleaned.length < 2) return t("crsQuizErrMinOptions");
@@ -337,6 +371,36 @@ export function BankQuestionForm({
               onChange={(event) => setNumericAnswer(event.target.value)}
               placeholder={t("crsQuizNumericPlaceholder")}
             />
+          </div>
+        ) : type === "MATCHING" ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>{t("crsQuizMatchingLeft")}</Label>
+              <Textarea
+                rows={5}
+                value={matchLeft}
+                onChange={(event) => setMatchLeft(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t("crsQuizMatchingRight")}</Label>
+              <Textarea
+                rows={5}
+                value={matchRight}
+                onChange={(event) => setMatchRight(event.target.value)}
+              />
+            </div>
+            <p className="text-xs text-slate-600 sm:col-span-2">{t("crsQuizMatchingHint")}</p>
+          </div>
+        ) : type === "ORDERING" ? (
+          <div className="space-y-2">
+            <Label>{t("crsQuizOrderingItems")}</Label>
+            <Textarea
+              rows={5}
+              value={orderItems}
+              onChange={(event) => setOrderItems(event.target.value)}
+            />
+            <p className="text-xs text-slate-600">{t("crsQuizOrderingHint")}</p>
           </div>
         ) : (
           <div className="space-y-2.5">

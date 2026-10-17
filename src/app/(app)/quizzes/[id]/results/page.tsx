@@ -257,8 +257,14 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
                         question.type === "TEXT" ||
                         question.type === "SHORT_ANSWER" ||
                         question.type === "NUMERIC";
+                      const structured =
+                        question.type === "MATCHING" || question.type === "ORDERING";
                       const selectedIndexes = new Set(
-                        typeof answer === "number" ? [answer] : Array.isArray(answer) ? answer : [],
+                        typeof answer === "number"
+                          ? [answer]
+                          : Array.isArray(answer)
+                            ? answer.filter((item): item is number => typeof item === "number")
+                            : [],
                       );
                       return (
                         <div
@@ -294,6 +300,10 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
 
                           {freeAnswer ? (
                             <p className="mt-3 whitespace-pre-wrap rounded-xl bg-white/80 px-3.5 py-2.5 text-sm text-slate-600 ring-1 ring-amber-100">
+                              {formatAnswer(question, answer)}
+                            </p>
+                          ) : structured ? (
+                            <p className="mt-3 whitespace-pre-wrap rounded-xl bg-white/80 px-3.5 py-2.5 text-sm text-slate-600 ring-1 ring-slate-100">
                               {formatAnswer(question, answer)}
                             </p>
                           ) : (

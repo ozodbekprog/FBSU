@@ -500,7 +500,9 @@ export function RunRoom({
 
   function toggleMultiple(questionId: string, index: number) {
     const current = answers[questionId];
-    const selected = Array.isArray(current) ? current : [];
+    const selected = Array.isArray(current)
+      ? current.filter((item): item is number => typeof item === "number")
+      : [];
     const next = selected.includes(index)
       ? selected.filter((item) => item !== index)
       : [...selected, index].sort((a, b) => a - b);
@@ -509,7 +511,7 @@ export function RunRoom({
 
   function isChecked(questionId: string, index: number): boolean {
     const current = answers[questionId];
-    return Array.isArray(current) && current.includes(index);
+    return Array.isArray(current) && current.some((item) => item === index);
   }
 
   function textValue(questionId: string): string {

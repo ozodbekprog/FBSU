@@ -103,6 +103,8 @@ export const EVENTS = {
   "course.export": { category: "courses", label: "Kurs eksport qilindi" },
   "course.import": { category: "courses", label: "Kurs import qilindi" },
   "assignment.extension": { category: "grades", label: "Topshiriq muddati uzaytirildi" },
+  "choice.create": { category: "courses", label: "So'rovnoma yaratildi" },
+  "choice.vote": { category: "courses", label: "So'rovnomada ovoz berildi" },
   ANNOUNCEMENT_CREATE: { category: "system", label: "E'lon yaratildi" },
   ANNOUNCEMENT_DELETE: { category: "system", label: "E'lon o'chirildi" },
   MAINTENANCE_TOGGLE: { category: "system", label: "Texnik rejim o'zgardi" },

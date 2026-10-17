@@ -11,6 +11,7 @@ import {
   TRUE_FALSE_OPTIONS,
   isTrueFalseOptions,
   parseAcceptedAnswers,
+  parseLineItems,
   type QuestionDraft,
   type QuestionFull,
   type QuestionType,
@@ -23,6 +24,8 @@ const TYPE_SHORT_KEY: Record<QuestionType, keyof Dictionary> = {
   TRUE_FALSE: "crsQuizTypeTrueFalseShort",
   SHORT_ANSWER: "crsQuizTypeShortAnswerShort",
   NUMERIC: "crsQuizTypeNumericShort",
+  MATCHING: "crsQuizTypeMatching",
+  ORDERING: "crsQuizTypeOrdering",
 };
 
 const TYPE_ACTIVE: Record<QuestionType, string> = {
@@ -32,6 +35,8 @@ const TYPE_ACTIVE: Record<QuestionType, string> = {
   TRUE_FALSE: "bg-emerald-600",
   SHORT_ANSWER: "bg-sky-600",
   NUMERIC: "bg-slate-700",
+  MATCHING: "bg-teal-600",
+  ORDERING: "bg-indigo-600",
 };
 
 function letterOf(index: number): string {
@@ -61,7 +66,13 @@ export function QuestionForm({
   const [type, setType] = useState<QuestionType>(initial?.type ?? "SINGLE");
   const [points, setPoints] = useState(String(initial?.points ?? 1));
   const [options, setOptions] = useState<string[]>(
-    initial && initial.type !== "TEXT" && initial.options.length > 0 ? initial.options : ["", ""],
+    initial &&
+      initial.type !== "TEXT" &&
+      initial.type !== "MATCHING" &&
+      initial.type !== "ORDERING" &&
+      initial.options.length > 0
+      ? initial.options
+      : ["", ""],
   );
   const [correct, setCorrect] = useState<number[]>(
     initialCorrect.filter((value): value is number => typeof value === "number"),
@@ -73,6 +84,17 @@ export function QuestionForm({
     typeof initialCorrect[0] === "number" && initial?.type === "NUMERIC"
       ? String(initialCorrect[0])
       : "",
+  );
+  const [matchLeft, setMatchLeft] = useState(
+    initial?.type === "MATCHING" ? initial.options.join("\n") : "",
+  );
+  const [matchRight, setMatchRight] = useState(
+    initial?.type === "MATCHING"
+      ? initialCorrect.filter((value): value is string => typeof value === "string").join("\n")
+      : "",
+  );
+  const [orderItems, setOrderItems] = useState(
+    initial?.type === "ORDERING" ? initial.options.join("\n") : "",
   );
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -110,6 +132,20 @@ export function QuestionForm({
         return t("crsQuizErrNumericAnswer");
       }
       return { text: trimmedText, type, options: [], correct: [value], points: pointsValue };
+    }
+    if (type === "MATCHING") {
+      const left = parseLineItems(matchLeft);
+      const right = parseLineItems(matchRight);
+      if (left.length < 2) return t("crsQuizErrMatchingMin");
+      if (new Set(left).size !== left.length) return t("crsQuizErrDuplicates");
+      if (left.length !== right.length) return t("crsQuizErrMatchingCount");
+      return { text: trimmedText, type, options: left, correct: right, points: pointsValue };
+    }
+    if (type === "ORDERING") {
+      const items = parseLineItems(orderItems);
+      if (items.length < 2) return t("crsQuizErrOrderingMin");
+      if (new Set(items).size !== items.length) return t("crsQuizErrDuplicates");
+      return { text: trimmedText, type, options: items, correct: [], points: pointsValue };
     }
     const cleaned = options.map((option) => option.trim());
     if (cleaned.length < 2) return t("crsQuizErrMinOptions");
@@ -294,6 +330,36 @@ export function QuestionForm({
               onChange={(event) => setNumericAnswer(event.target.value)}
               placeholder={t("crsQuizNumericPlaceholder")}
             />
+          </div>
+        ) : type === "MATCHING" ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>{t("crsQuizMatchingLeft")}</Label>
+              <Textarea
+                rows={5}
+                value={matchLeft}
+                onChange={(event) => setMatchLeft(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t("crsQuizMatchingRight")}</Label>
+              <Textarea
+                rows={5}
+                value={matchRight}
+                onChange={(event) => setMatchRight(event.target.value)}
+              />
+            </div>
+            <p className="text-xs text-slate-600 sm:col-span-2">{t("crsQuizMatchingHint")}</p>
+          </div>
+        ) : type === "ORDERING" ? (
+          <div className="space-y-2">
+            <Label>{t("crsQuizOrderingItems")}</Label>
+            <Textarea
+              rows={5}
+              value={orderItems}
+              onChange={(event) => setOrderItems(event.target.value)}
+            />
+            <p className="text-xs text-slate-600">{t("crsQuizOrderingHint")}</p>
           </div>
         ) : (
           <div className="space-y-2.5">

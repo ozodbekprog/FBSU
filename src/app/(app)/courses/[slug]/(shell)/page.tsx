@@ -5,6 +5,7 @@ import { CourseMaterials } from "@/components/courses/course-materials";
 import { CourseReviews } from "@/components/courses/course-reviews";
 import { SelfEnrollButton } from "@/components/courses/self-enroll-button";
 import { CourseSettingsCard } from "@/components/courses/course-settings-card";
+import { ChoicePollCard } from "@/components/courses/choice-poll-card";
 
 export default async function CoursePage({
   params,
@@ -86,6 +87,11 @@ export default async function CoursePage({
         isStudent={isStudent}
         completedMaterialIds={completedMaterialIds}
       />
+      {canManage || isEnrolled ? (
+        <div className="mt-6">
+          <ChoicePollCard courseId={course.id} canManage={canManage} />
+        </div>
+      ) : null}
       {canManage || isEnrolled ? (
         <div className="mt-6">
           <CourseReviews courseId={course.id} isEnrolled={isEnrolled} canManage={canManage} />

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Badge, Button, Input, Textarea } from "@/components/ui";
+import { Badge, Button, Input, Select, Textarea } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/components/quiz/api";
 import { useI18n } from "@/components/i18n/LocaleProvider";
@@ -27,6 +27,28 @@ function CheckIcon() {
       <path d="M20 6 9 17l-5-5" />
     </svg>
   );
+}
+
+function startOrder(question: QuestionPublic): string[] {
+  const items = [...question.options];
+  if (items.length < 2) return items;
+  let state = 7;
+  for (const char of question.id) {
+    state = (state * 31 + char.charCodeAt(0)) % 2147483647;
+  }
+  for (let index = items.length - 1; index > 0; index -= 1) {
+    state = (state * 1103515245 + 12345) % 2147483648;
+    const swap = state % (index + 1);
+    const current = items[index];
+    items[index] = items[swap];
+    items[swap] = current;
+  }
+  if (items.every((item, index) => item === question.options[index])) {
+    const first = items[0];
+    items.shift();
+    items.push(first);
+  }
+  return items;
 }
 
 export function AttemptForm({
@@ -125,7 +147,9 @@ export function AttemptForm({
 
   function toggleMultiple(questionId: string, index: number) {
     const current = answers[questionId];
-    const selected = Array.isArray(current) ? current : [];
+    const selected = Array.isArray(current)
+      ? current.filter((item): item is number => typeof item === "number")
+      : [];
     const next = selected.includes(index)
       ? selected.filter((item) => item !== index)
       : [...selected, index].sort((a, b) => a - b);
@@ -134,12 +158,44 @@ export function AttemptForm({
 
   function isChecked(questionId: string, index: number): boolean {
     const current = answers[questionId];
-    return Array.isArray(current) && current.includes(index);
+    return Array.isArray(current) && current.some((item) => item === index);
   }
 
   function textValue(questionId: string): string {
     const current = answers[questionId];
     return typeof current === "string" ? current : "";
+  }
+
+  function stringList(questionId: string): string[] {
+    const current = answers[questionId];
+    return Array.isArray(current) ? current.filter((item): item is string => typeof item === "string") : [];
+  }
+
+  function matchValue(questionId: string, leftIndex: number): string {
+    return stringList(questionId)[leftIndex] ?? "";
+  }
+
+  function setMatchValue(questionId: string, leftIndex: number, total: number, value: string) {
+    const current = stringList(questionId);
+    const next = Array.from({ length: total }, (_, index) => current[index] ?? "");
+    next[leftIndex] = value;
+    setValue(questionId, next);
+  }
+
+  function moveOrder(question: QuestionPublic, index: number, direction: -1 | 1) {
+    const typed = stringList(question.id);
+    const order = typed.length === question.options.length ? [...typed] : startOrder(question);
+    const target = index + direction;
+    if (target < 0 || target >= order.length) return;
+    const moved = order[index];
+    order[index] = order[target];
+    order[target] = moved;
+    setValue(question.id, order);
+  }
+
+  function currentOrder(question: QuestionPublic): string[] {
+    const typed = stringList(question.id);
+    return typed.length === question.options.length ? typed : startOrder(question);
   }
 
   function goTo(index: number) {
@@ -297,6 +353,64 @@ export function AttemptForm({
                     </label>
                   );
                 })}
+              </div>
+            ) : question.type === "MATCHING" ? (
+              <div className="mt-4 space-y-2.5">
+                {question.options.map((left, leftIndex) => (
+                  <div
+                    key={leftIndex}
+                    className="flex flex-col gap-2 rounded-2xl border border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:gap-3"
+                  >
+                    <span className="flex-1 text-base text-slate-800">{left}</span>
+                    <Select
+                      value={matchValue(question.id, leftIndex)}
+                      onChange={(event) =>
+                        setMatchValue(question.id, leftIndex, question.options.length, event.target.value)
+                      }
+                      aria-label={`${left} — ${t("crsQuizTypeMatching")}`}
+                      className="sm:w-56"
+                    >
+                      <option value="">{t("crsQuizMatchChoose")}</option>
+                      {(question.matchOptions ?? []).map((right, rightIndex) => (
+                        <option key={`${rightIndex}-${right}`} value={right}>
+                          {right}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                ))}
+              </div>
+            ) : question.type === "ORDERING" ? (
+              <div className="mt-4 space-y-2">
+                {currentOrder(question).map((item, itemIndex, order) => (
+                  <div
+                    key={`${itemIndex}-${item}`}
+                    className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5"
+                  >
+                    <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-600">
+                      {itemIndex + 1}
+                    </span>
+                    <span className="flex-1 text-base text-slate-800">{item}</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => moveOrder(question, itemIndex, -1)}
+                      disabled={itemIndex === 0}
+                      aria-label={t("crsQuizOrderingUp")}
+                    >
+                      ↑
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => moveOrder(question, itemIndex, 1)}
+                      disabled={itemIndex === order.length - 1}
+                      aria-label={t("crsQuizOrderingDown")}
+                    >
+                      ↓
+                    </Button>
+                  </div>
+                ))}
               </div>
             ) : question.type === "SHORT_ANSWER" ? (
               <Input

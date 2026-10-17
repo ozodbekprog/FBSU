@@ -1,11 +1,19 @@
 import type { Question } from "@prisma/client";
 import type { Dictionary } from "@/i18n/uz";
 
-export type QuestionType = "SINGLE" | "MULTIPLE" | "TEXT" | "TRUE_FALSE" | "SHORT_ANSWER" | "NUMERIC";
+export type QuestionType =
+  | "SINGLE"
+  | "MULTIPLE"
+  | "TEXT"
+  | "TRUE_FALSE"
+  | "SHORT_ANSWER"
+  | "NUMERIC"
+  | "MATCHING"
+  | "ORDERING";
 
 export type CorrectValue = number | string;
 
-export type AnswerValue = number | number[] | string;
+export type AnswerValue = number | number[] | string | string[];
 export type QuizAnswers = Record<string, AnswerValue>;
 
 export type QuestionFull = {
@@ -18,7 +26,7 @@ export type QuestionFull = {
   position: number;
 };
 
-export type QuestionPublic = Omit<QuestionFull, "correct">;
+export type QuestionPublic = Omit<QuestionFull, "correct"> & { matchOptions?: string[] };
 
 export type QuestionDraft = {
   text: string;
@@ -44,6 +52,8 @@ export const QUESTION_TYPES: QuestionType[] = [
   "TRUE_FALSE",
   "SHORT_ANSWER",
   "NUMERIC",
+  "MATCHING",
+  "ORDERING",
 ];
 
 export const QUESTION_TYPE_LABEL: Record<QuestionType, string> = {
@@ -53,6 +63,8 @@ export const QUESTION_TYPE_LABEL: Record<QuestionType, string> = {
   TRUE_FALSE: "To'g'ri / Noto'g'ri",
   SHORT_ANSWER: "Qisqa javob",
   NUMERIC: "Raqamli javob",
+  MATCHING: "Moslashtirish",
+  ORDERING: "Tartiblash",
 };
 
 export const QUESTION_TYPE_KEY: Record<QuestionType, keyof Dictionary> = {
@@ -62,6 +74,8 @@ export const QUESTION_TYPE_KEY: Record<QuestionType, keyof Dictionary> = {
   TRUE_FALSE: "crsQuizTypeTrueFalse",
   SHORT_ANSWER: "crsQuizTypeShortAnswer",
   NUMERIC: "crsQuizTypeNumeric",
+  MATCHING: "crsQuizTypeMatching",
+  ORDERING: "crsQuizTypeOrdering",
 };
 
 export const QUESTION_TYPE_TONE: Record<QuestionType, "brand" | "purple" | "amber"> = {
@@ -71,6 +85,8 @@ export const QUESTION_TYPE_TONE: Record<QuestionType, "brand" | "purple" | "ambe
   TRUE_FALSE: "brand",
   SHORT_ANSWER: "amber",
   NUMERIC: "purple",
+  MATCHING: "brand",
+  ORDERING: "purple",
 };
 
 export const QUESTION_TYPE_ACCENT: Record<QuestionType, string> = {
@@ -80,6 +96,8 @@ export const QUESTION_TYPE_ACCENT: Record<QuestionType, string> = {
   TRUE_FALSE: "bg-emerald-500",
   SHORT_ANSWER: "bg-sky-500",
   NUMERIC: "bg-slate-500",
+  MATCHING: "bg-teal-500",
+  ORDERING: "bg-indigo-500",
 };
 
 export const QUESTION_TYPE_SOFT: Record<QuestionType, string> = {
@@ -89,6 +107,8 @@ export const QUESTION_TYPE_SOFT: Record<QuestionType, string> = {
   TRUE_FALSE: "bg-emerald-50 text-emerald-700",
   SHORT_ANSWER: "bg-sky-50 text-sky-700",
   NUMERIC: "bg-slate-100 text-slate-700",
+  MATCHING: "bg-teal-50 text-teal-700",
+  ORDERING: "bg-indigo-50 text-indigo-700",
 };
 
 export const QUESTION_TYPE_ICON: Record<QuestionType, string> = {
@@ -98,6 +118,8 @@ export const QUESTION_TYPE_ICON: Record<QuestionType, string> = {
   TRUE_FALSE: "M5 13l4 4L19 7",
   SHORT_ANSWER: "M4 7h16M4 12h10M4 17h7",
   NUMERIC: "M7 4v16M17 4v16M4 9h6M14 9h6M4 15h6M14 15h6",
+  MATCHING: "M4 7h6M14 7h6M10 7l4 10M14 17H4M20 17h-6",
+  ORDERING: "M4 6h10M4 12h13M4 18h7M18 5v14m0 0 3-3m-3 3-3-3",
 };
 
 export function asStringArray(value: unknown): string[] {
@@ -134,6 +156,13 @@ export function parseAcceptedAnswers(value: string): string[] {
   return result;
 }
 
+export function parseLineItems(value: string): string[] {
+  return value
+    .split("\n")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+}
+
 export function asAnswers(value: unknown): QuizAnswers {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const result: QuizAnswers = {};
@@ -141,7 +170,8 @@ export function asAnswers(value: unknown): QuizAnswers {
     if (typeof item === "number" || typeof item === "string") {
       result[key] = item;
     } else if (Array.isArray(item)) {
-      result[key] = item.filter((entry): entry is number => typeof entry === "number");
+      const numbers = asNumberArray(item);
+      result[key] = numbers.length === item.length ? numbers : asStringArray(item);
     }
   }
   return result;
@@ -162,7 +192,7 @@ export function toQuestionFull(
 }
 
 export function toQuestionPublic(question: QuestionFull): QuestionPublic {
-  return {
+  const base: Omit<QuestionFull, "correct"> = {
     id: question.id,
     text: question.text,
     type: question.type,
@@ -170,6 +200,15 @@ export function toQuestionPublic(question: QuestionFull): QuestionPublic {
     points: question.points,
     position: question.position,
   };
+  if (question.type !== "MATCHING") return base;
+  const seen = new Set<string>();
+  const matchOptions: string[] = [];
+  for (const value of correctStrings(question)) {
+    if (seen.has(value)) continue;
+    seen.add(value);
+    matchOptions.push(value);
+  }
+  return { ...base, matchOptions };
 }
 
 export function totalPoints(questions: Array<{ points: number }>): number {
@@ -203,8 +242,9 @@ export function isAnswerCorrect(question: QuestionFull, answer: AnswerValue | un
   }
   if (question.type === "MULTIPLE") {
     if (!Array.isArray(answer)) return false;
+    const given = answer.filter((item): item is number => typeof item === "number");
     const expected = correctNumbers(question);
-    const selected = [...new Set(answer)].sort((a, b) => a - b);
+    const selected = [...new Set(given)].sort((a, b) => a - b);
     const sorted = [...new Set(expected)].sort((a, b) => a - b);
     return selected.length === sorted.length && selected.every((value, index) => value === sorted[index]);
   }
@@ -222,6 +262,19 @@ export function isAnswerCorrect(question: QuestionFull, answer: AnswerValue | un
     const given = typeof answer === "string" ? Number(answer.trim()) : answer;
     return Number.isFinite(given) && given === expected[0];
   }
+  if (question.type === "MATCHING") {
+    if (!Array.isArray(answer)) return false;
+    const given = answer.filter((item): item is string => typeof item === "string");
+    const expected = correctStrings(question);
+    if (given.length !== expected.length || expected.length === 0) return false;
+    return expected.every((value, index) => given[index] === value);
+  }
+  if (question.type === "ORDERING") {
+    if (!Array.isArray(answer)) return false;
+    const given = answer.filter((item): item is string => typeof item === "string");
+    if (given.length !== question.options.length || question.options.length < 2) return false;
+    return question.options.every((value, index) => given[index] === value);
+  }
   return false;
 }
 
@@ -233,6 +286,24 @@ export function autoScore(questions: QuestionFull[], answers: QuizAnswers): numb
 
 export function formatAnswer(question: QuestionFull, answer: AnswerValue | undefined): string {
   if (answer === undefined || answer === null) return "Javob berilmagan";
+  if (question.type === "MATCHING") {
+    const given = Array.isArray(answer)
+      ? answer.filter((item): item is string => typeof item === "string")
+      : [];
+    const pairs = question.options
+      .map((left, index) => {
+        const right = given[index];
+        return right !== undefined && right.trim().length > 0 ? `${left} → ${right}` : null;
+      })
+      .filter((item): item is string => item !== null);
+    return pairs.length > 0 ? pairs.join("\n") : "Javob berilmagan";
+  }
+  if (question.type === "ORDERING") {
+    const given = Array.isArray(answer)
+      ? answer.filter((item): item is string => typeof item === "string")
+      : [];
+    return given.length > 0 ? given.join(" → ") : "Javob berilmagan";
+  }
   if (question.type === "TEXT" || question.type === "SHORT_ANSWER") {
     return typeof answer === "string" && answer.trim().length > 0 ? answer : "Javob berilmagan";
   }
@@ -241,7 +312,12 @@ export function formatAnswer(question: QuestionFull, answer: AnswerValue | undef
     if (typeof answer === "string" && answer.trim().length > 0) return answer;
     return "Javob berilmagan";
   }
-  const indexes = typeof answer === "number" ? [answer] : Array.isArray(answer) ? answer : [];
+  const indexes =
+    typeof answer === "number"
+      ? [answer]
+      : Array.isArray(answer)
+        ? answer.filter((item): item is number => typeof item === "number")
+        : [];
   const labels = indexes
     .filter((index) => index >= 0 && index < question.options.length)
     .map((index) => question.options[index]);

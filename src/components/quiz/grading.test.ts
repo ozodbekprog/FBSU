@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  asAnswers,
   autoScore,
+  formatAnswer,
   isAnswerCorrect,
   normalizeShortAnswer,
   parseAcceptedAnswers,
@@ -92,6 +94,93 @@ describe("legacy question types", () => {
   it("never auto-grades TEXT", () => {
     const item = question({ type: "TEXT", options: [], correct: [] });
     expect(isAnswerCorrect(item, "javob")).toBe(false);
+  });
+});
+
+describe("isAnswerCorrect — MATCHING", () => {
+  const item = question({
+    type: "MATCHING",
+    options: ["O'zbekiston", "Rossiya", "Xitoy"],
+    correct: ["Toshkent", "Moskva", "Pekin"],
+  });
+
+  it("accepts the complete correct pairing", () => {
+    expect(isAnswerCorrect(item, ["Toshkent", "Moskva", "Pekin"])).toBe(true);
+  });
+
+  it("rejects a partially filled answer", () => {
+    expect(isAnswerCorrect(item, ["Toshkent", "Moskva"])).toBe(false);
+    expect(isAnswerCorrect(item, ["Toshkent", "", "Pekin"])).toBe(false);
+  });
+
+  it("rejects swapped and empty answers", () => {
+    expect(isAnswerCorrect(item, ["Toshkent", "Pekin", "Moskva"])).toBe(false);
+    expect(isAnswerCorrect(item, [])).toBe(false);
+    expect(isAnswerCorrect(item, undefined)).toBe(false);
+  });
+
+  it("keeps case sensitivity", () => {
+    expect(isAnswerCorrect(item, ["toshkent", "Moskva", "Pekin"])).toBe(false);
+  });
+});
+
+describe("isAnswerCorrect — ORDERING", () => {
+  const item = question({
+    type: "ORDERING",
+    options: ["Birinchi", "Ikkinchi", "Uchinchi"],
+    correct: [],
+  });
+
+  it("accepts the exact order", () => {
+    expect(isAnswerCorrect(item, ["Birinchi", "Ikkinchi", "Uchinchi"])).toBe(true);
+  });
+
+  it("rejects a swapped order", () => {
+    expect(isAnswerCorrect(item, ["Ikkinchi", "Birinchi", "Uchinchi"])).toBe(false);
+  });
+
+  it("rejects partial, empty and case-changed orders", () => {
+    expect(isAnswerCorrect(item, ["Birinchi", "Ikkinchi"])).toBe(false);
+    expect(isAnswerCorrect(item, [])).toBe(false);
+    expect(isAnswerCorrect(item, undefined)).toBe(false);
+    expect(isAnswerCorrect(item, ["birinchi", "Ikkinchi", "Uchinchi"])).toBe(false);
+  });
+});
+
+describe("string answer lists", () => {
+  it("keeps string arrays when reading stored answers", () => {
+    expect(asAnswers({ matching: ["A", "B"], ordering: ["B", "A"], single: 1 })).toEqual({
+      matching: ["A", "B"],
+      ordering: ["B", "A"],
+      single: 1,
+    });
+  });
+
+  it("formats matching pairs and ordering sequence", () => {
+    const matching = question({
+      type: "MATCHING",
+      options: ["A", "B"],
+      correct: ["1", "2"],
+    });
+    expect(formatAnswer(matching, ["1", "2"])).toBe("A → 1\nB → 2");
+    const ordering = question({ type: "ORDERING", options: ["A", "B"], correct: [] });
+    expect(formatAnswer(ordering, ["B", "A"])).toBe("B → A");
+    expect(formatAnswer(ordering, [])).toBe("Javob berilmagan");
+  });
+
+  it("scores matching and ordering questions", () => {
+    const questions: QuestionFull[] = [
+      question({
+        id: "match",
+        type: "MATCHING",
+        options: ["A", "B"],
+        correct: ["1", "2"],
+        points: 3,
+      }),
+      question({ id: "order", type: "ORDERING", options: ["X", "Y"], correct: [], points: 5 }),
+    ];
+    expect(autoScore(questions, { match: ["1", "2"], order: ["Y", "X"] })).toBe(3);
+    expect(autoScore(questions, { match: ["1", "2"], order: ["X", "Y"] })).toBe(8);
   });
 });
 
