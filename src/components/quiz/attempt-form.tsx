@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Badge, Button, Textarea } from "@/components/ui";
+import { Badge, Button, Input, Textarea } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/components/quiz/api";
 import { useI18n } from "@/components/i18n/LocaleProvider";
@@ -251,13 +251,16 @@ export function AttemptForm({
               {question.text}
             </p>
 
-            {question.type === "SINGLE" || question.type === "MULTIPLE" ? (
+            {question.type === "SINGLE" ||
+            question.type === "MULTIPLE" ||
+            question.type === "TRUE_FALSE" ? (
               <div className="mt-4 space-y-2.5">
                 {question.options.map((option, optionIndex) => {
-                  const selected =
-                    question.type === "SINGLE"
-                      ? answers[question.id] === optionIndex
-                      : isChecked(question.id, optionIndex);
+                  const singleChoice =
+                    question.type === "SINGLE" || question.type === "TRUE_FALSE";
+                  const selected = singleChoice
+                    ? answers[question.id] === optionIndex
+                    : isChecked(question.id, optionIndex);
                   return (
                     <label
                       key={optionIndex}
@@ -269,11 +272,11 @@ export function AttemptForm({
                       )}
                     >
                       <input
-                        type={question.type === "SINGLE" ? "radio" : "checkbox"}
+                        type={singleChoice ? "radio" : "checkbox"}
                         name={`question-${question.id}`}
                         checked={selected}
                         onChange={() =>
-                          question.type === "SINGLE"
+                          singleChoice
                             ? setValue(question.id, optionIndex)
                             : toggleMultiple(question.id, optionIndex)
                         }
@@ -282,7 +285,7 @@ export function AttemptForm({
                       <span
                         className={cn(
                           "inline-flex size-6 shrink-0 items-center justify-center border transition-colors duration-150",
-                          question.type === "SINGLE" ? "rounded-full" : "rounded-lg",
+                          singleChoice ? "rounded-full" : "rounded-lg",
                           selected
                             ? "border-brand-600 bg-brand-600 text-white"
                             : "border-slate-300 bg-white",
@@ -295,6 +298,23 @@ export function AttemptForm({
                   );
                 })}
               </div>
+            ) : question.type === "SHORT_ANSWER" ? (
+              <Input
+                value={textValue(question.id)}
+                onChange={(event) => setValue(question.id, event.target.value)}
+                placeholder={t("crsQuizShortAnswerPlaceholder")}
+                className="mt-4"
+              />
+            ) : question.type === "NUMERIC" ? (
+              <Input
+                type="number"
+                step="any"
+                inputMode="decimal"
+                value={textValue(question.id)}
+                onChange={(event) => setValue(question.id, event.target.value)}
+                placeholder={t("crsQuizNumericPlaceholder")}
+                className="mt-4"
+              />
             ) : (
               <Textarea
                 rows={5}

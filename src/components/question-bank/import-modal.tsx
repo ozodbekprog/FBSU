@@ -264,7 +264,11 @@ export function BankImportModal({
                       <span className="mt-1.5 block text-sm font-medium text-slate-900">
                         {item.text}
                       </span>
-                      {item.options.length > 0 ? (
+                      {item.type === "SHORT_ANSWER" || item.type === "NUMERIC" ? (
+                        <span className="mt-1 block truncate text-xs font-medium text-emerald-700">
+                          {item.correct.map((value) => String(value)).join(", ")}
+                        </span>
+                      ) : item.options.length > 0 ? (
                         <span className="mt-1 block truncate text-xs text-slate-500">
                           {item.options.join(" · ")}
                         </span>

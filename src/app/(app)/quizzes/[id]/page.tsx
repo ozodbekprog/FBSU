@@ -112,6 +112,10 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
                   <p className="text-sm text-slate-500">
                     {dictionary.crsQuizTextManual}
                   </p>
+                ) : question.type === "SHORT_ANSWER" || question.type === "NUMERIC" ? (
+                  <p className="text-sm font-medium text-emerald-700">
+                    {question.correct.map((value) => String(value)).join(", ")}
+                  </p>
                 ) : (
                   <ul className="grid gap-2 sm:grid-cols-2">
                     {question.options.map((option, index) => {

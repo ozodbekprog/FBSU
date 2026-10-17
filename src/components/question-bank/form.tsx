@@ -6,7 +6,14 @@ import { cn } from "@/lib/utils";
 import type { Dictionary } from "@/i18n";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { apiFetch } from "@/components/quiz/api";
-import { QUESTION_TYPE_ICON, QUESTION_TYPE_KEY, type QuestionType } from "@/components/quiz/shared";
+import {
+  QUESTION_TYPES,
+  QUESTION_TYPE_ICON,
+  TRUE_FALSE_OPTIONS,
+  isTrueFalseOptions,
+  parseAcceptedAnswers,
+  type QuestionType,
+} from "@/components/quiz/shared";
 import {
   DIFFICULTY_ACTIVE,
   DIFFICULTY_LABEL_KEYS,
@@ -21,10 +28,21 @@ const TYPE_SHORT_KEY: Record<QuestionType, keyof Dictionary> = {
   SINGLE: "crsQuizTypeSingleShort",
   MULTIPLE: "crsQuizTypeMultipleShort",
   TEXT: "crsQuizTypeTextShort",
+  TRUE_FALSE: "crsQuizTypeTrueFalseShort",
+  SHORT_ANSWER: "crsQuizTypeShortAnswerShort",
+  NUMERIC: "crsQuizTypeNumericShort",
 };
 
 function letterOf(index: number): string {
   return String.fromCharCode(65 + index);
+}
+
+function CheckIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
 }
 
 export function BankQuestionForm({
@@ -41,6 +59,7 @@ export function BankQuestionForm({
   onCancel: () => void;
 }) {
   const { t } = useI18n();
+  const initialCorrect = initial?.correct ?? [];
   const [courseId, setCourseId] = useState(initial?.courseId ?? "");
   const [subjectId, setSubjectId] = useState(initial?.subjectId ?? "");
   const [text, setText] = useState(initial?.text ?? "");
@@ -48,7 +67,17 @@ export function BankQuestionForm({
   const [options, setOptions] = useState<string[]>(
     initial && initial.type !== "TEXT" && initial.options.length > 0 ? initial.options : ["", ""],
   );
-  const [correct, setCorrect] = useState<number[]>(initial?.correct ?? []);
+  const [correct, setCorrect] = useState<number[]>(
+    initialCorrect.filter((value): value is number => typeof value === "number"),
+  );
+  const [shortAnswers, setShortAnswers] = useState(
+    initialCorrect.filter((value): value is string => typeof value === "string").join(", "),
+  );
+  const [numericAnswer, setNumericAnswer] = useState(
+    typeof initialCorrect[0] === "number" && initial?.type === "NUMERIC"
+      ? String(initialCorrect[0])
+      : "",
+  );
   const [difficulty, setDifficulty] = useState(initial?.difficulty ?? 2);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -66,6 +95,24 @@ export function BankQuestionForm({
     };
     if (type === "TEXT") {
       return { ...base, options: [], correct: [] };
+    }
+    if (type === "TRUE_FALSE") {
+      if (correct.length !== 1 || (correct[0] !== 0 && correct[0] !== 1)) {
+        return t("crsQuizErrSingleCorrect");
+      }
+      return { ...base, options: [...TRUE_FALSE_OPTIONS], correct: [correct[0]] };
+    }
+    if (type === "SHORT_ANSWER") {
+      const accepted = parseAcceptedAnswers(shortAnswers);
+      if (accepted.length === 0) return t("crsQuizErrShortAnswer");
+      return { ...base, options: [], correct: accepted };
+    }
+    if (type === "NUMERIC") {
+      const value = Number(numericAnswer);
+      if (numericAnswer.trim().length === 0 || !Number.isFinite(value)) {
+        return t("crsQuizErrNumericAnswer");
+      }
+      return { ...base, options: [], correct: [value] };
     }
     const cleaned = options.map((option) => option.trim());
     if (cleaned.length < 2) return t("crsQuizErrMinOptions");
@@ -101,7 +148,15 @@ export function BankQuestionForm({
   function changeType(next: QuestionType) {
     setType(next);
     setCorrect([]);
-    if (next !== "TEXT" && options.length < 2) setOptions(["", ""]);
+    setShortAnswers("");
+    setNumericAnswer("");
+    if (next === "TRUE_FALSE") {
+      setOptions([...TRUE_FALSE_OPTIONS]);
+      return;
+    }
+    if (next === "SINGLE" || next === "MULTIPLE") {
+      setOptions((prev) => (prev.length >= 2 && !isTrueFalseOptions(prev) ? prev : ["", ""]));
+    }
   }
 
   function changeOption(index: number, value: string) {
@@ -171,7 +226,7 @@ export function BankQuestionForm({
         <div>
           <Label>{t("crsQuizQuestionType")}</Label>
           <div className="grid grid-cols-3 gap-2">
-            {(Object.keys(QUESTION_TYPE_KEY) as QuestionType[]).map((value) => {
+            {(QUESTION_TYPES).map((value) => {
               const active = type === value;
               return (
                 <button
@@ -230,6 +285,59 @@ export function BankQuestionForm({
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
             {t("crsQuizTextAutoNote")}
           </p>
+        ) : type === "TRUE_FALSE" ? (
+          <div className="space-y-2.5">
+            <span className="text-sm font-medium text-slate-700">{t("crsQuizTrueFalsePrompt")}</span>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {TRUE_FALSE_OPTIONS.map((label, index) => {
+                const checked = correct.includes(index);
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => setCorrect([index])}
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium transition-[background-color,border-color,box-shadow] duration-150",
+                      checked
+                        ? "border-emerald-300 bg-emerald-50/70 text-emerald-900 ring-2 ring-emerald-400/40"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "inline-flex size-5 shrink-0 items-center justify-center rounded-full border",
+                        checked ? "border-emerald-600 bg-emerald-600 text-white" : "border-slate-300 bg-white",
+                      )}
+                    >
+                      {checked ? <CheckIcon /> : null}
+                    </span>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : type === "SHORT_ANSWER" ? (
+          <div className="space-y-2">
+            <Label>{t("crsQuizTypeShortAnswer")}</Label>
+            <Input
+              value={shortAnswers}
+              onChange={(event) => setShortAnswers(event.target.value)}
+              placeholder={t("crsQuizShortAnswerPlaceholder")}
+            />
+            <p className="text-xs text-slate-600">{t("crsQuizShortAnswerHint")}</p>
+          </div>
+        ) : type === "NUMERIC" ? (
+          <div className="space-y-2">
+            <Label>{t("crsQuizTypeNumeric")}</Label>
+            <Input
+              type="number"
+              step="any"
+              value={numericAnswer}
+              onChange={(event) => setNumericAnswer(event.target.value)}
+              placeholder={t("crsQuizNumericPlaceholder")}
+            />
+          </div>
         ) : (
           <div className="space-y-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">

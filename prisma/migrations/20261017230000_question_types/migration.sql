@@ -1,0 +1,4 @@
+-- AlterEnum
+ALTER TYPE "QuestionType" ADD VALUE 'TRUE_FALSE';
+ALTER TYPE "QuestionType" ADD VALUE 'SHORT_ANSWER';
+ALTER TYPE "QuestionType" ADD VALUE 'NUMERIC';

@@ -100,8 +100,18 @@ export async function POST(
     );
   }
 
+  const extension = await prisma.assignmentExtension.findUnique({
+    where: { assignmentId_studentId: { assignmentId: id, studentId: user.id } },
+    select: { extendedDueAt: true },
+  });
+
+  let effectiveDueAt: Date | null = assignment.dueAt;
+  if (extension && (!effectiveDueAt || extension.extendedDueAt > effectiveDueAt)) {
+    effectiveDueAt = extension.extendedDueAt;
+  }
+
   const status =
-    assignment.dueAt && new Date() > assignment.dueAt ? ("LATE" as const) : ("SUBMITTED" as const);
+    effectiveDueAt && new Date() > effectiveDueAt ? ("LATE" as const) : ("SUBMITTED" as const);
 
   const submission = await prisma.submission.upsert({
     where: { assignmentId_studentId: { assignmentId: id, studentId: user.id } },

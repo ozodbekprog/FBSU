@@ -21,6 +21,7 @@ import { OralDefensePanel } from "@/components/courses/oral-defense-panel";
 import { DueChip, SubmissionBadge } from "@/components/courses/assignments-status";
 import { SimilarityPanel } from "@/components/courses/similarity-panel";
 import { AvailabilityEditor } from "@/components/courses/availability-editor";
+import { AssignmentExtensions } from "@/components/courses/assignment-extensions";
 import { ActivityLockNotice } from "@/components/courses/activity-lock-notice";
 import { getRuleState } from "@/modules/course-rules/server";
 
@@ -185,6 +186,15 @@ export default async function AssignmentDetailPage({
             <CardHeader title="Ochilish vaqti" subtitle="Topshiriq talabalarga qachon ochiladi" />
             <CardBody>
               <AvailabilityEditor targetType="ASSIGNMENT" targetId={assignment.id} />
+            </CardBody>
+          </Card>
+          <Card className="animate-fade-up">
+            <CardHeader
+              title="Individual muddat"
+              subtitle="Alohida talaba uchun topshirish muddatini uzaytirish"
+            />
+            <CardBody>
+              <AssignmentExtensions assignmentId={assignment.id} />
             </CardBody>
           </Card>
           <OralDefensePanel assignmentId={id} courseId={course.id} />

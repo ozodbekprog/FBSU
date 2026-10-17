@@ -69,7 +69,8 @@ function orderedQuestions(
 }
 
 function shuffledOptions(question: QuestionFull, attemptId: string): QuestionFull {
-  if (question.type === "TEXT" || question.options.length < 2) return question;
+  if (question.type !== "SINGLE" && question.type !== "MULTIPLE") return question;
+  if (question.options.length < 2) return question;
   const order = shuffleWith(
     question.options.map((_, index) => index),
     randomFromSeed(hashSeed(`${attemptId}:${question.id}`)),
@@ -79,6 +80,7 @@ function shuffledOptions(question: QuestionFull, attemptId: string): QuestionFul
     ...question,
     options: order.map((original) => question.options[original]),
     correct: question.correct
+      .filter((original): original is number => typeof original === "number")
       .map((original) => positions.get(original))
       .filter((position): position is number => position !== undefined),
   };

@@ -413,7 +413,11 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
                       <Badge tone="gold">{t("crsQuizPoints", { points: question.points })}</Badge>
                     </div>
                     <p className="mt-2.5 text-sm font-medium text-slate-900">{question.text}</p>
-                    {question.type !== "TEXT" ? (
+                    {question.type === "SHORT_ANSWER" || question.type === "NUMERIC" ? (
+                      <p className="mt-3 text-xs font-medium text-emerald-700">
+                        {question.correct.map((value) => String(value)).join(", ")}
+                      </p>
+                    ) : question.type !== "TEXT" ? (
                       <ul className="mt-3 grid gap-2 sm:grid-cols-2">
                         {question.options.map((option, index) => {
                           const isCorrect = question.correct.includes(index);

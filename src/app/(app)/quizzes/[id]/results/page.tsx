@@ -253,6 +253,10 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
                     {questions.map((question) => {
                       const answer = answers[question.id];
                       const correct = isAnswerCorrect(question, answer);
+                      const freeAnswer =
+                        question.type === "TEXT" ||
+                        question.type === "SHORT_ANSWER" ||
+                        question.type === "NUMERIC";
                       const selectedIndexes = new Set(
                         typeof answer === "number" ? [answer] : Array.isArray(answer) ? answer : [],
                       );
@@ -261,7 +265,7 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
                           key={question.id}
                           className={cn(
                             "rounded-2xl border p-3.5",
-                            question.type === "TEXT"
+                            freeAnswer
                               ? "border-amber-200 bg-amber-50/40"
                               : correct
                                 ? "border-emerald-200 bg-emerald-50/40"
@@ -288,7 +292,7 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
                             </span>
                           </div>
 
-                          {question.type === "TEXT" ? (
+                          {freeAnswer ? (
                             <p className="mt-3 whitespace-pre-wrap rounded-xl bg-white/80 px-3.5 py-2.5 text-sm text-slate-600 ring-1 ring-amber-100">
                               {formatAnswer(question, answer)}
                             </p>

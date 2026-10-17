@@ -1,7 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { publicError } from "@/components/quiz/server";
-import { asNumberArray, asStringArray } from "@/components/quiz/shared";
+import { asCorrectArray, asStringArray } from "@/components/quiz/shared";
 import { bankQuestionUpdateSchema, questionShapeError } from "@/components/question-bank/schema";
 import { findManageableBankQuestion, resolveBankTarget } from "@/components/question-bank/server";
 import { toBankQuestion } from "@/components/question-bank/shared";
@@ -38,7 +38,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     text: data.text ?? question.text,
     type: data.type ?? question.type,
     options: data.options ?? asStringArray(question.options),
-    correct: data.correct ?? asNumberArray(question.correct),
+    correct: data.correct ?? asCorrectArray(question.correct),
     difficulty: data.difficulty ?? question.difficulty,
   };
 

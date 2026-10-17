@@ -8,10 +8,26 @@ import { recordEvent } from "@/modules/events/record";
 
 const REGISTRAR_MANAGED_ROLES: readonly Role[] = ["STUDENT", "TEACHER"];
 
+const ASSIGNABLE_ROLES = [
+  "ADMIN",
+  "REKTOR",
+  "PRO_RECTOR",
+  "DEKAN",
+  "KAFEDRA_MUDIRI",
+  "REGISTRAR",
+  "BUXGALTER",
+  "TYUTOR",
+  "TEACHER",
+  "STUDENT",
+  "XODIM",
+  "OTA_ONA",
+] as const;
+
 const bulkSchema = z.object({
   ids: z.array(z.string().min(1)).min(1).max(200),
-  action: z.enum(["activate", "deactivate", "assignGroup"]),
+  action: z.enum(["activate", "deactivate", "assignGroup", "assignRole"]),
   groupId: z.string().min(1).optional(),
+  role: z.enum(ASSIGNABLE_ROLES).optional(),
 });
 
 export async function POST(request: Request) {
@@ -31,7 +47,7 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return Response.json({ ok: false, error: "Ma'lumotlar xato" }, { status: 400 });
   }
-  const { ids, action, groupId } = parsed.data;
+  const { ids, action, groupId, role: nextRole } = parsed.data;
 
   let assignedGroupId: string | null = null;
   if (action === "assignGroup") {
@@ -43,6 +59,15 @@ export async function POST(request: Request) {
       return Response.json({ ok: false, error: "Guruh topilmadi" }, { status: 404 });
     }
     assignedGroupId = group.id;
+  }
+
+  if (action === "assignRole") {
+    if (user.role !== "ADMIN") {
+      return Response.json({ ok: false, error: "Rol o'zgartirishga ruxsat yo'q" }, { status: 403 });
+    }
+    if (!nextRole) {
+      return Response.json({ ok: false, error: "Rol tanlanmagan" }, { status: 400 });
+    }
   }
 
   const targets = await prisma.user.findMany({
@@ -69,15 +94,20 @@ export async function POST(request: Request) {
   }
 
   const result =
-    assignedGroupId !== null
+    action === "assignRole" && nextRole
       ? await prisma.user.updateMany({
           where: { id: { in: ids } },
-          data: { groupId: assignedGroupId },
+          data: { role: nextRole },
         })
-      : await prisma.user.updateMany({
-          where: { id: { in: ids } },
-          data: { isActive: action === "activate" },
-        });
+      : assignedGroupId !== null
+        ? await prisma.user.updateMany({
+            where: { id: { in: ids } },
+            data: { groupId: assignedGroupId },
+          })
+        : await prisma.user.updateMany({
+            where: { id: { in: ids } },
+            data: { isActive: action === "activate" },
+          });
 
   await recordEvent(user.id, "admin.user.update", {
     entity: "User",
@@ -86,6 +116,7 @@ export async function POST(request: Request) {
       count: result.count,
       ids,
       ...(assignedGroupId ? { groupId: assignedGroupId } : {}),
+      ...(action === "assignRole" && nextRole ? { role: nextRole } : {}),
     },
   });
 

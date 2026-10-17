@@ -73,6 +73,9 @@ enum QuestionType {
   SINGLE
   MULTIPLE
   TEXT
+  TRUE_FALSE
+  SHORT_ANSWER
+  NUMERIC
 }
 
 model User {
@@ -176,6 +179,7 @@ model User {
   @@index([groupId])
   gradeItemScores    GradeItemScore[]
   activityCompletions ActivityCompletion[]
+  assignmentExtensions AssignmentExtension[]
 
   @@index([subGroupId])
   @@index([role])
@@ -295,6 +299,7 @@ model Assignment {
   course       Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
   sectionRef   Section?      @relation(fields: [sectionId], references: [id], onDelete: SetNull)
   submissions  Submission[]
+  extensions   AssignmentExtension[]
   oralDefenses OralDefense[]
   boards       Board[]
 
@@ -1683,4 +1688,18 @@ model OwnerAccessCode {
   createdAt  DateTime  @default(now())
 
   @@index([expiresAt])
+}
+
+model AssignmentExtension {
+  id            String   @id @default(cuid())
+  assignmentId  String
+  studentId     String
+  extendedDueAt DateTime
+  createdAt     DateTime @default(now())
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student    User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, studentId])
+  @@index([assignmentId])
 }

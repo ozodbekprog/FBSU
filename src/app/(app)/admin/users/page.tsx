@@ -162,6 +162,8 @@ export default async function AdminUsersPage({
           isActive: user.isActive,
         }))}
         groups={groups.map((group) => ({ id: group.id, name: group.name }))}
+        roles={ROLES}
+        canAssignRoles={admin.role === "ADMIN"}
       />
 
       <UsersManager

@@ -17,18 +17,38 @@ export type BulkGroupOption = {
   name: string;
 };
 
-type BulkAction = "activate" | "deactivate" | "assignGroup";
+type BulkAction = "activate" | "deactivate" | "assignGroup" | "assignRole";
+
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: "Administrator",
+  REKTOR: "Rektor",
+  PRO_RECTOR: "Prorektor",
+  DEKAN: "Dekan",
+  KAFEDRA_MUDIRI: "Kafedra mudiri",
+  REGISTRAR: "Registrator",
+  BUXGALTER: "Buxgalter",
+  TYUTOR: "Tyutor",
+  TEACHER: "O'qituvchi",
+  STUDENT: "Talaba",
+  XODIM: "Xodim",
+  OTA_ONA: "Ota-ona",
+};
 
 export default function UserBulkBar({
   users,
   groups,
+  roles,
+  canAssignRoles,
 }: {
   users: BulkUserOption[];
   groups: BulkGroupOption[];
+  roles: readonly string[];
+  canAssignRoles: boolean;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<string[]>([]);
   const [groupId, setGroupId] = useState("");
+  const [role, setRole] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -51,6 +71,11 @@ export default function UserBulkBar({
       setError("Avval guruhni tanlang");
       return;
     }
+    if (action === "assignRole" && !role) {
+      setNotice(null);
+      setError("Avval rolni tanlang");
+      return;
+    }
     setBusy(true);
     setError(null);
     setNotice(null);
@@ -58,7 +83,13 @@ export default function UserBulkBar({
       const res = await apiFetch("/api/admin/users/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(action === "assignGroup" ? { ids: selected, action, groupId } : { ids: selected, action }),
+        body: JSON.stringify(
+          action === "assignGroup"
+            ? { ids: selected, action, groupId }
+            : action === "assignRole"
+              ? { ids: selected, action, role }
+              : { ids: selected, action },
+        ),
       });
       const json = (await res.json().catch(() => null)) as
         | { ok: boolean; data?: { updated: number }; error?: string }
@@ -74,9 +105,12 @@ export default function UserBulkBar({
           ? `${updated} ta foydalanuvchi faollashtirildi`
           : action === "deactivate"
             ? `${updated} ta foydalanuvchi faolsizlantirildi`
-            : `${updated} ta foydalanuvchi guruhga qo'shildi`,
+            : action === "assignGroup"
+              ? `${updated} ta foydalanuvchi guruhga qo'shildi`
+              : `${updated} ta foydalanuvchining roli o'zgartirildi`,
       );
       if (action === "assignGroup") setGroupId("");
+      if (action === "assignRole") setRole("");
       router.refresh();
     } catch {
       setError("Tarmoq xatosi");
@@ -153,6 +187,31 @@ export default function UserBulkBar({
           >
             Guruhga qo&apos;shish
           </Button>
+          {canAssignRoles ? (
+            <>
+              <Select
+                value={role}
+                onChange={(event) => setRole(event.target.value)}
+                disabled={busy || roles.length === 0}
+                className="w-full sm:w-56!"
+              >
+                <option value="">{roles.length === 0 ? "Rollar yo'q" : "Rolni tanlang"}</option>
+                {roles.map((item) => (
+                  <option key={item} value={item}>
+                    {ROLE_LABELS[item] ?? item}
+                  </option>
+                ))}
+              </Select>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={busy || selected.length === 0 || !role}
+                onClick={() => run("assignRole")}
+              >
+                Rolni o&apos;zgartirish
+              </Button>
+            </>
+          ) : null}
           {notice ? <span className="text-sm font-medium text-emerald-600">{notice}</span> : null}
           {error ? <span className="text-sm font-medium text-rose-600">{error}</span> : null}
         </div>

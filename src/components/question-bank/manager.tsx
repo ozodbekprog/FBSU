@@ -261,6 +261,10 @@ export function QuestionBankManager({
               <p className="mt-3 text-sm font-medium leading-relaxed text-slate-900">{item.text}</p>
               {item.type === "TEXT" ? (
                 <p className="mt-3 text-xs text-slate-600">{t("crsQuizTextManual")}</p>
+              ) : item.type === "SHORT_ANSWER" || item.type === "NUMERIC" ? (
+                <p className="mt-3 text-xs font-medium text-emerald-700">
+                  {item.correct.map((value) => String(value)).join(", ")}
+                </p>
               ) : (
                 <ul className="mt-3 space-y-1.5">
                   {item.options.map((option, index) => {
