@@ -98,6 +98,8 @@ export const EVENTS = {
   "admin.subgroup.update": { category: "system", label: "Kichik guruh tahrirlandi" },
   "admin.subgroup.delete": { category: "system", label: "Kichik guruh o'chirildi" },
   "admin.settings.update": { category: "system", label: "Tizim sozlamalari o'zgardi" },
+  "courseRule.set": { category: "courses", label: "Faoliyat ochilish qoidasi o'rnatildi" },
+  "courseRule.delete": { category: "courses", label: "Faoliyat ochilish qoidasi olib tashlandi" },
   ANNOUNCEMENT_CREATE: { category: "system", label: "E'lon yaratildi" },
   ANNOUNCEMENT_DELETE: { category: "system", label: "E'lon o'chirildi" },
   MAINTENANCE_TOGGLE: { category: "system", label: "Texnik rejim o'zgardi" },
