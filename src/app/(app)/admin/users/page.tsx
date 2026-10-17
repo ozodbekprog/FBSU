@@ -8,7 +8,21 @@ import UserBulkBar from "@/components/admin/UserBulkBar";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { cn } from "@/lib/utils";
 
-const ALL_ROLES: readonly Role[] = ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA"];
+const ALL_ROLES: readonly Role[] = [
+  "ADMIN",
+  "REKTOR",
+  "PRO_RECTOR",
+  "DEKAN",
+  "KAFEDRA_MUDIRI",
+  "REGISTRAR",
+  "BUXGALTER",
+  "TYUTOR",
+  "TEACHER",
+  "STUDENT",
+  "XODIM",
+  "OTA_ONA",
+  "NAZORATCHI",
+];
 
 const ROLES: readonly Role[] = ALL_ROLES.filter((role) => role !== "OWNER");
 

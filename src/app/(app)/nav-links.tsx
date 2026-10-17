@@ -5,15 +5,11 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/components/i18n/LocaleProvider";
-import { useMediaQuery, useWebGLSupport } from "@/components/nav/nav-3d-env";
+import { useMediaQuery } from "@/components/nav/nav-3d-env";
+import { drawerIcon } from "@/components/nav/nav-drawer-icons";
 import { useNavCollapsed } from "@/components/nav/nav-collapsed";
-import dynamic from "next/dynamic";
-import { useCallback, useEffect, useRef, useState } from "react";
-
-const Nav3DLayer = dynamic(
-  () => import("@/components/nav/nav-3d-layer").then((mod) => mod.Nav3DLayer),
-  { ssr: false },
-);
+import { isNavActive, resolveActiveHref } from "@/components/nav/nav-active";
+import { useCallback, useRef, useState } from "react";
 
 export type NavLink = { href: string; label: string; badge?: ReactNode };
 export type NavGroup = { label: string; links: NavLink[] };
@@ -66,6 +62,7 @@ const TAB_ICONS: Record<MobileTabIcon, ReactNode> = {
 export function MobileTabBar({ tabs }: { tabs: MobileTab[] }) {
   const pathname = usePathname();
   const { t } = useI18n();
+  const activeHref = resolveActiveHref(pathname, tabs.map((tab) => tab.href));
 
   return (
     <nav
@@ -75,7 +72,7 @@ export function MobileTabBar({ tabs }: { tabs: MobileTab[] }) {
     >
       <div className="mx-auto flex max-w-md items-stretch px-1.5">
         {tabs.map((tab) => {
-          const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+          const active = isNavActive(pathname, activeHref, tab.href);
           return (
             <div key={tab.href} className="relative flex-1">
               <Link
@@ -148,10 +145,12 @@ function BurgerIcon() {
 export function NavLinks({ groups }: { groups: NavGroup[] }) {
   const pathname = usePathname();
   const { t } = useI18n();
+  const activeHref = resolveActiveHref(
+    pathname,
+    groups.flatMap((group) => group.links.map((link) => link.href)),
+  );
   const shellRef = useRef<HTMLDivElement>(null);
-  const webgl = useWebGLSupport();
   const desktop = useMediaQuery("(min-width: 768px)");
-  const with3d = webgl && desktop;
   const { collapsed, toggle } = useNavCollapsed();
   const [tip, setTip] = useState<{ label: string; y: number } | null>(null);
 
@@ -163,7 +162,6 @@ export function NavLinks({ groups }: { groups: NavGroup[] }) {
       data-collapsed={collapsed ? "true" : undefined}
       className="relative flex min-h-0 flex-1 flex-col"
     >
-      {with3d ? <Nav3DLayer containerRef={shellRef} /> : null}
       <button
         type="button"
         onClick={toggle}
@@ -226,7 +224,8 @@ export function NavLinks({ groups }: { groups: NavGroup[] }) {
             </p>
             <div className="space-y-0.5">
               {group.links.map((l, index) => {
-                const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
+                const active = isNavActive(pathname, activeHref, l.href);
+                const icon = drawerIcon(l.href);
                 return (
                   <Link
                     key={l.href}
@@ -248,14 +247,30 @@ export function NavLinks({ groups }: { groups: NavGroup[] }) {
                       data-nav3d-active={active ? "true" : "false"}
                       className="nav-icon flex size-6 shrink-0 items-center justify-center"
                     >
-                      {!with3d ? (
+                      {icon ? (
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.7"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                          className={cn(
+                            "size-[22px] shrink-0 transition-colors",
+                            active ? "text-gold-300" : "text-slate-400 group-hover:text-brand-500",
+                          )}
+                        >
+                          {icon}
+                        </svg>
+                      ) : (
                         <span
                           className={cn(
                             "size-1.5 rounded-full transition-colors",
                             active ? "bg-gold-400" : "bg-slate-300 group-hover:bg-brand-400",
                           )}
                         />
-                      ) : null}
+                      )}
                     </span>
                     <span className="nav-label">{l.label}</span>
                     {l.badge ? <span className="nav-badge">{l.badge}</span> : null}

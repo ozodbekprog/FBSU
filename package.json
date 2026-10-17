@@ -2,9 +2,13 @@
   "name": "fbsu",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
+    "vercel-build": "node scripts/vercel-build.mjs",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest",
@@ -45,6 +49,7 @@
     "qrcode": "^1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "sanitize-html": "^2.18.1",
     "three": "^0.186.1",
     "zod": "^4.6.5"
   },
@@ -55,6 +60,7 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sanitize-html": "^2.16.2",
     "@types/three": "^0.186.0",
     "@vitest/coverage-v8": "^5.0.4",
     "eslint": "^9",

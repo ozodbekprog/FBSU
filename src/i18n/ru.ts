@@ -140,6 +140,19 @@ export const ru: Dictionary = {
   certGradeUnsatisfactory: "Неудовлетворительно",
   certGradeNone: "Без оценки",
 
+
+  tchStudents: "чел.",
+  tchAttendanceTitle: "Баллы за посещаемость",
+  tchAttendanceSubtitle: "Отдельно для каждой группы — пришедший на занятие получает столько баллов",
+  tchNoGroups: "Для этого курса группы не найдены",
+  tchNoGroupTitle: "Без группы",
+  tchNoGroupSubtitle: "Для студентов без группы",
+  tchSave: "Сохранить",
+  tchGivePointsSubtitle: "По выбранной категории и баллам",
+  tchTotalForStudent: "Всего баллов у студента",
+  tchHistory: "Выданные баллы",
+  tchHistorySubtitle: "записей",
+
   settingsEyebrow: "Аккаунт",
   settingsTitle: "Настройки",
   settingsSubtitle: "Уведомления, интерфейс и связь",

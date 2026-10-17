@@ -272,6 +272,18 @@ function SecureExams() {
   );
 }
 
+function Nazorat() {
+  return (
+    <group>
+      <Tile a={[1.3, 1.7, 0.18]} m="paper" p={[0, 0, 0]} radius={0.08} />
+      <Ring rad={0.6} tube={0.1} m="brand" p={[0, 0.06, 0.14]} />
+      <Ball rad={0.25} m="brandDeep" p={[0, 0.06, 0.2]} />
+      <Ball rad={0.09} m="goldLight" p={[0.07, 0.15, 0.36]} />
+      <Cube a={[0.52, 0.075, 0.07]} m="gold" p={[0, -0.66, 0.12]} />
+    </group>
+  );
+}
+
 function Grades() {
   return (
     <group>
@@ -497,27 +509,20 @@ function Help() {
 /**
  * Fariza — AI yordamchi ikonkasi.
  *
- * Shakl: to'rt qirrali "uchqun" (sparkle) — sun'iy intellekt uchun
- * umum qabul qilingan belgi — plus orbita halqasi ("agent" ishlayotgani).
- * Uzun va qisqa nurlar navbatma-navbat: haqiqiy yulduz nurlanishi kabi.
+ * Shakl: "Negativ F" monogrammasi — oltin plitka ustida siyoh rangli «F».
+ * Plitka chuqur / yaqqol ko'rinadi, harf esa o'yilgan kabi o'qiladi.
  */
 function Assistant() {
   return (
     <group>
-      {/* Orbita halqasi — agent aylanib turganini bildiradi */}
-      <Ring rad={0.6} tube={0.075} m="brandLight" r={[PI / 2.5, 0, 0]} />
-      {/* Uzun nurlar (vertikal + gorizontal) */}
-      {[0, 1].map((i) => (
-        <Tile key={`long${i}`} a={[0.82, 0.15, 0.15]} m="gold" p={[0, 0, 0]} r={[0, 0, (i * PI) / 2]} />
-      ))}
-      {/* Qisqa diagonal nurlar */}
-      {[0, 1].map((i) => (
-        <Tile key={`short${i}`} a={[0.46, 0.11, 0.11]} m="goldLight" p={[0, 0, 0]} r={[0, 0, (i * PI) / 2 + PI / 4]} />
-      ))}
-      {/* Markaziy yadro */}
-      <Ball rad={0.16} m="goldLight" p={[0, 0, 0.02]} />
-      {/* Alohida kichik uchqun — "yangi fikr" belgisi */}
-      <Tile a={[0.22, 0.08, 0.08]} m="goldLight" p={[0.46, 0.46, 0]} r={[0, 0, PI / 4]} />
+      {/* Oltin plitka */}
+      <Tile a={[1.1, 1.1, 0.14]} m="gold" p={[0, 0, 0]} radius={0.14} />
+      {/* «F» — vertikal tayanch */}
+      <Tile a={[0.16, 0.6, 0.1]} m="brand" p={[-0.2, 0, 0.12]} radius={0.04} />
+      {/* «F» — yuqori chiziq */}
+      <Tile a={[0.44, 0.14, 0.1]} m="brand" p={[-0.04, 0.23, 0.12]} radius={0.04} />
+      {/* «F» — o'rta chiziq */}
+      <Tile a={[0.32, 0.14, 0.1]} m="brand" p={[-0.1, 0, 0.12]} radius={0.04} />
     </group>
   );
 }
@@ -836,6 +841,19 @@ function Diplomas() {
 }
 
 /** Moliya — oltin tangalar ustuni va hisob varaqasi. */
+/** Fakultet summalari — ko'tarilgan ustunlar va tilla tanga. */
+function FacultyRates() {
+  return (
+    <group>
+      <Cube a={[1.5, 0.16, 0.5]} m="brandDeep" p={[-0.5, -0.5, 0]} />
+      <Cube a={[1.2, 0.16, 0.5]} m="brand" p={[-0.35, -0.2, 0.07]} />
+      <Cube a={[0.9, 0.16, 0.5]} m="brandLight" p={[-0.2, 0.1, 0.14]} />
+      <Cyl rt={0.28} rb={0.28} h={0.12} seg={26} m="gold" p={[0.58, 0.5, 0.3]} />
+      <Cyl rt={0.22} rb={0.22} h={0.12} seg={26} m="goldLight" p={[0.58, 0.66, 0.3]} />
+    </group>
+  );
+}
+
 function Finance() {
   return (
     <group>
@@ -885,6 +903,7 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/academic-calendar": Academic,
   "/exams": Exams,
   "/secure-exams": SecureExams,
+  "/nazorat": Nazorat,
   "/grades": Grades,
   "/gradebook": Grades,
   "/gpa": Gpa,
@@ -923,7 +942,9 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/documents": Documents,
   "/diplomas": Diplomas,
   "/finance": Finance,
+  "/finance/rates": FacultyRates,
   "/payroll": Payroll,
+  "/teacher-points": Curator,
 };
 
 export const NAV3D_SPINNING = new Set([

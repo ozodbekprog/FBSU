@@ -15,6 +15,7 @@ import {
 } from "@/modules/access/history";
 
 const ROLE_LABEL_KEY: Record<Role, keyof Dictionary> = {
+  OWNER: "roleOwner",
   ADMIN: "mscRoleAdmin",
   REKTOR: "mscRoleRector",
   PRO_RECTOR: "mscRoleProRector",
@@ -27,7 +28,7 @@ const ROLE_LABEL_KEY: Record<Role, keyof Dictionary> = {
   STUDENT: "mscRoleStudent",
   XODIM: "mscRoleStaff",
   OTA_ONA: "mscRoleParent",
-  OWNER: "roleOwner",
+  NAZORATCHI: "roleNazoratchi",
 };
 
 const SEARCH_DEBOUNCE_MS = 350;

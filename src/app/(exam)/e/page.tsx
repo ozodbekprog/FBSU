@@ -18,7 +18,9 @@ export default async function ExamHomePage({
   const dictionary = getDictionary(locale);
   const params = await searchParams;
 
-  if (isStaff(user.role)) {
+  const isProctor = user.role === "NAZORATCHI";
+
+  if (isStaff(user.role) || isProctor) {
     return (
       <div className="mx-auto max-w-md">
         <Card className="p-6 text-center">
@@ -29,11 +31,17 @@ export default async function ExamHomePage({
             {dictionary.secTitle}
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-600">
-            {dictionary.secSubtitleStaff}
+            {isProctor ? dictionary.secNazoratSubtitle : dictionary.secSubtitleStaff}
           </p>
-          <ButtonLink href="/secure-exams" className="mt-5">
-            {dictionary.secStaffPanel}
-          </ButtonLink>
+          {isProctor ? (
+            <ButtonLink href="/nazorat" className="mt-5">
+              {dictionary.navNazorat}
+            </ButtonLink>
+          ) : (
+            <ButtonLink href="/secure-exams" className="mt-5">
+              {dictionary.secStaffPanel}
+            </ButtonLink>
+          )}
         </Card>
       </div>
     );

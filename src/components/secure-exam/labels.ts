@@ -32,6 +32,15 @@ export const EVENT_LABEL_KEY: Record<SecureEventType, keyof Dictionary> = {
   KEY_ANOMALY: "secEventKEY_ANOMALY",
   MOUSE_ANOMALY: "secEventMOUSE_ANOMALY",
   AUTOMATION_DETECTED: "secEventAUTOMATION_DETECTED",
+  DUPLICATE_TAB: "secEventDUPLICATE_TAB",
+  MOUSE_LEFT: "secEventMOUSE_LEFT",
+  DRAG_ATTEMPT: "secEventDRAG_ATTEMPT",
+  AUX_CLICK: "secEventAUX_CLICK",
+  CAMERA_BLOCKED: "secEventCAMERA_BLOCKED",
+  SNAPSHOT: "secEventSNAPSHOT",
+  FACE_MISSING: "secEventFACE_MISSING",
+  FACE_TURNED: "secEventFACE_TURNED",
+  MULTIPLE_FACES: "secEventMULTIPLE_FACES",
 };
 
 export const SEVERITY_TONE: Record<EventSeverity, "slate" | "amber" | "rose"> = {

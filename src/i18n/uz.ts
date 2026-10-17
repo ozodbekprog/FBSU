@@ -139,6 +139,19 @@ export const uz = {
   certGradeUnsatisfactory: "Qoniqarsiz",
   certGradeNone: "Baholanmagan",
 
+
+  tchStudents: "ta",
+  tchAttendanceTitle: "Davamat balli",
+  tchAttendanceSubtitle: "Har bir sinf uchun alohida — darsga kelgan talaba shuncha ball oladi",
+  tchNoGroups: "Bu kursga yozilgan sinf topilmadi",
+  tchNoGroupTitle: "Sinfsiz",
+  tchNoGroupSubtitle: "Sinfgа biriktirilmagan talabalar uchun",
+  tchSave: "Saqlash",
+  tchGivePointsSubtitle: "Tanlangan kategoriya va ballar bo'yicha",
+  tchTotalForStudent: "Talabaning jami bali",
+  tchHistory: "Berilgan ballar",
+  tchHistorySubtitle: "yozuv",
+
   settingsEyebrow: "Hisob",
   settingsTitle: "Sozlamalar",
   settingsSubtitle: "Bildirishnomalar, ko'rinish va aloqa",

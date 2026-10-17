@@ -10,9 +10,7 @@ import { SYNC_INTERVAL_MS } from "@/modules/secure-exam/config";
 import { severityOf, type SecureEventType } from "@/modules/secure-exam/events";
 import type { RunState } from "@/modules/secure-exam/types";
 import { EVENT_LABEL_KEY } from "@/components/secure-exam/labels";
-import { FaceScan } from "@/components/face/face-scan";
-import { useFaceGuard } from "@/components/secure-exam/use-face-guard";
-import { useInputGuard } from "@/components/secure-exam/use-input-guard";
+import { ensureFaceModels } from "@/components/face/face-scan";
 import {
   QUESTION_TYPE_KEY,
   QUESTION_TYPE_SOFT,
@@ -33,7 +31,6 @@ export type RunSettings = {
   webcamEnabled: boolean;
   maxWarnings: number;
   limitAction: "WARN" | "TERMINATE";
-  faceEnrolled: boolean;
 };
 
 function formatClock(seconds: number): string {
@@ -103,27 +100,26 @@ export function RunRoom({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [fullscreenActive, setFullscreenActive] = useState(false);
   const [multiMonitor, setMultiMonitor] = useState(false);
+  const [duplicateTab, setDuplicateTab] = useState(false);
+  const [faceAlert, setFaceAlert] = useState(false);
+  const [faceStatus, setFaceStatus] = useState<"off" | "ok" | "away" | "turned" | "multi">("off");
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState(false);
   const [toast, setToast] = useState<{ label: string; tone: "amber" | "rose" } | null>(null);
-  const [faceStage, setFaceStage] = useState<"idle" | "scan" | "verify" | "mismatch">("idle");
-  const [faceChip, setFaceChip] = useState<"monitoring" | "absent" | "multi" | null>(null);
 
   const answersRef = useRef<QuizAnswers>(initialAnswers);
   const eventsRef = useRef<QueuedEvent[]>([]);
   const screenCountRef = useRef<number | null>(null);
   const multiRaisedRef = useRef(false);
-  const blurredRef = useRef(false);
-  const wasHiddenRef = useRef(false);
+  const dupRaisedRef = useRef(false);
+  const darkCountRef = useRef(0);
+  const faceCooldownRef = useRef(0);
+  const faceMissingStreakRef = useRef(0);
   const phaseRef = useRef(phase);
   const finishedRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const toastTimerRef = useRef<number | null>(null);
-  const blurTimerRef = useRef<number | null>(null);
-  const faceDescriptorRef = useRef<number[] | null>(null);
-  const lastUrgentSyncRef = useRef(0);
-  const syncRef = useRef<(() => Promise<unknown>) | null>(null);
   const clientIdRef = useRef<string>(
     typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : "web",
   );
@@ -150,32 +146,10 @@ export function RunRoom({
   const pushEvent = useCallback(
     (type: SecureEventType, meta?: Record<string, string | number | boolean>) => {
       eventsRef.current.push({ type, meta });
-      if (phaseRef.current !== "running") return;
-      showToast(type);
-      if (severityOf(type) !== "INFO") {
-        const now = Date.now();
-        if (now - lastUrgentSyncRef.current > 2000) {
-          lastUrgentSyncRef.current = now;
-          window.setTimeout(() => {
-            void syncRef.current?.();
-          }, 400);
-        }
-      }
+      if (phaseRef.current === "running") showToast(type);
     },
     [showToast],
   );
-
-  useInputGuard({ active: phase === "running", onEvent: pushEvent });
-
-  useFaceGuard({
-    videoRef,
-    active: phase === "running" && cameraReady && settings.faceEnrolled,
-    onEvent: pushEvent,
-    onDescriptor: (descriptor) => {
-      faceDescriptorRef.current = descriptor;
-    },
-    onStatus: setFaceChip,
-  });
 
   const sync = useCallback(
     async (options?: { submit?: boolean }) => {
@@ -199,10 +173,6 @@ export function RunRoom({
         events: eventsRef.current.splice(0, eventsRef.current.length),
         answers: answersRef.current,
       };
-      if (faceDescriptorRef.current) {
-        payload.face = { descriptor: faceDescriptorRef.current };
-        faceDescriptorRef.current = null;
-      }
       if (options?.submit) payload.submit = true;
       const result = await apiFetch<RunState>(
         `/api/secure-exams/runs/${runId}/sync`,
@@ -217,9 +187,6 @@ export function RunRoom({
       const state = result.data;
       setError(null);
       setWarnings(state.warnings);
-      if (state.face?.check === "mismatch" && phaseRef.current === "running") {
-        setToast({ label: t("secEventFACE_MISMATCH"), tone: "rose" });
-      }
       if (state.endsAt) {
         setLocalDeadlineMs(Date.parse(state.endsAt) + (Date.now() - Date.parse(state.serverNow)));
       }
@@ -234,17 +201,6 @@ export function RunRoom({
     },
     [runId, t],
   );
-
-  useEffect(() => {
-    syncRef.current = sync;
-  }, [sync]);
-
-  const enterRoom = useCallback(() => {
-    setPhase("running");
-    if (settings.requireFullscreen) eventsRef.current.push({ type: "FULLSCREEN_ENTER" });
-    if (settings.webcamEnabled) eventsRef.current.push({ type: "WEBCAM_ON" });
-    void sync();
-  }, [settings.requireFullscreen, settings.webcamEnabled, sync]);
 
   const finish = useCallback(
     async () => {
@@ -303,51 +259,19 @@ export function RunRoom({
   useEffect(() => {
     if (phase !== "running") return;
     const onVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        wasHiddenRef.current = true;
-        pushEvent("TAB_HIDDEN");
-      } else {
-        pushEvent("TAB_VISIBLE");
-        if (wasHiddenRef.current) {
-          wasHiddenRef.current = false;
-          showToast("TAB_HIDDEN");
-        }
-      }
+      pushEvent(document.visibilityState === "hidden" ? "TAB_HIDDEN" : "TAB_VISIBLE");
     };
-    const onBlur = () => {
-      if (blurTimerRef.current !== null) window.clearTimeout(blurTimerRef.current);
-      blurTimerRef.current = window.setTimeout(() => {
-        blurTimerRef.current = null;
-        if (document.visibilityState === "visible") {
-          pushEvent("WINDOW_BLUR");
-          blurredRef.current = true;
-        }
-      }, 150);
-    };
-    const onFocus = () => {
-      if (blurTimerRef.current !== null) {
-        window.clearTimeout(blurTimerRef.current);
-        blurTimerRef.current = null;
-      }
-      pushEvent("WINDOW_FOCUS");
-      if (blurredRef.current) {
-        blurredRef.current = false;
-        showToast("WINDOW_BLUR");
-      }
-    };
+    const onBlur = () => pushEvent("WINDOW_BLUR");
+    const onFocus = () => pushEvent("WINDOW_FOCUS");
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("blur", onBlur);
     window.addEventListener("focus", onFocus);
     return () => {
-      if (blurTimerRef.current !== null) {
-        window.clearTimeout(blurTimerRef.current);
-        blurTimerRef.current = null;
-      }
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("blur", onBlur);
       window.removeEventListener("focus", onFocus);
     };
-  }, [phase, pushEvent, showToast]);
+  }, [phase, pushEvent]);
 
   useEffect(() => {
     if (phase !== "running" || !settings.blockCopy) return;
@@ -381,14 +305,7 @@ export function RunRoom({
         pushEvent("PRINT_ATTEMPT");
         return;
       }
-      if (event.key === "F12") {
-        event.preventDefault();
-        pushEvent("KEY_BLOCKED", { key: event.key });
-        return;
-      }
-      const shiftCombo = combo && event.shiftKey && ["I", "J", "C", "K", "U"].includes(key);
-      const macCombo = event.metaKey && event.altKey && ["I", "J", "C", "U"].includes(key);
-      if (shiftCombo || macCombo) {
+      if (event.key === "F12" || (combo && event.shiftKey && ["I", "J", "C"].includes(key))) {
         event.preventDefault();
         pushEvent("KEY_BLOCKED", { key: event.key });
       }
@@ -408,12 +325,10 @@ export function RunRoom({
   }, [phase]);
 
   useEffect(() => {
-    const video = videoRef.current;
-    const stream = streamRef.current;
-    if (!cameraReady || !video || !stream) return;
-    if (video.srcObject !== stream) video.srcObject = stream;
-    void video.play().catch(() => void 0);
-  }, [cameraReady, phase]);
+    if (cameraReady && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [cameraReady]);
 
   useEffect(() => {
     const stream = streamRef.current;
@@ -433,21 +348,208 @@ export function RunRoom({
     [],
   );
 
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return;
+    const channel = new BroadcastChannel(`secure-exam-room-${runId}`);
+    const clientId = clientIdRef.current;
+    const flagDuplicate = () => {
+      if (dupRaisedRef.current) return;
+      dupRaisedRef.current = true;
+      setDuplicateTab(true);
+      eventsRef.current.push({ type: "DUPLICATE_TAB" });
+      showToast("DUPLICATE_TAB");
+    };
+    channel.onmessage = (event: MessageEvent) => {
+      const data = event.data as { clientId?: string; type?: string } | null;
+      if (!data || typeof data.clientId !== "string") return;
+      if (data.clientId === clientId) return;
+      flagDuplicate();
+      if (data.type === "hello") {
+        channel.postMessage({ clientId, type: "here" });
+      }
+    };
+    channel.postMessage({ clientId, type: "hello" });
+    const heartbeat = window.setInterval(
+      () => channel.postMessage({ clientId, type: "beat" }),
+      5000,
+    );
+    return () => {
+      window.clearInterval(heartbeat);
+      channel.close();
+    };
+  }, [runId, showToast]);
+
+  useEffect(() => {
+    if (phase !== "running") return;
+    const onAux = (event: MouseEvent) => {
+      if (event.button !== 1) return;
+      event.preventDefault();
+      pushEvent("AUX_CLICK");
+    };
+    const onDrag = (event: Event) => {
+      event.preventDefault();
+      pushEvent("DRAG_ATTEMPT");
+    };
+    const onMouseOut = (event: MouseEvent) => {
+      if (event.relatedTarget === null) pushEvent("MOUSE_LEFT");
+    };
+    document.addEventListener("auxclick", onAux, true);
+    document.addEventListener("dragstart", onDrag, true);
+    document.addEventListener("drop", onDrag, true);
+    document.addEventListener("mouseout", onMouseOut, true);
+    return () => {
+      document.removeEventListener("auxclick", onAux, true);
+      document.removeEventListener("dragstart", onDrag, true);
+      document.removeEventListener("drop", onDrag, true);
+      document.removeEventListener("mouseout", onMouseOut, true);
+    };
+  }, [phase, pushEvent]);
+
+  useEffect(() => {
+    if (!cameraReady || phase !== "running") return;
+    const canvas = document.createElement("canvas");
+    canvas.width = 160;
+    canvas.height = 120;
+    const timer = window.setInterval(() => {
+      const video = videoRef.current;
+      const context = canvas.getContext("2d");
+      if (!video || !context || video.readyState < 2) return;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const frame = context.getImageData(0, 0, canvas.width, canvas.height);
+      let sum = 0;
+      for (let index = 0; index < frame.data.length; index += 4) {
+        sum += frame.data[index] + frame.data[index + 1] + frame.data[index + 2];
+      }
+      const average = sum / (frame.data.length / 4) / 3;
+      if (average < 12) {
+        darkCountRef.current += 1;
+      } else {
+        darkCountRef.current = 0;
+      }
+      if (darkCountRef.current >= 3) {
+        darkCountRef.current = 0;
+        pushEvent("CAMERA_BLOCKED");
+      }
+    }, 20_000);
+    return () => window.clearInterval(timer);
+  }, [cameraReady, phase, pushEvent]);
+
+  useEffect(() => {
+    if (!cameraReady || phase !== "running") return;
+    const sendSnapshot = async () => {
+      const video = videoRef.current;
+      if (!video || video.readyState < 2) return;
+      const canvas = document.createElement("canvas");
+      canvas.width = 320;
+      canvas.height = 240;
+      const context = canvas.getContext("2d");
+      if (!context) return;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const image = canvas.toDataURL("image/jpeg", 0.55);
+      if (image.length > 250_000) return;
+      eventsRef.current.push({ type: "SNAPSHOT" });
+      await apiFetch(
+        `/api/secure-exams/runs/${runId}/snapshot`,
+        "POST",
+        { image },
+        t("commonNetworkError"),
+      );
+    };
+    const first = window.setTimeout(() => void sendSnapshot(), 8_000);
+    const timer = window.setInterval(() => void sendSnapshot(), 60_000);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(timer);
+    };
+  }, [cameraReady, phase, runId, t]);
+
+  useEffect(() => {
+    if (!cameraReady || phase !== "running") return;
+    let cancelled = false;
+    let interval: number | null = null;
+    const startMonitoring = async () => {
+      try {
+        const faceapi = await ensureFaceModels();
+        if (cancelled) return;
+        const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 });
+        interval = window.setInterval(async () => {
+          const video = videoRef.current;
+          if (!video || video.readyState < 2) return;
+          const now = Date.now();
+          try {
+            const detections = await faceapi
+              .detectAllFaces(video, options)
+              .withFaceLandmarks();
+            if (cancelled) return;
+            if (detections.length === 0) {
+              faceMissingStreakRef.current += 1;
+              setFaceAlert(true);
+              setFaceStatus("away");
+              if (
+                faceMissingStreakRef.current >= 2 &&
+                now - faceCooldownRef.current > 12_000
+              ) {
+                faceCooldownRef.current = now;
+                faceMissingStreakRef.current = 0;
+                pushEvent("FACE_MISSING");
+              }
+              return;
+            }
+            faceMissingStreakRef.current = 0;
+            if (detections.length > 1) {
+              setFaceAlert(true);
+              setFaceStatus("multi");
+              if (now - faceCooldownRef.current > 12_000) {
+                faceCooldownRef.current = now;
+                pushEvent("MULTIPLE_FACES", { count: detections.length });
+              }
+              return;
+            }
+            const landmarks = detections[0].landmarks;
+            const leftEye = landmarks.getLeftEye();
+            const rightEye = landmarks.getRightEye();
+            const nose = landmarks.getNose();
+            const leftCenter = leftEye.reduce((sum, p) => sum + p.x, 0) / leftEye.length;
+            const rightCenter = rightEye.reduce((sum, p) => sum + p.x, 0) / rightEye.length;
+            const eyeDistance = Math.abs(rightCenter - leftCenter) || 1;
+            const noseTip = nose[nose.length - 1];
+            const eyeMid = (leftCenter + rightCenter) / 2;
+            const yaw = Math.abs(noseTip.x - eyeMid) / eyeDistance;
+            const dLeft = Math.abs(noseTip.x - leftCenter);
+            const dRight = Math.abs(noseTip.x - rightCenter);
+            const asym = Math.abs(dLeft - dRight) / (dLeft + dRight || 1);
+            if (yaw > 0.18 || asym > 0.28) {
+              setFaceAlert(true);
+              setFaceStatus("turned");
+              if (now - faceCooldownRef.current > 12_000) {
+                faceCooldownRef.current = now;
+                pushEvent("FACE_TURNED", {
+                  yaw: Number(yaw.toFixed(2)),
+                  asym: Number(asym.toFixed(2)),
+                });
+              }
+              return;
+            }
+            setFaceAlert(false);
+            setFaceStatus("ok");
+          } catch {
+            void 0;
+          }
+        }, 3000);
+      } catch {
+        void 0;
+      }
+    };
+    void startMonitoring();
+    return () => {
+      cancelled = true;
+      if (interval !== null) window.clearInterval(interval);
+    };
+  }, [cameraReady, phase, pushEvent]);
+
   async function start() {
     setError(null);
     setCameraError(false);
-    if (settings.webcamEnabled && settings.faceEnrolled) {
-      if (settings.requireFullscreen) {
-        try {
-          await document.documentElement.requestFullscreen();
-        } catch {
-          setError(t("secGateFullscreenText"));
-          return;
-        }
-      }
-      setFaceStage("scan");
-      return;
-    }
     if (settings.webcamEnabled) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -466,32 +568,10 @@ export function RunRoom({
         return;
       }
     }
-    enterRoom();
-  }
-
-  async function onFaceDescriptor(descriptor: number[]) {
-    faceDescriptorRef.current = descriptor;
-    setFaceStage("verify");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      streamRef.current = stream;
-      setCameraReady(true);
-    } catch {
-      setCameraError(true);
-      setFaceStage("idle");
-      return;
-    }
-    const state = await sync();
-    if (!state) {
-      setFaceStage("idle");
-      return;
-    }
-    if (state.face?.check === "mismatch") {
-      setFaceStage("mismatch");
-      return;
-    }
-    setFaceStage("idle");
-    enterRoom();
+    setPhase("running");
+    if (settings.requireFullscreen) eventsRef.current.push({ type: "FULLSCREEN_ENTER" });
+    if (settings.webcamEnabled) eventsRef.current.push({ type: "WEBCAM_ON" });
+    void sync();
   }
 
   function setValue(questionId: string, value: AnswerValue) {
@@ -500,7 +580,7 @@ export function RunRoom({
 
   function toggleMultiple(questionId: string, index: number) {
     const current = answers[questionId];
-    const selected = Array.isArray(current)
+    const selected: number[] = Array.isArray(current)
       ? current.filter((item): item is number => typeof item === "number")
       : [];
     const next = selected.includes(index)
@@ -550,55 +630,31 @@ export function RunRoom({
               </li>
             ) : null}
             {settings.webcamEnabled ? (
-              <li className="flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-brand-600" />
-                {t("secGateCameraTitle")}
-              </li>
+              <>
+                <li className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-brand-600" />
+                  {t("secGateCameraTitle")}
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-brand-600" />
+                  {t("secFaceHint")}
+                </li>
+              </>
             ) : null}
             <li className="flex items-center gap-2">
               <span className="size-1.5 rounded-full bg-brand-600" />
               {t("secWarningLimit", { max: settings.maxWarnings })}
             </li>
           </ul>
-          {settings.webcamEnabled && !settings.faceEnrolled ? (
-            <p className="mt-3 text-xs text-slate-500">{t("secFaceGateNotEnrolled")}</p>
-          ) : null}
-          {settings.webcamEnabled && settings.faceEnrolled && faceStage === "scan" ? (
-            <div className="mt-5 space-y-3">
-              <p className="text-sm font-semibold text-slate-800">{t("secFaceGateTitle")}</p>
-              <p className="text-sm text-slate-600">{t("secFaceGateText")}</p>
-              <FaceScan
-                onDescriptor={(descriptor) => void onFaceDescriptor(descriptor)}
-                onCancel={() => setFaceStage("idle")}
-              />
-            </div>
-          ) : null}
-          {settings.webcamEnabled && settings.faceEnrolled && faceStage === "verify" ? (
-            <p className="mt-5 text-sm text-slate-600">{t("secFaceGateVerify")}</p>
-          ) : null}
-          {settings.webcamEnabled && settings.faceEnrolled && faceStage === "mismatch" ? (
-            <div className="mt-5 space-y-3 rounded-xl bg-rose-50 px-3.5 py-3">
-              <p className="text-sm text-rose-700">{t("secFaceGateMismatch")}</p>
-              <Button
-                variant="secondary"
-                className="w-full"
-                onClick={() => setFaceStage("scan")}
-              >
-                {t("schFaceRetry")}
-              </Button>
-            </div>
-          ) : null}
           {settings.webcamEnabled && cameraError ? (
             <p className="mt-4 rounded-xl bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700">
               {t("secGateCameraError")}
             </p>
           ) : null}
           {error ? <p className="mt-4 text-sm text-rose-600">{error}</p> : null}
-          {settings.webcamEnabled && settings.faceEnrolled && faceStage !== "idle" ? null : (
-            <Button size="lg" className="mt-5 w-full py-3 text-base!" onClick={() => void start()}>
-              {t("secGateStart")}
-            </Button>
-          )}
+          <Button size="lg" className="mt-5 w-full py-3 text-base!" onClick={() => void start()}>
+            {t("secGateStart")}
+          </Button>
         </Card>
       </div>
     );
@@ -651,6 +707,16 @@ export function RunRoom({
 
   return (
     <div className="mx-auto max-w-3xl">
+      {duplicateTab ? (
+        <div className="mb-3 flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="3" width="13" height="13" rx="2" />
+            <path d="M9 21h11a2 2 0 0 0 2-2V9" />
+          </svg>
+          {t("secDuplicateTab")}
+        </div>
+      ) : null}
+
       {multiMonitor ? (
         <div className="mb-4 flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -663,7 +729,6 @@ export function RunRoom({
 
       {toast ? (
         <div
-          role={toast.tone === "rose" ? "alert" : "status"}
           className={cn(
             "fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-full px-4 py-2 text-sm font-medium shadow-lg",
             toast.tone === "rose" ? "bg-rose-600 text-white" : "bg-amber-500 text-white",
@@ -815,26 +880,36 @@ export function RunRoom({
       </div>
 
       {cameraReady ? (
-        <div className="fixed right-3 top-20 z-40 overflow-hidden rounded-xl border border-slate-200 bg-black shadow-lg md:right-4 md:top-24">
+        <div
+          className={cn(
+            "fixed bottom-24 right-4 z-40 overflow-hidden rounded-xl border bg-black shadow-lg transition-[border-color,box-shadow] duration-300",
+            faceAlert
+              ? "border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.35)]"
+              : "border-slate-200",
+          )}
+        >
           <video ref={videoRef} autoPlay muted playsInline className="h-28 w-40 object-cover" />
           <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white">
-            <span className="size-1.5 animate-pulse rounded-full bg-rose-500" />
-            {t("secCamera")}
-          </span>
-          {settings.faceEnrolled && faceChip ? (
             <span
               className={cn(
-                "absolute bottom-0 left-0 right-0 px-2 py-1 text-center text-[10px] font-medium text-white",
-                faceChip === "monitoring" ? "bg-emerald-600/90" : "bg-rose-600/90",
+                "size-1.5 rounded-full",
+                faceStatus === "ok"
+                  ? "bg-emerald-400"
+                  : faceStatus === "off"
+                    ? "animate-pulse bg-rose-500"
+                    : "animate-pulse bg-rose-500",
               )}
-            >
-              {faceChip === "monitoring"
-                ? t("secFaceChipMonitoring")
-                : faceChip === "absent"
-                  ? t("secFaceChipAbsent")
-                  : t("secFaceChipMulti")}
-            </span>
-          ) : null}
+            />
+            {faceStatus === "ok"
+              ? t("secFaceOk")
+              : faceStatus === "away"
+                ? t("secFaceAway")
+                : faceStatus === "turned"
+                  ? t("secFaceTurned")
+                  : faceStatus === "multi"
+                    ? t("secFaceMulti")
+                    : t("secCamera")}
+          </span>
         </div>
       ) : null}
 

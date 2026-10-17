@@ -117,7 +117,7 @@ const DEMO_ACCOUNTS = [
   },
   {
     roleKey: "authRoleTeacher" as const,
-    email: "o.ismoilova@ttpu.uz",
+    email: "t.prog@ttpu.uz",
     icon: (
       <svg
         viewBox="0 0 24 24"

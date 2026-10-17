@@ -83,7 +83,60 @@ export async function GET(
   });
   messages.reverse();
 
-  return Response.json({ ok: true, data: { messages } });
+  // Qo'ng'iroq tarixi: CallSession yozuvlari xabarlar oqimiga
+  // birlashtirilib ko'rsatiladi (kim qo'ng'iroq qilgan, javob berilganmi,
+  // qancha gaplashilgan). Alohida xabar yozuvi yaratilmaydi — manba
+  // yagona: CallSession.
+  const calls = await prisma.callSession.findMany({
+    where: {
+      conversationId: id,
+      ...(visibleFrom ? { createdAt: { gt: visibleFrom } } : {}),
+    },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+    select: {
+      id: true,
+      callerId: true,
+      calleeId: true,
+      status: true,
+      media: true,
+      startedAt: true,
+      endedAt: true,
+      createdAt: true,
+    },
+  });
+
+  const nowMs = Date.now();
+  const callMessages = calls.map((call) => ({
+    id: `call-${call.id}`,
+    conversationId: id,
+    senderId: call.callerId,
+    body: "",
+    type: "CALL" as const,
+    isRead: true,
+    createdAt: call.createdAt,
+    call: {
+      id: call.id,
+      status: call.status,
+      media: call.media,
+      callerId: call.callerId,
+      calleeId: call.calleeId,
+      durationSec: call.startedAt
+        ? Math.max(
+            0,
+            Math.round(
+              ((call.endedAt ? call.endedAt.getTime() : nowMs) - call.startedAt.getTime()) / 1000,
+            ),
+          )
+        : null,
+    },
+  }));
+
+  const timeline = [...messages, ...callMessages]
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    .slice(-100);
+
+  return Response.json({ ok: true, data: { messages: timeline } });
 }
 
 export async function POST(

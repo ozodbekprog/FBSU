@@ -30,6 +30,7 @@ type ScanData = {
 type CameraErrorKey = "schCameraUnsupported" | "schCameraPermission" | "schCameraFailed";
 
 const ROLE_LABEL_KEY: Record<Role, keyof Dictionary> = {
+  OWNER: "roleOwner",
   ADMIN: "mscRoleAdmin",
   REKTOR: "mscRoleRector",
   PRO_RECTOR: "mscRoleProRector",
@@ -42,7 +43,7 @@ const ROLE_LABEL_KEY: Record<Role, keyof Dictionary> = {
   STUDENT: "mscRoleStudent",
   XODIM: "mscRoleStaff",
   OTA_ONA: "mscRoleParent",
-  OWNER: "roleOwner",
+  NAZORATCHI: "roleNazoratchi",
 };
 
 const TAB_BASE =

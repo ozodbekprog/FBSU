@@ -83,10 +83,11 @@ const ROLE_COLORS: Record<Role, string> = {
   DEKAN: "#7c3aed",
   PRO_RECTOR: "#ca8a04",
   REKTOR: "#c9a227",
+  OWNER: "#c9a227",
   ADMIN: "#e11d48",
   XODIM: "#64748b",
   OTA_ONA: "#0d9488",
-  OWNER: "#c9a227",
+  NAZORATCHI: "#64748b",
 };
 
 const ROLE_LABELS: Record<Role, keyof Dictionary> = {
@@ -99,10 +100,11 @@ const ROLE_LABELS: Record<Role, keyof Dictionary> = {
   DEKAN: "dashRoleDeans",
   PRO_RECTOR: "dashRoleProRectors",
   REKTOR: "dashRoleRector",
+  OWNER: "roleOwner",
   ADMIN: "dashRoleAdmins",
   XODIM: "dashRoleStaff",
   OTA_ONA: "dashRoleParents",
-  OWNER: "roleOwner",
+  NAZORATCHI: "secNazoratTitle",
 };
 
 const ATTENDED: AttendanceStatus[] = ["PRESENT", "LATE"];

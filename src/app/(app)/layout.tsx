@@ -140,6 +140,12 @@ export default async function AppLayout({
         ...(hasCapability(user.role, "finance.view") || user.role === "STUDENT"
           ? [{ href: "/finance", label: dictionary.finTitle }]
           : []),
+        ...(["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"].includes(user.role)
+          ? [{ href: "/finance/rates", label: dictionary.finNavRates }]
+          : []),
+        ...(user.role === "TEACHER" || user.role === "ADMIN"
+          ? [{ href: "/teacher-points", label: dictionary.tchNavPoints }]
+          : []),
         { href: "/my-qr", label: dictionary.accMyQr },
         ...(hasCapability(user.role, "access.viewLogs")
           ? [{ href: "/access", label: dictionary.accTitle }]
@@ -169,6 +175,9 @@ export default async function AppLayout({
           : []),
         ...(hasCapability(user.role, "curator.manage")
           ? [{ href: "/curator", label: dictionary.navCurator }]
+          : []),
+        ...(user.role === "ADMIN" || user.role === "NAZORATCHI"
+          ? [{ href: "/nazorat", label: dictionary.navNazorat }]
           : []),
         ...(user.role === "REGISTRAR"
           ? [
@@ -224,7 +233,7 @@ export default async function AppLayout({
       "/dashboard", "/assistant", "/courses", "/board", "/journal", "/journals",
       "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/secure-exams", "/attendance",
       "/reports", "/workload", "/staff", "/tasks", "/my-qr", "/messages", "/bookings", "/rooms",
-      "/research", "/search", "/help", "/bounty", "/settings",
+      "/research", "/teacher-points", "/search", "/help", "/bounty", "/settings",
     ],
     STUDENT: [
       "/dashboard", "/assistant", "/courses", "/board", "/schedule", "/calendar",
@@ -235,6 +244,9 @@ export default async function AppLayout({
     XODIM: [
       "/dashboard", "/assistant", "/staff", "/tasks", "/my-qr", "/access", "/schedule", "/calendar",
       "/academic-calendar", "/messages", "/rooms", "/bookings", "/search", "/help", "/bounty", "/settings",
+    ],
+    NAZORATCHI: [
+      "/dashboard", "/nazorat", "/messages", "/search", "/help", "/settings",
     ],
     // Buxgalter: moliyaviy vazifa uchun faqat kerakli bo'limlar.
     // Jadval, davomat va xodimlar davomati olib tashlandi — ular oylik
@@ -280,6 +292,8 @@ export default async function AppLayout({
                     ? dictionary.roleStaff
                     : user.role === "OTA_ONA"
                       ? dictionary.roleParent
+                    : user.role === "NAZORATCHI"
+                      ? dictionary.roleNazoratchi
                     : user.role === "TEACHER"
                   ? dictionary.roleTeacher
                   : user.group?.name ?? dictionary.roleStudent;

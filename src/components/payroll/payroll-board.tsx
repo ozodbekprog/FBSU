@@ -113,8 +113,8 @@ type Dict = {
   saveError: string; amountError: string; payCancel: string; editShort: string; payDelete: string; deleteHint: string;
   roleBuxgalter: string; roleXodim: string; roleTyutor: string;
   roleHead: string; roleDean: string; roleProRector: string; roleRector: string;
-  roleAdmin: string; roleRegistrar: string; roleTeacher: string;
-  roleStudent: string; roleParent: string; roleOwner?: string;
+  roleAdmin: string; roleRegistrar: string; roleTeacher: string; roleOwner?: string;
+  roleStudent: string; roleParent: string; roleNazoratchi: string;
 };
 
 type Tab = "records" | "grants";
@@ -174,12 +174,13 @@ export default function PayrollBoard({
       DEKAN: d.roleDean,
       PRO_RECTOR: d.roleProRector,
       REKTOR: d.roleRector,
+      OWNER: d.roleOwner ?? d.roleAdmin,
       ADMIN: d.roleAdmin,
       REGISTRAR: d.roleRegistrar,
       TEACHER: d.roleTeacher,
       STUDENT: d.roleStudent,
       OTA_ONA: d.roleParent,
-      OWNER: d.roleOwner ?? d.roleAdmin,
+      NAZORATCHI: d.roleNazoratchi,
     }),
     [d],
   );

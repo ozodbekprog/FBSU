@@ -8,6 +8,7 @@ import { SearchEmpty } from "./search-empty";
 import type { SearchResults } from "./search-data";
 
 const ROLE_KEY: Record<Role, keyof Dictionary> = {
+  OWNER: "roleOwner",
   ADMIN: "mscSrchRoleAdmin",
   REKTOR: "mscSrchRoleRector",
   PRO_RECTOR: "mscSrchRoleProRector",
@@ -20,10 +21,11 @@ const ROLE_KEY: Record<Role, keyof Dictionary> = {
   STUDENT: "mscSrchRoleStudent",
   XODIM: "mscSrchRoleStaff",
   OTA_ONA: "mscSrchRoleParent",
-  OWNER: "roleOwner",
+  NAZORATCHI: "roleNazoratchi",
 };
 
 const ROLE_TONES: Record<Role, string> = {
+  OWNER: "gold",
   ADMIN: "rose",
   REKTOR: "gold",
   PRO_RECTOR: "gold",
@@ -36,7 +38,7 @@ const ROLE_TONES: Record<Role, string> = {
   STUDENT: "slate",
   XODIM: "slate",
   OTA_ONA: "green",
-  OWNER: "gold",
+  NAZORATCHI: "slate",
 };
 
 const MATERIAL_TYPE_KEY: Record<MaterialType, keyof Dictionary> = {

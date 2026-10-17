@@ -16,7 +16,7 @@ import {
   shuffledQuestions,
 } from "@/modules/secure-exam/order";
 import { effectiveDeadline } from "@/modules/secure-exam/policy";
-import { isValidFaceDescriptor } from "@/modules/attendance/face";
+import { finalizeRun } from "@/server/secure-exam";
 
 export const metadata: Metadata = {
   title: "Xavfsiz imtihon",
@@ -57,6 +57,7 @@ export default async function SecureRunPage({
         : permutedOptions(question.options, optionSeed(run.attemptId, question.id)),
   }));
 
+
   const durationMin = run.exam.durationMin ?? run.exam.quiz.timeLimitMin;
   const deadline = effectiveDeadline({
     startedAt: run.startedAt,
@@ -65,16 +66,26 @@ export default async function SecureRunPage({
     extraMin: run.extraMin,
   });
 
+  if (deadline && Date.now() >= deadline.getTime()) {
+    await prisma.$transaction(async (tx) => {
+      await tx.secureExamEvent.create({
+        data: {
+          runId: run.id,
+          type: "TIMEOUT",
+          severity: "INFO",
+          meta: { reason: "reopen_after_deadline" },
+        },
+      });
+      await finalizeRun(tx, run.id, "SUBMITTED", new Date());
+    });
+    redirect(`/quizzes/${run.exam.quizId}/results`);
+  }
+
   const initialAnswers = remapAnswersToDisplay(
     asAnswers(run.attempt.answers),
     fullQuestions,
     run.attemptId,
   );
-
-  const faceRow = await prisma.user.findUnique({
-    where: { id: user.id },
-    select: { faceDescriptor: true },
-  });
 
   return (
     <RunRoom
@@ -92,7 +103,6 @@ export default async function SecureRunPage({
         webcamEnabled: run.exam.webcamEnabled,
         maxWarnings: run.exam.maxWarnings,
         limitAction: run.exam.limitAction,
-        faceEnrolled: isValidFaceDescriptor(faceRow?.faceDescriptor),
       }}
     />
   );
