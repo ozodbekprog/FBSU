@@ -20,7 +20,7 @@ const PAGE_SIZE = 100;
 export default async function AdminAuditPage({
   searchParams,
 }: {
-  searchParams: Promise<{ action?: string; date?: string; category?: string; page?: string }>;
+  searchParams: Promise<{ action?: string; date?: string; category?: string; actor?: string; page?: string }>;
 }) {
   await requireRole(["ADMIN"]);
   const locale = await getLocale();
@@ -30,6 +30,7 @@ export default async function AdminAuditPage({
 
   const action = typeof params.action === "string" ? params.action.trim() : "";
   const date = typeof params.date === "string" ? params.date.trim() : "";
+  const actor = typeof params.actor === "string" ? params.actor.trim() : "";
   const categoryRaw = typeof params.category === "string" ? params.category.trim() : "";
   const category = (EVENT_CATEGORIES as readonly string[]).includes(categoryRaw)
     ? (categoryRaw as EventCategory)
@@ -47,8 +48,9 @@ export default async function AdminAuditPage({
     where.action = { in: eventsByCategory(category) };
   }
   if (dayStart && dayEnd) where.createdAt = { gte: dayStart, lt: dayEnd };
+  if (actor) where.actorId = actor;
 
-  const [total, logs, actionGroups] = await Promise.all([
+  const [total, logs, actionGroups, actorGroups] = await Promise.all([
     prisma.auditLog.count({ where }),
     prisma.auditLog.findMany({
       where,
@@ -62,7 +64,23 @@ export default async function AdminAuditPage({
       _count: { _all: true },
       orderBy: { action: "asc" },
     }),
+    prisma.auditLog.findMany({
+      where: { actorId: { not: null } },
+      distinct: ["actorId"],
+      select: { actorId: true },
+      take: 200,
+    }),
   ]);
+
+  const actorIds = actorGroups.flatMap((group) => (group.actorId ? [group.actorId] : []));
+  const actorUsers =
+    actorIds.length > 0
+      ? await prisma.user.findMany({
+          where: { id: { in: actorIds } },
+          select: { id: true, name: true },
+          orderBy: { name: "asc" },
+        })
+      : [];
 
   const categoryCounts = new Map<EventCategory, number>();
   for (const group of actionGroups) {
@@ -81,7 +99,7 @@ export default async function AdminAuditPage({
     actor: log.actor,
   }));
 
-  const hasFilters = Boolean(action || category || date);
+  const hasFilters = Boolean(action || category || date || actor);
 
   return (
     <>
@@ -112,6 +130,17 @@ export default async function AdminAuditPage({
                     </option>
                   ) : null,
                 )}
+              </Select>
+            </div>
+            <div className="w-full sm:w-56">
+              <Label>Foydalanuvchi</Label>
+              <Select name="actor" defaultValue={actor}>
+                <option value="">Barcha foydalanuvchilar</option>
+                {actorUsers.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
               </Select>
             </div>
             <div className="w-full sm:w-48">
@@ -145,7 +174,7 @@ export default async function AdminAuditPage({
         total={total}
         page={page}
         pageCount={Math.max(1, Math.ceil(total / PAGE_SIZE))}
-        query={{ action, date, category }}
+        query={{ action, date, category, actor }}
       />
     </>
   );

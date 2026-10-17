@@ -159,6 +159,7 @@ export default async function AdminUsersPage({
           email: user.email,
           isActive: user.isActive,
         }))}
+        groups={groups.map((group) => ({ id: group.id, name: group.name }))}
       />
 
       <UsersManager

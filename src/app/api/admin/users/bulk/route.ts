@@ -10,7 +10,8 @@ const REGISTRAR_MANAGED_ROLES: readonly Role[] = ["STUDENT", "TEACHER"];
 
 const bulkSchema = z.object({
   ids: z.array(z.string().min(1)).min(1).max(200),
-  action: z.enum(["activate", "deactivate"]),
+  action: z.enum(["activate", "deactivate", "assignGroup"]),
+  groupId: z.string().min(1).optional(),
 });
 
 export async function POST(request: Request) {
@@ -30,7 +31,19 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return Response.json({ ok: false, error: "Ma'lumotlar xato" }, { status: 400 });
   }
-  const { ids, action } = parsed.data;
+  const { ids, action, groupId } = parsed.data;
+
+  let assignedGroupId: string | null = null;
+  if (action === "assignGroup") {
+    if (!groupId) {
+      return Response.json({ ok: false, error: "Guruh tanlanmagan" }, { status: 400 });
+    }
+    const group = await prisma.group.findUnique({ where: { id: groupId }, select: { id: true } });
+    if (!group) {
+      return Response.json({ ok: false, error: "Guruh topilmadi" }, { status: 404 });
+    }
+    assignedGroupId = group.id;
+  }
 
   const targets = await prisma.user.findMany({
     where: { id: { in: ids } },
@@ -51,14 +64,25 @@ export async function POST(request: Request) {
     }
   }
 
-  const result = await prisma.user.updateMany({
-    where: { id: { in: ids } },
-    data: { isActive: action === "activate" },
-  });
+  const result =
+    assignedGroupId !== null
+      ? await prisma.user.updateMany({
+          where: { id: { in: ids } },
+          data: { groupId: assignedGroupId },
+        })
+      : await prisma.user.updateMany({
+          where: { id: { in: ids } },
+          data: { isActive: action === "activate" },
+        });
 
   await recordEvent(user.id, "admin.user.update", {
     entity: "User",
-    meta: { bulk: action, count: result.count, ids },
+    meta: {
+      bulk: action,
+      count: result.count,
+      ids,
+      ...(assignedGroupId ? { groupId: assignedGroupId } : {}),
+    },
   });
 
   return Response.json({ ok: true, data: { updated: result.count } });

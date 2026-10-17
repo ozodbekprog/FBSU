@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, CardBody, CardHeader } from "@/components/ui";
+import { Button, Card, CardBody, CardHeader, Select } from "@/components/ui";
 import { apiFetch } from "@/lib/api";
 
 export type BulkUserOption = {
@@ -12,11 +12,23 @@ export type BulkUserOption = {
   isActive: boolean;
 };
 
-type BulkAction = "activate" | "deactivate";
+export type BulkGroupOption = {
+  id: string;
+  name: string;
+};
 
-export default function UserBulkBar({ users }: { users: BulkUserOption[] }) {
+type BulkAction = "activate" | "deactivate" | "assignGroup";
+
+export default function UserBulkBar({
+  users,
+  groups,
+}: {
+  users: BulkUserOption[];
+  groups: BulkGroupOption[];
+}) {
   const router = useRouter();
   const [selected, setSelected] = useState<string[]>([]);
+  const [groupId, setGroupId] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -34,6 +46,11 @@ export default function UserBulkBar({ users }: { users: BulkUserOption[] }) {
 
   async function run(action: BulkAction) {
     if (selected.length === 0) return;
+    if (action === "assignGroup" && !groupId) {
+      setNotice(null);
+      setError("Avval guruhni tanlang");
+      return;
+    }
     setBusy(true);
     setError(null);
     setNotice(null);
@@ -41,7 +58,7 @@ export default function UserBulkBar({ users }: { users: BulkUserOption[] }) {
       const res = await apiFetch("/api/admin/users/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: selected, action }),
+        body: JSON.stringify(action === "assignGroup" ? { ids: selected, action, groupId } : { ids: selected, action }),
       });
       const json = (await res.json().catch(() => null)) as
         | { ok: boolean; data?: { updated: number }; error?: string }
@@ -50,12 +67,16 @@ export default function UserBulkBar({ users }: { users: BulkUserOption[] }) {
         setError(json?.error ?? "Xatolik yuz berdi");
         return;
       }
+      const updated = json.data?.updated ?? 0;
       setSelected([]);
       setNotice(
         action === "activate"
-          ? `${json.data?.updated ?? 0} ta foydalanuvchi faollashtirildi`
-          : `${json.data?.updated ?? 0} ta foydalanuvchi faolsizlantirildi`,
+          ? `${updated} ta foydalanuvchi faollashtirildi`
+          : action === "deactivate"
+            ? `${updated} ta foydalanuvchi faolsizlantirildi`
+            : `${updated} ta foydalanuvchi guruhga qo'shildi`,
       );
+      if (action === "assignGroup") setGroupId("");
       router.refresh();
     } catch {
       setError("Tarmoq xatosi");
@@ -111,6 +132,26 @@ export default function UserBulkBar({ users }: { users: BulkUserOption[] }) {
             onClick={() => run("deactivate")}
           >
             Faolsizlantirish
+          </Button>
+          <Select
+            value={groupId}
+            onChange={(event) => setGroupId(event.target.value)}
+            disabled={busy || groups.length === 0}
+            className="w-full sm:w-56!"
+          >
+            <option value="">{groups.length === 0 ? "Guruhlar yo'q" : "Guruhni tanlang"}</option>
+            {groups.map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.name}
+              </option>
+            ))}
+          </Select>
+          <Button
+            size="sm"
+            disabled={busy || selected.length === 0 || !groupId}
+            onClick={() => run("assignGroup")}
+          >
+            Guruhga qo&apos;shish
           </Button>
           {notice ? <span className="text-sm font-medium text-emerald-600">{notice}</span> : null}
           {error ? <span className="text-sm font-medium text-rose-600">{error}</span> : null}

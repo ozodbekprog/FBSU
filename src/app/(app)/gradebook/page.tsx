@@ -5,7 +5,7 @@ import { hasCapability } from "@/modules/capabilities";
 import { canManageCourse } from "@/components/courses/course-access";
 import { computeFinalGrades } from "@/modules/gradebook/compute";
 import GradebookManager from "@/components/gradebook/GradebookManager";
-import { Badge, Button, Card, CardBody, EmptyState, Label, PageHeader, Select, Table } from "@/components/ui";
+import { Badge, Button, Card, CardBody, CardHeader, EmptyState, Label, PageHeader, Select, Table } from "@/components/ui";
 
 function finalTone(percent: number | null) {
   if (percent === null) return "slate" as const;
@@ -15,12 +15,149 @@ function finalTone(percent: number | null) {
   return "rose" as const;
 }
 
+async function StudentGradebook({ studentId }: { studentId: string }) {
+  const enrollments = await prisma.enrollment.findMany({
+    where: { userId: studentId, status: "ACTIVE" },
+    include: { course: { select: { id: true, title: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+
+  if (enrollments.length === 0) {
+    return (
+      <>
+        <PageHeader title="Mening baholarim" subtitle="Kurslar topilmadi" />
+        <EmptyState
+          title="Kurslar yo'q"
+          description="Siz hali biror kursga yozilmagansiz. Administrator bilan bog'laning."
+        />
+      </>
+    );
+  }
+
+  const courseIds = enrollments.map((enrollment) => enrollment.courseId);
+
+  const [categories, items] = await Promise.all([
+    prisma.gradeCategory.findMany({
+      where: { courseId: { in: courseIds } },
+      orderBy: { position: "asc" },
+    }),
+    prisma.gradeItem.findMany({
+      where: { courseId: { in: courseIds } },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+
+  const scores =
+    items.length > 0
+      ? await prisma.gradeItemScore.findMany({
+          where: { studentId, itemId: { in: items.map((item) => item.id) } },
+        })
+      : [];
+
+  return (
+    <>
+      <PageHeader
+        title="Mening baholarim"
+        subtitle={`${enrollments.length} ta kurs bo'yicha natijalar`}
+      />
+
+      <div className="grid gap-4">
+        {enrollments.map((enrollment) => {
+          const courseCategories = categories.filter(
+            (category) => category.courseId === enrollment.courseId,
+          );
+          const courseItems = items.filter((item) => item.courseId === enrollment.courseId);
+          const courseItemIds = new Set(courseItems.map((item) => item.id));
+
+          const final = computeFinalGrades(
+            courseCategories.map((category) => ({
+              id: category.id,
+              name: category.name,
+              weight: category.weight,
+            })),
+            courseItems.map((item) => ({
+              id: item.id,
+              categoryId: item.categoryId,
+              name: item.name,
+              weight: item.weight,
+              maxScore: item.maxScore,
+            })),
+            [studentId],
+            scores
+              .filter((score) => courseItemIds.has(score.itemId))
+              .map((score) => ({
+                itemId: score.itemId,
+                studentId: score.studentId,
+                score: score.score,
+              })),
+          )[0];
+
+          const percent = final?.percent ?? null;
+          const hasCategories = courseCategories.length > 0;
+
+          return (
+            <Card key={enrollment.course.id}>
+              <CardHeader
+                title={enrollment.course.title}
+                subtitle={`${courseCategories.length} kategoriya · ${courseItems.length} baholash`}
+                action={
+                  <Badge tone={finalTone(percent)}>
+                    {percent === null ? "Baho yo'q" : `${percent.toFixed(1)}%`}
+                  </Badge>
+                }
+              />
+              <CardBody>
+                {percent === null ? (
+                  <p className="text-sm text-slate-500">Hali baho kiritilmagan</p>
+                ) : !hasCategories ? (
+                  <p className="text-sm text-slate-500">
+                    Baholar kategoriyalarga bo&apos;linmagan
+                  </p>
+                ) : (
+                  <Table>
+                    <thead>
+                      <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
+                        <th className="border-b border-slate-100 px-0 py-2 text-left">Kategoriya</th>
+                        <th className="border-b border-slate-100 px-0 py-2 text-right">Vazn</th>
+                        <th className="border-b border-slate-100 px-0 py-2 text-right">Natija</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {courseCategories.map((category) => {
+                        const value = final?.categoryPercents[category.id] ?? null;
+                        return (
+                          <tr key={category.id} className="border-b border-slate-50 last:border-0">
+                            <td className="px-0 py-2.5 text-sm font-medium text-slate-800">
+                              {category.name}
+                            </td>
+                            <td className="px-0 py-2.5 text-right text-sm text-slate-500">
+                              {category.weight}%
+                            </td>
+                            <td className="px-0 py-2.5 text-right text-sm text-slate-600">
+                              {value === null ? "—" : `${value.toFixed(1)}%`}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </Table>
+                )}
+              </CardBody>
+            </Card>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
 export default async function GradebookPage({
   searchParams,
 }: {
   searchParams: Promise<{ courseId?: string }>;
 }) {
   const user = await requireUser();
+  if (user.role === "STUDENT") return <StudentGradebook studentId={user.id} />;
   if (!hasCapability(user.role, "course.grade")) redirect("/dashboard");
 
   const params = await searchParams;
