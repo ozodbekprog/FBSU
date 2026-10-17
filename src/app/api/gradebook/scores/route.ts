@@ -34,10 +34,24 @@ export async function PUT(request: Request) {
     return Response.json({ ok: false, error: "Ball 0 va maksimal ball orasida bo'lishi kerak" }, { status: 400 });
   }
 
+  const existing = await prisma.gradeItemScore.findUnique({
+    where: { itemId_studentId: { itemId: item.id, studentId } },
+  });
+
   const saved = await prisma.gradeItemScore.upsert({
     where: { itemId_studentId: { itemId: item.id, studentId } },
     update: { score },
     create: { itemId: item.id, studentId, score },
+  });
+
+  await prisma.gradeItemScoreHistory.create({
+    data: {
+      itemId: item.id,
+      studentId,
+      oldScore: existing?.score ?? null,
+      newScore: score,
+      changedById: user.id,
+    },
   });
 
   await recordEvent(user.id, "gradebook.score.set", {

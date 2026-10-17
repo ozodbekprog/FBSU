@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
@@ -6,9 +7,47 @@ import { recordEvent } from "@/modules/events/record";
 
 const materialTypeSchema = z.enum(["TEXT", "FILE", "VIDEO", "LINK"]);
 
+const QUESTION_TYPES = [
+  "SINGLE",
+  "MULTIPLE",
+  "TEXT",
+  "TRUE_FALSE",
+  "SHORT_ANSWER",
+  "NUMERIC",
+] as const;
+
+type ImportedQuestionType = (typeof QUESTION_TYPES)[number];
+
+function isQuestionType(value: string): value is ImportedQuestionType {
+  return (QUESTION_TYPES as readonly string[]).includes(value);
+}
+
+function toJsonInput(value: unknown): Prisma.InputJsonValue {
+  return value as Prisma.InputJsonValue;
+}
+
+const backupQuestionSchema = z.object({
+  text: z.string().max(5000),
+  type: z.string().max(40).optional(),
+  options: z.unknown().optional(),
+  correct: z.unknown().optional(),
+  points: z.number().int().min(1).max(1000).optional(),
+  position: z.number().int().min(0).optional(),
+});
+
+const backupQuizSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  description: z.string().max(5000).nullable().optional(),
+  timeLimitMin: z.number().int().min(1).max(1000).nullable().optional(),
+  maxAttempts: z.number().int().min(1).max(100).optional(),
+  isPublished: z.boolean().optional(),
+  dueAt: z.string().nullable().optional(),
+  questions: z.array(backupQuestionSchema).optional(),
+});
+
 const backupSchema = z.object({
   format: z.literal("fbsu-course"),
-  version: z.literal(1),
+  version: z.union([z.literal(1), z.literal(2)]),
   course: z.object({
     title: z.string().trim().min(1).max(200),
     description: z.string().max(5000).nullable().optional(),
@@ -51,18 +90,7 @@ const backupSchema = z.object({
       }),
     )
     .optional(),
-  quizzes: z
-    .array(
-      z.object({
-        title: z.string().trim().min(1).max(200),
-        description: z.string().max(5000).nullable().optional(),
-        timeLimitMin: z.number().int().min(1).max(1000).nullable().optional(),
-        maxAttempts: z.number().int().min(1).max(100).optional(),
-        isPublished: z.boolean().optional(),
-        dueAt: z.string().nullable().optional(),
-      }),
-    )
-    .optional(),
+  quizzes: z.array(backupQuizSchema).optional(),
 });
 
 function slugify(title: string) {
@@ -180,8 +208,11 @@ export async function POST(request: Request) {
       });
     }
 
+    let importedQuestions = 0;
+    let skippedQuestions = 0;
+
     for (const quiz of data.quizzes ?? []) {
-      await prisma.quiz.create({
+      const createdQuiz = await prisma.quiz.create({
         data: {
           courseId: course.id,
           title: quiz.title,
@@ -192,17 +223,55 @@ export async function POST(request: Request) {
           dueAt: parseDate(quiz.dueAt),
         },
       });
+
+      const questionRows: Prisma.QuestionCreateManyInput[] = [];
+      for (const [index, question] of (quiz.questions ?? []).entries()) {
+        const text = question.text.trim();
+        const rawType = question.type?.trim() ?? "";
+        const type = rawType === "" ? "SINGLE" : rawType;
+        if (!text || !isQuestionType(type)) {
+          skippedQuestions += 1;
+          continue;
+        }
+        questionRows.push({
+          quizId: createdQuiz.id,
+          text,
+          type,
+          options: toJsonInput(question.options ?? []),
+          correct: toJsonInput(question.correct ?? []),
+          points: question.points ?? 1,
+          position: question.position ?? index,
+        });
+      }
+
+      if (questionRows.length > 0) {
+        await prisma.question.createMany({ data: questionRows });
+        importedQuestions += questionRows.length;
+      }
     }
 
     await recordEvent(user.id, "course.import", {
       entity: "Course",
       entityId: course.id,
-      meta: { sourceTitle: data.course.title },
+      meta: {
+        sourceTitle: data.course.title,
+        version: data.version,
+        importedQuestions,
+        skippedQuestions,
+        materials: (data.materials ?? []).length,
+        quizzes: (data.quizzes ?? []).length,
+      },
     });
 
     return Response.json({
       ok: true,
-      data: { courseId: course.id, slug: course.slug, title: course.title },
+      data: {
+        courseId: course.id,
+        slug: course.slug,
+        title: course.title,
+        importedQuestions,
+        skippedQuestions,
+      },
     });
   } catch {
     return Response.json({ ok: false, error: "Import amalga oshmadi" }, { status: 500 });

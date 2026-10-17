@@ -25,12 +25,32 @@ type Props = {
 
 type ApiResponse = { ok: boolean; data?: unknown; error?: string };
 
+type HistoryEntry = {
+  id: string;
+  itemName: string;
+  studentName: string;
+  oldScore: number | null;
+  newScore: number | null;
+  changedById: string | null;
+  createdAt: string;
+};
+
 const cellKey = (itemId: string, studentId: string) => `${itemId}:${studentId}`;
 
 function buildValues(scores: Score[]): Record<string, string> {
   const values: Record<string, string> = {};
   for (const score of scores) values[cellKey(score.itemId, score.studentId)] = String(score.score);
   return values;
+}
+
+function formatScore(value: number | null): string {
+  return value === null ? "—" : String(value);
+}
+
+function formatHistoryTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("uz-UZ");
 }
 
 export default function GradebookManager({
@@ -70,6 +90,12 @@ export default function GradebookManager({
   const [syncBusy, setSyncBusy] = useState(false);
   const [syncNotice, setSyncNotice] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
 
   useEffect(() => {
     setValues(buildValues(scores));
@@ -250,12 +276,42 @@ export default function GradebookManager({
         setScoreErrors((prev) => ({ ...prev, [key]: json?.error ?? t("gbErrSave") }));
         return;
       }
+      if (historyOpen) void fetchHistory();
       router.refresh();
     } catch {
       setScoreErrors((prev) => ({ ...prev, [key]: t("gbErrNetwork") }));
     } finally {
       setSaving(null);
     }
+  }
+
+  async function fetchHistory() {
+    setHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const res = await apiFetch(`/api/gradebook/history?courseId=${encodeURIComponent(courseId)}`);
+      const json = (await res.json().catch(() => null)) as ApiResponse | null;
+      if (!res.ok || !json?.ok) {
+        setHistoryError(json?.error ?? "Tarixni yuklab bo'lmadi");
+        return;
+      }
+      const data = json.data as { entries?: HistoryEntry[] } | undefined;
+      setHistoryEntries(data?.entries ?? []);
+      setHistoryLoaded(true);
+    } catch {
+      setHistoryError("Tarmoq xatosi");
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
+
+  async function toggleHistory() {
+    if (historyOpen) {
+      setHistoryOpen(false);
+      return;
+    }
+    setHistoryOpen(true);
+    if (!historyLoaded) await fetchHistory();
   }
 
   async function runSync() {
@@ -561,6 +617,56 @@ export default function GradebookManager({
             <p className="text-sm text-slate-500">{t("gbScoresEmptyDesc")}</p>
           </CardBody>
         )}
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="Oxirgi o'zgarishlar"
+          subtitle="Baholar tarixi (oxirgi 50 yozuv)"
+          action={
+            <Button variant="ghost" size="sm" disabled={historyLoading} onClick={toggleHistory}>
+              {historyLoading
+                ? "Yuklanmoqda..."
+                : historyOpen
+                  ? "Yopish"
+                  : "Tarixni ko'rish"}
+            </Button>
+          }
+        />
+        {historyOpen ? (
+          <CardBody className="p-0">
+            {historyError ? (
+              <p className="px-6 py-4 text-sm text-rose-600">{historyError}</p>
+            ) : historyEntries.length === 0 && !historyLoading ? (
+              <p className="px-6 py-4 text-sm text-slate-500">Hozircha o'zgarishlar yo'q</p>
+            ) : historyEntries.length > 0 ? (
+              <Table>
+                <thead>
+                  <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
+                    <th className="border-b border-slate-100 bg-slate-50/95 px-5 py-3 text-left">Vaqt</th>
+                    <th className="border-b border-slate-100 bg-slate-50/95 px-5 py-3 text-left">Talaba</th>
+                    <th className="border-b border-slate-100 bg-slate-50/95 px-5 py-3 text-left">Ustun</th>
+                    <th className="border-b border-slate-100 bg-slate-50/95 px-5 py-3 text-center">Eski → Yangi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {historyEntries.slice(0, 20).map((entry) => (
+                    <tr key={entry.id} className="border-b border-slate-50 last:border-0">
+                      <td className="px-5 py-3 text-xs text-slate-500">{formatHistoryTime(entry.createdAt)}</td>
+                      <td className="px-5 py-3 text-sm font-medium text-slate-800">{entry.studentName}</td>
+                      <td className="px-5 py-3 text-sm text-slate-700">{entry.itemName}</td>
+                      <td className="px-5 py-3 text-center">
+                        <Badge tone={entry.oldScore === null ? "blue" : "amber"}>
+                          {formatScore(entry.oldScore)} → {formatScore(entry.newScore)}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            ) : null}
+          </CardBody>
+        ) : null}
       </Card>
     </div>
   );

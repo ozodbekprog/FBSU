@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 import { isEnrolled, publicError } from "@/components/quiz/server";
 import {
   decideStart,
@@ -9,6 +10,8 @@ import {
 import { attendanceCounts } from "@/app/api/attendance/summary/data";
 import { toQuestionFull, toQuestionPublic, type QuestionFull } from "@/components/quiz/shared";
 import { assertActivityOpen } from "@/modules/course-rules/server";
+import { isIpInSubnet } from "@/modules/quiz/access-rules";
+import { getClientIp } from "@/lib/client-ip";
 
 function hashSeed(value: string): number {
   let hash = 2166136261;
@@ -110,7 +113,7 @@ function attemptPayload(
   };
 }
 
-export async function POST(_request: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   if (user.role !== "STUDENT") {
@@ -118,6 +121,12 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
   }
 
   const { id } = await ctx.params;
+  const body: unknown = await request.json().catch(() => null);
+  const providedPassword =
+    body !== null && typeof body === "object" && "password" in body && typeof body.password === "string"
+      ? body.password
+      : "";
+
   try {
     const quiz = await prisma.quiz.findUnique({
       where: { id },
@@ -132,6 +141,23 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
 
     const gate = await assertActivityOpen("QUIZ", id);
     if (!gate.ok) return Response.json({ ok: false, error: gate.error }, { status: 403 });
+
+    if (quiz.quizPassword) {
+      const passwordValid = await bcrypt.compare(providedPassword, quiz.quizPassword);
+      if (!passwordValid) {
+        return Response.json({ ok: false, error: "Parol noto'g'ri" }, { status: 403 });
+      }
+    }
+
+    if (quiz.ipSubnet) {
+      const clientIp = getClientIp(request.headers);
+      if (!clientIp || !isIpInSubnet(clientIp, quiz.ipSubnet)) {
+        return Response.json(
+          { ok: false, error: "Bu tarmoqdan kirish mumkin emas" },
+          { status: 403 },
+        );
+      }
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       const now = new Date();

@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canManageCourse } from "@/components/courses/course-access";
@@ -22,6 +23,15 @@ type ExportedAssignment = {
   dueAt: Date | null;
 };
 
+type ExportedQuestion = {
+  text: string;
+  type: string;
+  options: Prisma.JsonValue;
+  correct: Prisma.JsonValue;
+  points: number;
+  position: number;
+};
+
 type ExportedQuiz = {
   title: string;
   description: string | null;
@@ -29,6 +39,7 @@ type ExportedQuiz = {
   maxAttempts: number;
   isPublished: boolean;
   dueAt: Date | null;
+  questions: ExportedQuestion[];
 };
 
 export async function GET(
@@ -98,17 +109,51 @@ export async function GET(
     maxAttempts: quiz.maxAttempts,
     isPublished: quiz.isPublished,
     dueAt: quiz.dueAt,
+    questions: [],
   }));
+
+  const quizIds = course.quizzes.map((quiz) => quiz.id);
+  const quizIndexById = new Map<string, number>();
+  course.quizzes.forEach((quiz, index) => quizIndexById.set(quiz.id, index));
+
+  if (quizIds.length > 0) {
+    const questions = await prisma.question.findMany({
+      where: { quizId: { in: quizIds } },
+      orderBy: { position: "asc" },
+    });
+    for (const question of questions) {
+      const index = quizIndexById.get(question.quizId);
+      if (index === undefined) continue;
+      quizzes[index].questions.push({
+        text: question.text,
+        type: question.type,
+        options: question.options,
+        correct: question.correct,
+        points: question.points,
+        position: question.position,
+      });
+    }
+  }
+
+  const questionCount = quizzes.reduce((sum, quiz) => sum + quiz.questions.length, 0);
 
   const backup = {
     format: "fbsu-course",
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     meta: {
       sourceCourseId: course.id,
       sourceSlug: course.slug,
-      questionsIncluded: false,
-      note: "Test savollari (question bank) eksport qilinmaydi",
+      questionsIncluded: true,
+      filesIncluded: false,
+      counts: {
+        sections: sections.length,
+        materials: materials.length,
+        assignments: assignments.length,
+        quizzes: quizzes.length,
+        questions: questionCount,
+      },
+      note: "Fayl baytlari eksport qilinmaydi — material fileUrl havolalari saqlanadi",
     },
     course: {
       title: course.title,
@@ -127,7 +172,12 @@ export async function GET(
   await recordEvent(user.id, "course.export", {
     entity: "Course",
     entityId: course.id,
-    meta: { title: course.title },
+    meta: {
+      title: course.title,
+      version: 2,
+      questions: questionCount,
+      materials: materials.length,
+    },
   });
 
   return new Response(JSON.stringify(backup, null, 2), {

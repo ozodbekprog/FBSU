@@ -30,6 +30,8 @@ export type EditableQuiz = {
   timeLimitMin: number | null;
   maxAttempts: number;
   isPublished: boolean;
+  hasPassword?: boolean;
+  ipSubnet?: string | null;
   questions: QuestionFull[];
 };
 
@@ -61,6 +63,9 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
   );
   const [maxAttempts, setMaxAttempts] = useState(String(quiz?.maxAttempts ?? 1));
   const [isPublished, setIsPublished] = useState(quiz?.isPublished ?? false);
+  const [password, setPassword] = useState("");
+  const [removePassword, setRemovePassword] = useState(false);
+  const [ipSubnet, setIpSubnet] = useState(quiz?.ipSubnet ?? "");
   const [questions, setQuestions] = useState<QuestionFull[]>(quiz?.questions ?? []);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [bankOpen, setBankOpen] = useState(false);
@@ -70,6 +75,14 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
 
   function metaData() {
     const time = timeLimitMin.trim();
+    const subnet = ipSubnet.trim();
+    const passwordChange: { password?: string } =
+      quiz && removePassword
+        ? { password: "" }
+        : password.length > 0
+          ? { password }
+          : {};
+    const includeSubnet = quiz === undefined || subnet !== "" || quiz.ipSubnet !== undefined;
     const base = {
       title: title.trim(),
       description: description.trim() === "" ? null : description.trim(),
@@ -77,6 +90,8 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
       timeLimitMin: time === "" ? null : Number(time),
       maxAttempts: Number(maxAttempts),
       isPublished,
+      ...passwordChange,
+      ...(includeSubnet ? { ipSubnet: subnet === "" ? null : subnet } : {}),
     };
     if (quiz && quiz.dueAt === undefined) return base;
     return { ...base, dueAt: dueAt.trim() === "" ? null : dueAt.trim() };
@@ -310,6 +325,39 @@ export function QuizEditor({ courses, quiz }: { courses: CourseOption[]; quiz?: 
                 max={50}
                 value={maxAttempts}
                 onChange={(event) => setMaxAttempts(event.target.value)}
+              />
+            </div>
+            <div>
+              <Label>Kirish paroli</Label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Yangi parol (ixtiyoriy)"
+                autoComplete="new-password"
+                disabled={removePassword}
+              />
+              {quiz ? (
+                <label className="mt-2 flex cursor-pointer items-center gap-2 text-xs text-slate-500">
+                  <input
+                    type="checkbox"
+                    checked={removePassword}
+                    onChange={(event) => {
+                      setRemovePassword(event.target.checked);
+                      if (event.target.checked) setPassword("");
+                    }}
+                    className="size-3.5 shrink-0 accent-brand-700"
+                  />
+                  Parolni olib tashlash
+                </label>
+              ) : null}
+            </div>
+            <div>
+              <Label>IP subnet (ixtiyoriy)</Label>
+              <Input
+                value={ipSubnet}
+                onChange={(event) => setIpSubnet(event.target.value)}
+                placeholder="192.168.0.0/24"
               />
             </div>
           </div>

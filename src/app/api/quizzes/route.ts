@@ -1,14 +1,29 @@
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { quizCreateSchema } from "@/components/quiz/schema";
 import { publicError } from "@/components/quiz/server";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { hasCapability } from "@/modules/capabilities";
+import { normalizeSubnet } from "@/modules/quiz/access-rules";
 
 const dueAtSchema = z.string().trim().min(1).nullable().optional();
 
 const createSchema = quizCreateSchema.extend({ dueAt: dueAtSchema });
+
+function publicQuiz<T extends { quizPassword: string | null }>(quiz: T) {
+  const { quizPassword, ...rest } = quiz;
+  return { ...rest, hasPassword: quizPassword !== null };
+}
+
+function parseSubnet(value: string | null | undefined): { ok: true; value: string | null } | { ok: false } {
+  if (value === null || value === undefined || value.trim() === "") return { ok: true, value: null };
+  const normalized = normalizeSubnet(value);
+  if (!normalized) return { ok: false };
+  return { ok: true, value: normalized };
+}
+
 
 function parseDueAt(value: string | null | undefined) {
   if (!value) return { ok: true as const, date: null };
@@ -43,7 +58,7 @@ export async function GET(request: Request) {
           },
         },
       });
-      return Response.json({ ok: true, data: quizzes });
+      return Response.json({ ok: true, data: quizzes.map(publicQuiz) });
     }
 
     if (!hasCapability(user.role, "quiz.manage")) {
@@ -61,7 +76,7 @@ export async function GET(request: Request) {
         _count: { select: { questions: true, attempts: true } },
       },
     });
-    return Response.json({ ok: true, data: quizzes });
+    return Response.json({ ok: true, data: quizzes.map(publicQuiz) });
   } catch (error) {
     return Response.json({ ok: false, error: publicError(error) }, { status: 500 });
   }
@@ -93,6 +108,11 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: "Muddat sanasi noto'g'ri" }, { status: 400 });
   }
 
+  const subnet = parseSubnet(parsed.data.ipSubnet);
+  if (!subnet.ok) {
+    return Response.json({ ok: false, error: "IP subnet formati xato" }, { status: 400 });
+  }
+
   try {
     const course = await prisma.course.findUnique({ where: { id: parsed.data.courseId } });
     if (!course) return Response.json({ ok: false, error: "Kurs topilmadi" }, { status: 404 });
@@ -100,7 +120,9 @@ export async function POST(request: Request) {
       return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
 
-    const { questions, ...meta } = parsed.data;
+    const { questions, password, ...meta } = parsed.data;
+    const quizPassword =
+      password && password.length > 0 ? await bcrypt.hash(password, 12) : null;
     const quiz = await prisma.quiz.create({
       data: {
         courseId: meta.courseId,
@@ -110,6 +132,8 @@ export async function POST(request: Request) {
         timeLimitMin: meta.timeLimitMin,
         maxAttempts: meta.maxAttempts,
         isPublished: meta.isPublished,
+        quizPassword,
+        ipSubnet: subnet.value,
         questions:
           questions && questions.length > 0
             ? {

@@ -21,15 +21,18 @@ function toDate(value: string | null): Date | null {
 export function StartAttemptButton({
   quizId,
   label,
+  hasPassword = false,
 }: {
   quizId: string;
   label?: string;
+  hasPassword?: boolean;
 }) {
   const { t } = useI18n();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lock, setLock] = useState<"before" | "after" | null>(null);
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -61,7 +64,7 @@ export function StartAttemptButton({
     const result = await apiFetch<{ attempt: { id: string } }>(
       `/api/quizzes/${quizId}/attempts`,
       "POST",
-      undefined,
+      hasPassword ? { password } : undefined,
       t("crsQuizServerError"),
     );
     if (!result.ok) {
@@ -76,6 +79,15 @@ export function StartAttemptButton({
 
   return (
     <div>
+      {hasPassword ? (
+        <input
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          placeholder="Test paroli"
+          className="mb-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+        />
+      ) : null}
       <Button onClick={start} disabled={loading || locked}>
         {lock === "before"
           ? "Hali ochilmagan"

@@ -237,7 +237,7 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
                   {dictionary.grdExInProgress}
                 </ButtonLink>
               ) : canStart ? (
-                <StartAttemptButton quizId={quiz.id} />
+                <StartAttemptButton quizId={quiz.id} hasPassword={Boolean(quiz.quizPassword)} />
               ) : (
                 <Badge tone="slate">{dictionary.grdCompleted}</Badge>
               )}

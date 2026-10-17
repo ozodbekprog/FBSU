@@ -1,4 +1,5 @@
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { quizUpdateSchema } from "@/components/quiz/schema";
@@ -6,10 +7,24 @@ import { publicError } from "@/components/quiz/server";
 import { toQuestionFull, toQuestionPublic } from "@/components/quiz/shared";
 import { notifyCourseStudents } from "@/server/notify";
 import { hasCapability } from "@/modules/capabilities";
+import { normalizeSubnet } from "@/modules/quiz/access-rules";
 
 const dueAtSchema = z.string().trim().min(1).nullable().optional();
 
 const updateSchema = quizUpdateSchema.extend({ dueAt: dueAtSchema });
+
+function publicQuiz<T extends { quizPassword: string | null }>(quiz: T) {
+  const { quizPassword, ...rest } = quiz;
+  return { ...rest, hasPassword: quizPassword !== null };
+}
+
+function parseSubnet(value: string | null | undefined): { ok: true; value: string | null } | { ok: false } {
+  if (value === null || value === undefined || value.trim() === "") return { ok: true, value: null };
+  const normalized = normalizeSubnet(value);
+  if (!normalized) return { ok: false };
+  return { ok: true, value: normalized };
+}
+
 
 function parseDueAt(value: string | null | undefined) {
   if (!value) return { ok: true as const, date: null };
@@ -39,7 +54,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
     if (user.role === "TEACHER" && quiz.course.teacherId !== user.id) {
       return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
-    return Response.json({ ok: true, data: { ...quiz, questions } });
+    return Response.json({ ok: true, data: { ...publicQuiz(quiz), questions } });
   }
 
   if (!quiz.isPublished) return Response.json({ ok: false, error: "Test topilmadi" }, { status: 404 });
@@ -56,7 +71,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
   });
   return Response.json({
     ok: true,
-    data: { ...quiz, questions: questions.map(toQuestionPublic), attempts },
+    data: { ...publicQuiz(quiz), questions: questions.map(toQuestionPublic), attempts },
   });
 }
 
@@ -82,6 +97,11 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     return Response.json({ ok: false, error: "Muddat sanasi noto'g'ri" }, { status: 400 });
   }
 
+  const subnet = parseSubnet(parsed.data.ipSubnet);
+  if (!subnet.ok) {
+    return Response.json({ ok: false, error: "IP subnet formati xato" }, { status: 400 });
+  }
+
   try {
     const quiz = await prisma.quiz.findUnique({ where: { id }, include: { course: true } });
     if (!quiz) return Response.json({ ok: false, error: "Test topilmadi" }, { status: 404 });
@@ -98,11 +118,15 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       }
     }
 
-    const { dueAt: dueAtValue, ...rest } = data;
+    const { dueAt: dueAtValue, password, ipSubnet: ipSubnetValue, ...rest } = data;
+    const quizPassword =
+      password === undefined ? undefined : password.length > 0 ? await bcrypt.hash(password, 12) : null;
     const updated = await prisma.quiz.update({
       where: { id },
       data: {
         ...rest,
+        ...(quizPassword !== undefined ? { quizPassword } : {}),
+        ...(ipSubnetValue !== undefined ? { ipSubnet: subnet.value } : {}),
         ...(dueAtValue !== undefined ? { dueAt: due.date } : {}),
       },
     });

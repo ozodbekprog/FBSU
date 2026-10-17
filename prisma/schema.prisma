@@ -180,6 +180,7 @@ model User {
   gradeItemScores    GradeItemScore[]
   activityCompletions ActivityCompletion[]
   assignmentExtensions AssignmentExtension[]
+  gradeItemHistory   GradeItemScoreHistory[]
 
   @@index([subGroupId])
   @@index([role])
@@ -424,6 +425,8 @@ model Quiz {
   timeLimitMin Int?
   maxAttempts  Int       @default(1)
   isPublished  Boolean   @default(false)
+  quizPassword String?
+  ipSubnet     String?
   createdAt    DateTime  @default(now())
 
   course     Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -1628,6 +1631,7 @@ model GradeItem {
   course   Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
   category GradeCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   scores   GradeItemScore[]
+  history  GradeItemScoreHistory[]
 
   @@index([courseId])
   @@index([categoryId])
@@ -1702,4 +1706,21 @@ model AssignmentExtension {
 
   @@unique([assignmentId, studentId])
   @@index([assignmentId])
+}
+
+
+model GradeItemScoreHistory {
+  id          String   @id @default(cuid())
+  itemId      String
+  studentId   String
+  oldScore    Float?
+  newScore    Float?
+  changedById String?
+  createdAt   DateTime @default(now())
+
+  item    GradeItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  student User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([itemId, studentId])
+  @@index([createdAt])
 }

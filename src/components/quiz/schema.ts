@@ -93,6 +93,8 @@ export const quizMetaSchema = z.object({
   timeLimitMin: z.number().int().min(1).max(600).nullable(),
   maxAttempts: z.number().int().min(1).max(50),
   isPublished: z.boolean(),
+  password: z.string().max(100).optional(),
+  ipSubnet: z.string().max(50).nullish(),
 });
 
 export const quizCreateSchema = quizMetaSchema.extend({
