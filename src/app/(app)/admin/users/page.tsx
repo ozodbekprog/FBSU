@@ -6,6 +6,7 @@ import { Button, Card, CardBody, Input, PageHeader, Select } from "@/components/
 import UsersManager from "@/components/admin/UsersManager";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { cn } from "@/lib/utils";
+import { textMatches } from "@/lib/encrypted-search";
 
 const ROLES = ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA", "NAZORATCHI"] as const;
 
@@ -33,12 +34,6 @@ export default async function AdminUsersPage({
   const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
 
   const where: Prisma.UserWhereInput = {};
-  if (q) {
-    where.OR = [
-      { name: { contains: q, mode: "insensitive" } },
-      { email: { contains: q, mode: "insensitive" } },
-    ];
-  }
   if (admin.role === "REGISTRAR") {
     if (role === "STUDENT" || role === "TEACHER") {
       where.role = role;
@@ -49,8 +44,7 @@ export default async function AdminUsersPage({
     where.role = role;
   }
 
-  const [total, users, groups, departments] = await Promise.all([
-    prisma.user.count({ where }),
+  const [allUsers, groups, departments] = await Promise.all([
     prisma.user.findMany({
       where,
       select: {
@@ -64,8 +58,6 @@ export default async function AdminUsersPage({
         department: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: "desc" },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
     }),
     prisma.group.findMany({
       select: { id: true, name: true },
@@ -76,6 +68,9 @@ export default async function AdminUsersPage({
       orderBy: { name: "asc" },
     }),
   ]);
+  const matched = q ? allUsers.filter((row) => textMatches(q, [row.name, row.email])) : allUsers;
+  const total = matched.length;
+  const users = matched.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const pageParams = new URLSearchParams();

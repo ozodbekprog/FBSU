@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { Badge, Card, CardBody, CardHeader, EmptyState, PageHeader, Progress } from "@/components/ui";
 import { getDictionary, getLocale, t as translate, type Dictionary } from "@/i18n";
 import { cn, fmtDate } from "@/lib/utils";
+import { textMatches } from "@/lib/encrypted-search";
 import { ProgramForm } from "@/components/admissions/program-form";
 import { ADMISSION_MANAGE_ROLES, ADMISSION_VIEW_ROLES } from "@/app/api/admissions/shared";
 
@@ -47,26 +48,21 @@ export default async function AdmissionsPage({
     : undefined;
 
   const [applications, programs, statusCounts] = await Promise.all([
-    prisma.admissionApplication.findMany({
-      where: {
-        status: statusFilter,
-        ...(query
-          ? {
-              OR: [
-                { applicantName: { contains: query, mode: "insensitive" as const } },
-                { phone: { contains: query } },
-                { email: { contains: query, mode: "insensitive" as const } },
-              ],
-            }
-          : {}),
-      },
-      orderBy: { createdAt: "desc" },
-      take: 200,
-      include: {
-        program: { select: { name: true } },
-        student: { select: { name: true } },
-      },
-    }),
+    prisma.admissionApplication
+      .findMany({
+        where: { status: statusFilter },
+        orderBy: { createdAt: "desc" },
+        include: {
+          program: { select: { name: true } },
+          student: { select: { name: true } },
+        },
+      })
+      .then((rows) =>
+        (query
+          ? rows.filter((row) => textMatches(query, [row.applicantName, row.phone, row.email]))
+          : rows
+        ).slice(0, 200),
+      ),
     prisma.admissionProgram.findMany({
       orderBy: { createdAt: "asc" },
       include: { applications: { select: { status: true } } },
