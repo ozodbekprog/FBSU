@@ -191,3 +191,29 @@ token qo'shilgach ogohlantirish avtomatik ishlaydi.
 OWNER uchun ikkinchi faktor (TOTP yoki Telegram-kod) hozircha **yo'q**; recovery faqat
 `OWNER_RECOVERY_SECRET` + server-side skript bilan cheklanadi. 2FA keyingi bosqichda
 rejalashtirilgan.
+
+---
+
+## 2026-10-17 — qo'shilgan funksiyalar (to'lqinlar)
+
+**Faza 3–4 (yakun):**
+- Admin bulk: activate/deactivate, guruhga qo'shish, rol o'zgartirish (faqat ADMIN)
+- Gradebook: kategoriya/ustun CRUD, inline ballar, manba (topshiriq/test) bog'lash, avto-sinxron, talaba ko'rinishi, CSV eksport
+
+**To'lqin 1–3:**
+- Talaba "Mening baholarim" + nav; audit foydalanuvchi filtri
+- Faoliyat ochilish qoidalari (ActivityRule + UI), completion (ActivityCompletion + material tugmasi)
+- Self-enrolment, guruhni kursga yozish, kurs sozlamalari kartasi
+- Cron: davomat finalize + 24h topshiriq eslatmalari (CRON_SECRET)
+- Quiz attempt machine: resume / limit / expiry
+- i18n: nav, audit, gradebook, savol turlari (uz/ru/en)
+
+**Qo'shimcha (Moodle'dan):**
+- Savol turlari: TRUE_FALSE, SHORT_ANSWER, NUMERIC (baholash + formalar + 12 test)
+- Topshiriq muddatini talabaga uzaytirish (AssignmentExtension)
+- Kurs eksport/import (JSON backup, backup sahifasida)
+- Audit hash zanjiri (tamper-evident) + audit-integrity.mjs
+- Self-healing integrity: manifest (HMAC) + integrity-heal (soatlik, artifact'dan tiklash, alert)
+- OWNER rol + DB trigger + 2FA login + recovery (30+ belgi) + security-check + NOTICE
+
+**Atayin kiritilmagan:** SCORM/xAPI/LTI, H5P, badge/competency, plugin ekosistema — universitet amaliyotida hozircha talab qilinmaydi (kerak bo'lsa alohida loyiha).
