@@ -235,4 +235,21 @@ node scripts/security-check.mjs   # owner / trigger / function: OK yoki FAIL (ex
 ```
 
 Cron (`POST /api/cron/run`) har ishga tushishda `ownerGuard` maydonini qaytaradi.
+
+## Yaxlitlik va avto-tiklash
+
+`src`, `prisma`, `scripts` va konfiguratsiya fayllarining sha256 manifesti imzolanadi
+(HMAC-SHA256), soatlik cron esa imzo va fayl hash'larini tekshiradi. Farq topilsa Telegram
+alert ketadi va `INTEGRITY_ARTIFACT_URL` berilgan bo'lsa faqat o'zgargan/yo'qolgan fayllar
+imzolangan `tar.gz` paketdan tiklanadi, keyin `INTEGRITY_RESTART_CMD` bajariladi. `extra`
+fayllar o'chirilmaydi. Imzo buzilgan bo'lsa — fail-closed (tiklash yo'q, exit 1).
+
+```bash
+OWNER_INTEGRITY_SECRET=... node scripts/manifest-build.mjs
+node scripts/integrity-heal.mjs --dry-run
+node scripts/integrity-heal.mjs --self-test
+```
+
+Batafsil: [`docs/spec/INTEGRITY-AUTOHEAL.md`](docs/spec/INTEGRITY-AUTOHEAL.md).
+
 Litsenziya va foydalanish shartlari — [`NOTICE`](NOTICE).
