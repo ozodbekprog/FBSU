@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasCapability } from "@/modules/capabilities";
+import { getDictionary, getLocale } from "@/i18n";
 import { canManageCourse } from "@/components/courses/course-access";
 import { computeFinalGrades } from "@/modules/gradebook/compute";
 import GradebookManager from "@/components/gradebook/GradebookManager";
@@ -16,6 +17,7 @@ function finalTone(percent: number | null) {
 }
 
 async function StudentGradebook({ studentId }: { studentId: string }) {
+  const dictionary = getDictionary(await getLocale());
   const enrollments = await prisma.enrollment.findMany({
     where: { userId: studentId, status: "ACTIVE" },
     include: { course: { select: { id: true, title: true } } },
@@ -25,7 +27,7 @@ async function StudentGradebook({ studentId }: { studentId: string }) {
   if (enrollments.length === 0) {
     return (
       <>
-        <PageHeader title="Mening baholarim" subtitle="Kurslar topilmadi" />
+        <PageHeader title={dictionary.navMyGrades} subtitle="Kurslar topilmadi" />
         <EmptyState
           title="Kurslar yo'q"
           description="Siz hali biror kursga yozilmagansiz. Administrator bilan bog'laning."
@@ -57,7 +59,7 @@ async function StudentGradebook({ studentId }: { studentId: string }) {
   return (
     <>
       <PageHeader
-        title="Mening baholarim"
+        title={dictionary.navMyGrades}
         subtitle={`${enrollments.length} ta kurs bo'yicha natijalar`}
       />
 
@@ -157,6 +159,7 @@ export default async function GradebookPage({
   searchParams: Promise<{ courseId?: string }>;
 }) {
   const user = await requireUser();
+  const dictionary = getDictionary(await getLocale());
   if (user.role === "STUDENT") return <StudentGradebook studentId={user.id} />;
   if (!hasCapability(user.role, "course.grade")) redirect("/dashboard");
 
@@ -172,7 +175,7 @@ export default async function GradebookPage({
   if (courses.length === 0) {
     return (
       <>
-        <PageHeader title="Baholar jurnali" subtitle="Kurslar topilmadi" />
+        <PageHeader title={dictionary.navGradebook} subtitle="Kurslar topilmadi" />
         <EmptyState
           title="Kurslar yo'q"
           description="Sizga biriktirilgan kurslar mavjud emas. Administrator bilan bog'laning."
@@ -235,7 +238,7 @@ export default async function GradebookPage({
   return (
     <>
       <PageHeader
-        title="Baholar jurnali"
+        title={dictionary.navGradebook}
         subtitle={`${selected.title} · ${students.length} talaba · ${items.length} ustun`}
       />
 

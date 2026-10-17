@@ -47,7 +47,10 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
         return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
       }
       if (attempt.finishedAt) {
-        return Response.json({ ok: false, error: "Urinish allaqachon topshirilgan" }, { status: 409 });
+        return Response.json(
+          { ok: false, error: "Urinish allaqachon yakunlangan" },
+          { status: 409 },
+        );
       }
       if (expiredDeadline) {
         await closeExpiredAttempt(prisma, id, attempt.answers, questions, expiredDeadline);

@@ -20,6 +20,7 @@ import { OralDefenseCard } from "@/components/courses/oral-defense-card";
 import { OralDefensePanel } from "@/components/courses/oral-defense-panel";
 import { DueChip, SubmissionBadge } from "@/components/courses/assignments-status";
 import { SimilarityPanel } from "@/components/courses/similarity-panel";
+import { AvailabilityEditor } from "@/components/courses/availability-editor";
 
 function DownloadIcon() {
   return (
@@ -178,6 +179,12 @@ export default async function AssignmentDetailPage({
         <PageHeader title={assignment.title} subtitle={course.title} action={back} />
         <div className="space-y-6">
           {infoCard}
+          <Card className="animate-fade-up">
+            <CardHeader title="Ochilish vaqti" subtitle="Topshiriq talabalarga qachon ochiladi" />
+            <CardBody>
+              <AvailabilityEditor targetType="ASSIGNMENT" targetId={assignment.id} />
+            </CardBody>
+          </Card>
           <OralDefensePanel assignmentId={id} courseId={course.id} />
           <AssignmentsGrade
             maxScore={assignment.maxScore}

@@ -19,6 +19,8 @@ export const shell = {
   navExams: "Exams",
   navGradesStaff: "Grading",
   navGradesStudent: "My grades",
+  navGradebook: "Gradebook",
+  navMyGrades: "My grades",
   navGpa: "GPA",
   navTranscript: "Transcript",
   navAttendance: "Attendance",

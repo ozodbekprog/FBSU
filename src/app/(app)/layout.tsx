@@ -88,7 +88,9 @@ export default async function AppLayout({
           ? [
               {
                 href: "/gradebook",
-                label: hasCapability(user.role, "course.grade") ? "Baholar jurnali" : "Mening baholarim",
+                label: hasCapability(user.role, "course.grade")
+                  ? dictionary.navGradebook
+                  : dictionary.navMyGrades,
               },
             ]
           : []),

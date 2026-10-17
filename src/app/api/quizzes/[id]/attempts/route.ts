@@ -1,11 +1,11 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isEnrolled, publicError } from "@/components/quiz/server";
 import {
-  closeExpiredAttempt,
-  expiredAttemptDeadline,
-  isEnrolled,
-  publicError,
-} from "@/components/quiz/server";
+  decideStart,
+  isAttemptExpired,
+  type AttemptSummary,
+} from "@/modules/quiz/attempt-machine";
 import { attendanceCounts } from "@/app/api/attendance/summary/data";
 import { toQuestionFull, toQuestionPublic, type QuestionFull } from "@/components/quiz/shared";
 import { assertActivityOpen } from "@/modules/course-rules/server";
@@ -131,21 +131,40 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
     const gate = await assertActivityOpen("QUIZ", id);
     if (!gate.ok) return Response.json({ ok: false, error: gate.error }, { status: 403 });
 
-    const questions = quiz.questions.map(toQuestionFull);
-
     const result = await prisma.$transaction(async (tx) => {
-      const active = await tx.quizAttempt.findFirst({
-        where: { quizId: id, studentId: user.id, finishedAt: null },
-        orderBy: { startedAt: "desc" },
+      const now = new Date();
+      const attempts = await tx.quizAttempt.findMany({
+        where: { quizId: id, studentId: user.id },
+        orderBy: { startedAt: "asc" },
       });
 
-      if (active) {
-        const deadline = expiredAttemptDeadline(active.startedAt, quiz.timeLimitMin);
-        if (!deadline) return { kind: "active" as const, attempt: active };
-        await closeExpiredAttempt(tx, active.id, active.answers, questions, deadline);
+      const settled: AttemptSummary[] = [];
+      for (const attempt of attempts) {
+        if (isAttemptExpired(attempt, quiz.timeLimitMin, now)) {
+          const finishedAt = new Date(
+            attempt.startedAt.getTime() + (quiz.timeLimitMin ?? 0) * 60_000,
+          );
+          await tx.quizAttempt.update({ where: { id: attempt.id }, data: { finishedAt } });
+          settled.push({ id: attempt.id, startedAt: attempt.startedAt, finishedAt });
+        } else {
+          settled.push({
+            id: attempt.id,
+            startedAt: attempt.startedAt,
+            finishedAt: attempt.finishedAt,
+          });
+        }
       }
 
-      if (quiz.dueAt && quiz.dueAt.getTime() < Date.now()) {
+      const decision = decideStart(settled, quiz.maxAttempts);
+      if (decision.action === "resume") {
+        const active = settled.find((attempt) => attempt.id === decision.attemptId);
+        if (active) return { kind: "active" as const, attempt: active };
+      }
+      if (decision.action === "blocked") {
+        return { kind: "limit" as const };
+      }
+
+      if (quiz.dueAt && quiz.dueAt.getTime() < now.getTime()) {
         return { kind: "due" as const };
       }
 
@@ -155,11 +174,6 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
       });
       const attendance = attendanceCounts(attendanceRecords.map((record) => record.status));
       if (!attendance.eligible) return { kind: "attendance" as const };
-
-      const finishedCount = await tx.quizAttempt.count({
-        where: { quizId: id, studentId: user.id, finishedAt: { not: null } },
-      });
-      if (finishedCount >= quiz.maxAttempts) return { kind: "limit" as const };
 
       const attempt = await tx.quizAttempt.create({
         data: { quizId: id, studentId: user.id },

@@ -120,9 +120,9 @@ export default async function AdminAuditPage({
               </Select>
             </div>
             <div className="w-full sm:w-56">
-              <Label>Kategoriya</Label>
+              <Label>{dictionary.auditCategoryLabel}</Label>
               <Select name="category" defaultValue={category}>
-                <option value="">Barcha kategoriyalar</option>
+                <option value="">{dictionary.auditAllCategories}</option>
                 {EVENT_CATEGORIES.map((item) =>
                   categoryCounts.get(item) ? (
                     <option key={item} value={item}>
@@ -133,9 +133,9 @@ export default async function AdminAuditPage({
               </Select>
             </div>
             <div className="w-full sm:w-56">
-              <Label>Foydalanuvchi</Label>
+              <Label>{dictionary.auditUserLabel}</Label>
               <Select name="actor" defaultValue={actor}>
-                <option value="">Barcha foydalanuvchilar</option>
+                <option value="">{dictionary.auditAllUsers}</option>
                 {actorUsers.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.name}

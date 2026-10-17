@@ -19,6 +19,8 @@ export const shell = {
   navExams: "Imtihonlar",
   navGradesStaff: "Baholash",
   navGradesStudent: "Baholarim",
+  navGradebook: "Baholar jurnali",
+  navMyGrades: "Mening baholarim",
   navGpa: "GPA",
   navTranscript: "Transkript",
   navAttendance: "Davomat",

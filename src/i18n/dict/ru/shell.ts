@@ -19,6 +19,8 @@ export const shell = {
   navExams: "Экзамены",
   navGradesStaff: "Оценивание",
   navGradesStudent: "Оценки",
+  navGradebook: "Журнал оценок",
+  navMyGrades: "Мои оценки",
   navGpa: "GPA",
   navTranscript: "Транскрипт",
   navAttendance: "Посещаемость",
