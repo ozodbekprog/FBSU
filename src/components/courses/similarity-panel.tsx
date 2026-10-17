@@ -91,7 +91,7 @@ export function SimilarityPanel({
                   >
                     <span className="min-w-0 truncate text-sm text-slate-700">
                       {names[pair.aId] ?? pair.aId}
-                      <span className="mx-1.5 text-slate-400">↔</span>
+                      <span className="mx-1.5 text-slate-500">↔</span>
                       {names[pair.bId] ?? pair.bId}
                     </span>
                     <span className="flex shrink-0 items-center gap-2">

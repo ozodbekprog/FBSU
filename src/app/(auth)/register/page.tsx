@@ -150,8 +150,9 @@ export default function RegisterPage() {
             </div>
             <form onSubmit={onSubmit} noValidate className="mt-8 space-y-5">
               <div>
-                <Label>{t("authRegisterName")}</Label>
+                <Label htmlFor="register-name">{t("authRegisterName")}</Label>
                 <Input
+                  id="register-name"
                   value={form.name}
                   onChange={(e) => update("name", e.target.value)}
                   placeholder={t("authRegisterNamePlaceholder")}
@@ -160,8 +161,9 @@ export default function RegisterPage() {
                 />
               </div>
               <div>
-                <Label>{t("authEmail")}</Label>
+                <Label htmlFor="register-email">{t("authEmail")}</Label>
                 <Input
+                  id="register-email"
                   type="email"
                   value={form.email}
                   onChange={(e) => update("email", e.target.value)}
@@ -171,8 +173,9 @@ export default function RegisterPage() {
                 />
               </div>
               <div>
-                <Label>{t("authPassword")}</Label>
+                <Label htmlFor="register-password">{t("authPassword")}</Label>
                 <Input
+                  id="register-password"
                   type="password"
                   value={form.password}
                   onChange={(e) => update("password", e.target.value)}

@@ -355,7 +355,7 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ i
                   courseSections.map((section) => (
                     <div key={section.id} className="space-y-2">
                       {courseSections.length > 1 ? (
-                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                           {section.title}
                         </p>
                       ) : null}
@@ -476,19 +476,19 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ i
                 <div className="space-y-2 text-sm">
                   {roomInfo.building ? (
                     <p className="text-slate-700">
-                      <span className="text-slate-400">{dictionary.schLessonBuilding}: </span>
+                      <span className="text-slate-500">{dictionary.schLessonBuilding}: </span>
                       {roomInfo.building}
                     </p>
                   ) : null}
                   {roomInfo.capacity ? (
                     <p className="text-slate-700">
-                      <span className="text-slate-400">{dictionary.schLessonCapacity}: </span>
+                      <span className="text-slate-500">{dictionary.schLessonCapacity}: </span>
                       {translate(locale, "mscRoomCapacity", { count: roomInfo.capacity })}
                     </p>
                   ) : null}
                   {roomInfo.equipment ? (
                     <p className="text-slate-700">
-                      <span className="text-slate-400">{dictionary.schLessonEquipment}: </span>
+                      <span className="text-slate-500">{dictionary.schLessonEquipment}: </span>
                       {roomInfo.equipment}
                     </p>
                   ) : null}
@@ -522,7 +522,7 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ i
               ) : null}
               {entry.teacherRef?.email ? (
                 <div className="rounded-xl bg-slate-50 px-3.5 py-2.5">
-                  <span className="block text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                  <span className="block text-[11px] font-medium uppercase tracking-wide text-slate-500">
                     {dictionary.schLessonEmail}
                   </span>
                   <span className="mt-0.5 block break-all text-sm font-medium text-slate-800">

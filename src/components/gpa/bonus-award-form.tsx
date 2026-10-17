@@ -69,7 +69,7 @@ export function BonusAwardForm({ courses, students }: Props) {
           subtitle={t("grdNoSubjectAssigned")}
         />
         <CardBody>
-          <p className="text-sm text-slate-400">{t("grdNoSubjectAssignedDesc")}</p>
+          <p className="text-sm text-slate-500">{t("grdNoSubjectAssignedDesc")}</p>
         </CardBody>
       </Card>
     );

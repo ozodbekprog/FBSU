@@ -183,7 +183,7 @@ export function CatalogCourseCard({
             {course.description}
           </p>
         ) : (
-          <p className="mt-3 min-h-10 text-sm leading-relaxed text-slate-400">{t("crsNoDescription")}</p>
+          <p className="mt-3 min-h-10 text-sm leading-relaxed text-slate-500">{t("crsNoDescription")}</p>
         )}
 
         <div className="mt-3 flex flex-wrap items-center gap-2">

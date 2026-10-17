@@ -144,7 +144,7 @@ export default async function BountyView({
                         {leader.role ? (
                           <Badge tone="slate">{ROLE_LABELS[leader.role] ? dictionary[ROLE_LABELS[leader.role]] : leader.role}</Badge>
                         ) : (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-slate-500">—</span>
                         )}
                       </td>
                       <td className="py-2.5 pr-3 text-right text-sm text-slate-600">{leader.fixed}</td>
@@ -243,11 +243,11 @@ export default async function BountyView({
                         {severity ? (
                           <Badge tone={severity.tone}>{dictionary[severity.label]}</Badge>
                         ) : (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-slate-500">—</span>
                         )}
                       </td>
                       <td className="py-2.5 pr-3 text-right text-sm font-semibold text-emerald-700">
-                        {item.points > 0 ? `+${item.points}` : <span className="text-slate-400">—</span>}
+                        {item.points > 0 ? `+${item.points}` : <span className="text-slate-500">—</span>}
                       </td>
                       <td className="whitespace-nowrap py-2.5 text-xs text-slate-500">
                         {item.fixWorker ?? "—"}

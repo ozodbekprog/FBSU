@@ -114,7 +114,12 @@ export function GradeTrendChart({
 
   return (
     <div>
-      <svg viewBox={`0 0 ${WIDTH} ${height}`} className="h-auto w-full" role="img">
+      <svg
+        viewBox={`0 0 ${WIDTH} ${height}`}
+        className="h-auto w-full"
+        role="img"
+        aria-label={data.map((item) => `${item.label}: ${Math.round(item.value)}%`).join("; ")}
+      >
         <defs>
           <linearGradient id="gt-area" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#5373b8" stopOpacity="0.32" />
@@ -339,7 +344,7 @@ export function GradeTrendChart({
           ) : null}
           {selectedItem.detail.feedback ? (
             <div className="mt-2 rounded-lg bg-white px-3 py-2 ring-1 ring-slate-200/70">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
                 {t("dashGradeFeedback")}
               </p>
               <p className="mt-1 text-xs leading-relaxed text-slate-700">«{selectedItem.detail.feedback}»</p>
@@ -347,7 +352,7 @@ export function GradeTrendChart({
           ) : null}
         </div>
       ) : (
-        <p className="mt-2 text-[11px] text-slate-400">{t("dashGradeDetailHint")}</p>
+        <p className="mt-2 text-[11px] text-slate-500">{t("dashGradeDetailHint")}</p>
       )}
     </div>
   );

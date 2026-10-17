@@ -143,7 +143,7 @@ export default async function AdminUpdatesPage({
                               </span>
                               <span className="truncate font-mono text-xs text-slate-600">{file.path}</span>
                               {file.insertions > 0 || file.deletions > 0 ? (
-                                <span className="ml-auto shrink-0 font-mono text-[11px] text-slate-400">
+                                <span className="ml-auto shrink-0 font-mono text-[11px] text-slate-500">
                                   +{file.insertions} −{file.deletions}
                                 </span>
                               ) : null}

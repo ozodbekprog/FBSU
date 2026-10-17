@@ -101,12 +101,12 @@ export default function KafedraSubjects({
                   <span className="block truncate text-sm font-semibold text-slate-900">
                     {subject.name}
                     {subject.code ? (
-                      <span className="ml-2 text-xs font-medium text-slate-400">{subject.code}</span>
+                      <span className="ml-2 text-xs font-medium text-slate-500">{subject.code}</span>
                     ) : null}
                   </span>
                   <span className="mt-1 flex flex-wrap gap-1">
                     {subject.teachers.length === 0 ? (
-                      <span className="text-xs text-slate-400">—</span>
+                      <span className="text-xs text-slate-500">—</span>
                     ) : (
                       subject.teachers.map((teacher) => (
                         <Badge key={teacher.id}>{teacher.name}</Badge>

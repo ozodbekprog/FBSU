@@ -379,9 +379,17 @@ export function Select({
   );
 }
 
-export function Label({ children, className }: { children: ReactNode; className?: string }) {
+export function Label({
+  children,
+  className,
+  htmlFor,
+}: {
+  children: ReactNode;
+  className?: string;
+  htmlFor?: string;
+}) {
   return (
-    <label className={cn("mb-1.5 block text-sm font-medium text-slate-700", className)}>
+    <label htmlFor={htmlFor} className={cn("mb-1.5 block text-sm font-medium text-slate-700", className)}>
       {children}
     </label>
   );

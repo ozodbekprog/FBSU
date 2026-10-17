@@ -154,7 +154,7 @@ export function CourseCard({ course, staff = false }: { course: CourseCardData; 
               {course.description}
             </p>
           ) : (
-            <p className="mt-3 min-h-10 text-sm leading-relaxed text-slate-400">
+            <p className="mt-3 min-h-10 text-sm leading-relaxed text-slate-500">
               {t("crsNoDescription")}
             </p>
           )}

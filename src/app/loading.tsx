@@ -5,7 +5,11 @@ export default async function Loading() {
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-surface">
+    <div
+      role="status"
+      aria-busy="true"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-surface"
+    >
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-brand-50 via-surface to-white" />
       <div className="pointer-events-none absolute -left-24 top-1/4 size-80 rounded-full bg-brand-200/40 blur-3xl" />
       <div className="pointer-events-none absolute -right-20 bottom-1/4 size-72 rounded-full bg-gold-300/20 blur-3xl" />
@@ -32,9 +36,9 @@ export default async function Loading() {
           <Logo size={72} withText={false} />
         </div>
 
-        <h1 className="mt-7 animate-shimmer text-xl font-bold tracking-tight text-brand-950">
+        <span className="mt-7 animate-shimmer text-xl font-bold tracking-tight text-brand-950">
           FBSU
-        </h1>
+        </span>
         <p className="mt-1 animate-shimmer text-sm font-medium text-slate-500">
           {dictionary.commonLoading}
         </p>

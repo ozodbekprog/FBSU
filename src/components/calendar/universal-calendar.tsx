@@ -1053,7 +1053,7 @@ export function UniversalCalendar({ canManage }: { canManage: boolean }) {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="ml-auto text-slate-400 transition-transform duration-200 group-open:rotate-180"
+                    className="ml-auto text-slate-500 transition-transform duration-200 group-open:rotate-180"
                   >
                     <path d="m6 9 6 6 6-6" />
                   </svg>
