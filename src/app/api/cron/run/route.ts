@@ -93,9 +93,15 @@ export async function POST(request: Request) {
         ? (await prisma.notification.createMany({ data: pending, skipDuplicates: true })).count
         : 0;
 
-    await recordEvent(null, "system.cron", { meta: { finalized, reminders } });
+    const ownerCount = await prisma.user.count({ where: { role: "OWNER", isActive: true } });
+    const guardRows = await prisma.$queryRaw<{ tgname: string }[]>`
+      SELECT tgname FROM pg_trigger WHERE tgname = 'protect_owner_user_trigger'
+    `;
+    const ownerGuard: "ok" | "fail" = ownerCount >= 1 && guardRows.length > 0 ? "ok" : "fail";
 
-    return Response.json({ ok: true, data: { finalized, reminders } });
+    await recordEvent(null, "system.cron", { meta: { finalized, reminders, ownerGuard } });
+
+    return Response.json({ ok: true, data: { finalized, reminders, ownerGuard } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Cron vazifasida xato";
     return Response.json({ ok: false, error: message }, { status: 500 });

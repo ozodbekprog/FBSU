@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { Prisma } from "@prisma/client";
-import { requireRole } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { hasCapability } from "@/modules/capabilities";
 import { Button, Card, CardBody, Input, Label, PageHeader, Select } from "@/components/ui";
 import AuditLogTable, { type AuditLogItem } from "@/components/admin/AuditLogTable";
 import { auditActionLabel } from "./labels";
@@ -22,7 +24,11 @@ export default async function AdminAuditPage({
 }: {
   searchParams: Promise<{ action?: string; date?: string; category?: string; actor?: string; page?: string }>;
 }) {
-  await requireRole(["ADMIN"]);
+  const user = await requireUser();
+  const canViewAll = hasCapability(user.role, "audit.viewAll");
+  const canViewScoped = !canViewAll && hasCapability(user.role, "audit.viewScoped");
+  if (!canViewAll && !canViewScoped) redirect("/dashboard");
+
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
   const tr = (key: keyof Dictionary, params?: Record<string, string | number>) => translate(locale, key, params);
@@ -41,14 +47,28 @@ export default async function AdminAuditPage({
   const dayStart = /^\d{4}-\d{2}-\d{2}$/.test(date) ? new Date(`${date}T00:00:00`) : null;
   const dayEnd = dayStart ? new Date(dayStart.getTime() + 24 * 60 * 60 * 1000) : null;
 
-  const where: Prisma.AuditLogWhereInput = {};
+  const baseWhere: Prisma.AuditLogWhereInput = {};
   if (action) {
-    where.action = action;
+    baseWhere.action = action;
   } else if (category) {
-    where.action = { in: eventsByCategory(category) };
+    baseWhere.action = { in: eventsByCategory(category) };
   }
-  if (dayStart && dayEnd) where.createdAt = { gte: dayStart, lt: dayEnd };
-  if (actor) where.actorId = actor;
+  if (dayStart && dayEnd) baseWhere.createdAt = { gte: dayStart, lt: dayEnd };
+  if (actor) baseWhere.actorId = actor;
+
+  const scopeWhere: Prisma.AuditLogWhereInput = canViewAll
+    ? {}
+    : user.role === "DEKAN"
+      ? { actor: { facultyId: user.facultyId ?? "__none__" } }
+      : user.role === "KAFEDRA_MUDIRI"
+        ? { actor: { departmentId: user.departmentId ?? "__none__" } }
+        : { actorId: user.id };
+
+  const where: Prisma.AuditLogWhereInput = canViewAll ? baseWhere : { AND: [baseWhere, scopeWhere] };
+  const scopeOnly: Prisma.AuditLogWhereInput | undefined = canViewAll ? undefined : scopeWhere;
+  const actorGroupsWhere: Prisma.AuditLogWhereInput = scopeOnly
+    ? { AND: [{ actorId: { not: null } }, scopeOnly] }
+    : { actorId: { not: null } };
 
   const [total, logs, actionGroups, actorGroups] = await Promise.all([
     prisma.auditLog.count({ where }),
@@ -61,11 +81,12 @@ export default async function AdminAuditPage({
     }),
     prisma.auditLog.groupBy({
       by: ["action"],
+      where: scopeOnly,
       _count: { _all: true },
       orderBy: { action: "asc" },
     }),
     prisma.auditLog.findMany({
-      where: { actorId: { not: null } },
+      where: actorGroupsWhere,
       distinct: ["actorId"],
       select: { actorId: true },
       take: 200,

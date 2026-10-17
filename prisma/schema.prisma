@@ -1150,6 +1150,8 @@ model AuditLog {
   entity    String?
   entityId  String?
   meta      Json?
+  prevHash  String?
+  hash      String?
   createdAt DateTime @default(now())
 
   actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)

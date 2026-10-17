@@ -13,7 +13,7 @@ const patchSchema = z.object({
   email: z.string().trim().email().optional(),
   password: z.string().min(12).max(100).optional(),
   role: z
-    .enum(["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA"])
+    .enum(["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "BUXGALTER", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA"])
     .optional(),
   groupId: z.string().trim().min(1).nullable().optional(),
   subGroupId: z.string().trim().min(1).nullable().optional(),
@@ -23,10 +23,6 @@ const patchSchema = z.object({
 
 const LAST_ADMIN_ERROR = "Oxirgi adminni o'chirib/pasaytirib bo'lmaydi";
 const REGISTRAR_MANAGED_ROLES: readonly Role[] = ["STUDENT", "TEACHER"];
-
-function isOwnerDemotion(role: Role | undefined) {
-  return role !== undefined && role !== "OWNER";
-}
 
 async function countActiveAdmins() {
   return prisma.user.count({ where: { role: "ADMIN", isActive: true } });
@@ -57,7 +53,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       return Response.json({ ok: false, error: "OWNER akkauntini o'zgartirishga ruxsat yo'q" }, { status: 403 });
     }
     const nextRole: Role | undefined = parsed.data.role;
-    if (isOwnerDemotion(nextRole)) {
+    if (nextRole !== undefined) {
       return Response.json({ ok: false, error: "OWNER rolini pasaytirib bo'lmaydi" }, { status: 403 });
     }
     if (parsed.data.isActive === false) {

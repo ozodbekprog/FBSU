@@ -219,3 +219,20 @@ deploy/              # Caddyfile + systemd unitlar (VPS deploy)
 ## Ferma test 3
 
 Bu bolim avtomatik tekshiruv uchun qoshildi.
+
+## OWNER va xavfsizlik
+
+`OWNER` — tizimning eng yuqori roli (loyiha egasi), u oddiy admin amallari bilan
+o'chirilmaydi yoki pasaytirilmaydi. Bazada `protect_owner_user_trigger` triggeri
+`User` jadvalidagi OWNER qatorini himoyalaydi: parol, rol va `isActive` faqat
+`app.allow_owner_write = 'on'` bilan ishlaydigan recovery skript orqali o'zgaradi
+(`node scripts/owner-recovery.mjs`); har bir o'zgarish audit jurnaliga yoziladi.
+
+Holatni tekshirish:
+
+```bash
+node scripts/security-check.mjs   # owner / trigger / function: OK yoki FAIL (exit 1)
+```
+
+Cron (`POST /api/cron/run`) har ishga tushishda `ownerGuard` maydonini qaytaradi.
+Litsenziya va foydalanish shartlari — [`NOTICE`](NOTICE).

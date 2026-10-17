@@ -1,7 +1,9 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { getClientIp } from "@/lib/client-ip";
+import { nextChainFields } from "@/server/audit-chain";
 
 export type AuditAction =
   | "LOGIN_SUCCESS"
@@ -64,13 +66,34 @@ export async function createAuditLog(data: AuditLogData): Promise<void> {
       ip: data.ip ?? "unknown",
       userAgent: data.userAgent ?? "unknown",
     };
+    const id = randomUUID();
+    const createdAt = new Date();
+    const actorId = user?.id || null;
+    const entity = data.entity || null;
+    const entityId = data.entityId || null;
+    let chain: { prevHash: string | null; hash: string | null } = { prevHash: null, hash: null };
+    try {
+      chain = await nextChainFields(prisma, {
+        id,
+        actorId,
+        action: data.action,
+        entity,
+        entityId,
+        meta,
+        createdAt,
+      });
+    } catch {}
     await prisma.auditLog.create({
       data: {
-        actorId: user?.id || null,
+        id,
+        actorId,
         action: data.action,
-        entity: data.entity || null,
-        entityId: data.entityId || null,
+        entity,
+        entityId,
         meta,
+        createdAt,
+        prevHash: chain.prevHash,
+        hash: chain.hash,
       },
     });
   } catch (error) {

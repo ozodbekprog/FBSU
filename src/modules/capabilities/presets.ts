@@ -33,7 +33,9 @@ export const ROLES: readonly RoleName[] = [
 
 export const ROLE_CAPABILITIES: Record<RoleName, readonly Capability[]> = {
   OWNER: ALL_CAPABILITIES,
-  ADMIN: ALL_CAPABILITIES,
+  ADMIN: ALL_CAPABILITIES.filter(
+    (capability) => capability !== "audit.viewAll" && capability !== "audit.viewScoped",
+  ),
   REKTOR: [
     "monitoring.view",
     "analysis.view",
@@ -43,6 +45,7 @@ export const ROLE_CAPABILITIES: Record<RoleName, readonly Capability[]> = {
     "finance.view",
     "diplomas.view",
     "documents.view",
+    "audit.viewScoped",
   ],
   PRO_RECTOR: [
     "monitoring.view",
@@ -52,9 +55,10 @@ export const ROLE_CAPABILITIES: Record<RoleName, readonly Capability[]> = {
     "finance.view",
     "diplomas.view",
     "documents.view",
+    "audit.viewScoped",
   ],
-  DEKAN: ["monitoring.view", "analysis.view", "tasks.manage", "transcript.view"],
-  KAFEDRA_MUDIRI: ["monitoring.view", "analysis.view", "tasks.manage", "transcript.view"],
+  DEKAN: ["monitoring.view", "analysis.view", "tasks.manage", "transcript.view", "audit.viewScoped"],
+  KAFEDRA_MUDIRI: ["monitoring.view", "analysis.view", "tasks.manage", "transcript.view", "audit.viewScoped"],
   REGISTRAR: [
     "monitoring.view",
     "academic.manage",

@@ -167,9 +167,32 @@ describe("capability: 2-to'lqim (hujjatlar, moliya, testlar)", () => {
   });
 });
 
+describe("capability: audit jurnali", () => {
+  it("to'liq audit faqat owner'da", () => {
+    expect(hasCapability("OWNER", "audit.viewAll")).toBe(true);
+    expect(hasCapability("ADMIN", "audit.viewAll")).toBe(false);
+  });
+
+  it("admin scoped auditni ham ko'rmaydi", () => {
+    expect(hasCapability("ADMIN", "audit.viewScoped")).toBe(false);
+  });
+
+  it("rahbariyat faqat scope bilan ko'radi", () => {
+    for (const role of ["REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI"]) {
+      expect(hasCapability(role, "audit.viewScoped"), role).toBe(true);
+      expect(hasCapability(role, "audit.viewAll"), role).toBe(false);
+    }
+    expect(hasCapability("TYUTOR", "audit.viewScoped")).toBe(false);
+  });
+});
+
 describe("capability: umumiy qoidalar", () => {
-  it("admin hamma capability'ga ega", () => {
-    expect(hasAllCapabilities("ADMIN", ALL_CAPABILITIES)).toBe(true);
+  it("admin audit'dan tashqari hamma capability'ga ega", () => {
+    const adminCapabilities = ALL_CAPABILITIES.filter(
+      (capability) => capability !== "audit.viewAll" && capability !== "audit.viewScoped",
+    );
+    expect(hasAllCapabilities("ADMIN", adminCapabilities)).toBe(true);
+    expect(hasAllCapabilities("ADMIN", ["audit.viewAll"])).toBe(false);
   });
 
   it("owner hamma capability'ga ega", () => {

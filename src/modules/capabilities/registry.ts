@@ -25,6 +25,8 @@ export const CAPABILITIES = {
   "parent.viewChild": { scope: "global", label: "Farzand ma'lumotlarini ko'rish" },
   "gradeChanges.review": { scope: "global", label: "Baho o'zgarish so'rovlarini ko'rib chiqish" },
   "tasks.manage": { scope: "global", label: "Topshiriqlarni taqsimlash va boshqarish" },
+  "audit.viewAll": { scope: "global", label: "To'liq audit jurnalini ko'rish" },
+  "audit.viewScoped": { scope: "global", label: "Audit jurnalini o'z doirasida ko'rish" },
   "schedule.manage": { scope: "global", label: "Dars jadvalini boshqarish" },
   "exams.manage": { scope: "global", label: "Imtihonlarni boshqarish" },
   "course.manage": { scope: "course", label: "Kurs kontentini boshqarish" },
