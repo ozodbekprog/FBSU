@@ -261,6 +261,42 @@ export function QuestionBankManager({
               <p className="mt-3 text-sm font-medium leading-relaxed text-slate-900">{item.text}</p>
               {item.type === "TEXT" ? (
                 <p className="mt-3 text-xs text-slate-600">{t("crsQuizTextManual")}</p>
+              ) : item.type === "SHORT_ANSWER" || item.type === "NUMERIC" ? (
+                <p className="mt-3 text-xs font-medium text-emerald-700">
+                  {item.correct.map((value) => String(value)).join(", ")}
+                </p>
+              ) : item.type === "MATCHING" ? (
+                <ul className="mt-3 space-y-1.5">
+                  {item.options.map((left, index) => {
+                    const paired = item.correct[index];
+                    return (
+                      <li
+                        key={index}
+                        className="flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50/60 px-2.5 py-1.5 text-xs text-teal-900"
+                      >
+                        <span className="min-w-0 flex-1 truncate">{left}</span>
+                        <span className="shrink-0 text-teal-500">→</span>
+                        <span className="min-w-0 flex-1 truncate font-medium">
+                          {typeof paired === "string" ? paired : "—"}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : item.type === "ORDERING" ? (
+                <ol className="mt-3 space-y-1.5">
+                  {item.options.map((value, index) => (
+                    <li
+                      key={index}
+                      className="flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50/60 px-2.5 py-1.5 text-xs text-indigo-900"
+                    >
+                      <span className="inline-flex size-4 shrink-0 items-center justify-center rounded bg-indigo-500 text-[10px] font-bold text-white">
+                        {index + 1}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate">{value}</span>
+                    </li>
+                  ))}
+                </ol>
               ) : (
                 <ul className="mt-3 space-y-1.5">
                   {item.options.map((option, index) => {

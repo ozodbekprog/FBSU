@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { hasCapability } from "@/modules/capabilities";
 import {
   parseSessionDate,
   sessionCreateSchema,
@@ -21,7 +22,7 @@ export async function GET(request: Request) {
     return Response.json({ ok: true, data: { role: user.role, sessions } });
   }
 
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (!hasCapability(user.role, "exams.manage")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
   if (!user) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (!hasCapability(user.role, "exams.manage")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

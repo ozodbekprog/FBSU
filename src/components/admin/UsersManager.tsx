@@ -64,6 +64,7 @@ const ROLE_META: Record<
   { label: keyof Dictionary; tone: "brand" | "purple" | "slate" | "blue" | "green" | "gold"; dot: string; ring: string }
 > = {
   ADMIN: { label: "admRoleAdmin", tone: "brand", dot: "bg-brand-500", ring: "ring-brand-200/80" },
+  OWNER: { label: "roleOwner", tone: "gold", dot: "bg-gold-500", ring: "ring-gold-300/60" },
   REKTOR: { label: "admRoleRector", tone: "gold", dot: "bg-gold-500", ring: "ring-gold-300/60" },
   PRO_RECTOR: { label: "admRoleProRector", tone: "gold", dot: "bg-gold-400", ring: "ring-gold-300/60" },
   DEKAN: { label: "admRoleDean", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },

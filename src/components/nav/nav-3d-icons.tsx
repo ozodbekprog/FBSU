@@ -886,6 +886,7 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/exams": Exams,
   "/secure-exams": SecureExams,
   "/grades": Grades,
+  "/gradebook": Grades,
   "/gpa": Gpa,
   "/transcript": Transcript,
   "/attendance": Attendance,

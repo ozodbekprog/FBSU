@@ -264,7 +264,24 @@ export function BankImportModal({
                       <span className="mt-1.5 block text-sm font-medium text-slate-900">
                         {item.text}
                       </span>
-                      {item.options.length > 0 ? (
+                      {item.type === "SHORT_ANSWER" || item.type === "NUMERIC" ? (
+                        <span className="mt-1 block truncate text-xs font-medium text-emerald-700">
+                          {item.correct.map((value) => String(value)).join(", ")}
+                        </span>
+                      ) : item.type === "MATCHING" ? (
+                        <span className="mt-1 block truncate text-xs text-teal-700">
+                          {item.options
+                            .map((left, index) => {
+                              const paired = item.correct[index];
+                              return typeof paired === "string" ? `${left} → ${paired}` : left;
+                            })
+                            .join(" · ")}
+                        </span>
+                      ) : item.type === "ORDERING" ? (
+                        <span className="mt-1 block truncate text-xs text-indigo-700">
+                          {item.options.join(" → ")}
+                        </span>
+                      ) : item.options.length > 0 ? (
                         <span className="mt-1 block truncate text-xs text-slate-500">
                           {item.options.join(" · ")}
                         </span>

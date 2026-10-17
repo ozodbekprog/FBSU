@@ -1,4 +1,5 @@
 export type RegradeRole =
+  | "OWNER"
   | "ADMIN"
   | "REKTOR"
   | "PRO_RECTOR"

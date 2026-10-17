@@ -10,6 +10,7 @@ import { SECURE_EVENT_TYPES } from "./events";
 export const answerValueSchema = z.union([
   z.number().int().min(0),
   z.array(z.number().int().min(0)).max(20),
+  z.array(z.string().max(500)).max(20),
   z.string().max(5000),
 ]);
 

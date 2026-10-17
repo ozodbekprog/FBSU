@@ -1,20 +1,34 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { Prisma } from "@prisma/client";
-import { requireRole } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { hasCapability } from "@/modules/capabilities";
 import { Button, Card, CardBody, Input, Label, PageHeader, Select } from "@/components/ui";
 import AuditLogTable, { type AuditLogItem } from "@/components/admin/AuditLogTable";
 import { auditActionLabel } from "./labels";
 import { getDictionary, getLocale, t as translate, type Dictionary } from "@/i18n";
+import {
+  EVENT_CATEGORIES,
+  EVENT_CATEGORY_LABELS,
+  EVENTS,
+  eventsByCategory,
+  isEventName,
+  type EventCategory,
+} from "@/modules/events";
 
 const PAGE_SIZE = 100;
 
 export default async function AdminAuditPage({
   searchParams,
 }: {
-  searchParams: Promise<{ action?: string; date?: string; page?: string }>;
+  searchParams: Promise<{ action?: string; date?: string; category?: string; actor?: string; page?: string }>;
 }) {
-  await requireRole(["ADMIN"]);
+  const user = await requireUser();
+  const canViewAll = hasCapability(user.role, "audit.viewAll");
+  const canViewScoped = !canViewAll && hasCapability(user.role, "audit.viewScoped");
+  if (!canViewAll && !canViewScoped) redirect("/dashboard");
+
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
   const tr = (key: keyof Dictionary, params?: Record<string, string | number>) => translate(locale, key, params);
@@ -22,17 +36,41 @@ export default async function AdminAuditPage({
 
   const action = typeof params.action === "string" ? params.action.trim() : "";
   const date = typeof params.date === "string" ? params.date.trim() : "";
+  const actor = typeof params.actor === "string" ? params.actor.trim() : "";
+  const categoryRaw = typeof params.category === "string" ? params.category.trim() : "";
+  const category = (EVENT_CATEGORIES as readonly string[]).includes(categoryRaw)
+    ? (categoryRaw as EventCategory)
+    : "";
   const pageParam = Number(params.page);
   const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
 
   const dayStart = /^\d{4}-\d{2}-\d{2}$/.test(date) ? new Date(`${date}T00:00:00`) : null;
   const dayEnd = dayStart ? new Date(dayStart.getTime() + 24 * 60 * 60 * 1000) : null;
 
-  const where: Prisma.AuditLogWhereInput = {};
-  if (action) where.action = action;
-  if (dayStart && dayEnd) where.createdAt = { gte: dayStart, lt: dayEnd };
+  const baseWhere: Prisma.AuditLogWhereInput = {};
+  if (action) {
+    baseWhere.action = action;
+  } else if (category) {
+    baseWhere.action = { in: eventsByCategory(category) };
+  }
+  if (dayStart && dayEnd) baseWhere.createdAt = { gte: dayStart, lt: dayEnd };
+  if (actor) baseWhere.actorId = actor;
 
-  const [total, logs, actionGroups] = await Promise.all([
+  const scopeWhere: Prisma.AuditLogWhereInput = canViewAll
+    ? {}
+    : user.role === "DEKAN"
+      ? { actor: { facultyId: user.facultyId ?? "__none__" } }
+      : user.role === "KAFEDRA_MUDIRI"
+        ? { actor: { departmentId: user.departmentId ?? "__none__" } }
+        : { actorId: user.id };
+
+  const where: Prisma.AuditLogWhereInput = canViewAll ? baseWhere : { AND: [baseWhere, scopeWhere] };
+  const scopeOnly: Prisma.AuditLogWhereInput | undefined = canViewAll ? undefined : scopeWhere;
+  const actorGroupsWhere: Prisma.AuditLogWhereInput = scopeOnly
+    ? { AND: [{ actorId: { not: null } }, scopeOnly] }
+    : { actorId: { not: null } };
+
+  const [total, logs, actionGroups, actorGroups] = await Promise.all([
     prisma.auditLog.count({ where }),
     prisma.auditLog.findMany({
       where,
@@ -43,10 +81,34 @@ export default async function AdminAuditPage({
     }),
     prisma.auditLog.groupBy({
       by: ["action"],
+      where: scopeOnly,
       _count: { _all: true },
       orderBy: { action: "asc" },
     }),
+    prisma.auditLog.findMany({
+      where: actorGroupsWhere,
+      distinct: ["actorId"],
+      select: { actorId: true },
+      take: 200,
+    }),
   ]);
+
+  const actorIds = actorGroups.flatMap((group) => (group.actorId ? [group.actorId] : []));
+  const actorUsers =
+    actorIds.length > 0
+      ? await prisma.user.findMany({
+          where: { id: { in: actorIds } },
+          select: { id: true, name: true },
+          orderBy: { name: "asc" },
+        })
+      : [];
+
+  const categoryCounts = new Map<EventCategory, number>();
+  for (const group of actionGroups) {
+    if (!isEventName(group.action)) continue;
+    const key = EVENTS[group.action].category;
+    categoryCounts.set(key, (categoryCounts.get(key) ?? 0) + group._count._all);
+  }
 
   const items: AuditLogItem[] = logs.map((log) => ({
     id: log.id,
@@ -58,7 +120,7 @@ export default async function AdminAuditPage({
     actor: log.actor,
   }));
 
-  const hasFilters = Boolean(action || date);
+  const hasFilters = Boolean(action || category || date || actor);
 
   return (
     <>
@@ -74,6 +136,30 @@ export default async function AdminAuditPage({
                 {actionGroups.map((group) => (
                   <option key={group.action} value={group.action}>
                     {auditActionLabel(group.action, tr)} ({group._count._all})
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="w-full sm:w-56">
+              <Label>{dictionary.auditCategoryLabel}</Label>
+              <Select name="category" defaultValue={category}>
+                <option value="">{dictionary.auditAllCategories}</option>
+                {EVENT_CATEGORIES.map((item) =>
+                  categoryCounts.get(item) ? (
+                    <option key={item} value={item}>
+                      {EVENT_CATEGORY_LABELS[item]} ({categoryCounts.get(item)})
+                    </option>
+                  ) : null,
+                )}
+              </Select>
+            </div>
+            <div className="w-full sm:w-56">
+              <Label>{dictionary.auditUserLabel}</Label>
+              <Select name="actor" defaultValue={actor}>
+                <option value="">{dictionary.auditAllUsers}</option>
+                {actorUsers.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
                   </option>
                 ))}
               </Select>
@@ -109,7 +195,7 @@ export default async function AdminAuditPage({
         total={total}
         page={page}
         pageCount={Math.max(1, Math.ceil(total / PAGE_SIZE))}
-        query={{ action, date }}
+        query={{ action, date, category, actor }}
       />
     </>
   );

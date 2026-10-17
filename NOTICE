@@ -1,0 +1,19 @@
+# NOTICE / OGOHLANTIRISH
+
+**Sana / Date:** 2026-10-17
+
+## O'zbekcha
+
+Ushbu loyiha (TTPU / FBSU LMS) intellektual mulki egasi — **Tony**. Loyihadagi `OWNER`
+akkaunt va uni himoya qiluvchi mexanizm (PostgreSQL trigger `protect_owner_user_trigger`,
+audit jurnali) loyiha arxitekturasining ajralmas qismidir: ularni olib tashlash, chetlab
+o'tish yoki o'zgartirish taqiqlanadi. Savdo, litsenziya yoki boshqa foydalanish shartlari
+bo'yicha faqat egasiga murojaat qiling.
+
+## English
+
+This project (TTPU / FBSU LMS) is the intellectual property of its owner, **Tony**. The
+`OWNER` account and its protection mechanism (the PostgreSQL trigger
+`protect_owner_user_trigger` and the audit log) are an integral part of the project's
+architecture; removing, bypassing or modifying them is prohibited. For sales, licensing or
+any other terms of use, contact the owner only.

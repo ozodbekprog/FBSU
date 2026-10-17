@@ -2,7 +2,7 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 
 const patchSchema = z.object({
   name: z.string().trim().min(1).max(20).optional(),
@@ -51,9 +51,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   const updated = await prisma.subGroup.update({ where: { id }, data: { name } });
   const actor = await getCurrentUser();
   if (actor) {
-    await logAudit({
-      actorId: actor.id,
-      action: "admin.subgroup.update",
+    await recordEvent(actor.id, "admin.subgroup.update", {
       entity: "SubGroup",
       entityId: id,
       meta: { name, previousName: subGroup.name },
@@ -78,9 +76,7 @@ export async function DELETE(request: Request, ctx: { params: Promise<{ id: stri
   await prisma.subGroup.delete({ where: { id } });
   const actor = await getCurrentUser();
   if (actor) {
-    await logAudit({
-      actorId: actor.id,
-      action: "admin.subgroup.delete",
+    await recordEvent(actor.id, "admin.subgroup.delete", {
       entity: "SubGroup",
       entityId: id,
       meta: { name: subGroup.name },

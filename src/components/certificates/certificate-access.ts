@@ -1,5 +1,6 @@
 import "server-only";
 import type { Role } from "@prisma/client";
+import { hasCapability } from "@/modules/capabilities";
 
 export type CertificateAccessUser = { id: string; role: Role };
 
@@ -9,7 +10,7 @@ export function canManageCertificate(
 ) {
   return (
     user.role === "ADMIN" ||
-    (user.role === "TEACHER" && certificate.course.teacherId === user.id)
+    (hasCapability(user.role, "certificates.issue") && certificate.course.teacherId === user.id)
   );
 }
 

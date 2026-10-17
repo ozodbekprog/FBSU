@@ -61,12 +61,14 @@ export function remapAnswerToOriginal(
   question: OptionedQuestion,
   seed: string,
 ): AnswerValue {
-  if (typeof value !== "number" && !Array.isArray(value)) return value;
   const order = optionPermutation(question.options.length, seed);
   if (typeof value === "number") {
     return order[value] ?? value;
   }
-  return value.map((index) => order[index] ?? index);
+  if (!Array.isArray(value)) return value;
+  const indexes = value.filter((item): item is number => typeof item === "number");
+  if (indexes.length !== value.length) return value;
+  return indexes.map((index) => order[index] ?? index);
 }
 
 export function remapAnswersToOriginal(
@@ -109,7 +111,8 @@ export function remapAnswersToDisplay(
     if (typeof value === "number") {
       result[questionId] = toDisplay(value);
     } else if (Array.isArray(value)) {
-      result[questionId] = value.map(toDisplay);
+      const indexes = value.filter((item): item is number => typeof item === "number");
+      result[questionId] = indexes.length === value.length ? indexes.map(toDisplay) : value;
     } else {
       result[questionId] = value;
     }

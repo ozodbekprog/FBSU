@@ -20,6 +20,10 @@ import { OralDefenseCard } from "@/components/courses/oral-defense-card";
 import { OralDefensePanel } from "@/components/courses/oral-defense-panel";
 import { DueChip, SubmissionBadge } from "@/components/courses/assignments-status";
 import { SimilarityPanel } from "@/components/courses/similarity-panel";
+import { AvailabilityEditor } from "@/components/courses/availability-editor";
+import { AssignmentExtensions } from "@/components/courses/assignment-extensions";
+import { ActivityLockNotice } from "@/components/courses/activity-lock-notice";
+import { getRuleState } from "@/modules/course-rules/server";
 
 function DownloadIcon() {
   return (
@@ -178,6 +182,21 @@ export default async function AssignmentDetailPage({
         <PageHeader title={assignment.title} subtitle={course.title} action={back} />
         <div className="space-y-6">
           {infoCard}
+          <Card className="animate-fade-up">
+            <CardHeader title="Ochilish vaqti" subtitle="Topshiriq talabalarga qachon ochiladi" />
+            <CardBody>
+              <AvailabilityEditor targetType="ASSIGNMENT" targetId={assignment.id} />
+            </CardBody>
+          </Card>
+          <Card className="animate-fade-up">
+            <CardHeader
+              title="Individual muddat"
+              subtitle="Alohida talaba uchun topshirish muddatini uzaytirish"
+            />
+            <CardBody>
+              <AssignmentExtensions assignmentId={assignment.id} />
+            </CardBody>
+          </Card>
           <OralDefensePanel assignmentId={id} courseId={course.id} />
           <AssignmentsGrade
             maxScore={assignment.maxScore}
@@ -212,6 +231,16 @@ export default async function AssignmentDetailPage({
   const overdue = Boolean(assignment.dueAt && new Date() > assignment.dueAt);
   const graded = submission?.status === "GRADED";
   const percent = submission ? scorePercent(submission.score, assignment.maxScore) : null;
+
+  const ruleState = await getRuleState("ASSIGNMENT", assignment.id, now);
+  const ruleWindow = ruleState.open
+    ? null
+    : await prisma.activityRule.findUnique({
+        where: {
+          targetType_targetId: { targetType: "ASSIGNMENT", targetId: assignment.id },
+        },
+        select: { availableFrom: true, availableTo: true },
+      });
 
   return (
     <>
@@ -349,6 +378,12 @@ export default async function AssignmentDetailPage({
                   {translate(locale, "crsGradedAt", { date: fmtDateTime(submission.gradedAt) })}
                 </p>
               </>
+            ) : ruleState.reason ? (
+              <ActivityLockNotice
+                reason={ruleState.reason}
+                availableFrom={ruleWindow?.availableFrom ?? null}
+                availableTo={ruleWindow?.availableTo ?? null}
+              />
             ) : (
               <AssignmentsSubmit assignmentId={id} overdue={overdue} existing={submission} />
             )}

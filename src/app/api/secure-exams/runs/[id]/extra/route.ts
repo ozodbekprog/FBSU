@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { publicError } from "@/components/quiz/server";
 import { extraTimeSchema } from "@/modules/secure-exam/schemas";
 import { findRunForStaff } from "@/server/secure-exam";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 
 export async function POST(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -33,9 +33,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
       where: { id },
       data: { extraMin: { increment: parsed.data.minutes } },
     });
-    await logAudit({
-      actorId: user.id,
-      action: "secure-exam.extra-time",
+    await recordEvent(user.id, "secure-exam.extra-time", {
       entity: "SecureExamRun",
       entityId: id,
       meta: { examId: run.examId, studentId: run.studentId, minutes: parsed.data.minutes },

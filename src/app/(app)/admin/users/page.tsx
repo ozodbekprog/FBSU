@@ -1,13 +1,16 @@
 import Link from "next/link";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, Role } from "@prisma/client";
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Button, Card, CardBody, Input, PageHeader, Select } from "@/components/ui";
 import UsersManager from "@/components/admin/UsersManager";
+import UserBulkBar from "@/components/admin/UserBulkBar";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { cn } from "@/lib/utils";
 
-const ROLES = ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA"] as const;
+const ALL_ROLES: readonly Role[] = ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA"];
+
+const ROLES: readonly Role[] = ALL_ROLES.filter((role) => role !== "OWNER");
 
 const PAGE_SIZE = 50;
 
@@ -26,8 +29,8 @@ export default async function AdminUsersPage({
 
   const q = typeof params.q === "string" ? params.q.trim() : "";
   const role =
-    typeof params.role === "string" && ROLES.includes(params.role as (typeof ROLES)[number])
-      ? (params.role as (typeof ROLES)[number])
+    typeof params.role === "string" && ROLES.includes(params.role as Role)
+      ? (params.role as Role)
       : "";
   const pageParam = Number(params.page);
   const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
@@ -150,6 +153,18 @@ export default async function AdminUsersPage({
           </CardBody>
         </Card>
       </form>
+
+      <UserBulkBar
+        users={users.map((user) => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          isActive: user.isActive,
+        }))}
+        groups={groups.map((group) => ({ id: group.id, name: group.name }))}
+        roles={ROLES}
+        canAssignRoles={admin.role === "ADMIN"}
+      />
 
       <UsersManager
         users={users}

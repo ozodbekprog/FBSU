@@ -6,6 +6,7 @@ import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { canManageCourse } from "@/components/courses/course-access";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { finalizeExpiredAttendanceSessions } from "@/modules/attendance/auto-close";
+import { hasCapability } from "@/modules/capabilities";
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const CODE_LENGTH = 6;
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
   if (!user) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (!hasCapability(user.role, "attendance.open")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -128,7 +129,7 @@ export async function GET(request: Request) {
   if (!user) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (!hasCapability(user.role, "attendance.open")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

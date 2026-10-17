@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canManageCourse, isAllowedFileUrl } from "@/components/courses/course-access";
+import { assertActivityOpen } from "@/modules/course-rules/server";
 
 const submitSchema = z
   .object({
@@ -86,6 +87,9 @@ export async function POST(
     return Response.json({ ok: false, error: message }, { status: 400 });
   }
 
+  const gate = await assertActivityOpen("ASSIGNMENT", id);
+  if (!gate.ok) return Response.json({ ok: false, error: gate.error }, { status: 403 });
+
   const existing = await prisma.submission.findUnique({
     where: { assignmentId_studentId: { assignmentId: id, studentId: user.id } },
   });
@@ -96,8 +100,18 @@ export async function POST(
     );
   }
 
+  const extension = await prisma.assignmentExtension.findUnique({
+    where: { assignmentId_studentId: { assignmentId: id, studentId: user.id } },
+    select: { extendedDueAt: true },
+  });
+
+  let effectiveDueAt: Date | null = assignment.dueAt;
+  if (extension && (!effectiveDueAt || extension.extendedDueAt > effectiveDueAt)) {
+    effectiveDueAt = extension.extendedDueAt;
+  }
+
   const status =
-    assignment.dueAt && new Date() > assignment.dueAt ? ("LATE" as const) : ("SUBMITTED" as const);
+    effectiveDueAt && new Date() > effectiveDueAt ? ("LATE" as const) : ("SUBMITTED" as const);
 
   const submission = await prisma.submission.upsert({
     where: { assignmentId_studentId: { assignmentId: id, studentId: user.id } },

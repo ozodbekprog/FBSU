@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { MODULE_KEYS, getModuleFlags, setModuleFlags, type ModuleFlags } from "@/server/settings";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 
 const settingsSchema = z.object({
   modules: z.partialRecord(z.enum(MODULE_KEYS), z.boolean()),
@@ -37,9 +37,7 @@ export async function PUT(request: Request) {
     const current = await getModuleFlags();
     const modules: ModuleFlags = { ...current, ...parsed.data.modules };
     const saved = await setModuleFlags(modules);
-    await logAudit({
-      actorId: user.id,
-      action: "admin.settings.update",
+    await recordEvent(user.id, "admin.settings.update", {
       entity: "AppSetting",
       entityId: "modules",
       meta: { modules: saved, changed: MODULE_KEYS.filter((key) => current[key] !== saved[key]) },

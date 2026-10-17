@@ -1,10 +1,11 @@
 import "server-only";
 import type { MaterialType, Role } from "@prisma/client";
+import { hasCapability } from "@/modules/capabilities";
 
 export type AccessUser = { id: string; role: Role };
 
 export function canManageCourse(user: AccessUser, course: { teacherId: string }) {
-  return user.role === "ADMIN" || (user.role === "TEACHER" && course.teacherId === user.id);
+  return user.role === "ADMIN" || (hasCapability(user.role, "course.manage") && course.teacherId === user.id);
 }
 
 export function canViewCourse(

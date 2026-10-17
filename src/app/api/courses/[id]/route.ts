@@ -11,6 +11,7 @@ const updateSchema = z.object({
     .regex(/^#[0-9a-fA-F]{6}$/)
     .optional(),
   isPublished: z.boolean().optional(),
+  selfEnrollment: z.boolean().optional(),
 });
 
 async function findCourse(id: string, userId: string) {
@@ -108,6 +109,9 @@ export async function PATCH(
       ...(parsed.data.description !== undefined ? { description: parsed.data.description || null } : {}),
       ...(parsed.data.coverColor !== undefined ? { coverColor: parsed.data.coverColor } : {}),
       ...(parsed.data.isPublished !== undefined ? { isPublished: parsed.data.isPublished } : {}),
+      ...(parsed.data.selfEnrollment !== undefined
+        ? { selfEnrollment: parsed.data.selfEnrollment }
+        : {}),
     },
   });
 

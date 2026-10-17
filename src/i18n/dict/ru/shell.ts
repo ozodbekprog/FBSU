@@ -19,6 +19,8 @@ export const shell = {
   navExams: "Экзамены",
   navGradesStaff: "Оценивание",
   navGradesStudent: "Оценки",
+  navGradebook: "Журнал оценок",
+  navMyGrades: "Мои оценки",
   navGpa: "GPA",
   navTranscript: "Транскрипт",
   navAttendance: "Посещаемость",
@@ -42,6 +44,7 @@ export const shell = {
   navAdmin: "Админ-панель",
 
   roleAdmin: "Администратор",
+  roleOwner: "Владелец",
   roleRector: "Ректор",
   roleProRector: "Проректор",
   roleStaff: "Сотрудник",

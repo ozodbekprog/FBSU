@@ -3,16 +3,17 @@ import bcrypt from "bcryptjs";
 import type { Prisma, Role } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 import { userSelect } from "../select";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
+import { hasCapability } from "@/modules/capabilities";
 
 const patchSchema = z.object({
   name: z.string().trim().min(2).max(100).optional(),
   email: z.string().trim().email().optional(),
   password: z.string().min(12).max(100).optional(),
   role: z
-    .enum(["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA"])
+    .enum(["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "BUXGALTER", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA"])
     .optional(),
   groupId: z.string().trim().min(1).nullable().optional(),
   subGroupId: z.string().trim().min(1).nullable().optional(),
@@ -23,10 +24,6 @@ const patchSchema = z.object({
 const LAST_ADMIN_ERROR = "Oxirgi adminni o'chirib/pasaytirib bo'lmaydi";
 const REGISTRAR_MANAGED_ROLES: readonly Role[] = ["STUDENT", "TEACHER"];
 
-function canManageUsers(role: Role) {
-  return role === "ADMIN" || role === "REGISTRAR";
-}
-
 async function countActiveAdmins() {
   return prisma.user.count({ where: { role: "ADMIN", isActive: true } });
 }
@@ -34,7 +31,7 @@ async function countActiveAdmins() {
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (!canManageUsers(user.role)) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (!hasCapability(user.role, "academic.manage")) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const csrfValid = await verifyCsrfFromRequest(request);
   if (!csrfValid) {
@@ -49,6 +46,19 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json({ ok: false, error: "Ma'lumotlar xato" }, { status: 400 });
+  }
+
+  if (target.role === "OWNER") {
+    if (user.role !== "OWNER") {
+      return Response.json({ ok: false, error: "OWNER akkauntini o'zgartirishga ruxsat yo'q" }, { status: 403 });
+    }
+    const nextRole: Role | undefined = parsed.data.role;
+    if (nextRole !== undefined) {
+      return Response.json({ ok: false, error: "OWNER rolini pasaytirib bo'lmaydi" }, { status: 403 });
+    }
+    if (parsed.data.isActive === false) {
+      return Response.json({ ok: false, error: "OWNER akkauntini faolsizlantirib bo'lmaydi" }, { status: 403 });
+    }
   }
 
   if (user.role === "REGISTRAR") {
@@ -162,9 +172,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   const emailChanged = parsed.data.email !== undefined && parsed.data.email.toLowerCase() !== target.email;
   const passwordChanged = parsed.data.password !== undefined;
   if (roleChanged || activeChanged || emailChanged || passwordChanged) {
-    await logAudit({
-      actorId: user.id,
-      action: "admin.user.update",
+    await recordEvent(user.id, "admin.user.update", {
       entity: "User",
       entityId: id,
       meta: {
@@ -184,7 +192,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (!canManageUsers(user.role)) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (!hasCapability(user.role, "academic.manage")) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const csrfValid = await verifyCsrfFromRequest(_request);
   if (!csrfValid) {
@@ -199,6 +207,10 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
   const target = await prisma.user.findUnique({ where: { id } });
   if (!target) return Response.json({ ok: false, error: "Foydalanuvchi topilmadi" }, { status: 404 });
 
+  if (target.role === "OWNER") {
+    return Response.json({ ok: false, error: "OWNER akkauntini o'chirib bo'lmaydi" }, { status: 403 });
+  }
+
   if (user.role === "REGISTRAR" && !REGISTRAR_MANAGED_ROLES.includes(target.role)) {
     return Response.json({ ok: false, error: "Bu foydalanuvchini o'chirishga ruxsat yo'q" }, { status: 403 });
   }
@@ -210,9 +222,7 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
   }
 
   await prisma.user.update({ where: { id }, data: { isActive: false } });
-  await logAudit({
-    actorId: user.id,
-    action: "admin.user.update",
+  await recordEvent(user.id, "admin.user.update", {
     entity: "User",
     entityId: id,
     meta: { role: target.role, isActive: false, previousIsActive: target.isActive },

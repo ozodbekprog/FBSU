@@ -2,7 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { notifyGroupStudents } from "@/server/notify";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 import { canManageEntry } from "../_helpers";
 
 const updateSchema = z.object({
@@ -125,9 +125,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       body: data.status === "CANCELLED" ? parts.join(" · ") : undefined,
       link: "/schedule",
     });
-    await logAudit({
-      actorId: guard.user.id,
-      action: "schedule.status",
+    await recordEvent(guard.user.id, "schedule.status", {
       entity: "ScheduleEntry",
       entityId: updated.id,
       meta: { from: entry.status, to: data.status, subject: updated.subject, groupId: updated.groupId },

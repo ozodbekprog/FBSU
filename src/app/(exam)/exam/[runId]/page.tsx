@@ -51,7 +51,10 @@ export default async function SecureRunPage({
   const ordered = shuffledQuestions(fullQuestions.map(toQuestionPublic), run.attemptId);
   const questions = ordered.map((question) => ({
     ...question,
-    options: permutedOptions(question.options, optionSeed(run.attemptId, question.id)),
+    options:
+      question.type === "MATCHING" || question.type === "ORDERING"
+        ? question.options
+        : permutedOptions(question.options, optionSeed(run.attemptId, question.id)),
   }));
 
   const durationMin = run.exam.durationMin ?? run.exam.quiz.timeLimitMin;

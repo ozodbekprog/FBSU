@@ -1,6 +1,6 @@
 import type { BankQuestion } from "@prisma/client";
 import type { Dictionary } from "@/i18n";
-import { asNumberArray, asStringArray, type QuestionType } from "@/components/quiz/shared";
+import { asCorrectArray, asStringArray, type CorrectValue, type QuestionType } from "@/components/quiz/shared";
 
 export type BankQuestionItem = {
   id: string;
@@ -11,7 +11,7 @@ export type BankQuestionItem = {
   text: string;
   type: QuestionType;
   options: string[];
-  correct: number[];
+  correct: CorrectValue[];
   difficulty: number;
   createdAt: string;
 };
@@ -22,7 +22,7 @@ export type BankQuestionDraft = {
   text: string;
   type: QuestionType;
   options: string[];
-  correct: number[];
+  correct: CorrectValue[];
   difficulty: number;
 };
 
@@ -59,7 +59,7 @@ export function toBankQuestion(question: BankQuestionWithRefs): BankQuestionItem
     text: question.text,
     type: question.type,
     options: asStringArray(question.options),
-    correct: asNumberArray(question.correct),
+    correct: asCorrectArray(question.correct),
     difficulty: question.difficulty,
     createdAt: question.createdAt.toISOString(),
   };

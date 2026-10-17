@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { getClientInfo } from "@/lib/audit";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 import { getMaintenanceMode, setMaintenanceMode } from "@/server/maintenance";
 
 const maintenanceSchema = z.object({
@@ -30,9 +30,7 @@ export async function POST(request: Request) {
 
   const enabled = await setMaintenanceMode(parsed.data.enabled);
 
-  await logAudit({
-    actorId: user.id,
-    action: "MAINTENANCE_TOGGLE",
+  await recordEvent(user.id, "MAINTENANCE_TOGGLE", {
     entity: "AppSetting",
     entityId: "maintenance_mode",
     meta: { enabled },
