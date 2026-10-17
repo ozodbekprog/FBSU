@@ -1672,3 +1672,13 @@ model ActivityCompletion {
   @@unique([studentId, targetType, targetId])
   @@index([targetId])
 }
+
+model OwnerAccessCode {
+  id         String    @id @default(cuid())
+  codeHash   String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([expiresAt])
+}

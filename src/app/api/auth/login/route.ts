@@ -1,5 +1,6 @@
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { createHash, randomInt, randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/auth";
 import { checkRateLimit, clearRateLimit } from "@/lib/rate-limit";
@@ -15,9 +16,36 @@ const schema = z.object({
 const LOGIN_WINDOW_MS = 10 * 60 * 1000;
 const LOGIN_MAX_ATTEMPTS = 10;
 const DUMMY_HASH = "$2b$10$vabGzMWs78G4gDK4w4uNiO.wWPeTboNzwBwuVLU5Ht1xJQBWXtiZS";
+const OWNER_CODE_TTL_MS = 5 * 60 * 1000;
 
 function getClientIp(request: Request) {
   return getClientIpFromHeaders(request.headers) ?? "local";
+}
+
+function hashOwnerCode(code: string, userId: string, loginId: string) {
+  return createHash("sha256").update(`${code}:${userId}:${loginId}`).digest("hex");
+}
+
+function generateOwnerCode() {
+  return String(randomInt(100000, 1000000));
+}
+
+async function sendOwnerCode(token: string, chatId: string, code: string) {
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: `FBSU OWNER kirish kodi: ${code} (5 daqiqa)`,
+      }),
+    });
+    if (!res.ok) return false;
+    const json = (await res.json().catch(() => null)) as { ok?: boolean } | null;
+    return json?.ok === true;
+  } catch {
+    return false;
+  }
 }
 
 export async function POST(request: Request) {
@@ -73,6 +101,57 @@ export async function POST(request: Request) {
   }
 
   await clearRateLimit(limitKey, "auth");
+
+  if (user.role === "OWNER") {
+    const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
+    const chatId = process.env.OWNER_TELEGRAM_ID?.trim();
+
+    if (!token || !chatId) {
+      await createAuditLog({
+        action: "LOGIN_FAILED",
+        entity: "User",
+        entityId: user.id,
+        meta: { email, reason: "owner_2fa_not_configured" },
+        ip: clientInfo.ip,
+        userAgent: clientInfo.userAgent,
+      });
+      return Response.json(
+        { ok: false, error: "OWNER kirishi 2FA sozlanmaguncha yopiq" },
+        { status: 503 },
+      );
+    }
+
+    const loginId = randomUUID();
+    const code = generateOwnerCode();
+    await prisma.ownerAccessCode.create({
+      data: {
+        id: loginId,
+        codeHash: hashOwnerCode(code, user.id, loginId),
+        expiresAt: new Date(Date.now() + OWNER_CODE_TTL_MS),
+      },
+    });
+
+    const sent = await sendOwnerCode(token, chatId, code);
+    if (!sent) {
+      try {
+        await prisma.ownerAccessCode.delete({ where: { id: loginId } });
+      } catch {
+        void 0;
+      }
+      await createAuditLog({
+        action: "LOGIN_FAILED",
+        entity: "User",
+        entityId: user.id,
+        meta: { email, reason: "owner_code_delivery_failed" },
+        ip: clientInfo.ip,
+        userAgent: clientInfo.userAgent,
+      });
+      return Response.json({ ok: false, error: "Telegramga kod yuborilmadi" }, { status: 502 });
+    }
+
+    return Response.json({ ok: true, data: { twoFactor: true, loginId } });
+  }
+
   await createSession(user, { remember: parsed.data.remember });
   await createAuditLog({
     action: "LOGIN_SUCCESS",

@@ -152,9 +152,42 @@ OWNER_EMAIL=egasi@example.com OWNER_RECOVERY_SECRET=... node scripts/owner-recov
 
 - `OWNER_EMAIL` va `OWNER_RECOVERY_SECRET` majburiy; ikkalasi ham serverdagi env faylida
   (`0600`) saqlanadi, repoga yoki logga tushmaydi.
-- Parol `--password <p>` bilan berilishi mumkin (kamida 12 belgi); berilmasa bir martalik
+- **Parol siyosati:** kamida **30 belgi** — `--password <p>` ham, generatsiya ham shu talabga
+  bo'ysunadi. Berilmasa `crypto.randomBytes(24).toString("base64url")` bilan ~32 belgili
   parol generatsiya qilinadi va **faqat bir marta** konsolga chiqadi — xavfsiz saqlang.
+  Parol hech qachon logga yozilmaydi.
 - Mavjud akkaunt tiklanganda `role=OWNER`, `isActive=true`, yangi parol hash va
   `sessionEpoch` oshiriladi (barcha eski sessiyalar bekor bo'ladi).
 - Har bir ishga tushirish `AuditLog` ga `action: "system.ownerRecovery"` bilan yoziladi
   (`entity: "User"`, `meta: { email, mode }`).
+
+### DB trigger himoyasi
+
+`"User"` jadvalida OWNER qatorini `UPDATE`/`DELETE` qilish DB trigger bilan qo'shimcha
+himoyalangan: amal faqat shu tranzaksiya ichida `current_setting('app.allow_owner_write') = 'on'`
+bo'lganda o'tadi, aks holda `EXCEPTION` ko'tariladi. Shu sababli skript barcha yozuvlarni
+bitta tranzaksiyada bajaradi va boshida `SET LOCAL app.allow_owner_write = 'on'` qo'llaydi:
+
+```js
+await prisma.$transaction(async (tx) => {
+  await tx.$executeRawUnsafe("SET LOCAL app.allow_owner_write = 'on'");
+  // create / update + auditLog
+});
+```
+
+`SET LOCAL` tranzaksiya tugashi bilan o'z-o'zidan bekor bo'ladi — global holat o'zgarmaydi.
+
+### Telegram ogohlantirish
+
+Tranzaksiyadan **keyin**, agar `TELEGRAM_BOT_TOKEN` va `OWNER_TELEGRAM_ID` env berilgan bo'lsa,
+Bot API orqali qisqa xabar yuboriladi:
+`OWNER recovery ishlatildi: <email>, <mode>, <vaqt>`. Token yo'q bo'lsa yoki so'rov
+muvaffaqiyatsiz bo'lsa — skript jim davom etadi (xato bermaydi, `try/catch`).
+Hozirgi holat: `OWNER_TELEGRAM_ID` `.env` da mavjud, `TELEGRAM_BOT_TOKEN` hali qo'shilmagan —
+token qo'shilgach ogohlantirish avtomatik ishlaydi.
+
+### 2FA (keyingi bosqich)
+
+OWNER uchun ikkinchi faktor (TOTP yoki Telegram-kod) hozircha **yo'q**; recovery faqat
+`OWNER_RECOVERY_SECRET` + server-side skript bilan cheklanadi. 2FA keyingi bosqichda
+rejalashtirilgan.
