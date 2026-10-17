@@ -6,6 +6,7 @@ import { CourseReviews } from "@/components/courses/course-reviews";
 import { SelfEnrollButton } from "@/components/courses/self-enroll-button";
 import { CourseSettingsCard } from "@/components/courses/course-settings-card";
 import { ChoicePollCard } from "@/components/courses/choice-poll-card";
+import { GlossaryCard } from "@/components/courses/glossary-card";
 
 export default async function CoursePage({
   params,
@@ -90,6 +91,11 @@ export default async function CoursePage({
       {canManage || isEnrolled ? (
         <div className="mt-6">
           <ChoicePollCard courseId={course.id} canManage={canManage} />
+        </div>
+      ) : null}
+      {canManage || isEnrolled ? (
+        <div className="mt-6">
+          <GlossaryCard courseId={course.id} canManage={canManage} />
         </div>
       ) : null}
       {canManage || isEnrolled ? (

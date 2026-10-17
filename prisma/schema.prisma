@@ -184,6 +184,8 @@ model User {
   assignmentExtensions AssignmentExtension[]
   gradeItemHistory   GradeItemScoreHistory[]
   choiceVotes        ChoiceVote[]
+  glossaryEntries    GlossaryEntry[] @relation("GlossaryAuthor")
+  apiTokens          ApiToken[]
 
   @@index([subGroupId])
   @@index([role])
@@ -247,6 +249,7 @@ model Course {
   gradeItems         GradeItem[]
   activityRules      ActivityRule[]
   choicePolls        ChoicePoll[]
+  glossaryEntries    GlossaryEntry[]
 
   @@index([teacherId])
 }
@@ -1757,4 +1760,33 @@ model ChoiceVote {
 
   @@unique([pollId, studentId, optionIndex])
   @@index([pollId])
+}
+
+model GlossaryEntry {
+  id          String   @id @default(cuid())
+  courseId    String
+  term        String
+  definition  String
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdBy User?  @relation("GlossaryAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([courseId])
+  @@index([term])
+}
+
+model ApiToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
