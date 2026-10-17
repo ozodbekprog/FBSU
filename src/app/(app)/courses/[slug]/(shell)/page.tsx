@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CourseMaterials } from "@/components/courses/course-materials";
 import { CourseReviews } from "@/components/courses/course-reviews";
+import { SelfEnrollButton } from "@/components/courses/self-enroll-button";
 
 export default async function CoursePage({
   params,
@@ -32,6 +33,11 @@ export default async function CoursePage({
 
   return (
     <>
+      {user.role === "STUDENT" && !isEnrolled && course.selfEnrollment ? (
+        <div className="mb-6">
+          <SelfEnrollButton courseId={course.id} />
+        </div>
+      ) : null}
       <CourseMaterials courseId={course.id} sections={course.sections} canManage={canManage} />
       {canManage || isEnrolled ? (
         <div className="mt-6">

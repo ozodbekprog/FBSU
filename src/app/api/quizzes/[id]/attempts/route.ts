@@ -8,6 +8,7 @@ import {
 } from "@/components/quiz/server";
 import { attendanceCounts } from "@/app/api/attendance/summary/data";
 import { toQuestionFull, toQuestionPublic, type QuestionFull } from "@/components/quiz/shared";
+import { assertActivityOpen } from "@/modules/course-rules/server";
 
 function hashSeed(value: string): number {
   let hash = 2166136261;
@@ -126,6 +127,9 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
     if (!(await isEnrolled(quiz.courseId, user.id))) {
       return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
+
+    const gate = await assertActivityOpen("QUIZ", id);
+    if (!gate.ok) return Response.json({ ok: false, error: gate.error }, { status: 403 });
 
     const questions = quiz.questions.map(toQuestionFull);
 
