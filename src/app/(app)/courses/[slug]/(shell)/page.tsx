@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { CourseMaterials } from "@/components/courses/course-materials";
 import { CourseReviews } from "@/components/courses/course-reviews";
 import { SelfEnrollButton } from "@/components/courses/self-enroll-button";
+import { CourseSettingsCard } from "@/components/courses/course-settings-card";
 
 export default async function CoursePage({
   params,
@@ -32,6 +33,19 @@ export default async function CoursePage({
   if (!canManage && !course.isPublished && !isEnrolled) notFound();
 
   const isStudent = user.role === "STUDENT";
+  const courseGroups = canManage
+    ? Array.from(
+        new Map(
+          (
+            await prisma.studyPlan.findMany({
+              where: { courseId: course.id },
+              select: { group: { select: { id: true, name: true } } },
+              orderBy: { group: { name: "asc" } },
+            })
+          ).map((plan) => [plan.group.id, plan.group]),
+        ).values(),
+      )
+    : [];
   const materialIds = course.sections.flatMap((section) =>
     section.materials.map((material) => material.id),
   );
@@ -54,6 +68,15 @@ export default async function CoursePage({
       {user.role === "STUDENT" && !isEnrolled && course.selfEnrollment ? (
         <div className="mb-6">
           <SelfEnrollButton courseId={course.id} />
+        </div>
+      ) : null}
+      {canManage ? (
+        <div className="mb-6">
+          <CourseSettingsCard
+            courseId={course.id}
+            selfEnrollment={course.selfEnrollment}
+            groups={courseGroups}
+          />
         </div>
       ) : null}
       <CourseMaterials

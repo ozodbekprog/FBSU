@@ -271,6 +271,18 @@ export default async function GradebookPage({
             <Button type="submit" variant="secondary">
               {dictionary.gbShow}
             </Button>
+            <a
+              href={`/api/gradebook/export?courseId=${selected.id}`}
+              download
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-[transform,background-color,border-color,color,box-shadow] duration-150 hover:border-slate-400 hover:bg-slate-50 active:scale-[0.98]"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <path d="m7 10 5 5 5-5" />
+                <path d="M12 15V3" />
+              </svg>
+              CSV yuklab olish
+            </a>
           </CardBody>
         </Card>
       </form>
