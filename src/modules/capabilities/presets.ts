@@ -13,7 +13,8 @@ export type RoleName =
   | "TEACHER"
   | "STUDENT"
   | "XODIM"
-  | "OTA_ONA";
+  | "OTA_ONA"
+  | "NAZORATCHI";
 
 export const ROLES: readonly RoleName[] = [
   "OWNER",
@@ -29,6 +30,7 @@ export const ROLES: readonly RoleName[] = [
   "STUDENT",
   "XODIM",
   "OTA_ONA",
+  "NAZORATCHI",
 ];
 
 export const ROLE_CAPABILITIES: Record<RoleName, readonly Capability[]> = {
@@ -90,6 +92,7 @@ export const ROLE_CAPABILITIES: Record<RoleName, readonly Capability[]> = {
   STUDENT: [],
   XODIM: ["access.scan", "access.viewLogs"],
   OTA_ONA: ["parent.viewChild"],
+  NAZORATCHI: ["exam.proctor", "monitoring.view"],
 };
 
 export type CourseRelation = "teacher" | "student";
