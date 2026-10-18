@@ -79,7 +79,7 @@ export async function POST(request: Request) {
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !user.isActive) {
-    await bcrypt.compare(parsed.data.password, DUMMY_HASH);
+    await bcrypt.compare(parsed.data.password.trim(), DUMMY_HASH);
     await createAuditLog({
       action: "LOGIN_FAILED",
       meta: { email, reason: "user_not_found_or_inactive" },
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: "Email yoki parol xato" }, { status: 401 });
   }
 
-  const valid = await bcrypt.compare(parsed.data.password, user.passwordHash);
+  const valid = await bcrypt.compare(parsed.data.password.trim(), user.passwordHash);
   if (!valid) {
     await createAuditLog({
       action: "LOGIN_FAILED",
