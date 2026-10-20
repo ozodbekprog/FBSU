@@ -10,7 +10,10 @@ export default async function QuestionBankPage() {
   const dictionary = getDictionary(locale);
 
   const courses = await prisma.course.findMany({
-    where: user.role === "TEACHER" ? { teacherId: user.id } : {},
+    where:
+      user.role === "TEACHER"
+        ? { OR: [{ teacherId: user.id }, { managerIds: { has: user.id } }] }
+        : {},
     orderBy: { title: "asc" },
     select: { id: true, title: true },
   });

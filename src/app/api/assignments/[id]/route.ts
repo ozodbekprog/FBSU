@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { canManageCourse } from "@/components/courses/course-access";
+import { canGradeCourse, canManageCourse } from "@/components/courses/course-access";
 
 const patchSchema = z.object({
   title: z.string().trim().min(1, "Sarlavha kiriting").max(200).optional(),
@@ -50,7 +50,7 @@ export async function GET(
     return Response.json({ ok: true, data: { ...assignment, submissions } });
   }
 
-  if (!canManageCourse(user, assignment.course)) {
+  if (!canGradeCourse(user, assignment.course)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

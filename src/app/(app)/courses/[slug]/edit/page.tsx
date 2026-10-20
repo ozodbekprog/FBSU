@@ -5,6 +5,8 @@ import { getDictionary, getLocale } from "@/i18n";
 import { PageHeader } from "@/components/ui";
 import { CourseForm } from "@/components/courses/course-form";
 import { CourseDeleteButton } from "@/components/courses/course-delete-button";
+import { CourseTeachersManager } from "@/components/courses/course-teachers-manager";
+import { canManageCourse } from "@/components/courses/course-access";
 
 export default async function EditCoursePage({
   params,
@@ -19,8 +21,7 @@ export default async function EditCoursePage({
   const course = await prisma.course.findUnique({ where: { slug } });
   if (!course) notFound();
 
-  const canManage =
-    user.role === "ADMIN" || (user.role === "TEACHER" && course.teacherId === user.id);
+  const canManage = canManageCourse(user, course);
   if (!canManage) notFound();
 
   return (
@@ -40,6 +41,7 @@ export default async function EditCoursePage({
           isPublished: course.isPublished,
         }}
       />
+      <CourseTeachersManager courseId={course.id} />
     </>
   );
 }

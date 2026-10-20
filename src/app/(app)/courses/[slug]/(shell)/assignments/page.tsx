@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { Card, CardBody, EmptyState } from "@/components/ui";
 import { cn, fmtDate } from "@/lib/utils";
-import { canManageCourse } from "@/components/courses/course-access";
+import { canGradeCourse, canManageCourse } from "@/components/courses/course-access";
 import { AssignmentsActions } from "@/components/courses/assignments-actions";
 import { AssignmentsCreate } from "@/components/courses/assignments-create";
 import { DueChip, SubmissionBadge } from "@/components/courses/assignments-status";
@@ -102,16 +102,17 @@ export default async function CourseAssignmentsPage({
   if (!course) notFound();
 
   const management = canManageCourse(user, course);
+  const grading = canGradeCourse(user, course);
   if (user.role === "STUDENT") {
     const enrolled = await prisma.enrollment.findUnique({
       where: { courseId_userId: { courseId: course.id, userId: user.id }, status: "ACTIVE" },
     });
     if (!enrolled) notFound();
-  } else if (!management) {
+  } else if (!grading) {
     notFound();
   }
 
-  if (!management) {
+  if (user.role === "STUDENT") {
     const assignments = await prisma.assignment.findMany({
       where: { courseId: course.id },
       orderBy: { createdAt: "asc" },
@@ -215,7 +216,7 @@ export default async function CourseAssignmentsPage({
 
   return (
     <>
-      <AssignmentsCreate courseId={course.id} />
+      {management ? <AssignmentsCreate courseId={course.id} /> : null}
       {assignments.length === 0 ? (
         <EmptyState
           title={dictionary.crsNoAssignments}
@@ -299,17 +300,19 @@ export default async function CourseAssignmentsPage({
                       </span>
                     </div>
                   </div>
-                  <div className="relative z-10">
-                    <AssignmentsActions
-                      assignment={{
-                        id: assignment.id,
-                        title: assignment.title,
-                        description: assignment.description,
-                        dueAt: assignment.dueAt ? assignment.dueAt.toISOString() : null,
-                        maxScore: assignment.maxScore,
-                      }}
-                    />
-                  </div>
+                  {management ? (
+                    <div className="relative z-10">
+                      <AssignmentsActions
+                        assignment={{
+                          id: assignment.id,
+                          title: assignment.title,
+                          description: assignment.description,
+                          dueAt: assignment.dueAt ? assignment.dueAt.toISOString() : null,
+                          maxScore: assignment.maxScore,
+                        }}
+                      />
+                    </div>
+                  ) : null}
                 </CardBody>
               </Card>
               </div>

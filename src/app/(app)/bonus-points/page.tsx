@@ -31,7 +31,10 @@ export default async function BonusPointsPage() {
   const isTeacher = user.role === "TEACHER";
 
   const courses = await prisma.course.findMany({
-    where: isTeacher ? { teacherId: user.id } : {},
+    where:
+      isTeacher
+        ? { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] }
+        : {},
     select: { id: true, title: true },
     orderBy: { title: "asc" },
   });

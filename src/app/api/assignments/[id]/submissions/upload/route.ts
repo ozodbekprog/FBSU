@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { canGradeCourse } from "@/components/courses/course-access";
 import { uploadsRoot } from "@/lib/uploads";
 
 const MAX_SIZE = 10 * 1024 * 1024;
@@ -55,9 +56,9 @@ export async function POST(
   } else if (user.role === "TEACHER") {
     const course = await prisma.course.findUnique({
       where: { id: assignment.courseId },
-      select: { teacherId: true },
+      select: { teacherId: true, teacherIds: true, managerIds: true, assistantIds: true },
     });
-    if (!course || course.teacherId !== user.id) {
+    if (!course || !canGradeCourse(user, course)) {
       return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
   } else if (user.role !== "ADMIN") {

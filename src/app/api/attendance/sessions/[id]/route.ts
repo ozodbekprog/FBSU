@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
-import { canManageCourse } from "@/components/courses/course-access";
+import { canGradeCourse } from "@/components/courses/course-access";
 
 export async function DELETE(
   request: Request,
@@ -28,7 +28,7 @@ export async function DELETE(
   if (!session) {
     return Response.json({ ok: false, error: "Sessiya topilmadi" }, { status: 404 });
   }
-  if (!canManageCourse(user, session.course)) {
+  if (!canGradeCourse(user, session.course)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

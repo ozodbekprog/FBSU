@@ -32,7 +32,10 @@ export async function GET(request: Request) {
   }
 
   const ownedCourses = await prisma.course.findMany({
-    where: { teacherId: user.id, enrollments: { some: { userId: studentId } } },
+    where: {
+      OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }],
+      enrollments: { some: { userId: studentId } },
+    },
     select: { id: true },
   });
   if (ownedCourses.length === 0) {

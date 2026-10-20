@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { canGradeCourse } from "@/components/courses/course-access";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
@@ -8,7 +9,19 @@ export async function GET(request: Request) {
   }
 
   const configs = await prisma.attendancePointConfig.findMany({
-    where: user.role === "ADMIN" ? {} : { teacherId: user.id },
+    where:
+      user.role === "ADMIN"
+        ? {}
+        : {
+            OR: [
+              { teacherId: user.id },
+              {
+                course: {
+                  OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }],
+                },
+              },
+            ],
+          },
     include: {
       course: { select: { id: true, title: true, slug: true } },
       group: { select: { id: true, name: true } },
@@ -41,9 +54,9 @@ export async function POST(request: Request) {
   if (user.role !== "ADMIN") {
     const course = await prisma.course.findUnique({
       where: { id: courseId },
-      select: { teacherId: true },
+      select: { teacherId: true, teacherIds: true, managerIds: true, assistantIds: true },
     });
-    if (!course || course.teacherId !== user.id) {
+    if (!course || !canGradeCourse(user, course)) {
       return Response.json({ ok: false, error: "Bu kursga huquq yo'q" }, { status: 403 });
     }
   }

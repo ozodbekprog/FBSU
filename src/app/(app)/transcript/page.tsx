@@ -121,7 +121,7 @@ export default async function TranscriptPage({
   if (user.role === "TEACHER" && studentId && studentId !== user.id) {
     const ownedCourses = await prisma.course.findMany({
       where: {
-        teacherId: user.id,
+        OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }],
         enrollments: { some: { userId: studentId, status: "ACTIVE" } },
       },
       select: { id: true },

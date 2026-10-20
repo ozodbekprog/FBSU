@@ -2,7 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
-import { canManageCourse } from "@/components/courses/course-access";
+import { canGradeCourse } from "@/components/courses/course-access";
 import { QR_TOKEN_TTL_SECONDS } from "@/modules/attendance-security/config";
 import { checkInUrl, signQrToken } from "@/modules/attendance-security/qr-token";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -51,7 +51,7 @@ export async function POST(
   if (!session) {
     return Response.json({ ok: false, error: "Sessiya topilmadi" }, { status: 404 });
   }
-  if (!canManageCourse(user, session.course)) {
+  if (!canGradeCourse(user, session.course)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
   if (session.expiresAt.getTime() <= Date.now()) {

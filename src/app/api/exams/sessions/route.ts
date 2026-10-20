@@ -10,6 +10,7 @@ import {
   getStaffSessions,
   getStudentSessions,
 } from "@/components/exams/session-data";
+import { canGradeCourse } from "@/components/courses/course-access";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
@@ -62,12 +63,12 @@ export async function POST(request: Request) {
 
   const course = await prisma.course.findUnique({
     where: { id: parsed.data.courseId },
-    select: { id: true, teacherId: true },
+    select: { id: true, teacherId: true, teacherIds: true, managerIds: true, assistantIds: true },
   });
   if (!course) {
     return Response.json({ ok: false, error: "Kurs topilmadi" }, { status: 404 });
   }
-  if (user.role === "TEACHER" && course.teacherId !== user.id) {
+  if (!canGradeCourse(user, course)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

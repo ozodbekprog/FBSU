@@ -217,3 +217,53 @@ rejalashtirilgan.
 - OWNER rol + DB trigger + 2FA login + recovery (30+ belgi) + security-check + NOTICE
 
 **Atayin kiritilmagan:** SCORM/xAPI/LTI, H5P, badge/competency, plugin ekosistema — universitet amaliyotida hozircha talab qilinmaydi (kerak bo'lsa alohida loyiha).
+
+---
+
+## 2026-10-20 — kontekst yadrosi va keyingi fazalar
+
+**Qaror:** Moodle'ning ishlash prinsiplari to'liq qabul qilinadi, lekin kod, schema va UI
+nusxalanmaydi. FBSU implementatsiyasi soddaroq, tiplashtirilgan va bozor talablariga
+mos bo'lishi shart.
+
+**Ustunlik mezonlari:**
+- kamroq tushuncha: 28 capability (Moodle'da 764), aniq scope'lar;
+- JSON o'rniga tiplashtirilgan relational ma'lumot;
+- Moodle'da yo'q native SIS/ERP qatlami (jadval, davomat, moliya, hujjatlar, qabul);
+- mobile/offline/PWA va Telegram — birinchi darajali;
+- HEMIS, antiplagiat, video va SSO — bozor majburiyatlari.
+
+### Faza 5 — kontekstli RBAC + team teaching (2026-10-20, birinchi qadam)
+
+- `CourseTeacherRole`: `LEAD`, `CO_TEACHER`, `ASSISTANT`, `OBSERVER`
+- `CourseTeacher` jadvali + `Course.teacherIds` / `managerIds` / `assistantIds`
+  proyeksiyalari (DB trigger bilan sinxron)
+- `canManageCourse` (lead/co), `canGradeCourse` (lead/co/assistant),
+  `canViewCourse` (barcha kurs xodimlari + yozilgan talaba)
+- API: o'qituvchilarni ko'rish/qo'shish/rolini o'zgartirish/o'chirish + nomzodlar qidiruvi
+- UI: kurs sozlamalarida o'qituvchilar boshqaruvi, kurs sarlavhasida barcha o'qituvchilar
+- Qamrov: kurs sahifalari, topshiriqlar, davomat, jurnal, gradebook, testlar, kurs
+  ro'yxatlari, dashboard, workload va hisobotlar
+- **Qolgan:** fakultet/kafedra scope'i, imtihon sessiyalari va secure-exam parity,
+  oral-defense va ba'zi ikkinchi darajali ro'yxatlar
+
+### Faza 6 — strukturali quiz urinishlari
+
+`QuizAttemptAnswer` jadvali: har javob alohida yozuv, savol bo'yicha ball va vaqt;
+regrade, savol analitikasi va anti-cheat tekshiruvlari. Eski `answers` JSON bilan
+dual-write orqali bosqichma-bosqich o'tish.
+
+### Faza 7 — HEMIS eksport/import ko'prigi
+
+Versiyalangan paket: kontingent, baholar, davomat, enrollment; idempotent sinxron,
+xato hisoboti va qayta urinish. VM 403 talabi.
+
+### Faza 8 — MBZ/SCORM import
+
+Moodle kurs paketlarini xavfsiz zip/XML parser bilan import qilish: kurs → bo'lim →
+material → savollar → baholash elementlari; dry-run va xato hisoboti.
+
+### Faza 9 — LTI 1.3, antiplagiat, video, SSO
+
+Har biri alohida adapter va feature flag bilan: LTI 1.3, Turnitin/iThenticate yoki
+Antiplag.uz, BigBlueButton/Zoom, universitet SSO.

@@ -6,6 +6,11 @@ import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { Avatar, Badge, ButtonLink } from "@/components/ui";
 import { CourseTabs } from "@/components/forum/course-tabs";
 import { getCourseAttendance } from "@/app/api/attendance/summary/data";
+import {
+  canGradeCourse,
+  canManageCourse,
+  canViewCourse,
+} from "@/components/courses/course-access";
 
 export default async function CourseShellLayout({
   children,
@@ -23,6 +28,10 @@ export default async function CourseShellLayout({
     where: { slug },
     include: {
       teacher: { select: { id: true, name: true } },
+      teachers: {
+        orderBy: [{ role: "asc" }, { createdAt: "asc" }],
+        include: { user: { select: { id: true, name: true } } },
+      },
       sections: { select: { _count: { select: { materials: true } } } },
       enrollments: { where: { status: "ACTIVE" }, select: { userId: true } },
     },
@@ -30,10 +39,15 @@ export default async function CourseShellLayout({
 
   if (!course) notFound();
 
-  const canManage =
-    user.role === "ADMIN" || (user.role === "TEACHER" && course.teacherId === user.id);
+  const canManage = canManageCourse(user, course);
+  const canGrade = canGradeCourse(user, course);
   const isEnrolled = course.enrollments.some((entry) => entry.userId === user.id);
-  if (!canManage && !course.isPublished && !isEnrolled) notFound();
+  if (!course.isPublished && !canViewCourse(user, course, isEnrolled)) notFound();
+
+  const courseTeachers =
+    course.teachers.length > 0
+      ? course.teachers.map((teacher) => ({ id: teacher.user.id, name: teacher.user.name }))
+      : [{ id: course.teacher.id, name: course.teacher.name }];
 
   const materialsCount = course.sections.reduce(
     (sum, section) => sum + section._count.materials,
@@ -74,7 +88,7 @@ export default async function CourseShellLayout({
               {dictionary.crsCourses}
             </Link>
             <div className="mt-5 flex flex-wrap items-start justify-between gap-6">
-              <div className="max-w-2xl">
+              <div className="min-w-0 max-w-2xl">
                 <div className="flex flex-wrap items-center gap-3">
                   <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">{course.title}</h1>
                   {!course.isPublished ? (
@@ -88,11 +102,19 @@ export default async function CourseShellLayout({
                     </Badge>
                   ) : null}
                 </div>
-                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-medium text-white/85">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-inset ring-white/15 backdrop-blur">
-                    <Avatar name={course.teacher.name} className="size-6! text-[10px] ring-1 ring-white/25" />
-                    {course.teacher.name}
-                  </span>
+                <div className="mt-4 flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 text-xs font-medium text-white/85 sm:flex-wrap sm:overflow-visible sm:pb-0">
+                  {courseTeachers.map((teacher) => (
+                    <span
+                      key={teacher.id}
+                      className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-inset ring-white/15 backdrop-blur"
+                    >
+                      <Avatar
+                        name={teacher.name}
+                        className="size-6! text-[10px] ring-1 ring-white/25"
+                      />
+                      {teacher.name}
+                    </span>
+                  ))}
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-inset ring-white/15 backdrop-blur">
                     <svg
                       width="15"
@@ -164,7 +186,12 @@ export default async function CourseShellLayout({
         </div>
       </section>
 
-      <CourseTabs slug={course.slug} canManage={canManage} />
+      <CourseTabs
+        slug={course.slug}
+        canManage={canManage}
+        canGrade={canGrade}
+        isEnrolled={isEnrolled}
+      />
 
       {children}
     </>

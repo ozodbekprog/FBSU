@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { ButtonLink, PageHeader } from "@/components/ui";
-import { canManageCourse } from "@/components/courses/course-access";
+import { canGradeCourse } from "@/components/courses/course-access";
 import { AttendanceJournal } from "@/components/attendance/attendance-journal";
 import { getAttendanceJournal } from "@/app/api/courses/[id]/attendance/journal/data";
 
@@ -20,7 +20,7 @@ export default async function AttendanceJournalPage({
   const course = await prisma.course.findUnique({ where: { slug } });
   if (!course) notFound();
 
-  const management = canManageCourse(user, course);
+  const management = canGradeCourse(user, course);
   if (!management) {
     if (user.role !== "STUDENT") notFound();
     const enrolled = await prisma.enrollment.findUnique({

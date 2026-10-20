@@ -796,14 +796,22 @@ export default async function DashboardPage() {
     const facultyScope = user.role === "DEKAN" ? user.facultyId ?? "__none__" : null;
     const departmentScope = user.role === "KAFEDRA_MUDIRI" ? user.departmentId ?? "__none__" : null;
     const courseWhere: Prisma.CourseWhereInput = isTeacherRole
-      ? { teacherId: user.id }
+      ? { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] }
       : facultyScope
         ? { teacher: { facultyId: facultyScope } }
         : departmentScope
           ? { teacher: { departmentId: departmentScope } }
           : {};
     const quizWhere: Prisma.QuizWhereInput = isTeacherRole
-      ? { course: { teacherId: user.id } }
+      ? {
+          course: {
+            OR: [
+              { teacherId: user.id },
+              { managerIds: { has: user.id } },
+              { assistantIds: { has: user.id } },
+            ],
+          },
+        }
       : facultyScope
         ? { course: { teacher: { facultyId: facultyScope } } }
         : departmentScope
@@ -821,7 +829,7 @@ export default async function DashboardPage() {
         : {}),
     };
     const submissionWhere: Prisma.SubmissionWhereInput = isTeacherRole
-      ? { assignment: { course: { teacherId: user.id } } }
+      ? { assignment: { course: { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] } } }
       : facultyScope
         ? { student: { facultyId: facultyScope } }
         : departmentScope
@@ -873,7 +881,7 @@ export default async function DashboardPage() {
           include: { group: { select: { name: true } } },
         }),
         prisma.course.findMany({
-          where: { teacherId: user.id },
+          where: { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] },
           orderBy: { createdAt: "asc" },
           select: {
             id: true,
@@ -884,7 +892,10 @@ export default async function DashboardPage() {
         }),
         prisma.attendance.groupBy({
           by: ["courseId"],
-          where: { date: dateFromIso(dateIso), course: { teacherId: user.id } },
+          where: {
+            date: dateFromIso(dateIso),
+            course: { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] },
+          },
           _count: { _all: true },
         }),
         prisma.user.findUnique({

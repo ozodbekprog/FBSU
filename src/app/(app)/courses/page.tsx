@@ -51,7 +51,7 @@ export default async function CoursesPage() {
     user.role === "ADMIN"
       ? {}
       : user.role === "TEACHER"
-        ? { teacherId: user.id }
+        ? { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] }
         : { isPublished: true };
 
   const courses = await prisma.course.findMany({

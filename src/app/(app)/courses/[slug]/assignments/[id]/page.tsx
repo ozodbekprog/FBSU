@@ -12,7 +12,7 @@ import {
   Progress,
 } from "@/components/ui";
 import { cn, fmtDate, fmtDateTime, gradeColor, scorePercent } from "@/lib/utils";
-import { canManageCourse } from "@/components/courses/course-access";
+import { canGradeCourse, canManageCourse } from "@/components/courses/course-access";
 import { AssignmentsGrade } from "@/components/courses/assignments-grade";
 import { AssignmentsSubmit } from "@/components/courses/assignments-submit";
 import { AssignmentAi } from "@/components/courses/assignment-ai";
@@ -62,12 +62,13 @@ export default async function AssignmentDetailPage({
   if (!course) notFound();
 
   const management = canManageCourse(user, course);
+  const grading = canGradeCourse(user, course);
   if (user.role === "STUDENT") {
     const enrolled = await prisma.enrollment.findUnique({
       where: { courseId_userId: { courseId: course.id, userId: user.id }, status: "ACTIVE" },
     });
     if (!enrolled) notFound();
-  } else if (!management) {
+  } else if (!grading) {
     notFound();
   }
 
@@ -161,7 +162,7 @@ export default async function AssignmentDetailPage({
     </Card>
   );
 
-  if (management) {
+  if (grading) {
     const submissions = await prisma.submission.findMany({
       where: { assignmentId: id },
       include: { student: { select: { id: true, name: true, avatarUrl: true } } },
@@ -182,22 +183,26 @@ export default async function AssignmentDetailPage({
         <PageHeader title={assignment.title} subtitle={course.title} action={back} />
         <div className="space-y-6">
           {infoCard}
-          <Card className="animate-fade-up">
-            <CardHeader title="Ochilish vaqti" subtitle="Topshiriq talabalarga qachon ochiladi" />
-            <CardBody>
-              <AvailabilityEditor targetType="ASSIGNMENT" targetId={assignment.id} />
-            </CardBody>
-          </Card>
-          <Card className="animate-fade-up">
-            <CardHeader
-              title="Individual muddat"
-              subtitle="Alohida talaba uchun topshirish muddatini uzaytirish"
-            />
-            <CardBody>
-              <AssignmentExtensions assignmentId={assignment.id} />
-            </CardBody>
-          </Card>
-          <OralDefensePanel assignmentId={id} courseId={course.id} />
+          {management ? (
+            <Card className="animate-fade-up">
+              <CardHeader title="Ochilish vaqti" subtitle="Topshiriq talabalarga qachon ochiladi" />
+              <CardBody>
+                <AvailabilityEditor targetType="ASSIGNMENT" targetId={assignment.id} />
+              </CardBody>
+            </Card>
+          ) : null}
+          {management ? (
+            <Card className="animate-fade-up">
+              <CardHeader
+                title="Individual muddat"
+                subtitle="Alohida talaba uchun topshirish muddatini uzaytirish"
+              />
+              <CardBody>
+                <AssignmentExtensions assignmentId={assignment.id} />
+              </CardBody>
+            </Card>
+          ) : null}
+          {management ? <OralDefensePanel assignmentId={id} courseId={course.id} /> : null}
           <AssignmentsGrade
             maxScore={assignment.maxScore}
             canDirectGrade={user.role !== "TEACHER"}

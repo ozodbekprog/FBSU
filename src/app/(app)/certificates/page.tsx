@@ -79,7 +79,10 @@ export default async function CertificatesPage({
   }
 
   const courses = await prisma.course.findMany({
-    where: user.role === "ADMIN" ? {} : { teacherId: user.id },
+    where:
+      user.role === "ADMIN"
+        ? {}
+        : { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] },
     orderBy: { title: "asc" },
   });
 

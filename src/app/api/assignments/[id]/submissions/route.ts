@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { canManageCourse, isAllowedFileUrl } from "@/components/courses/course-access";
+import { canGradeCourse, isAllowedFileUrl } from "@/components/courses/course-access";
 import { assertActivityOpen } from "@/modules/course-rules/server";
 
 const submitSchema = z
@@ -38,7 +38,7 @@ export async function GET(
   if (!assignment) {
     return Response.json({ ok: false, error: "Topshiriq topilmadi" }, { status: 404 });
   }
-  if (!canManageCourse(user, assignment.course)) {
+  if (!canGradeCourse(user, assignment.course)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

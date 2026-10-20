@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { Course, Prisma, Question, Quiz, Role } from "@prisma/client";
 import { asAnswers, autoScore, type QuestionFull } from "@/components/quiz/shared";
+import { canGradeCourse, canManageCourse } from "@/components/courses/course-access";
 
 export type StaffUser = { id: string; role: Role };
 
@@ -35,8 +36,17 @@ export async function findManageableQuiz(quizId: string, user: StaffUser): Promi
     include: { course: true },
   });
   if (!quiz) return null;
-  if (user.role === "ADMIN") return quiz;
-  if (user.role === "TEACHER" && quiz.course.teacherId === user.id) return quiz;
+  if (canManageCourse(user, quiz.course)) return quiz;
+  return null;
+}
+
+export async function findGradableQuiz(quizId: string, user: StaffUser): Promise<(Quiz & { course: Course }) | null> {
+  const quiz = await prisma.quiz.findUnique({
+    where: { id: quizId },
+    include: { course: true },
+  });
+  if (!quiz) return null;
+  if (canGradeCourse(user, quiz.course)) return quiz;
   return null;
 }
 
@@ -49,8 +59,7 @@ export async function findManageableQuestion(
     include: { quiz: { include: { course: true } } },
   });
   if (!question) return null;
-  if (user.role === "ADMIN") return question;
-  if (user.role === "TEACHER" && question.quiz.course.teacherId === user.id) return question;
+  if (canManageCourse(user, question.quiz.course)) return question;
   return null;
 }
 

@@ -466,4 +466,21 @@ export const crs = {
   crsSubmitHint: "Write text and/or attach a file — both are accepted.",
   crsCurrentFile: "Current uploaded file",
   crsImagePreview: "Uploaded image",
+
+  crsTeachersTitle: "Course teachers",
+  crsTeachersSubtitle:
+    "Manage the lead teacher, co-teachers, assistants, and observers",
+  crsTeacherAdd: "Add teacher",
+  crsTeacherSearchPlaceholder: "Search by name or email",
+  crsTeacherRole: "Role",
+  crsTeacherSearchHint: "Type at least 2 characters",
+  crsTeacherNoResults: "No teacher found",
+  crsTeacherEmpty: "Only the lead teacher is assigned so far",
+  crsTeacherLead: "Lead",
+  crsTeacherCo: "Co-teacher",
+  crsTeacherAssistant: "Assistant",
+  crsTeacherObserver: "Observer",
+  crsTeacherRemoveConfirm: "Remove \"{name}\" from the course?",
+  crsTeacherLeadLocked: "The lead teacher cannot be changed",
+  crsTeacherSaved: "Teachers updated",
 };

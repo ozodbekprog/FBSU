@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasCapability } from "@/modules/capabilities";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
-import { canManageCourse } from "@/components/courses/course-access";
+import { canGradeCourse } from "@/components/courses/course-access";
 import { computeFinalGrades } from "@/modules/gradebook/compute";
 import GradebookManager from "@/components/gradebook/GradebookManager";
 import { Badge, Button, Card, CardBody, CardHeader, EmptyState, Label, PageHeader, Select, Table } from "@/components/ui";
@@ -176,9 +176,19 @@ export default async function GradebookPage({
   const requestedId = typeof params.courseId === "string" ? params.courseId.trim() : "";
 
   const courses = await prisma.course.findMany({
-    where: user.role === "ADMIN" ? {} : { teacherId: user.id },
+    where:
+      user.role === "ADMIN"
+        ? {}
+        : { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] },
     orderBy: { title: "asc" },
-    select: { id: true, title: true, teacherId: true },
+    select: {
+      id: true,
+      title: true,
+      teacherId: true,
+      teacherIds: true,
+      managerIds: true,
+      assistantIds: true,
+    },
   });
 
   if (courses.length === 0) {
@@ -194,7 +204,7 @@ export default async function GradebookPage({
   }
 
   const selected = courses.find((course) => course.id === requestedId) ?? courses[0];
-  if (!canManageCourse(user, selected)) redirect("/dashboard");
+  if (!canGradeCourse(user, selected)) redirect("/dashboard");
 
   const [categories, items, enrollments, assignments, quizzes] = await Promise.all([
     prisma.gradeCategory.findMany({ where: { courseId: selected.id }, orderBy: { position: "asc" } }),

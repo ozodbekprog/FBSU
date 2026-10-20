@@ -13,7 +13,7 @@ import {
   Table,
 } from "@/components/ui";
 import { fmtDate } from "@/lib/utils";
-import { canManageCourse } from "@/components/courses/course-access";
+import { canGradeCourse } from "@/components/courses/course-access";
 import { AttendanceBulk } from "@/components/courses/attendance-bulk";
 import { SessionPanel } from "@/components/attendance/SessionPanel";
 
@@ -54,7 +54,7 @@ export default async function CourseAttendancePage({
   const course = await prisma.course.findUnique({ where: { slug } });
   if (!course) notFound();
 
-  const management = canManageCourse(user, course);
+  const management = canGradeCourse(user, course);
   const journal = (
     <ButtonLink href={`/courses/${course.slug}/attendance/journal`} variant="secondary" size="sm">
       {dictionary.crsGroupJournal}

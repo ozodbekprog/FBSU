@@ -44,7 +44,7 @@ export async function GET() {
     user.role === "ADMIN"
       ? {}
       : user.role === "TEACHER"
-        ? { teacherId: user.id }
+        ? { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] }
         : { enrollments: { some: { userId: user.id } } };
 
   const courses = await prisma.course.findMany({
@@ -109,6 +109,7 @@ export async function POST(request: Request) {
       coverColor: parsed.data.coverColor,
       isPublished: parsed.data.isPublished,
       teacherId: user.id,
+      teachers: { create: { userId: user.id, role: "LEAD" } },
     },
   });
 

@@ -5,6 +5,7 @@ import { ButtonLink, PageHeader } from "@/components/ui";
 import { QuizEditor } from "@/components/quiz/quiz-editor";
 import { toQuestionFull } from "@/components/quiz/shared";
 import { getDictionary, getLocale } from "@/i18n";
+import { canManageCourse } from "@/components/courses/course-access";
 
 export default async function EditQuizPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireRole(["TEACHER", "ADMIN"]);
@@ -14,15 +15,18 @@ export default async function EditQuizPage({ params }: { params: Promise<{ id: s
   const quiz = await prisma.quiz.findUnique({
     where: { id },
     include: {
-      course: { select: { teacherId: true } },
+      course: { select: { teacherId: true, teacherIds: true, managerIds: true, assistantIds: true } },
       questions: { orderBy: { position: "asc" } },
     },
   });
   if (!quiz) notFound();
-  if (user.role === "TEACHER" && quiz.course.teacherId !== user.id) notFound();
+  if (!canManageCourse(user, quiz.course)) notFound();
 
   const courses = await prisma.course.findMany({
-    where: user.role === "TEACHER" ? { teacherId: user.id } : {},
+    where:
+      user.role === "TEACHER"
+        ? { OR: [{ teacherId: user.id }, { managerIds: { has: user.id } }] }
+        : {},
     orderBy: { title: "asc" },
     select: { id: true, title: true },
   });

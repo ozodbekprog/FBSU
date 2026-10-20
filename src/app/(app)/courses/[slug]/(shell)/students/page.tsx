@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CourseStudents } from "@/components/courses/course-students";
+import { canGradeCourse } from "@/components/courses/course-access";
 
 export default async function CourseStudentsPage({
   params,
@@ -33,9 +34,7 @@ export default async function CourseStudentsPage({
 
   if (!course) notFound();
 
-  const canManage =
-    user.role === "ADMIN" || (user.role === "TEACHER" && course.teacherId === user.id);
-  if (!canManage) notFound();
+  if (!canGradeCourse(user, course)) notFound();
 
   return <CourseStudents courseId={course.id} enrollments={course.enrollments} />;
 }

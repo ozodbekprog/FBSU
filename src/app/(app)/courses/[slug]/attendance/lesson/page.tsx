@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { dayName, fmtDate } from "@/lib/utils";
-import { canManageCourse } from "@/components/courses/course-access";
+import { canGradeCourse } from "@/components/courses/course-access";
 import { LessonAttendance } from "@/components/attendance/lesson-attendance";
 import type { LessonStatus } from "@/components/attendance/lesson-attendance";
 import {
@@ -42,7 +42,7 @@ export default async function LessonAttendancePage({
 
   const course = await prisma.course.findUnique({ where: { slug } });
   if (!course) notFound();
-  if (!canManageCourse(user, course)) redirect("/dashboard");
+  if (!canGradeCourse(user, course)) redirect("/dashboard");
 
   const date =
     typeof query.date === "string" && DATE_PATTERN.test(query.date) ? query.date : todayIso();
@@ -75,7 +75,7 @@ export default async function LessonAttendancePage({
     }),
     user.role === "TEACHER"
       ? prisma.course.findMany({
-          where: { teacherId: user.id },
+          where: { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] },
           select: { slug: true, title: true },
           orderBy: { createdAt: "asc" },
         })

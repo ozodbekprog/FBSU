@@ -6,6 +6,7 @@ import { Badge, ButtonLink, Card, CardBody, CardHeader, EmptyState, PageHeader, 
 import { StartAttemptButton } from "@/components/quiz/start-button";
 import { ScoreRing } from "@/components/quiz/score-ring";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
+import { canGradeCourse, canManageCourse } from "@/components/courses/course-access";
 import {
   QUESTION_TYPE_ACCENT,
   QUESTION_TYPE_LABEL,
@@ -24,7 +25,7 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
   const quiz = await prisma.quiz.findUnique({
     where: { id },
     include: {
-      course: { select: { id: true, title: true, teacherId: true } },
+      course: { select: { id: true, title: true, teacherId: true, teacherIds: true, managerIds: true, assistantIds: true } },
       questions: { orderBy: { position: "asc" } },
     },
   });
@@ -34,7 +35,8 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
   const questions = quiz.questions.map(toQuestionFull);
 
   if (staff) {
-    if (user.role === "TEACHER" && quiz.course.teacherId !== user.id) notFound();
+    if (!canGradeCourse(user, quiz.course)) notFound();
+    const canManage = canManageCourse(user, quiz.course);
     const attempts = await prisma.quizAttempt.findMany({
       where: { quizId: id },
       orderBy: { startedAt: "desc" },
@@ -54,7 +56,9 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
               <ButtonLink href={`/quizzes/${quiz.id}/results`} variant="secondary">
                 {dictionary.grdExResults}
               </ButtonLink>
-              <ButtonLink href={`/quizzes/${quiz.id}/edit`}>{dictionary.grdExEdit}</ButtonLink>
+              {canManage ? (
+                <ButtonLink href={`/quizzes/${quiz.id}/edit`}>{dictionary.grdExEdit}</ButtonLink>
+              ) : null}
             </div>
           }
         />

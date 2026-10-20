@@ -158,6 +158,7 @@ export async function POST(request: Request) {
         isElective: data.course.isElective ?? false,
         selfEnrollment: data.course.selfEnrollment ?? false,
         teacherId: user.id,
+        teachers: { create: { userId: user.id, role: "LEAD" } },
       },
     });
 

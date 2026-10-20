@@ -6,6 +6,7 @@ export type WorkloadCourse = {
   title: string;
   slug: string;
   teacherId: string;
+  teacherIds: string[];
   teacherName: string;
   studentCount: number;
   assignmentCount: number;
@@ -107,13 +108,21 @@ export async function buildWorkloadData(options: {
   });
   const scopedTeacherIds = teacherUsers.map((teacher) => teacher.id);
   const courseRows = await prisma.course.findMany({
-    where: hasScope ? { teacherId: { in: scopedTeacherIds } } : {},
+    where: hasScope
+      ? {
+          OR: [
+            { teacherId: { in: scopedTeacherIds } },
+            { teacherIds: { hasSome: scopedTeacherIds } },
+          ],
+        }
+      : {},
     orderBy: { title: "asc" },
     select: {
       id: true,
       title: true,
       slug: true,
       teacherId: true,
+      teacherIds: true,
       teacher: { select: { name: true } },
       _count: { select: { enrollments: true, assignments: true, quizzes: true } },
     },
@@ -178,9 +187,12 @@ export async function buildWorkloadData(options: {
 
   const coursesByTeacher = new Map<string, Array<{ id: string; title: string }>>();
   for (const course of courseRows) {
-    const list = coursesByTeacher.get(course.teacherId) ?? [];
-    list.push({ id: course.id, title: course.title });
-    coursesByTeacher.set(course.teacherId, list);
+    const teacherIds = course.teacherIds.length > 0 ? course.teacherIds : [course.teacherId];
+    for (const teacherId of teacherIds) {
+      const list = coursesByTeacher.get(teacherId) ?? [];
+      list.push({ id: course.id, title: course.title });
+      coursesByTeacher.set(teacherId, list);
+    }
   }
 
   const teacherByKey = new Map(
@@ -204,6 +216,7 @@ export async function buildWorkloadData(options: {
     title: course.title,
     slug: course.slug,
     teacherId: course.teacherId,
+    teacherIds: course.teacherIds.length > 0 ? course.teacherIds : [course.teacherId],
     teacherName: course.teacher.name,
     studentCount: course._count.enrollments,
     assignmentCount: course._count.assignments,
@@ -214,7 +227,7 @@ export async function buildWorkloadData(options: {
   }));
 
   const teacherRows: WorkloadTeacher[] = teacherUsers.map((teacher) => {
-    const teacherCourses = rows.filter((row) => row.teacherId === teacher.id);
+    const teacherCourses = rows.filter((row) => row.teacherIds.includes(teacher.id));
     return {
       id: teacher.id,
       name: teacher.name,
@@ -234,7 +247,7 @@ export async function buildWorkloadData(options: {
     ? teacherRows
     : teacherRows.filter((row) => row.id === options.teacherId);
   const courses = options.teacherId
-    ? rows.filter((row) => row.teacherId === options.teacherId)
+    ? rows.filter((row) => row.teacherIds.includes(options.teacherId as string))
     : rows;
   const scopeTeacher = options.teacherId
     ? teacherRows.find((row) => row.id === options.teacherId) ?? null

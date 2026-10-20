@@ -31,7 +31,16 @@ export default async function SecureExamsPage({
       prisma.secureExam.findMany({
         where:
           user.role === "TEACHER"
-            ? { OR: [{ createdById: user.id }, { course: { teacherId: user.id } }] }
+            ? {
+                OR: [
+                  { createdById: user.id },
+                  {
+                    course: {
+                      OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }],
+                    },
+                  },
+                ],
+              }
             : {},
         orderBy: { createdAt: "desc" },
         include: {
@@ -43,7 +52,13 @@ export default async function SecureExamsPage({
       prisma.quiz.findMany({
         where: {
           isPublished: true,
-          ...(user.role === "TEACHER" ? { course: { teacherId: user.id } } : {}),
+          ...(user.role === "TEACHER"
+            ? {
+                course: {
+                  OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }],
+                },
+              }
+            : {}),
         },
         orderBy: { createdAt: "desc" },
         include: { course: { select: { title: true } } },

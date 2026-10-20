@@ -6,6 +6,7 @@ import { Badge, Card, CardBody, CardHeader, EmptyState, PageHeader, Progress, St
 import { GradeForm } from "@/components/quiz/grade-form";
 import { ScoreRing } from "@/components/quiz/score-ring";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
+import { canGradeCourse } from "@/components/courses/course-access";
 import {
   asAnswers,
   autoScore,
@@ -37,7 +38,7 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
   const quiz = await prisma.quiz.findUnique({
     where: { id },
     include: {
-      course: { select: { title: true, teacherId: true } },
+      course: { select: { title: true, teacherId: true, teacherIds: true, managerIds: true, assistantIds: true } },
       questions: { orderBy: { position: "asc" } },
       attempts: {
         orderBy: { startedAt: "desc" },
@@ -49,7 +50,7 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
 
   const staff = isStaff(user.role);
   if (staff) {
-    if (user.role === "TEACHER" && quiz.course.teacherId !== user.id) notFound();
+    if (!canGradeCourse(user, quiz.course)) notFound();
   } else {
     if (!quiz.isPublished) notFound();
     const enrollment = await prisma.enrollment.findUnique({

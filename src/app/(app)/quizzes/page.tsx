@@ -60,7 +60,18 @@ export default async function QuizzesPage() {
 
   if (isStaff(user.role)) {
     const quizzes = await prisma.quiz.findMany({
-      where: user.role === "TEACHER" ? { course: { teacherId: user.id } } : {},
+      where:
+        user.role === "TEACHER"
+          ? {
+              course: {
+                OR: [
+                  { teacherId: user.id },
+                  { managerIds: { has: user.id } },
+                  { assistantIds: { has: user.id } },
+                ],
+              },
+            }
+          : {},
       orderBy: { createdAt: "desc" },
       include: {
         course: { select: { title: true } },

@@ -4,7 +4,7 @@ import { attemptPatchSchema } from "@/components/quiz/schema";
 import {
   closeExpiredAttempt,
   expiredAttemptDeadline,
-  findManageableQuiz,
+  findGradableQuiz,
   publicError,
 } from "@/components/quiz/server";
 import { autoScore, toQuestionFull, totalPoints } from "@/components/quiz/shared";
@@ -74,7 +74,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     if (user.role !== "ADMIN" && user.role !== "TEACHER") {
       return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
-    const manageable = await findManageableQuiz(attempt.quizId, user);
+    const manageable = await findGradableQuiz(attempt.quizId, user);
     if (!manageable) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
     let finishedAt = attempt.finishedAt;

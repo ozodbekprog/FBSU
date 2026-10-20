@@ -8,7 +8,10 @@ export default async function NewQuizPage() {
   const user = await requireRole(["TEACHER", "ADMIN"]);
   const dictionary = getDictionary(await getLocale());
   const courses = await prisma.course.findMany({
-    where: user.role === "TEACHER" ? { teacherId: user.id } : {},
+    where:
+      user.role === "TEACHER"
+        ? { OR: [{ teacherId: user.id }, { managerIds: { has: user.id } }] }
+        : {},
     orderBy: { title: "asc" },
     select: { id: true, title: true },
   });
