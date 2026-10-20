@@ -51,6 +51,7 @@ export const EVENTS = {
   "secure-exam.terminate": { category: "exams", label: "Xavfsiz imtihon to'xtatildi" },
   "secure-exam.extra-time": { category: "exams", label: "Xavfsiz imtihonga qo'shimcha vaqt" },
   "attempt.score": { category: "exams", label: "Test urinishi baholandi" },
+  "quiz.regrade": { category: "exams", label: "Test qayta baholandi" },
 
   "submission.grade": { category: "grades", label: "Topshiriq baholandi" },
   "submission.regrade_request": { category: "grades", label: "Qayta baholash so'rovi" },
@@ -98,6 +99,7 @@ export const EVENTS = {
   "admin.subgroup.update": { category: "system", label: "Kichik guruh tahrirlandi" },
   "admin.subgroup.delete": { category: "system", label: "Kichik guruh o'chirildi" },
   "admin.settings.update": { category: "system", label: "Tizim sozlamalari o'zgardi" },
+  "attempt.backfill": { category: "system", label: "Test urinishlari sinxronlandi" },
   "courseRule.set": { category: "courses", label: "Faoliyat ochilish qoidasi o'rnatildi" },
   "courseRule.delete": { category: "courses", label: "Faoliyat ochilish qoidasi olib tashlandi" },
   "course.export": { category: "courses", label: "Kurs eksport qilindi" },

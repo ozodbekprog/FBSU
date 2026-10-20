@@ -1,6 +1,20 @@
 # STATUS — qurilish holati
 
-Oxirgi yangilanish: Kontekstli RBAC + team teaching (2026-10-20)
+Oxirgi yangilanish: Strukturali test urinishlari (2026-10-20)
+
+## Strukturali test urinishlari (2026-10-20)
+
+- [x] `QuizAttemptAnswer` jadvali: har bir javob alohida yozuv, `score`, `isCorrect`,
+      `answeredAt`; `(attemptId, questionId)` unikal
+- [x] `QuizAttempt.manualScore` — qo'lda qo'yilgan ballni regrade paytida himoya qiladi
+- [x] Dual-write: topshirish, vaqt tugashi va secure-exam finalize'da JSON + normalizatsiya
+- [x] `POST /api/quizzes/[id]/regrade` — avtobaholarni qayta hisoblash; qo'lda
+      baholanganlarni o'zgartirmaslik
+- [x] `POST /api/admin/attempts/backfill` — eski JSON urinishlarni ko'chirish
+      (`dryRun`, `quizId` bilan cheklash)
+- [x] Natijalar sahifasida savol bo'yicha tahlil va «Qayta baholash» tugmasi
+- [x] 6 yangi unit test; `tsc` 0 xato; `next build` yashil
+- [ ] Keyingi: HEMIS eksport/import, MBZ/SCORM, LTI/antiplagiat/video/SSO
 
 ## Kontekstli RBAC + team teaching (2026-10-20)
 

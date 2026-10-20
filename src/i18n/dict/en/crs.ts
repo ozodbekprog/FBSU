@@ -483,4 +483,20 @@ export const crs = {
   crsTeacherRemoveConfirm: "Remove \"{name}\" from the course?",
   crsTeacherLeadLocked: "The lead teacher cannot be changed",
   crsTeacherSaved: "Teachers updated",
+
+  grdQuestionAnalytics: "Question analytics",
+  grdQuestionAnalyticsSubtitle:
+    "Answers, correct answers, and average score for each question",
+  grdQuestion: "Question",
+  grdAnswered: "Answers",
+  grdCorrectAnswers: "Correct",
+  grdAverageScore: "Average score",
+  grdPendingManual: "Manual",
+  grdRegrade: "Regrade",
+  grdRegrading: "Regrading...",
+  grdRegradeDone: "Regraded attempts: {count}",
+  grdRegradeDoneManual:
+    "Regraded attempts: {count}, manually graded left unchanged: {skipped}",
+  grdManual: "Manual",
+  grdAnalyticsNoAnswers: "No answers yet",
 };

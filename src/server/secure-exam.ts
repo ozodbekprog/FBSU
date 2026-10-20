@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { asAnswers, autoScore, toQuestionFull } from "@/components/quiz/shared";
 import { EXAM_CODE_MAX_RETRIES } from "@/modules/secure-exam/config";
 import { generateExamCode, isValidExamCode, normalizeExamCode } from "@/modules/secure-exam/code";
-import { isEnrolled } from "@/components/quiz/server";
+import { isEnrolled, saveAttemptAnswers } from "@/components/quiz/server";
 import { hasCapability } from "@/modules/capabilities";
 import { EVENT_LABEL_KEY } from "@/components/secure-exam/labels";
 import { uz } from "@/i18n/uz";
@@ -54,6 +54,7 @@ export async function finalizeRun(
       where: { id: run.attempt.id },
       data: { answers, score: autoScore(questions, answers), finishedAt: now },
     });
+    await saveAttemptAnswers(db, run.attempt.id, questions, answers, now);
   }
   await db.secureExamRun.update({
     where: { id: runId },

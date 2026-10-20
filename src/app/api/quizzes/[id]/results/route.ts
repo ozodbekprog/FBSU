@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isEnrolled, publicError } from "@/components/quiz/server";
 import { canGradeCourse } from "@/components/courses/course-access";
+import { buildQuestionStats, rowsFromAttempts } from "@/components/quiz/analytics";
 import {
   asAnswers,
   toQuestionFull,
@@ -52,11 +53,22 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
         orderBy: { startedAt: "desc" },
         include: { student: { select: { id: true, name: true, email: true } } },
       });
+      const normalized = await prisma.quizAttemptAnswer.findMany({
+        where: { attempt: { quizId: id, finishedAt: { not: null } } },
+        select: { attemptId: true, questionId: true, isCorrect: true, score: true },
+      });
+      const normalizedAttempts = new Set(normalized.map((row) => row.attemptId));
+      const fallback = rowsFromAttempts(
+        questions,
+        attempts.filter((attempt) => !normalizedAttempts.has(attempt.id)),
+      );
+      const questionStats = buildQuestionStats(questions, [...normalized, ...fallback]);
       return Response.json({
         ok: true,
         data: {
           quiz: quizMeta,
           questions,
+          questionStats,
           attempts: attempts.map((attempt) => ({
             id: attempt.id,
             startedAt: attempt.startedAt,

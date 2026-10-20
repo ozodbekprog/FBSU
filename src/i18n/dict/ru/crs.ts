@@ -483,4 +483,20 @@ export const crs = {
   crsTeacherRemoveConfirm: "Убрать \"{name}\" с курса?",
   crsTeacherLeadLocked: "Основного преподавателя нельзя изменить",
   crsTeacherSaved: "Преподаватели обновлены",
+
+  grdQuestionAnalytics: "Анализ вопросов",
+  grdQuestionAnalyticsSubtitle:
+    "Ответы, правильные ответы и средний балл по каждому вопросу",
+  grdQuestion: "Вопрос",
+  grdAnswered: "Ответы",
+  grdCorrectAnswers: "Правильные",
+  grdAverageScore: "Средний балл",
+  grdPendingManual: "Вручную",
+  grdRegrade: "Переоценить",
+  grdRegrading: "Переоценка...",
+  grdRegradeDone: "Переоценено попыток: {count}",
+  grdRegradeDoneManual:
+    "Переоценено попыток: {count}, вручную оценённых не изменено: {skipped}",
+  grdManual: "Вручную",
+  grdAnalyticsNoAnswers: "Ответов пока нет",
 };

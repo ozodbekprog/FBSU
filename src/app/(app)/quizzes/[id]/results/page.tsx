@@ -4,9 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { cn, fmtDateTime, gradeColor, scorePercent } from "@/lib/utils";
 import { Badge, Card, CardBody, CardHeader, EmptyState, PageHeader, Progress, Stat, Table } from "@/components/ui";
 import { GradeForm } from "@/components/quiz/grade-form";
+import { QuizRegradeButton } from "@/components/quiz/regrade-button";
 import { ScoreRing } from "@/components/quiz/score-ring";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
-import { canGradeCourse } from "@/components/courses/course-access";
+import { canGradeCourse, canManageCourse } from "@/components/courses/course-access";
+import { buildQuestionStats, rowsFromAttempts } from "@/components/quiz/analytics";
 import {
   asAnswers,
   autoScore,
@@ -63,6 +65,24 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
   const questions = quiz.questions.map(toQuestionFull);
   const maxScore = totalPoints(questions);
   const attempts = staff ? quiz.attempts : quiz.attempts.filter((attempt) => attempt.studentId === user.id);
+  const canManage = staff ? canManageCourse(user, quiz.course) : false;
+  const normalizedRows = staff
+    ? await prisma.quizAttemptAnswer.findMany({
+        where: { attempt: { quizId: quiz.id, finishedAt: { not: null } } },
+        select: { attemptId: true, questionId: true, isCorrect: true, score: true },
+      })
+    : [];
+  const normalizedAttempts = new Set(normalizedRows.map((row) => row.attemptId));
+  const fallbackRows = staff
+    ? rowsFromAttempts(
+        questions,
+        attempts.filter((attempt) => !normalizedAttempts.has(attempt.id)),
+      )
+    : [];
+  const questionStats = staff
+    ? buildQuestionStats(questions, [...normalizedRows, ...fallbackRows])
+    : [];
+  const statById = new Map(questionStats.map((stat) => [stat.questionId, stat]));
 
   const finished = attempts.filter((attempt) => attempt.finishedAt !== null);
   const scored = finished.filter((attempt) => attempt.score != null);
@@ -79,7 +99,11 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
 
   return (
     <>
-      <PageHeader title={dictionary.grdExResults} subtitle={`${quiz.title} · ${quiz.course.title}`} />
+      <PageHeader
+        title={dictionary.grdExResults}
+        subtitle={`${quiz.title} · ${quiz.course.title}`}
+        action={canManage ? <QuizRegradeButton quizId={quiz.id} /> : undefined}
+      />
 
       {attempts.length === 0 ? (
         <EmptyState
@@ -212,6 +236,73 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
               </Table>
             </CardBody>
           </Card>
+
+          {staff ? (
+            <Card className="mt-6">
+              <CardHeader
+                title={dictionary.grdQuestionAnalytics}
+                subtitle={dictionary.grdQuestionAnalyticsSubtitle}
+              />
+              <CardBody>
+                <Table>
+                  <thead>
+                    <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-600">
+                      <th className="pb-2.5 pr-3 font-medium">#</th>
+                      <th className="pb-2.5 pr-3 font-medium">{dictionary.grdQuestion}</th>
+                      <th className="pb-2.5 pr-3 font-medium">{dictionary.grdAnswered}</th>
+                      <th className="pb-2.5 pr-3 font-medium">{dictionary.grdCorrectAnswers}</th>
+                      <th className="pb-2.5 pr-3 font-medium">{dictionary.grdAverageScore}</th>
+                      <th className="pb-2.5 font-medium">{dictionary.grdPendingManual}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {questions.map((question) => {
+                      const stat = statById.get(question.id);
+                      const manual = question.type === "TEXT" || question.type === "ESSAY";
+                      const percent =
+                        stat && stat.answered > 0
+                          ? Math.round((stat.correct / stat.answered) * 100)
+                          : null;
+                      return (
+                        <tr key={question.id} className="border-b border-slate-50 last:border-0">
+                          <td className="py-3 pr-3 text-sm font-semibold text-slate-500">
+                            {question.position}
+                          </td>
+                          <td className="py-3 pr-3">
+                            <p className="line-clamp-2 text-sm font-medium text-slate-800">
+                              {question.text}
+                            </p>
+                            <Badge tone={QUESTION_TYPE_TONE[question.type]} className="mt-1">
+                              {QUESTION_TYPE_LABEL[question.type]}
+                            </Badge>
+                          </td>
+                          <td className="py-3 pr-3 text-sm tabular-nums text-slate-700">
+                            {stat?.answered ?? 0}
+                          </td>
+                          <td className="py-3 pr-3 text-sm tabular-nums text-slate-700">
+                            {manual ? "—" : percent != null ? `${stat?.correct ?? 0} (${percent}%)` : "—"}
+                          </td>
+                          <td className="py-3 pr-3 text-sm tabular-nums text-slate-700">
+                            {manual
+                              ? dictionary.grdManual
+                              : stat?.averageScore != null
+                                ? `${stat.averageScore}/${question.points}`
+                                : "—"}
+                          </td>
+                          <td className="py-3 text-sm text-slate-700">
+                            {stat?.pending ? <Badge tone="amber">{stat.pending}</Badge> : "—"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </Table>
+                {questionStats.every((stat) => stat.answered === 0) ? (
+                  <p className="mt-3 text-sm text-slate-500">{dictionary.grdAnalyticsNoAnswers}</p>
+                ) : null}
+              </CardBody>
+            </Card>
+          ) : null}
         </>
       )}
 
