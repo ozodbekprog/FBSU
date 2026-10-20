@@ -1,0 +1,41 @@
+name: EduPage sync
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: edupage-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Trigger EduPage timetable sync
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+          EDUPAGE_SYNC_SECRET: ${{ secrets.EDUPAGE_SYNC_SECRET }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          secret="${EDUPAGE_SYNC_SECRET:-${CRON_SECRET:-}}"
+          if [ -z "$secret" ]; then
+            echo "::error::EDUPAGE_SYNC_SECRET yoki CRON_SECRET GitHub secret sifatida sozlanmagan"
+            exit 1
+          fi
+          base="${APP_URL:-https://fbsu.vercel.app}"
+          http_code=$(curl -sS --max-time 300 -o response.json -w "%{http_code}" \
+            -H "Authorization: Bearer $secret" \
+            "$base/api/edupage/sync")
+          cat response.json
+          if [ "$http_code" = "409" ]; then
+            echo "::warning::Oldingi sinxron hali tugamagan, bu soat o'tkazib yuborildi"
+            exit 0
+          fi
+          if [ "$http_code" != "200" ]; then
+            echo "::error::EduPage sinxroni muvaffaqiyatsiz (HTTP $http_code)"
+            exit 1
+          fi

@@ -1,6 +1,17 @@
 # STATUS — qurilish holati
 
-Oxirgi yangilanish: EduPage avto jadval integratsiyasi (2026-10-15)
+Oxirgi yangilanish: EduPage soatlik avtosinxron (2026-10-21)
+
+## EduPage soatlik avtosinxron (2026-10-21)
+
+- [x] `.github/workflows/edupage-sync.yml` — har soatda `GET /api/edupage/sync`
+      (Bearer secret), qo'lda `workflow_dispatch` ham bor
+- [x] `edupage:sync-lock` — DB darajasidagi qulf; cron, sahifa va qo'lda sinxron
+      bir vaqtda ketsa ikkinchisi 409 bilan qaytadi (10 daqiqa TTL)
+- [x] `autoSyncEduPageSchedule` band qulfni xato deb hisoblamaydi
+- [x] Sozlash: `EDUPAGE_SYNC_SECRET` (yoki `CRON_SECRET`) Vercel + GitHub secret;
+      ixtiyoriy `APP_URL` repo variable
+- [x] Hujjat: `docs/production-deploy.md`; admin kartada yangilanish tavsifi uz/ru/en
 
 ## EduPage avto jadval (2026-10-15)
 
