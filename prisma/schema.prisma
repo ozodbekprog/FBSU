@@ -79,6 +79,8 @@ enum QuestionType {
   NUMERIC
   MATCHING
   ORDERING
+  CLOZE
+  ESSAY
 }
 
 model User {
@@ -188,6 +190,7 @@ model User {
   assignmentExtensions AssignmentExtension[]
   gradeItemHistory   GradeItemScoreHistory[]
   choiceVotes        ChoiceVote[]
+  cohortMemberships  CohortMember[]
   glossaryEntries    GlossaryEntry[] @relation("GlossaryAuthor")
   apiTokens          ApiToken[]
 
@@ -1872,5 +1875,28 @@ model ApiToken {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+}
+
+
+model Cohort {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  members CohortMember[]
+}
+
+model CohortMember {
+  id        String   @id @default(cuid())
+  cohortId  String
+  userId    String
+  createdAt DateTime @default(now())
+
+  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([cohortId, userId])
   @@index([userId])
 }

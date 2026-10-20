@@ -9,8 +9,11 @@ import {
   QUESTION_TYPES,
   QUESTION_TYPE_ICON,
   TRUE_FALSE_OPTIONS,
+  clozeBlankNumbers,
+  clozeVariants,
   isTrueFalseOptions,
   parseAcceptedAnswers,
+  parseClozeAnswers,
   parseLineItems,
   type QuestionDraft,
   type QuestionFull,
@@ -26,6 +29,8 @@ const TYPE_SHORT_KEY: Record<QuestionType, keyof Dictionary> = {
   NUMERIC: "crsQuizTypeNumericShort",
   MATCHING: "crsQuizTypeMatching",
   ORDERING: "crsQuizTypeOrdering",
+  CLOZE: "crsQuizTypeClozeShort",
+  ESSAY: "crsQuizTypeEssayShort",
 };
 
 const TYPE_ACTIVE: Record<QuestionType, string> = {
@@ -37,6 +42,8 @@ const TYPE_ACTIVE: Record<QuestionType, string> = {
   NUMERIC: "bg-slate-700",
   MATCHING: "bg-teal-600",
   ORDERING: "bg-indigo-600",
+  CLOZE: "bg-fuchsia-600",
+  ESSAY: "bg-rose-600",
 };
 
 function letterOf(index: number): string {
@@ -96,6 +103,9 @@ export function QuestionForm({
   const [orderItems, setOrderItems] = useState(
     initial?.type === "ORDERING" ? initial.options.join("\n") : "",
   );
+  const [clozeAnswers, setClozeAnswers] = useState(
+    initial?.type === "CLOZE" ? initial.options.join("\n") : "",
+  );
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -108,6 +118,22 @@ export function QuestionForm({
     }
     if (type === "TEXT") {
       return { text: trimmedText, type, options: [], correct: [], points: pointsValue };
+    }
+    if (type === "ESSAY") {
+      return { text: trimmedText, type, options: [], correct: [], points: pointsValue };
+    }
+    if (type === "CLOZE") {
+      const blanks = clozeBlankNumbers(trimmedText);
+      if (blanks.length === 0) return t("crsQuizErrClozeText");
+      if (blanks.some((value, index) => value !== index + 1)) {
+        return t("crsQuizErrClozeNumbering");
+      }
+      const answers = parseClozeAnswers(clozeAnswers);
+      if (answers.length !== blanks.length) return t("crsQuizErrClozeCount");
+      if (answers.some((answer) => clozeVariants(answer).length === 0)) {
+        return t("crsQuizErrClozeAnswer");
+      }
+      return { text: trimmedText, type, options: answers, correct: [], points: pointsValue };
     }
     if (type === "TRUE_FALSE") {
       if (correct.length !== 1 || (correct[0] !== 0 && correct[0] !== 1)) {
@@ -181,6 +207,7 @@ export function QuestionForm({
     setCorrect([]);
     setShortAnswers("");
     setNumericAnswer("");
+    setClozeAnswers("");
     if (next === "TRUE_FALSE") {
       setOptions([...TRUE_FALSE_OPTIONS]);
       return;
@@ -274,10 +301,21 @@ export function QuestionForm({
           </div>
         </div>
 
-        {type === "TEXT" ? (
+        {type === "TEXT" || type === "ESSAY" ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-            {t("crsQuizTextAutoNote")}
+            {type === "ESSAY" ? t("crsQuizEssayAutoNote") : t("crsQuizTextAutoNote")}
           </p>
+        ) : type === "CLOZE" ? (
+          <div className="space-y-2">
+            <Label>{t("crsQuizClozeAnswers")}</Label>
+            <Textarea
+              rows={4}
+              value={clozeAnswers}
+              onChange={(event) => setClozeAnswers(event.target.value)}
+              placeholder={t("crsQuizClozeAnswersPlaceholder")}
+            />
+            <p className="text-xs text-slate-600">{t("crsQuizClozeHint")}</p>
+          </div>
         ) : type === "TRUE_FALSE" ? (
           <div className="space-y-2.5">
             <span className="text-sm font-medium text-slate-700">{t("crsQuizTrueFalsePrompt")}</span>

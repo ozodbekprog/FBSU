@@ -281,6 +281,10 @@ export function BankImportModal({
                         <span className="mt-1 block truncate text-xs text-indigo-700">
                           {item.options.join(" → ")}
                         </span>
+                      ) : item.type === "CLOZE" ? (
+                        <span className="mt-1 block truncate text-xs text-fuchsia-700">
+                          {item.options.join(" · ")}
+                        </span>
                       ) : item.options.length > 0 ? (
                         <span className="mt-1 block truncate text-xs text-slate-500">
                           {item.options.join(" · ")}

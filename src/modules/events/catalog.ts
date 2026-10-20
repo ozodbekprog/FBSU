@@ -108,6 +108,8 @@ export const EVENTS = {
   "glossary.create": { category: "courses", label: "Glossariyga atama qo'shildi" },
   "glossary.update": { category: "courses", label: "Glossariy atamasi tahrirlandi" },
   "glossary.delete": { category: "courses", label: "Glossariy atamasi o'chirildi" },
+  "cohort.create": { category: "system", label: "Kohort yaratildi" },
+  "cohort.enroll": { category: "enrollments", label: "Kohort kursga yozildi" },
   ANNOUNCEMENT_CREATE: { category: "system", label: "E'lon yaratildi" },
   ANNOUNCEMENT_DELETE: { category: "system", label: "E'lon o'chirildi" },
   MAINTENANCE_TOGGLE: { category: "system", label: "Texnik rejim o'zgardi" },

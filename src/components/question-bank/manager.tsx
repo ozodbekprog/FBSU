@@ -259,8 +259,24 @@ export function QuestionBankManager({
                 ) : null}
               </div>
               <p className="mt-3 text-sm font-medium leading-relaxed text-slate-900">{item.text}</p>
-              {item.type === "TEXT" ? (
-                <p className="mt-3 text-xs text-slate-600">{t("crsQuizTextManual")}</p>
+              {item.type === "TEXT" || item.type === "ESSAY" ? (
+                <p className="mt-3 text-xs text-slate-600">
+                  {item.type === "ESSAY" ? t("crsQuizEssayManual") : t("crsQuizTextManual")}
+                </p>
+              ) : item.type === "CLOZE" ? (
+                <ul className="mt-3 space-y-1.5">
+                  {item.options.map((option, index) => (
+                    <li
+                      key={index}
+                      className="flex items-center gap-2 rounded-lg border border-fuchsia-200 bg-fuchsia-50/60 px-2.5 py-1.5 text-xs text-fuchsia-900"
+                    >
+                      <span className="inline-flex shrink-0 items-center justify-center rounded bg-fuchsia-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                        {index + 1}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate">{option}</span>
+                    </li>
+                  ))}
+                </ul>
               ) : item.type === "SHORT_ANSWER" || item.type === "NUMERIC" ? (
                 <p className="mt-3 text-xs font-medium text-emerald-700">
                   {item.correct.map((value) => String(value)).join(", ")}

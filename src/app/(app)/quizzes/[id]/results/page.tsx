@@ -256,9 +256,13 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
                       const freeAnswer =
                         question.type === "TEXT" ||
                         question.type === "SHORT_ANSWER" ||
-                        question.type === "NUMERIC";
+                        question.type === "NUMERIC" ||
+                        question.type === "ESSAY";
                       const structured =
-                        question.type === "MATCHING" || question.type === "ORDERING";
+                        question.type === "MATCHING" ||
+                        question.type === "ORDERING" ||
+                        question.type === "CLOZE";
+                      const manual = question.type === "TEXT" || question.type === "ESSAY";
                       const selectedIndexes = new Set(
                         typeof answer === "number"
                           ? [answer]
@@ -286,12 +290,16 @@ export default async function QuizResultsPage({ params }: { params: Promise<{ id
                             <Badge tone={QUESTION_TYPE_TONE[question.type]}>
                               {QUESTION_TYPE_LABEL[question.type]}
                             </Badge>
-                            {question.type !== "TEXT" ? (
+                            {question.type !== "TEXT" && question.type !== "ESSAY" ? (
                               <Badge tone={correct ? "green" : "rose"}>
                                 {correct ? dictionary.grdStatusPassed : dictionary.grdStatusFailed}
                               </Badge>
                             ) : (
-                              <Badge tone="amber">{dictionary.crsQuizTextManual}</Badge>
+                              <Badge tone="amber">
+                                {manual && question.type === "ESSAY"
+                                  ? dictionary.crsQuizEssayManual
+                                  : dictionary.crsQuizTextManual}
+                              </Badge>
                             )}
                             <span className="ml-auto text-xs text-slate-600">
                               {translate(locale, "crsQuizPoints", { points: question.points })}

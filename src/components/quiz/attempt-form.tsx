@@ -29,6 +29,27 @@ function CheckIcon() {
   );
 }
 
+type ClozeSegment = { text: string; blank: number | null };
+
+function clozeSegments(text: string): ClozeSegment[] {
+  const pattern = /\[\[(\d+)\]\]/g;
+  const segments: ClozeSegment[] = [];
+  let lastIndex = 0;
+  let match = pattern.exec(text);
+  while (match !== null) {
+    if (match.index > lastIndex) {
+      segments.push({ text: text.slice(lastIndex, match.index), blank: null });
+    }
+    segments.push({ text: "", blank: Number(match[1]) });
+    lastIndex = match.index + match[0].length;
+    match = pattern.exec(text);
+  }
+  if (lastIndex < text.length) {
+    segments.push({ text: text.slice(lastIndex), blank: null });
+  }
+  return segments;
+}
+
 function startOrder(question: QuestionPublic): string[] {
   const items = [...question.options];
   if (items.length < 2) return items;
@@ -179,6 +200,17 @@ export function AttemptForm({
     const current = stringList(questionId);
     const next = Array.from({ length: total }, (_, index) => current[index] ?? "");
     next[leftIndex] = value;
+    setValue(questionId, next);
+  }
+
+  function clozeValue(questionId: string, blank: number): string {
+    return stringList(questionId)[blank - 1] ?? "";
+  }
+
+  function setClozeValue(questionId: string, blank: number, total: number, value: string) {
+    const current = stringList(questionId);
+    const next = Array.from({ length: total }, (_, index) => current[index] ?? "");
+    next[blank - 1] = value;
     setValue(questionId, next);
   }
 
@@ -412,6 +444,31 @@ export function AttemptForm({
                   </div>
                 ))}
               </div>
+            ) : question.type === "CLOZE" ? (
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/60 px-4 py-3.5 text-base leading-loose text-slate-800">
+                {clozeSegments(question.text).map((segment, segmentIndex) =>
+                  segment.blank === null ? (
+                    <span key={segmentIndex}>{segment.text}</span>
+                  ) : (
+                    <input
+                      key={segmentIndex}
+                      type="text"
+                      value={clozeValue(question.id, segment.blank)}
+                      onChange={(event) =>
+                        setClozeValue(
+                          question.id,
+                          segment.blank ?? 1,
+                          question.options.length,
+                          event.target.value,
+                        )
+                      }
+                      aria-label={t("crsQuizClozeBlankAria", { number: segment.blank })}
+                      placeholder={t("crsQuizClozeAnswerPlaceholder")}
+                      className="mx-1 inline-block w-36 rounded-lg border border-slate-300 bg-white px-2 py-1 text-base text-slate-900 shadow-sm outline-none transition-[border-color,box-shadow] duration-150 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+                    />
+                  ),
+                )}
+              </div>
             ) : question.type === "SHORT_ANSWER" ? (
               <Input
                 value={textValue(question.id)}
@@ -431,8 +488,12 @@ export function AttemptForm({
               />
             ) : (
               <Textarea
-                rows={5}
-                placeholder={t("crsQuizAnswerPlaceholder")}
+                rows={question.type === "ESSAY" ? 8 : 5}
+                placeholder={
+                  question.type === "ESSAY"
+                    ? t("crsQuizEssayPlaceholder")
+                    : t("crsQuizAnswerPlaceholder")
+                }
                 value={textValue(question.id)}
                 onChange={(event) => setValue(question.id, event.target.value)}
                 className="mt-4"

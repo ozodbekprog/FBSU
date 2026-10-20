@@ -176,6 +176,9 @@ export default async function AppLayout({
         ...(hasCapability(user.role, "curator.manage")
           ? [{ href: "/curator", label: dictionary.navCurator }]
           : []),
+        ...(hasCapability(user.role, "academic.manage")
+          ? [{ href: "/admin/cohorts", label: "Kohortlar" }]
+          : []),
         ...(user.role === "ADMIN" || user.role === "NAZORATCHI"
           ? [{ href: "/nazorat", label: dictionary.navNazorat }]
           : []),
@@ -221,7 +224,7 @@ export default async function AppLayout({
     ],
     REGISTRAR: [
       "/dashboard", "/assistant", "/monitoring", "/admissions", "/approvals", "/finance", "/documents", "/diplomas", "/staff",
-      "/tasks", "/admin/users", "/admin/groups", "/admin/import", "/admin/hemis", "/schedule",
+      "/tasks", "/admin/users", "/admin/groups", "/admin/cohorts", "/admin/import", "/admin/hemis", "/schedule",
       "/calendar", "/academic-calendar", "/rooms", "/messages", "/search", "/help", "/bounty", "/settings",
       "/my-qr", "/access",
     ],

@@ -9,7 +9,9 @@ export type QuestionType =
   | "SHORT_ANSWER"
   | "NUMERIC"
   | "MATCHING"
-  | "ORDERING";
+  | "ORDERING"
+  | "CLOZE"
+  | "ESSAY";
 
 export type CorrectValue = number | string;
 
@@ -54,6 +56,8 @@ export const QUESTION_TYPES: QuestionType[] = [
   "NUMERIC",
   "MATCHING",
   "ORDERING",
+  "CLOZE",
+  "ESSAY",
 ];
 
 export const QUESTION_TYPE_LABEL: Record<QuestionType, string> = {
@@ -65,6 +69,8 @@ export const QUESTION_TYPE_LABEL: Record<QuestionType, string> = {
   NUMERIC: "Raqamli javob",
   MATCHING: "Moslashtirish",
   ORDERING: "Tartiblash",
+  CLOZE: "Bo'sh joyni to'ldirish",
+  ESSAY: "Insho (qo'lda baholanadi)",
 };
 
 export const QUESTION_TYPE_KEY: Record<QuestionType, keyof Dictionary> = {
@@ -76,6 +82,8 @@ export const QUESTION_TYPE_KEY: Record<QuestionType, keyof Dictionary> = {
   NUMERIC: "crsQuizTypeNumeric",
   MATCHING: "crsQuizTypeMatching",
   ORDERING: "crsQuizTypeOrdering",
+  CLOZE: "crsQuizTypeCloze",
+  ESSAY: "crsQuizTypeEssay",
 };
 
 export const QUESTION_TYPE_TONE: Record<QuestionType, "brand" | "purple" | "amber"> = {
@@ -87,6 +95,8 @@ export const QUESTION_TYPE_TONE: Record<QuestionType, "brand" | "purple" | "ambe
   NUMERIC: "purple",
   MATCHING: "brand",
   ORDERING: "purple",
+  CLOZE: "purple",
+  ESSAY: "amber",
 };
 
 export const QUESTION_TYPE_ACCENT: Record<QuestionType, string> = {
@@ -98,6 +108,8 @@ export const QUESTION_TYPE_ACCENT: Record<QuestionType, string> = {
   NUMERIC: "bg-slate-500",
   MATCHING: "bg-teal-500",
   ORDERING: "bg-indigo-500",
+  CLOZE: "bg-fuchsia-500",
+  ESSAY: "bg-rose-500",
 };
 
 export const QUESTION_TYPE_SOFT: Record<QuestionType, string> = {
@@ -109,6 +121,8 @@ export const QUESTION_TYPE_SOFT: Record<QuestionType, string> = {
   NUMERIC: "bg-slate-100 text-slate-700",
   MATCHING: "bg-teal-50 text-teal-700",
   ORDERING: "bg-indigo-50 text-indigo-700",
+  CLOZE: "bg-fuchsia-50 text-fuchsia-700",
+  ESSAY: "bg-rose-50 text-rose-700",
 };
 
 export const QUESTION_TYPE_ICON: Record<QuestionType, string> = {
@@ -120,6 +134,8 @@ export const QUESTION_TYPE_ICON: Record<QuestionType, string> = {
   NUMERIC: "M7 4v16M17 4v16M4 9h6M14 9h6M4 15h6M14 15h6",
   MATCHING: "M4 7h6M14 7h6M10 7l4 10M14 17H4M20 17h-6",
   ORDERING: "M4 6h10M4 12h13M4 18h7M18 5v14m0 0 3-3m-3 3-3-3",
+  CLOZE: "M4 7h5M15 7h5M4 17h5M15 17h5M9 4v16M15 4v16",
+  ESSAY: "M6 3h9l5 5v13H6zM14 3v6h6M9 13h7M9 17h5",
 };
 
 export function asStringArray(value: unknown): string[] {
@@ -161,6 +177,45 @@ export function parseLineItems(value: string): string[] {
     .split("\n")
     .map((item) => item.trim())
     .filter((item) => item.length > 0);
+}
+
+export function parseClozeAnswers(value: string): string[] {
+  return value
+    .split(/[\n,]+/)
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+}
+
+export function clozeBlankNumbers(text: string): number[] {
+  const seen = new Set<number>();
+  const pattern = /\[\[(\d+)\]\]/g;
+  let match = pattern.exec(text);
+  while (match !== null) {
+    const value = Number(match[1]);
+    if (Number.isInteger(value) && value >= 1 && !seen.has(value)) seen.add(value);
+    match = pattern.exec(text);
+  }
+  return [...seen].sort((a, b) => a - b);
+}
+
+export const CLOZE_MARKER_PATTERN = /\[\[(\d+)\]\]/g;
+
+export function clozeVariants(option: string): string[] {
+  return option
+    .split("|")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+}
+
+export function isClozeGraded(question: QuestionFull, answer: AnswerValue | undefined): boolean {
+  if (!Array.isArray(answer)) return false;
+  const given = answer.filter((item): item is string => typeof item === "string");
+  if (given.length !== question.options.length || question.options.length === 0) return false;
+  return question.options.every((option, index) => {
+    const normalized = normalizeShortAnswer(given[index] ?? "");
+    if (normalized.length === 0) return false;
+    return clozeVariants(option).some((variant) => normalizeShortAnswer(variant) === normalized);
+  });
 }
 
 export function asAnswers(value: unknown): QuizAnswers {
@@ -216,7 +271,7 @@ export function totalPoints(questions: Array<{ points: number }>): number {
 }
 
 export function hasTextQuestions(questions: Array<{ type: QuestionType }>): boolean {
-  return questions.some((question) => question.type === "TEXT");
+  return questions.some((question) => question.type === "TEXT" || question.type === "ESSAY");
 }
 
 export function normalizeShortAnswer(value: string): string {
@@ -275,6 +330,9 @@ export function isAnswerCorrect(question: QuestionFull, answer: AnswerValue | un
     if (given.length !== question.options.length || question.options.length < 2) return false;
     return question.options.every((value, index) => given[index] === value);
   }
+  if (question.type === "CLOZE") {
+    return isClozeGraded(question, answer);
+  }
   return false;
 }
 
@@ -304,8 +362,18 @@ export function formatAnswer(question: QuestionFull, answer: AnswerValue | undef
       : [];
     return given.length > 0 ? given.join(" → ") : "Javob berilmagan";
   }
-  if (question.type === "TEXT" || question.type === "SHORT_ANSWER") {
+  if (question.type === "TEXT" || question.type === "SHORT_ANSWER" || question.type === "ESSAY") {
     return typeof answer === "string" && answer.trim().length > 0 ? answer : "Javob berilmagan";
+  }
+  if (question.type === "CLOZE") {
+    const given = Array.isArray(answer)
+      ? answer.filter((item): item is string => typeof item === "string")
+      : [];
+    const rows = question.options.map((_, index) => {
+      const value = given[index]?.trim() ?? "";
+      return `[[${index + 1}]] → ${value.length > 0 ? value : "—"}`;
+    });
+    return rows.length > 0 ? rows.join("\n") : "Javob berilmagan";
   }
   if (question.type === "NUMERIC") {
     if (typeof answer === "number") return String(answer);

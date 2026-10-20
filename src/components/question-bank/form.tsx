@@ -10,8 +10,11 @@ import {
   QUESTION_TYPES,
   QUESTION_TYPE_ICON,
   TRUE_FALSE_OPTIONS,
+  clozeBlankNumbers,
+  clozeVariants,
   isTrueFalseOptions,
   parseAcceptedAnswers,
+  parseClozeAnswers,
   parseLineItems,
   type QuestionType,
 } from "@/components/quiz/shared";
@@ -34,6 +37,8 @@ const TYPE_SHORT_KEY: Record<QuestionType, keyof Dictionary> = {
   NUMERIC: "crsQuizTypeNumericShort",
   MATCHING: "crsQuizTypeMatching",
   ORDERING: "crsQuizTypeOrdering",
+  CLOZE: "crsQuizTypeClozeShort",
+  ESSAY: "crsQuizTypeEssayShort",
 };
 
 function letterOf(index: number): string {
@@ -98,6 +103,9 @@ export function BankQuestionForm({
   const [orderItems, setOrderItems] = useState(
     initial?.type === "ORDERING" ? initial.options.join("\n") : "",
   );
+  const [clozeAnswers, setClozeAnswers] = useState(
+    initial?.type === "CLOZE" ? initial.options.join("\n") : "",
+  );
   const [difficulty, setDifficulty] = useState(initial?.difficulty ?? 2);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -115,6 +123,22 @@ export function BankQuestionForm({
     };
     if (type === "TEXT") {
       return { ...base, options: [], correct: [] };
+    }
+    if (type === "ESSAY") {
+      return { ...base, options: [], correct: [] };
+    }
+    if (type === "CLOZE") {
+      const blanks = clozeBlankNumbers(trimmedText);
+      if (blanks.length === 0) return t("crsQuizErrClozeText");
+      if (blanks.some((value, index) => value !== index + 1)) {
+        return t("crsQuizErrClozeNumbering");
+      }
+      const answers = parseClozeAnswers(clozeAnswers);
+      if (answers.length !== blanks.length) return t("crsQuizErrClozeCount");
+      if (answers.some((answer) => clozeVariants(answer).length === 0)) {
+        return t("crsQuizErrClozeAnswer");
+      }
+      return { ...base, options: answers, correct: [] };
     }
     if (type === "TRUE_FALSE") {
       if (correct.length !== 1 || (correct[0] !== 0 && correct[0] !== 1)) {
@@ -184,6 +208,7 @@ export function BankQuestionForm({
     setCorrect([]);
     setShortAnswers("");
     setNumericAnswer("");
+    setClozeAnswers("");
     if (next === "TRUE_FALSE") {
       setOptions([...TRUE_FALSE_OPTIONS]);
       return;
@@ -315,10 +340,21 @@ export function BankQuestionForm({
           </div>
         </div>
 
-        {type === "TEXT" ? (
+        {type === "TEXT" || type === "ESSAY" ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-            {t("crsQuizTextAutoNote")}
+            {type === "ESSAY" ? t("crsQuizEssayAutoNote") : t("crsQuizTextAutoNote")}
           </p>
+        ) : type === "CLOZE" ? (
+          <div className="space-y-2">
+            <Label>{t("crsQuizClozeAnswers")}</Label>
+            <Textarea
+              rows={4}
+              value={clozeAnswers}
+              onChange={(event) => setClozeAnswers(event.target.value)}
+              placeholder={t("crsQuizClozeAnswersPlaceholder")}
+            />
+            <p className="text-xs text-slate-600">{t("crsQuizClozeHint")}</p>
+          </div>
         ) : type === "TRUE_FALSE" ? (
           <div className="space-y-2.5">
             <span className="text-sm font-medium text-slate-700">{t("crsQuizTrueFalsePrompt")}</span>

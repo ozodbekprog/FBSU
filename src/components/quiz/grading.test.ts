@@ -184,6 +184,71 @@ describe("string answer lists", () => {
   });
 });
 
+describe("isAnswerCorrect — CLOZE", () => {
+  const item = question({
+    text: "Kod [[1]] natijani [[2]] ga chiqaradi",
+    type: "CLOZE",
+    options: ["print|Print", "42"],
+    correct: [],
+  });
+
+  it("accepts every blank filled correctly", () => {
+    expect(isAnswerCorrect(item, ["print", "42"])).toBe(true);
+  });
+
+  it("is case-insensitive and trims spaces", () => {
+    expect(isAnswerCorrect(item, ["  PRINT ", " 42 "])).toBe(true);
+  });
+
+  it("accepts alternative answers separated by a pipe", () => {
+    expect(isAnswerCorrect(item, ["Print", "42"])).toBe(true);
+  });
+
+  it("rejects a wrong or empty blank", () => {
+    expect(isAnswerCorrect(item, ["echo", "42"])).toBe(false);
+    expect(isAnswerCorrect(item, ["", "42"])).toBe(false);
+    expect(isAnswerCorrect(item, ["print", "  "])).toBe(false);
+  });
+
+  it("rejects partial and non-array answers", () => {
+    expect(isAnswerCorrect(item, ["print"])).toBe(false);
+    expect(isAnswerCorrect(item, ["print", "42", "extra"])).toBe(false);
+    expect(isAnswerCorrect(item, "print")).toBe(false);
+    expect(isAnswerCorrect(item, undefined)).toBe(false);
+  });
+
+  it("formats blanks with the given answers", () => {
+    expect(formatAnswer(item, ["print", "42"])).toBe("[[1]] → print\n[[2]] → 42");
+    expect(formatAnswer(item, [])).toBe("[[1]] → —\n[[2]] → —");
+  });
+
+  it("scores only fully correct cloze answers", () => {
+    const questions: QuestionFull[] = [question({ ...item, id: "cloze", points: 5 })];
+    expect(autoScore(questions, { cloze: ["print", "42"] })).toBe(5);
+    expect(autoScore(questions, { cloze: ["print", "7"] })).toBe(0);
+  });
+});
+
+describe("ESSAY", () => {
+  const item = question({ text: "Insho yozing", type: "ESSAY", options: [], correct: [] });
+
+  it("is never auto-graded", () => {
+    expect(isAnswerCorrect(item, "Katta matn")).toBe(false);
+    expect(isAnswerCorrect(item, "")).toBe(false);
+    expect(isAnswerCorrect(item, undefined)).toBe(false);
+  });
+
+  it("never adds points in autoScore", () => {
+    const questions: QuestionFull[] = [question({ ...item, id: "essay", points: 10 })];
+    expect(autoScore(questions, { essay: "Katta matn" })).toBe(0);
+  });
+
+  it("formats the essay text as a free answer", () => {
+    expect(formatAnswer(item, "Katta matn")).toBe("Katta matn");
+    expect(formatAnswer(item, "   ")).toBe("Javob berilmagan");
+  });
+});
+
 describe("autoScore", () => {
   it("sums points of every supported type", () => {
     const questions: QuestionFull[] = [

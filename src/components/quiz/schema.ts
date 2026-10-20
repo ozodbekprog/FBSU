@@ -1,5 +1,7 @@
 import { z } from "zod";
 import {
+  clozeBlankNumbers,
+  clozeVariants,
   isTrueFalseOptions,
   type CorrectValue,
   type QuestionType,
@@ -14,6 +16,8 @@ export const questionTypeSchema = z.enum([
   "NUMERIC",
   "MATCHING",
   "ORDERING",
+  "CLOZE",
+  "ESSAY",
 ]);
 
 export const correctValueSchema = z.union([
@@ -22,14 +26,30 @@ export const correctValueSchema = z.union([
 ]);
 
 export function questionShapeError(input: {
+  text: string;
   type: QuestionType;
   options: string[];
   correct: CorrectValue[];
 }): string | null {
-  if (input.type === "TEXT") {
+  if (input.type === "TEXT" || input.type === "ESSAY") {
     if (input.options.length > 0 || input.correct.length > 0) {
       return "Matnli savolda variantlar bo'lmaydi";
     }
+    return null;
+  }
+  if (input.type === "CLOZE") {
+    const blanks = clozeBlankNumbers(input.text);
+    if (blanks.length === 0) return "Savol matnida [[1]] kabi bo'shliqlar bo'lishi kerak";
+    if (blanks.some((value, index) => value !== index + 1)) {
+      return "Bo'shliqlar [[1]], [[2]] tartibida raqamlanishi kerak";
+    }
+    if (input.options.length !== blanks.length) {
+      return "Bo'shliqlar soni javoblar soniga teng bo'lishi kerak";
+    }
+    if (input.options.some((option) => clozeVariants(option).length === 0)) {
+      return "Har bir bo'sh joy uchun javob kiriting";
+    }
+    if (input.correct.length > 0) return "Bo'sh joyni to'ldirishda to'g'ri javob ro'yxati bo'sh bo'lishi kerak";
     return null;
   }
   if (input.type === "TRUE_FALSE") {
