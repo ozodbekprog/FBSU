@@ -82,7 +82,10 @@ async function buildUserContext(user: {
   } else {
     const [courses, lessons] = await Promise.all([
       prisma.course.findMany({
-        where: user.role === "TEACHER" ? { teacherId: user.id } : {},
+        where:
+          user.role === "TEACHER"
+            ? { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] }
+            : {},
         select: { title: true },
         take: 12,
       }),

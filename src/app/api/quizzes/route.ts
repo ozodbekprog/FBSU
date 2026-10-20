@@ -7,6 +7,7 @@ import { publicError } from "@/components/quiz/server";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { hasCapability } from "@/modules/capabilities";
 import { normalizeSubnet } from "@/modules/quiz/access-rules";
+import { canGradeCourse, canManageCourse } from "@/components/courses/course-access";
 
 const dueAtSchema = z.string().trim().min(1).nullable().optional();
 
@@ -68,7 +69,17 @@ export async function GET(request: Request) {
     const quizzes = await prisma.quiz.findMany({
       where: {
         courseId,
-        ...(user.role === "TEACHER" ? { course: { teacherId: user.id } } : {}),
+        ...(user.role === "TEACHER"
+          ? {
+              course: {
+                OR: [
+                  { teacherId: user.id },
+                  { managerIds: { has: user.id } },
+                  { assistantIds: { has: user.id } },
+                ],
+              },
+            }
+          : {}),
       },
       orderBy: { createdAt: "desc" },
       include: {
@@ -116,7 +127,7 @@ export async function POST(request: Request) {
   try {
     const course = await prisma.course.findUnique({ where: { id: parsed.data.courseId } });
     if (!course) return Response.json({ ok: false, error: "Kurs topilmadi" }, { status: 404 });
-    if (user.role === "TEACHER" && course.teacherId !== user.id) {
+    if (!canManageCourse(user, course)) {
       return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
 

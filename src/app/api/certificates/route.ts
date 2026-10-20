@@ -46,7 +46,13 @@ export async function GET(request: Request) {
   const certificates = await prisma.certificate.findMany({
     where: {
       ...(courseId ? { courseId } : {}),
-      ...(user.role === "TEACHER" ? { course: { teacherId: user.id } } : {}),
+      ...(user.role === "TEACHER"
+        ? {
+            course: {
+              OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }],
+            },
+          }
+        : {}),
     },
     orderBy: { issuedAt: "desc" },
     include: certificateInclude,

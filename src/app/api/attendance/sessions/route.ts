@@ -3,7 +3,7 @@ import { randomInt } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
-import { canManageCourse } from "@/components/courses/course-access";
+import { canGradeCourse } from "@/components/courses/course-access";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { finalizeExpiredAttendanceSessions } from "@/modules/attendance/auto-close";
 import { hasCapability } from "@/modules/capabilities";
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
   if (!course) {
     return Response.json({ ok: false, error: "Kurs topilmadi" }, { status: 404 });
   }
-  if (!canManageCourse(user, course)) {
+  if (!canGradeCourse(user, course)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -144,7 +144,7 @@ export async function GET(request: Request) {
   if (!course) {
     return Response.json({ ok: false, error: "Kurs topilmadi" }, { status: 404 });
   }
-  if (!canManageCourse(user, course)) {
+  if (!canGradeCourse(user, course)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

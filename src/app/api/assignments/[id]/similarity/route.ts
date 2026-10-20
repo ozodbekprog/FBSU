@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { canManageCourse } from "@/components/courses/course-access";
+import { canGradeCourse } from "@/components/courses/course-access";
 import { findPairs, maxScoreByItem } from "@/modules/antiplagiat/similarity";
 
 export async function GET(
@@ -20,7 +20,7 @@ export async function GET(
   if (!assignment) {
     return Response.json({ ok: false, error: "Topshiriq topilmadi" }, { status: 404 });
   }
-  if (!canManageCourse(user, assignment.course)) {
+  if (!canGradeCourse(user, assignment.course)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

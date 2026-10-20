@@ -466,4 +466,21 @@ export const crs = {
   crsSubmitHint: "Напишите текст и/или прикрепите файл — принимается всё.",
   crsCurrentFile: "Текущий загруженный файл",
   crsImagePreview: "Загруженное изображение",
+
+  crsTeachersTitle: "Преподаватели курса",
+  crsTeachersSubtitle:
+    "Управляйте основным преподавателем, соавторами, ассистентами и наблюдателями",
+  crsTeacherAdd: "Добавить преподавателя",
+  crsTeacherSearchPlaceholder: "Поиск по имени или email",
+  crsTeacherRole: "Роль",
+  crsTeacherSearchHint: "Введите минимум 2 символа",
+  crsTeacherNoResults: "Преподаватель не найден",
+  crsTeacherEmpty: "Пока назначен только основной преподаватель",
+  crsTeacherLead: "Основной",
+  crsTeacherCo: "Соавтор",
+  crsTeacherAssistant: "Ассистент",
+  crsTeacherObserver: "Наблюдатель",
+  crsTeacherRemoveConfirm: "Убрать \"{name}\" с курса?",
+  crsTeacherLeadLocked: "Основного преподавателя нельзя изменить",
+  crsTeacherSaved: "Преподаватели обновлены",
 };

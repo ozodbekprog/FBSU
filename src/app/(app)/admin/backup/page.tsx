@@ -19,7 +19,9 @@ export default async function AdminBackupPage() {
       : Promise.resolve<BackupCounts>({}),
     isAdmin ? getMaintenanceMode() : Promise.resolve(false),
     prisma.course.findMany({
-      where: isAdmin ? {} : { teacherId: user.id },
+      where: isAdmin
+        ? {}
+        : { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] },
       orderBy: { createdAt: "asc" },
       select: { id: true, slug: true, title: true },
     }),

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { canManageCourse } from "@/components/courses/course-access";
+import { canGradeCourse } from "@/components/courses/course-access";
 import { finalizeExpiredAttendanceSessions } from "@/modules/attendance/auto-close";
 import { recordEvent } from "@/modules/events/record";
 
@@ -55,7 +55,7 @@ export async function GET(
     return Response.json({ ok: true, data: entries });
   }
 
-  if (!canManageCourse(user, course)) {
+  if (!canGradeCourse(user, course)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -92,7 +92,7 @@ export async function POST(
   if (!course) {
     return Response.json({ ok: false, error: "Kurs topilmadi" }, { status: 404 });
   }
-  if (!canManageCourse(user, course)) {
+  if (!canGradeCourse(user, course)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -179,7 +179,7 @@ export async function DELETE(
   if (!course) {
     return Response.json({ ok: false, error: "Kurs topilmadi" }, { status: 404 });
   }
-  if (!canManageCourse(user, course)) {
+  if (!canGradeCourse(user, course)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

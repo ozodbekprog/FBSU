@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { quizUpdateSchema } from "@/components/quiz/schema";
+import { canGradeCourse, canManageCourse } from "@/components/courses/course-access";
 import { publicError } from "@/components/quiz/server";
 import { toQuestionFull, toQuestionPublic } from "@/components/quiz/shared";
 import { notifyCourseStudents } from "@/server/notify";
@@ -41,7 +42,17 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
   const quiz = await prisma.quiz.findUnique({
     where: { id },
     include: {
-      course: { select: { id: true, title: true, slug: true, teacherId: true } },
+      course: {
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          teacherId: true,
+          teacherIds: true,
+          managerIds: true,
+          assistantIds: true,
+        },
+      },
       questions: { orderBy: { position: "asc" } },
     },
   });
@@ -51,7 +62,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
   const questions = quiz.questions.map(toQuestionFull);
 
   if (staff) {
-    if (user.role === "TEACHER" && quiz.course.teacherId !== user.id) {
+    if (!canGradeCourse(user, quiz.course)) {
       return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
     return Response.json({ ok: true, data: { ...publicQuiz(quiz), questions } });
@@ -105,7 +116,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   try {
     const quiz = await prisma.quiz.findUnique({ where: { id }, include: { course: true } });
     if (!quiz) return Response.json({ ok: false, error: "Test topilmadi" }, { status: 404 });
-    if (user.role === "TEACHER" && quiz.course.teacherId !== user.id) {
+    if (!canManageCourse(user, quiz.course)) {
       return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
 
@@ -113,7 +124,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     if (data.courseId && data.courseId !== quiz.courseId) {
       const course = await prisma.course.findUnique({ where: { id: data.courseId } });
       if (!course) return Response.json({ ok: false, error: "Kurs topilmadi" }, { status: 404 });
-      if (user.role === "TEACHER" && course.teacherId !== user.id) {
+      if (!canManageCourse(user, course)) {
         return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
       }
     }
@@ -155,7 +166,7 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
   try {
     const quiz = await prisma.quiz.findUnique({ where: { id }, include: { course: true } });
     if (!quiz) return Response.json({ ok: false, error: "Test topilmadi" }, { status: 404 });
-    if (user.role === "TEACHER" && quiz.course.teacherId !== user.id) {
+    if (!canManageCourse(user, quiz.course)) {
       return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
     await prisma.quiz.delete({ where: { id } });

@@ -62,7 +62,7 @@ export default async function AttendancePage() {
         ? { teacher: { departmentId: user.departmentId ?? "__none__" } }
         : user.role === "TYUTOR"
           ? { enrollments: { some: { status: "ACTIVE" as const, user: { group: { curatorId: user.id } } } } }
-          : { teacherId: user.id };
+          : { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] };
   const courses = await prisma.course.findMany({
     where: courseWhere,
     select: {

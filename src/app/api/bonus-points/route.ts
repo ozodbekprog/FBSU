@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { canGradeCourse } from "@/components/courses/course-access";
 import { BONUS_MAX_TENTHS, BONUS_MIN_TENTHS } from "@/app/api/gpa/data";
 
 const MIN_POINTS = (BONUS_MIN_TENTHS / 10).toFixed(1);
@@ -52,12 +53,12 @@ export async function POST(request: Request) {
   // O'z fani tekshiruvi: o'qituvchi faqat o'z kursidan berishi mumkin.
   const course = await prisma.course.findUnique({
     where: { id: courseId },
-    select: { id: true, title: true, teacherId: true },
+    select: { id: true, title: true, teacherId: true, teacherIds: true, managerIds: true, assistantIds: true },
   });
   if (!course) {
     return Response.json({ ok: false, error: "Fan topilmadi" }, { status: 404 });
   }
-  if (course.teacherId !== user.id) {
+  if (!canGradeCourse(user, course)) {
     return Response.json(
       { ok: false, error: "Faqat o'z faningizdan bonus ball bera olasiz" },
       { status: 403 },

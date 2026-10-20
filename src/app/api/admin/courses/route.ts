@@ -68,6 +68,7 @@ export async function POST(request: Request) {
       description: parsed.data.description || null,
       teacherId,
       isPublished: parsed.data.isPublished,
+      teachers: { create: { userId: teacherId, role: "LEAD" } },
     },
     include: { teacher: { select: { id: true, name: true, email: true } } },
   });

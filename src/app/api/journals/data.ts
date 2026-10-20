@@ -38,7 +38,10 @@ export async function getWeeklyJournals(
       include: { group: { select: { name: true } } },
     }),
     prisma.course.findMany({
-      where: user.role === "TEACHER" ? { teacherId: user.id } : {},
+      where:
+        user.role === "TEACHER"
+          ? { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] }
+          : {},
       orderBy: { createdAt: "asc" },
       select: {
         id: true,

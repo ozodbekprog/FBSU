@@ -105,7 +105,8 @@ model User {
   groupId String?
   group   Group?  @relation(fields: [groupId], references: [id])
 
-  taughtCourses        Course[]              @relation("CourseTeacher")
+  taughtCourses        Course[]              @relation("CourseLeadTeacher")
+  courseTeaching       CourseTeacher[]
   enrollments          Enrollment[]
   studyPlans      StudyPlan[]
   submissions          Submission[]
@@ -234,7 +235,11 @@ model Course {
   subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
 
   teacherId String
-  teacher   User   @relation("CourseTeacher", fields: [teacherId], references: [id])
+  teacher   User   @relation("CourseLeadTeacher", fields: [teacherId], references: [id])
+  teacherIds   String[] @default([])
+  managerIds   String[] @default([])
+  assistantIds String[] @default([])
+  teachers     CourseTeacher[]
 
   sections    Section[]
   assignments Assignment[]
@@ -262,6 +267,30 @@ model Course {
   glossaryEntries    GlossaryEntry[]
 
   @@index([teacherId])
+  @@index([teacherIds], type: Gin)
+  @@index([managerIds], type: Gin)
+  @@index([assistantIds], type: Gin)
+}
+
+enum CourseTeacherRole {
+  LEAD
+  CO_TEACHER
+  ASSISTANT
+  OBSERVER
+}
+
+model CourseTeacher {
+  id        String            @id @default(cuid())
+  courseId  String
+  userId    String
+  role      CourseTeacherRole @default(CO_TEACHER)
+  createdAt DateTime          @default(now())
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, userId])
+  @@index([userId])
 }
 
 model Enrollment {

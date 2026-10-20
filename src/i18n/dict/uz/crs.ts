@@ -466,4 +466,21 @@ export const crs = {
   crsSubmitHint: "Matn yozing va/yoki fayl biriktiring — ikkalasi ham qabul qilinadi.",
   crsCurrentFile: "Hozir yuklangan fayl",
   crsImagePreview: "Yuklangan rasm",
+
+  crsTeachersTitle: "Kurs o'qituvchilari",
+  crsTeachersSubtitle:
+    "Asosiy o'qituvchi, hammuallif, yordamchi va kuzatuvchilarni boshqaring",
+  crsTeacherAdd: "O'qituvchi qo'shish",
+  crsTeacherSearchPlaceholder: "Ism yoki email bo'yicha qidirish",
+  crsTeacherRole: "Rol",
+  crsTeacherSearchHint: "Qo'shish uchun kamida 2 ta belgi kiriting",
+  crsTeacherNoResults: "O'qituvchi topilmadi",
+  crsTeacherEmpty: "Hozircha faqat asosiy o'qituvchi biriktirilgan",
+  crsTeacherLead: "Asosiy",
+  crsTeacherCo: "Hammuallif",
+  crsTeacherAssistant: "Yordamchi",
+  crsTeacherObserver: "Kuzatuvchi",
+  crsTeacherRemoveConfirm: "\"{name}\" kursdan olib tashlansinmi?",
+  crsTeacherLeadLocked: "Asosiy o'qituvchi o'zgartirilmaydi",
+  crsTeacherSaved: "O'qituvchilar yangilandi",
 };

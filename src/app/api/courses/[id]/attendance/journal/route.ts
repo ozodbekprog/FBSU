@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { canManageCourse } from "@/components/courses/course-access";
+import { canGradeCourse } from "@/components/courses/course-access";
 import { getAttendanceJournal } from "./data";
 
 export async function GET(
@@ -28,7 +28,7 @@ export async function GET(
     }
     const data = await getAttendanceJournal(course.id, user.id);
     return Response.json({ ok: true, data });
-  } else if (!canManageCourse(user, course)) {
+  } else if (!canGradeCourse(user, course)) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

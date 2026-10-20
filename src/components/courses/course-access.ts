@@ -4,16 +4,45 @@ import { hasCapability } from "@/modules/capabilities";
 
 export type AccessUser = { id: string; role: Role };
 
-export function canManageCourse(user: AccessUser, course: { teacherId: string }) {
-  return user.role === "ADMIN" || (hasCapability(user.role, "course.manage") && course.teacherId === user.id);
+type CourseAccessShape = {
+  teacherId: string;
+  teacherIds?: string[];
+  managerIds?: string[];
+  assistantIds?: string[];
+};
+
+function isAdmin(user: AccessUser) {
+  return user.role === "ADMIN" || user.role === "OWNER";
+}
+
+function isManager(user: AccessUser, course: CourseAccessShape) {
+  return course.teacherId === user.id || (course.managerIds?.includes(user.id) ?? false);
+}
+
+function isAssistant(user: AccessUser, course: CourseAccessShape) {
+  return course.assistantIds?.includes(user.id) ?? false;
+}
+
+function isStaff(user: AccessUser, course: CourseAccessShape) {
+  return course.teacherId === user.id || (course.teacherIds?.includes(user.id) ?? false);
+}
+
+export function canManageCourse(user: AccessUser, course: CourseAccessShape) {
+  return isAdmin(user) || (hasCapability(user.role, "course.manage") && isManager(user, course));
+}
+
+export function canGradeCourse(user: AccessUser, course: CourseAccessShape) {
+  if (isAdmin(user)) return true;
+  if (!hasCapability(user.role, "course.grade")) return false;
+  return isManager(user, course) || isAssistant(user, course);
 }
 
 export function canViewCourse(
   user: AccessUser,
-  course: { teacherId: string },
+  course: CourseAccessShape,
   isEnrolled: boolean,
 ) {
-  return canManageCourse(user, course) || isEnrolled;
+  return canGradeCourse(user, course) || isStaff(user, course) || isEnrolled;
 }
 
 export function isValidHttpUrl(value: string) {

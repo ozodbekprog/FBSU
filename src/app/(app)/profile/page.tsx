@@ -54,10 +54,15 @@ export default async function ProfilePage() {
     thirdKind = "average";
   } else if (user.role === "TEACHER") {
     const [courses, certificates, students] = await Promise.all([
-      prisma.course.count({ where: { teacherId: user.id } }),
+      prisma.course.count({
+        where: { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] },
+      }),
       prisma.certificate.count({ where: { issuedById: user.id } }),
       prisma.enrollment.findMany({
-        where: { course: { teacherId: user.id }, status: "ACTIVE" },
+        where: {
+          course: { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] },
+          status: "ACTIVE",
+        },
         distinct: ["userId"],
         select: { userId: true },
       }),

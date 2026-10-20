@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@prisma/client";
+import { canManageCourse } from "@/components/courses/course-access";
 
 export type BankStaffUser = { id: string; role: Role };
 
@@ -7,13 +8,22 @@ export async function findManageableBankQuestion(id: string, user: BankStaffUser
   const question = await prisma.bankQuestion.findUnique({
     where: { id },
     include: {
-      course: { select: { id: true, title: true, teacherId: true } },
+      course: {
+        select: {
+          id: true,
+          title: true,
+          teacherId: true,
+          teacherIds: true,
+          managerIds: true,
+          assistantIds: true,
+        },
+      },
       subject: { select: { id: true, name: true } },
     },
   });
   if (!question) return null;
   if (user.role === "ADMIN") return question;
-  if (question.courseId) return question.course?.teacherId === user.id ? question : null;
+  if (question.courseId) return question.course && canManageCourse(user, question.course) ? question : null;
   if (question.subjectId) {
     const link = await prisma.teacherSubject.findUnique({
       where: { teacherId_subjectId: { teacherId: user.id, subjectId: question.subjectId } },
@@ -32,10 +42,10 @@ export async function resolveBankTarget(
   if (courseId) {
     const course = await prisma.course.findUnique({
       where: { id: courseId },
-      select: { teacherId: true },
+      select: { teacherId: true, teacherIds: true, managerIds: true, assistantIds: true },
     });
     if (!course) return { ok: false, status: 404, error: "Kurs topilmadi" };
-    if (user.role === "TEACHER" && course.teacherId !== user.id) {
+    if (!canManageCourse(user, course)) {
       return { ok: false, status: 403, error: "Forbidden" };
     }
     return { ok: true };

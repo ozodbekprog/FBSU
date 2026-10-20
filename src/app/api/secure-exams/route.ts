@@ -1,3 +1,4 @@
+import { canGradeCourse } from "@/components/courses/course-access";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { publicError } from "@/components/quiz/server";
@@ -41,13 +42,23 @@ export async function POST(request: Request) {
   try {
     const quiz = await prisma.quiz.findUnique({
       where: { id: parsed.data.quizId },
-      include: { course: { select: { teacherId: true, id: true } } },
+      include: {
+        course: {
+          select: {
+            id: true,
+            teacherId: true,
+            teacherIds: true,
+            managerIds: true,
+            assistantIds: true,
+          },
+        },
+      },
     });
     if (!quiz) return Response.json({ ok: false, error: "Test topilmadi" }, { status: 404 });
     if (!quiz.isPublished) {
       return Response.json({ ok: false, error: "Test hali chop etilmagan" }, { status: 400 });
     }
-    if (user.role === "TEACHER" && quiz.course.teacherId !== user.id) {
+    if (!canGradeCourse(user, quiz.course)) {
       return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
 

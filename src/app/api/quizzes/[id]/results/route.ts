@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isEnrolled, publicError } from "@/components/quiz/server";
+import { canGradeCourse } from "@/components/courses/course-access";
 import {
   asAnswers,
   toQuestionFull,
@@ -18,7 +19,16 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
     const quiz = await prisma.quiz.findUnique({
       where: { id },
       include: {
-        course: { select: { id: true, title: true, teacherId: true } },
+        course: {
+          select: {
+            id: true,
+            title: true,
+            teacherId: true,
+            teacherIds: true,
+            managerIds: true,
+            assistantIds: true,
+          },
+        },
         questions: { orderBy: { position: "asc" } },
       },
     });
@@ -34,7 +44,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
     };
 
     if (user.role === "ADMIN" || user.role === "TEACHER") {
-      if (user.role === "TEACHER" && quiz.course.teacherId !== user.id) {
+      if (!canGradeCourse(user, quiz.course)) {
         return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
       }
       const attempts = await prisma.quizAttempt.findMany({

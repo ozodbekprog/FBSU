@@ -13,7 +13,17 @@ export type CourseTabKey =
   | "forum"
   | "students";
 
-export function CourseTabs({ slug, canManage }: { slug: string; canManage: boolean }) {
+export function CourseTabs({
+  slug,
+  canManage,
+  canGrade,
+  isEnrolled,
+}: {
+  slug: string;
+  canManage: boolean;
+  canGrade: boolean;
+  isEnrolled: boolean;
+}) {
   const pathname = usePathname();
   const { t } = useI18n();
   const base = `/courses/${slug}`;
@@ -23,20 +33,20 @@ export function CourseTabs({ slug, canManage }: { slug: string; canManage: boole
 
   const tabs: Array<{ id: CourseTabKey; href: string; label: string }> = [
     { id: "materials", href: base, label: t("msgTabMaterials") },
-    { id: "assignments", href: `${base}/assignments`, label: t("msgTabAssignments") },
-    { id: "attendance", href: `${base}/attendance`, label: t("msgTabAttendance") },
+  ];
+  if (canGrade || isEnrolled) {
+    tabs.push(
+      { id: "assignments", href: `${base}/assignments`, label: t("msgTabAssignments") },
+      { id: "attendance", href: `${base}/attendance`, label: t("msgTabAttendance") },
+    );
+  }
+  tabs.push(
     { id: "announcements", href: `${base}/announcements`, label: t("msgTabAnnouncements") },
     { id: "forum", href: `${base}/forum`, label: t("msgTabForum") },
-    ...(canManage
-      ? [
-          {
-            id: "students" as const,
-            href: `${base}/students`,
-            label: t("msgTabStudents"),
-          },
-        ]
-      : []),
-  ];
+  );
+  if (canManage || canGrade) {
+    tabs.push({ id: "students", href: `${base}/students`, label: t("msgTabStudents") });
+  }
 
   function isActive(id: CourseTabKey) {
     if (id === "materials") return rest.length === 0;

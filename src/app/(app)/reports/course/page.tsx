@@ -25,7 +25,9 @@ export default async function CourseActivityReportPage({
   const canListAll = canViewAnalysis && user.role !== "TEACHER";
 
   const courses = await prisma.course.findMany({
-    where: canListAll ? {} : { teacherId: user.id },
+    where: canListAll
+      ? {}
+      : { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] },
     orderBy: { title: "asc" },
     select: { id: true, title: true, slug: true, teacherId: true },
   });

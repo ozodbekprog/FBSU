@@ -1,6 +1,22 @@
 # STATUS — qurilish holati
 
-Oxirgi yangilanish: Xavfsiz imtihon — yuz nazorati + kiritma anomaliyasi (2026-10-15)
+Oxirgi yangilanish: Kontekstli RBAC + team teaching (2026-10-20)
+
+## Kontekstli RBAC + team teaching (2026-10-20)
+
+- [x] `CourseTeacherRole` (LEAD/CO_TEACHER/ASSISTANT/OBSERVER), `CourseTeacher` jadvali
+- [x] `Course.teacherIds` / `managerIds` / `assistantIds` proyeksiyalari + DB trigger;
+      mavjud `teacherId` lar `LEAD` sifatida backfill qilindi
+- [x] `canManageCourse` / `canGradeCourse` / `canViewCourse`; assistant baholaydi,
+      observer faqat ko'radi
+- [x] O'qituvchilarni boshqarish API'si (CSRF + audit) va nomzodlar qidiruvi
+- [x] Kurs sozlamalarida o'qituvchilar boshqaruvi; kurs sarlavhasida barcha o'qituvchilar;
+      mobil ko'rinish
+- [x] Qamrov: kurs sahifalari, topshiriqlar, davomat, jurnal, gradebook, testlar,
+      kurs ro'yxatlari, dashboard, workload va hisobotlar
+- [x] 8 yangi unit test; jami 602 test yashil; `tsc` 0 xato; `next build` yashil
+- [ ] Keyingi: fakultet/kafedra scope'i, imtihon sessiyalari/secure-exam parity,
+      strukturali quiz urinishlari (`QuizAttemptAnswer`)
 
 ## Xavfsiz imtihon — yuz nazorati + kiritma anomaliyasi (2026-10-15)
 

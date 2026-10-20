@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { askAi } from "@/lib/ai";
-import { canManageCourse } from "@/components/courses/course-access";
+import { canGradeCourse } from "@/components/courses/course-access";
 import { fmtDateTime } from "@/lib/utils";
 
 const requestSchema = z.object({
@@ -43,7 +43,7 @@ export async function POST(
     return Response.json({ ok: false, error: "Topshiriq topilmadi" }, { status: 404 });
   }
 
-  const management = canManageCourse(user, assignment.course);
+  const management = canGradeCourse(user, assignment.course);
   let submissionStatus: string | null = null;
 
   if (!management) {

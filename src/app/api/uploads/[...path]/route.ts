@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
 import { safeUploadContentType, uploadsRoot } from "@/lib/uploads";
+import { canGradeCourse } from "@/components/courses/course-access";
 
 function isSafePath(baseDir: string, targetPath: string): boolean {
   const resolvedBase = path.resolve(baseDir);
@@ -58,14 +59,25 @@ export async function GET(
       where: { fileUrl: { endsWith: `/${lastSegment}` } },
       select: {
         studentId: true,
-        assignment: { select: { course: { select: { teacherId: true } } } },
+        assignment: {
+          select: {
+            course: {
+              select: {
+                teacherId: true,
+                teacherIds: true,
+                managerIds: true,
+                assistantIds: true,
+              },
+            },
+          },
+        },
       },
     });
     const allowed =
       user.role === "ADMIN" ||
       (submission !== null &&
         (submission.studentId === user.id ||
-          submission.assignment.course.teacherId === user.id));
+          canGradeCourse(user, submission.assignment.course)));
     if (!allowed) {
       await createAuditLog({
         action: "FILE_DOWNLOAD",

@@ -7,6 +7,7 @@ import { SelfEnrollButton } from "@/components/courses/self-enroll-button";
 import { CourseSettingsCard } from "@/components/courses/course-settings-card";
 import { ChoicePollCard } from "@/components/courses/choice-poll-card";
 import { GlossaryCard } from "@/components/courses/glossary-card";
+import { canManageCourse, canViewCourse } from "@/components/courses/course-access";
 
 export default async function CoursePage({
   params,
@@ -29,10 +30,10 @@ export default async function CoursePage({
 
   if (!course) notFound();
 
-  const canManage =
-    user.role === "ADMIN" || (user.role === "TEACHER" && course.teacherId === user.id);
+  const canManage = canManageCourse(user, course);
   const isEnrolled = course.enrollments.some((entry) => entry.userId === user.id);
-  if (!canManage && !course.isPublished && !isEnrolled) notFound();
+  const canView = canViewCourse(user, course, isEnrolled);
+  if (!canView && !course.isPublished) notFound();
 
   const isStudent = user.role === "STUDENT";
   const courseGroups = canManage
@@ -93,7 +94,7 @@ export default async function CoursePage({
           <ChoicePollCard courseId={course.id} canManage={canManage} />
         </div>
       ) : null}
-      {canManage || isEnrolled ? (
+      {canView ? (
         <div className="mt-6">
           <GlossaryCard courseId={course.id} canManage={canManage} />
         </div>

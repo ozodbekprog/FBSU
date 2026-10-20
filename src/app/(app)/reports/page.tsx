@@ -30,7 +30,7 @@ export default async function ReportsPage({
 
   const courseWhere =
     user.role === "TEACHER"
-      ? { teacherId: user.id }
+      ? { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] }
       : user.role === "DEKAN"
         ? { teacher: { facultyId: user.facultyId ?? "__none__" } }
         : user.role === "KAFEDRA_MUDIRI"

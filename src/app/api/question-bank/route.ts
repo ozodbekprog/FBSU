@@ -48,7 +48,7 @@ export async function GET(request: Request) {
   }
   if (user.role === "TEACHER") {
     where.OR = [
-      { course: { teacherId: user.id } },
+      { course: { OR: [{ teacherId: user.id }, { managerIds: { has: user.id } }] } },
       { subject: { teachers: { some: { teacherId: user.id } } } },
     ];
   }

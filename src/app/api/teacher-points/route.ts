@@ -1,3 +1,4 @@
+import { canGradeCourse } from "@/components/courses/course-access";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -86,9 +87,9 @@ export async function POST(request: Request) {
   if (user.role !== "ADMIN") {
     const course = await prisma.course.findUnique({
       where: { id: courseId },
-      select: { teacherId: true },
+      select: { teacherId: true, teacherIds: true, managerIds: true, assistantIds: true },
     });
-    if (!course || course.teacherId !== user.id) {
+    if (!course || !canGradeCourse(user, course)) {
       return Response.json({ ok: false, error: "Bu kursga siz huquq yoq" }, { status: 403 });
     }
   }

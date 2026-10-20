@@ -22,7 +22,10 @@ export default async function JournalPage({
   const { course: courseParam } = await searchParams;
 
   const courses = await prisma.course.findMany({
-    where: user.role === "TEACHER" ? { teacherId: user.id } : {},
+    where:
+      user.role === "TEACHER"
+        ? { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] }
+        : {},
     orderBy: { title: "asc" },
     select: { id: true, title: true, slug: true },
   });

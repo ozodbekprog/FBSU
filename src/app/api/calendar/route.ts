@@ -56,7 +56,7 @@ export async function GET(request: Request) {
         user.role === "STUDENT"
           ? { enrollments: { some: { userId: user.id, status: "ACTIVE" } } }
           : user.role === "TEACHER"
-            ? { teacherId: user.id }
+            ? { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] }
             : user.role === "ADMIN" || user.role === "REGISTRAR"
               ? {}
               : { id: "__none__" },

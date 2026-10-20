@@ -304,7 +304,7 @@ export async function getTeacherAnalytics(
   locale: Locale,
 ): Promise<TeacherAnalytics> {
   const courses = await prisma.course.findMany({
-    where: { teacherId },
+    where: { OR: [{ teacherId }, { teacherIds: { has: teacherId } }] },
     select: { id: true, title: true, _count: { select: { enrollments: true } } },
     orderBy: { title: "asc" },
   });

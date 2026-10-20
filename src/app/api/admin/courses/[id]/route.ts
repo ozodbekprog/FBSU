@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { recordEvent } from "@/modules/events/record";
 
 const patchSchema = z.object({
   isPublished: z.boolean().optional(),
@@ -30,15 +31,44 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     }
   }
 
-  const updated = await prisma.course.update({
-    where: { id },
-    data: {
-      isPublished: parsed.data.isPublished,
-      isElective: parsed.data.isElective,
-      teacherId: parsed.data.teacherId,
-    },
-    include: { teacher: { select: { id: true, name: true, email: true } } },
+  const updated = await prisma.$transaction(async (tx) => {
+    const next = await tx.course.update({
+      where: { id },
+      data: {
+        isPublished: parsed.data.isPublished,
+        isElective: parsed.data.isElective,
+        teacherId: parsed.data.teacherId,
+      },
+      include: { teacher: { select: { id: true, name: true, email: true } } },
+    });
+
+    if (parsed.data.teacherId && parsed.data.teacherId !== course.teacherId) {
+      await tx.courseTeacher.upsert({
+        where: {
+          courseId_userId: { courseId: id, userId: course.teacherId },
+        },
+        create: { courseId: id, userId: course.teacherId, role: "CO_TEACHER" },
+        update: { role: "CO_TEACHER" },
+      });
+      await tx.courseTeacher.upsert({
+        where: {
+          courseId_userId: { courseId: id, userId: parsed.data.teacherId },
+        },
+        create: { courseId: id, userId: parsed.data.teacherId, role: "LEAD" },
+        update: { role: "LEAD" },
+      });
+    }
+
+    return next;
   });
+
+  if (parsed.data.teacherId && parsed.data.teacherId !== course.teacherId) {
+    await recordEvent(user.id, "course.teacher.update", {
+      entity: "Course",
+      entityId: id,
+      meta: { leadFrom: course.teacherId, leadTo: parsed.data.teacherId },
+    });
+  }
 
   return Response.json({ ok: true, data: updated });
 }

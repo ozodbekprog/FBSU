@@ -13,7 +13,7 @@ export async function GET(request: Request) {
       ? await prisma.course.findMany({ select, orderBy: { createdAt: "asc" }, take: 50 })
       : user.role === "TEACHER"
         ? await prisma.course.findMany({
-            where: { teacherId: user.id },
+            where: { OR: [{ teacherId: user.id }, { teacherIds: { has: user.id } }] },
             select,
             orderBy: { createdAt: "asc" },
           })
