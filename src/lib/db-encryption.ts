@@ -2,11 +2,14 @@ import { Prisma } from "@prisma/client";
 import {
   decryptDeep,
   encryptByMode,
+  isEncryptionConfigured,
   type EncryptionMode,
 } from "@/lib/crypto";
 import { deterministicFieldsFor, encryptedFieldsFor } from "@/lib/pii";
 
 const WRITE_PATTERN = /create|update|upsert/;
+
+let warnedMissingKey = false;
 
 function encryptDataBlock(model: string, block: unknown): void {
   const fields = encryptedFieldsFor(model);
@@ -89,6 +92,16 @@ export const encryptionExtension = Prisma.defineExtension({
   query: {
     $allModels: {
       async $allOperations({ model, operation, args, query }) {
+        if (!isEncryptionConfigured()) {
+          if (!warnedMissingKey) {
+            warnedMissingKey = true;
+            console.warn(
+              "[pii] DATA_ENCRYPTION_KEY o'rnatilmagan — PII shifrlash o'chirilgan. " +
+                "Yoqish uchun kalit qo'ying va scripts/encrypt-existing.ts ni ishlating.",
+            );
+          }
+          return query(args);
+        }
         if (model) transformArgs(model, operation, args);
         const result = await query(args);
         return decryptDeep(result) as typeof result;

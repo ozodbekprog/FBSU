@@ -8,10 +8,22 @@ import {
   encryptJson,
   encryptString,
   isEncrypted,
+  isEncryptionConfigured,
 } from "@/lib/crypto";
 
 process.env.DATA_ENCRYPTION_KEY = Buffer.alloc(32, 7).toString("base64");
 process.env.DATA_ENCRYPTION_KEY_ID = "test";
+
+describe("konfiguratsiya", () => {
+  it("kalit bo'lmasa shifrlash o'chirilgan hisoblanadi", () => {
+    const saved = process.env.DATA_ENCRYPTION_KEY;
+    delete process.env.DATA_ENCRYPTION_KEY;
+    expect(isEncryptionConfigured()).toBe(false);
+    if (saved === undefined) delete process.env.DATA_ENCRYPTION_KEY;
+    else process.env.DATA_ENCRYPTION_KEY = saved;
+    expect(isEncryptionConfigured()).toBe(true);
+  });
+});
 
 describe("matn shifrlash", () => {
   it("randomized round-trip", () => {
