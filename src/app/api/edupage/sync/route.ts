@@ -2,7 +2,7 @@ import { revalidateTag } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { EDUPAGE_CACHE_TAG } from "@/lib/edupage";
-import { syncEduPageSchedule } from "@/lib/edupage-sync";
+import { EduPageSyncBusyError, syncEduPageSchedule } from "@/lib/edupage-sync";
 
 const MANAGE_ROLES = new Set(["ADMIN", "REGISTRAR"]);
 
@@ -25,6 +25,9 @@ async function runSync() {
 }
 
 function failure(error: unknown) {
+  if (error instanceof EduPageSyncBusyError) {
+    return Response.json({ ok: false, error: error.message }, { status: 409 });
+  }
   const message = error instanceof Error ? error.message : "EduPage bilan aloqa xatosi";
   return Response.json({ ok: false, error: message }, { status: 502 });
 }

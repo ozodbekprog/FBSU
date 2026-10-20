@@ -83,8 +83,9 @@ export default async function Page() {
   `/admin/users` (o'qituvchilar), `/admin/groups` (guruhlar), `/admin/dictionaries` (fanlar),
   `/rooms` (xonalar); sinxron boshqaruvi `/admin/import` da.
 - API: `GET /api/edupage/timetable`, sinxron `POST /api/edupage/sync`
-  (ADMIN/REGISTRAR + CSRF yoki `Bearer CRON_SECRET`). `Jadval` sahifasi ochilganda
-  30 daqiqadan eski bo'lsa fonda avtomatik sinxronlanadi.
+  (ADMIN/REGISTRAR + CSRF yoki `Bearer CRON_SECRET`). Har soatda GitHub Actions
+  cron orqali, `Jadval` sahifasi ochilganda esa 30 daqiqadan eski bo'lsa fonda
+  avtomatik sinxronlanadi. Parallel sinxronlarni `edupage:sync-lock` to'xtatadi.
 - Sinf ↔ guruh bog'lanishi `Group.edupageName` orqali; mos kelmagan sinf uchun guruh
   avtomatik yaratiladi, bog'langan guruhdagi eski qo'lda yozuvlar tozalanadi.
 - Import qilingan yozuvlar `ScheduleEntry.source = "edupage"` + `externalId` bilan belgilanadi —
