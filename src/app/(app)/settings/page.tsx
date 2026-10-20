@@ -19,7 +19,7 @@ export default async function SettingsPage() {
         title={t(locale, "settingsTitle")}
         subtitle={t(locale, "settingsSubtitle")}
       />
-      <Card className="mb-6">
+      <Card className="mb-4">
         <CardBody className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="font-semibold tracking-tight text-brand-950">

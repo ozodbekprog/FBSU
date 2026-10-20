@@ -59,12 +59,13 @@ export function BugAssistant() {
     <Link
       href="/assistant"
       data-tour="ai-assistant"
-      className="fixed bottom-24 right-3 z-40 flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-lift transition-transform duration-150 hover:scale-105 active:scale-95 md:bottom-28 md:right-6"
+      aria-label={t("mscBugOpen")}
+      className="fixed bottom-20 right-3 z-40 flex size-12 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-medium text-slate-700 shadow-lift transition-transform duration-150 hover:scale-105 active:scale-95 md:bottom-28 md:right-6 md:h-auto md:w-auto md:gap-2 md:px-3 md:py-2"
     >
-      <span className="flex size-6 items-center justify-center rounded-full bg-brand-900 text-[11px] text-white">
+      <span className="flex size-8 items-center justify-center rounded-full bg-brand-900 text-[11px] text-white md:size-6">
         AI
       </span>
-      {t("mscBugOpen")}
+      <span className="hidden md:inline">{t("mscBugOpen")}</span>
       {hasPending ? (
         <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-rose-500 ring-2 ring-white" />
       ) : null}
