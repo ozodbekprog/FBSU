@@ -263,7 +263,7 @@ export default function SettingsManager({
         {enabled ? (
           <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
         ) : null}
-        <CardBody className="flex items-center gap-4">
+        <CardBody className="relative flex items-start gap-3 pr-16 sm:items-center sm:gap-4 sm:pr-6">
           <span
             className={cn(
               "relative inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white transition-[transform,translate,scale,rotate,opacity,filter,box-shadow] duration-300",
@@ -277,7 +277,7 @@ export default function SettingsManager({
             ) : null}
           </span>
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 pr-10 sm:pr-0">
               <p className="font-semibold tracking-tight text-brand-950">{item.title}</p>
               <Badge tone={enabled ? "green" : "slate"}>
                 {enabled ? t("mscSettingsEnabled") : t("mscSettingsDisabled")}
@@ -293,7 +293,7 @@ export default function SettingsManager({
             disabled={busy}
             onClick={() => toggle(item)}
             className={cn(
-              "relative inline-flex h-8 w-14 shrink-0 items-center rounded-full p-1 transition-[background-color,box-shadow,opacity] duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20",
+              "absolute right-4 top-4 inline-flex h-8 w-14 shrink-0 items-center rounded-full p-1 transition-[background-color,box-shadow,opacity] duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20 sm:static sm:right-auto sm:top-auto",
               enabled ? "bg-gradient-to-r from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/20" : "bg-slate-200",
               busy ? "cursor-wait opacity-70" : "cursor-pointer",
             )}
@@ -323,26 +323,28 @@ export default function SettingsManager({
   const hourBusy = busyKey === "reminderHour";
 
   return (
-    <div className="space-y-8">
-      <div className="flex min-h-8 flex-wrap items-center gap-2">
-        {notice ? (
-          <span className="animate-fade-up inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3.5 py-1.5 text-sm font-medium text-emerald-700 ring-1 ring-inset ring-emerald-100">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 6 9 17l-5-5" />
-            </svg>
-            {notice}
-          </span>
-        ) : null}
-        {error ? (
-          <span className="animate-fade-up inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3.5 py-1.5 text-sm font-medium text-rose-700 ring-1 ring-inset ring-rose-100">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 8v4M12 16h.01" />
-            </svg>
-            {error}
-          </span>
-        ) : null}
-      </div>
+    <div className="space-y-6">
+      {notice || error ? (
+        <div className="flex flex-wrap items-center gap-2">
+          {notice ? (
+            <span className="animate-fade-up inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3.5 py-1.5 text-sm font-medium text-emerald-700 ring-1 ring-inset ring-emerald-100">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+              {notice}
+            </span>
+          ) : null}
+          {error ? (
+            <span className="animate-fade-up inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3.5 py-1.5 text-sm font-medium text-rose-700 ring-1 ring-inset ring-rose-100">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v4M12 16h.01" />
+              </svg>
+              {error}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
 
       <section>
         <SectionHeading

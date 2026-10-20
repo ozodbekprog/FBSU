@@ -2,7 +2,7 @@ import { Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 function Bar({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-md bg-slate-200", className)} />;
+  return <div className={cn("animate-pulse rounded-md bg-slate-300/70", className)} />;
 }
 
 export default function ScheduleLoading() {
@@ -43,7 +43,7 @@ export default function ScheduleLoading() {
                   <Bar className="mt-2 h-3 w-20" />
                 </div>
                 {Array.from({ length: 6 }).map((__, col) => (
-                  <div key={col} className="h-14 animate-pulse rounded-lg bg-slate-100" />
+                  <div key={col} className="h-14 animate-pulse rounded-lg bg-slate-200/70" />
                 ))}
               </div>
             ))}
