@@ -85,3 +85,33 @@ uchun merge qilingandan keyin faollashadi. Vercel Pro bo'lsa, GitHub Actions o'r
 ```
 
 Vercel cron so'roviga `Authorization: Bearer $CRON_SECRET` avtomatik qo'shiladi.
+
+## PII shifrlash (DATA_ENCRYPTION_KEY)
+
+`src/lib/db-encryption.ts` PII maydonlarini AES-256-GCM bilan shifrlaydi, lekin faqat
+`DATA_ENCRYPTION_KEY` mavjud bo'lsa. Kalit bo'lmasa shifrlash o'chirilgan holda ishlaydi
+va server logiga bir marta ogohlantirish yoziladi — bu productionni kalitsiz ishga
+tushirib yubormaslik uchun himoya.
+
+Kalitni yoqish (productionda hozircha kalit yo'q, shifrlash o'chiq):
+
+1. **Avval backup** oling (Neon snapshot yoki `pg_dump`).
+2. 32 baytli kalit yarating: `openssl rand -base64 32`.
+3. Kalitni va **production DB URL** ni lokal `.env` ga qo'ying, so'ng mavjud
+   yozuvlarni shifrlang:
+
+```bash
+npm run db:encrypt
+```
+
+4. Faqat shundan keyin Vercel'da `DATA_ENCRYPTION_KEY` ni qo'shing va qayta deploy
+   qiling. Ixtiyoriy: `DATA_ENCRYPTION_KEY_ID` (default `k1`).
+
+Tartib muhim: kalit Vercel'ga backfill'dan oldin qo'yilsa, deterministik maydonlar
+(`User.email`, hujjat/diplom raqamlari) bo'yicha qidiruv va login ishlamaydi, chunki
+eski yozuvlar hali ochiq matnda bo'ladi. `db:encrypt` idempotent — allaqachon
+shifrlangan qiymatlarni o'tkazib yuboradi.
+
+Kalitni yo'qotmang: u bilan shifrlangan ma'lumotni tiklab bo'lmaydi. Kalit aylanishi
+uchun eski kalitni `DATA_ENCRYPTION_KEY_<id>` sifatida qoldirib, yangisini
+`DATA_ENCRYPTION_KEY` va `DATA_ENCRYPTION_KEY_ID` bilan bering.

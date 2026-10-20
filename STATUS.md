@@ -1,6 +1,15 @@
 # STATUS — qurilish holati
 
-Oxirgi yangilanish: EduPage soatlik avtosinxron (2026-10-21)
+Oxirgi yangilanish: PII shifrlash fallback + EduPage soatlik avtosinxron (2026-10-21)
+
+## PII shifrlash fallback (2026-10-21)
+
+- [x] `DATA_ENCRYPTION_KEY` bo'lmasa Prisma kengaytmasi shifrlashni o'tkazib yuboradi
+      (avval har qanday PII yozuvi/`where.email` 500 berardi — login ham)
+- [x] Bir marta logga ogohlantirish; kalit qo'yilganda avtomatik yoqiladi
+- [x] Test: `isEncryptionConfigured()` kalit bor/yo'q holatda
+- [ ] Keyingi: kalit + backup + `npm run db:encrypt` bilan shifrlashni yoqish
+      (`docs/production-deploy.md`)
 
 ## EduPage soatlik avtosinxron (2026-10-21)
 

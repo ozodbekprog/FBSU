@@ -35,6 +35,10 @@ function decodeKey(raw: string): Buffer {
   return buffer;
 }
 
+export function isEncryptionConfigured(): boolean {
+  return Boolean(process.env.DATA_ENCRYPTION_KEY?.trim());
+}
+
 function keyring(): Keyring {
   if (cachedKeyring) return cachedKeyring;
 
