@@ -6,6 +6,7 @@ import {
   expiredAttemptDeadline,
   findGradableQuiz,
   publicError,
+  saveAttemptAnswers,
 } from "@/components/quiz/server";
 import { autoScore, toQuestionFull, totalPoints } from "@/components/quiz/shared";
 import { recordEvent } from "@/modules/events/record";
@@ -53,7 +54,9 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
         );
       }
       if (expiredDeadline) {
-        await closeExpiredAttempt(prisma, id, attempt.answers, questions, expiredDeadline);
+        await prisma.$transaction((tx) =>
+          closeExpiredAttempt(tx, id, attempt.answers, questions, expiredDeadline),
+        );
         return Response.json(
           { ok: false, error: "Vaqt tugagan — urinish yopildi" },
           { status: 409 },
@@ -61,9 +64,14 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       }
       const answers = parsed.data.answers ?? {};
       const score = autoScore(questions, answers);
-      const updated = await prisma.quizAttempt.update({
-        where: { id },
-        data: { answers, score, finishedAt: new Date() },
+      const finishedAt = new Date();
+      const updated = await prisma.$transaction(async (tx) => {
+        const attempt = await tx.quizAttempt.update({
+          where: { id },
+          data: { answers, score, finishedAt },
+        });
+        await saveAttemptAnswers(tx, id, questions, answers, finishedAt);
+        return attempt;
       });
       return Response.json({
         ok: true,
@@ -79,7 +87,9 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 
     let finishedAt = attempt.finishedAt;
     if (!finishedAt && expiredDeadline) {
-      const closed = await closeExpiredAttempt(prisma, id, attempt.answers, questions, expiredDeadline);
+      const closed = await prisma.$transaction((tx) =>
+        closeExpiredAttempt(tx, id, attempt.answers, questions, expiredDeadline),
+      );
       finishedAt = closed.finishedAt;
     }
     if (!finishedAt) {
@@ -94,7 +104,10 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
         { status: 400 },
       );
     }
-    const updated = await prisma.quizAttempt.update({ where: { id }, data: { score } });
+    const updated = await prisma.quizAttempt.update({
+      where: { id },
+      data: { score, manualScore: true },
+    });
     await recordEvent(user.id, "attempt.score", {
       entity: "QuizAttempt",
       entityId: updated.id,
@@ -104,6 +117,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
         oldScore: attempt.score,
         score,
         maxScore,
+        manual: true,
       },
     });
     return Response.json({ ok: true, data: { id: updated.id, score: updated.score } });

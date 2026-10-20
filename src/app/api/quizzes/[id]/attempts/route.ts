@@ -1,7 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { isEnrolled, publicError } from "@/components/quiz/server";
+import { isEnrolled, publicError, closeExpiredAttempt } from "@/components/quiz/server";
 import {
   decideStart,
   isAttemptExpired,
@@ -172,7 +172,13 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
           const finishedAt = new Date(
             attempt.startedAt.getTime() + (quiz.timeLimitMin ?? 0) * 60_000,
           );
-          await tx.quizAttempt.update({ where: { id: attempt.id }, data: { finishedAt } });
+          await closeExpiredAttempt(
+            tx,
+            attempt.id,
+            attempt.answers,
+            quiz.questions.map(toQuestionFull),
+            finishedAt,
+          );
           settled.push({ id: attempt.id, startedAt: attempt.startedAt, finishedAt });
         } else {
           settled.push({

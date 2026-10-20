@@ -483,4 +483,20 @@ export const crs = {
   crsTeacherRemoveConfirm: "\"{name}\" kursdan olib tashlansinmi?",
   crsTeacherLeadLocked: "Asosiy o'qituvchi o'zgartirilmaydi",
   crsTeacherSaved: "O'qituvchilar yangilandi",
+
+  grdQuestionAnalytics: "Savollar tahlili",
+  grdQuestionAnalyticsSubtitle:
+    "Har bir savol bo'yicha javoblar, to'g'ri javoblar va o'rtacha ball",
+  grdQuestion: "Savol",
+  grdAnswered: "Javoblar",
+  grdCorrectAnswers: "To'g'ri",
+  grdAverageScore: "O'rtacha ball",
+  grdPendingManual: "Qo'lda",
+  grdRegrade: "Qayta baholash",
+  grdRegrading: "Qayta baholanmoqda...",
+  grdRegradeDone: "{count} ta urinish qayta baholandi",
+  grdRegradeDoneManual:
+    "{count} ta urinish qayta baholandi, {skipped} ta qo'lda baholangan o'zgartirilmadi",
+  grdManual: "Qo'lda",
+  grdAnalyticsNoAnswers: "Javoblar hali yo'q",
 };

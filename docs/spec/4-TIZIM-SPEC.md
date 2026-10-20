@@ -247,11 +247,20 @@ mos bo'lishi shart.
 - **Qolgan:** fakultet/kafedra scope'i, imtihon sessiyalari va secure-exam parity,
   oral-defense va ba'zi ikkinchi darajali ro'yxatlar
 
-### Faza 6 — strukturali quiz urinishlari
+### Faza 6 — strukturali quiz urinishlari (2026-10-20, bajarildi)
 
-`QuizAttemptAnswer` jadvali: har javob alohida yozuv, savol bo'yicha ball va vaqt;
-regrade, savol analitikasi va anti-cheat tekshiruvlari. Eski `answers` JSON bilan
-dual-write orqali bosqichma-bosqich o'tish.
+- `QuizAttemptAnswer`: har bir javob alohida yozuv; `answer` JSON, `score`, `isCorrect`,
+  `answeredAt`; `(attemptId, questionId)` unikal.
+- `QuizAttempt.manualScore`: qo'lda qo'yilgan umumiy ballni regrade paytida himoya qiladi.
+- Dual-write: talaba topshirganda, vaqt tugaganda va secure-exam finalize'da JSON bilan
+  birga normalizatsiya qilingan yozuvlar ham saqlanadi.
+- `POST /api/quizzes/[id]/regrade`: avtobaholarni qayta hisoblaydi; qo'lda baholangan
+  urinishlarning umumiy ballini o'zgartirmaydi.
+- `POST /api/admin/attempts/backfill`: eski JSON urinishlarni `QuizAttemptAnswer` ga
+  ko'chiradi; `dryRun` va `quizId` bilan cheklash mumkin.
+- Natijalar sahifasida savol bo'yicha tahlil: javoblar, to'g'ri javob %, o'rtacha ball
+  va qo'lda baholash kutayotgan javoblar.
+- 6 yangi unit test; `tsc`, to'liq test to'plami va build yashil.
 
 ### Faza 7 — HEMIS eksport/import ko'prigi
 
