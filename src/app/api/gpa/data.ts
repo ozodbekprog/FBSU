@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { normalizeQuizScore } from "@/lib/quiz-score";
 
 export const GPA_CREDITS = 6;
 
@@ -131,7 +132,7 @@ export async function getStudentGpa(
 
   for (const attempt of attempts) {
     const quizMax = attempt.quiz.questions.reduce((sum, question) => sum + question.points, 0);
-    add(attempt.quiz.courseId, attempt.score ?? 0, quizMax);
+    add(attempt.quiz.courseId, normalizeQuizScore(attempt.score, quizMax) ?? 0, quizMax);
   }
 
   // Bonus ballar o'z fani bo'yicha, o'quvchining umumiy bonusiga qo'shiladi.

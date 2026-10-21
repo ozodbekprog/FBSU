@@ -4,22 +4,22 @@ import { getDictionary, getLocale, t as translate } from "@/i18n";
 import type { StudentGpa } from "@/app/api/gpa/data";
 import { GpaRing } from "./gpa-ring";
 
-type StatusTone = "green" | "blue" | "amber" | "rose";
+type StatusTone = "gold" | "blue" | "slate" | "rose";
 
 function gpaStatus(
   gpa: number,
   labels: { excellent: string; good: string; satisfactory: string; unsatisfactory: string },
 ): { label: string; tone: StatusTone } {
-  if (gpa >= 3.5) return { label: labels.excellent, tone: "green" };
+  if (gpa >= 3.5) return { label: labels.excellent, tone: "gold" };
   if (gpa >= 3.0) return { label: labels.good, tone: "blue" };
-  if (gpa >= 2.0) return { label: labels.satisfactory, tone: "amber" };
+  if (gpa >= 2.0) return { label: labels.satisfactory, tone: "slate" };
   return { label: labels.unsatisfactory, tone: "rose" };
 }
 
 function percentAccent(percent: number | null) {
   if (percent == null) return "bg-slate-400";
-  if (percent >= 80) return "bg-emerald-400";
-  if (percent >= 60) return "bg-gold-400";
+  if (percent >= 80) return "bg-gold-400";
+  if (percent >= 60) return "bg-brand-400";
   return "bg-rose-400";
 }
 
@@ -58,7 +58,7 @@ export async function GpaHero({ data, delay = 0 }: { data: StudentGpa; delay?: n
   return (
     <div className="animate-fade-up" style={{ animationDelay: `${delay}ms` }}>
       <Card className="relative overflow-hidden border-brand-800/50 bg-gradient-to-br from-brand-950 via-brand-900 to-brand-800">
-        <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-gold-400 to-brand-500" />
+        <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-gold-400 via-brand-500 to-brand-800" />
         <span className="pointer-events-none absolute -right-24 -top-32 size-80 rounded-full bg-gold-400/10 blur-3xl" />
         <span className="pointer-events-none absolute -bottom-32 -left-24 size-80 rounded-full bg-brand-400/20 blur-3xl" />
         <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgba(212,175,55,0.14),transparent_45%)]" />
@@ -90,7 +90,7 @@ export async function GpaHero({ data, delay = 0 }: { data: StudentGpa; delay?: n
               </div>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-brand-400 via-gold-400 to-emerald-400 transition-[width] duration-700"
+                  className="h-full rounded-full bg-gradient-to-r from-brand-500 via-brand-400 to-gold-300 transition-[width] duration-700"
                   style={{ width: `${scalePercent}%` }}
                 />
               </div>

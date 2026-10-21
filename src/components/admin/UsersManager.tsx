@@ -64,19 +64,24 @@ const ROLE_META: Record<
   { label: keyof Dictionary; tone: "brand" | "purple" | "slate" | "blue" | "green" | "gold"; dot: string; ring: string }
 > = {
   ADMIN: { label: "admRoleAdmin", tone: "brand", dot: "bg-brand-500", ring: "ring-brand-200/80" },
+  OWNER: { label: "admRoleAdmin", tone: "gold", dot: "bg-gold-500", ring: "ring-gold-300/60" },
   REKTOR: { label: "admRoleRector", tone: "gold", dot: "bg-gold-500", ring: "ring-gold-300/60" },
   PRO_RECTOR: { label: "admRoleProRector", tone: "gold", dot: "bg-gold-400", ring: "ring-gold-300/60" },
-  DEKAN: { label: "admRoleDean", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
-  KAFEDRA_MUDIRI: { label: "admRoleHead", tone: "blue", dot: "bg-sky-500", ring: "ring-sky-200/80" },
-  REGISTRAR: { label: "admRoleRegistrar", tone: "brand", dot: "bg-sky-500", ring: "ring-sky-200/80" },
-  BUXGALTER: { label: "payRoleBuxgalter", tone: "gold", dot: "bg-amber-600", ring: "ring-amber-200/80" },
-  TYUTOR: { label: "admRoleTutor", tone: "green", dot: "bg-emerald-500", ring: "ring-emerald-200/80" },
-  TEACHER: { label: "admRoleTeacher", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
+  DEKAN: { label: "admRoleDean", tone: "brand", dot: "bg-brand-400", ring: "ring-brand-200/80" },
+  KAFEDRA_MUDIRI: { label: "admRoleHead", tone: "blue", dot: "bg-brand-500", ring: "ring-brand-200/80" },
+  REGISTRAR: { label: "admRoleRegistrar", tone: "brand", dot: "bg-gold-400", ring: "ring-gold-300/60" },
+  BUXGALTER: { label: "payRoleBuxgalter", tone: "gold", dot: "bg-gold-600", ring: "ring-gold-300/60" },
+  TYUTOR: { label: "admRoleTutor", tone: "blue", dot: "bg-brand-400", ring: "ring-brand-200/80" },
+  TEACHER: { label: "admRoleTeacher", tone: "blue", dot: "bg-brand-500", ring: "ring-brand-200/80" },
   STUDENT: { label: "admRoleStudent", tone: "slate", dot: "bg-slate-400", ring: "ring-slate-200" },
   XODIM: { label: "admRoleStaff", tone: "slate", dot: "bg-slate-500", ring: "ring-slate-200" },
-  OTA_ONA: { label: "admRoleParent", tone: "green", dot: "bg-teal-500", ring: "ring-teal-200/80" },
+  OTA_ONA: { label: "admRoleParent", tone: "blue", dot: "bg-brand-400", ring: "ring-brand-200/80" },
   NAZORATCHI: { label: "admRoleNazoratchi", tone: "slate", dot: "bg-slate-600", ring: "ring-slate-300/80" },
 };
+
+function roleMeta(role: Role) {
+  return ROLE_META[role] ?? ROLE_META.STUDENT;
+}
 
 export default function UsersManager({
   users,
@@ -427,11 +432,11 @@ export default function UsersManager({
                   </td>
                   <td className="px-5 py-3">
                     <Badge
-                      tone={ROLE_META[user.role].tone}
-                      className={cn("gap-1.5 ring-1 ring-inset", ROLE_META[user.role].ring)}
+                      tone={roleMeta(user.role).tone}
+                      className={cn("gap-1.5 ring-1 ring-inset", roleMeta(user.role).ring)}
                     >
-                      <span className={cn("size-1.5 rounded-full", ROLE_META[user.role].dot)} />
-                      {t(ROLE_META[user.role].label)}
+                      <span className={cn("size-1.5 rounded-full", roleMeta(user.role).dot)} />
+                      {t(roleMeta(user.role).label)}
                     </Badge>
                   </td>
                   <td className="px-5 py-3 text-slate-600">{user.group?.name ?? "—"}</td>

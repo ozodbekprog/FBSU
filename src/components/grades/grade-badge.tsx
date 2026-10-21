@@ -10,9 +10,9 @@ const BADGE_SIZES = {
 export function gradeBadgeTone(percent: number | null) {
   if (percent == null) return "bg-slate-100 text-slate-600 ring-1 ring-slate-200/70";
   if (percent >= 80)
-    return "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-sm shadow-emerald-500/30";
+    return "bg-gradient-to-br from-brand-500 to-brand-800 text-white shadow-sm shadow-brand-900/40";
   if (percent >= 60)
-    return "bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-sm shadow-amber-500/30";
+    return "bg-gradient-to-br from-gold-300 to-gold-600 text-brand-950 shadow-sm shadow-gold-500/30";
   return "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-sm shadow-rose-500/30";
 }
 

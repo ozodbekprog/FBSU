@@ -175,6 +175,7 @@ export default function PayrollBoard({
       PRO_RECTOR: d.roleProRector,
       REKTOR: d.roleRector,
       ADMIN: d.roleAdmin,
+      OWNER: d.roleAdmin,
       REGISTRAR: d.roleRegistrar,
       TEACHER: d.roleTeacher,
       STUDENT: d.roleStudent,

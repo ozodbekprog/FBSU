@@ -1,4 +1,5 @@
 import "server-only";
+import { normalizeQuizScore } from "@/lib/quiz-score";
 import { prisma } from "@/lib/prisma";
 import { getStudentGpa, letterGrade } from "@/app/api/gpa/data";
 
@@ -112,7 +113,7 @@ export async function buildTranscript(
 
   for (const attempt of attempts) {
     const max = attempt.quiz.questions.reduce((sum, question) => sum + question.points, 0);
-    addTotal(quizTotals, attempt.quiz.courseId, attempt.score ?? 0, max);
+    addTotal(quizTotals, attempt.quiz.courseId, normalizeQuizScore(attempt.score, max) ?? 0, max);
   }
 
   for (const record of attendance) {

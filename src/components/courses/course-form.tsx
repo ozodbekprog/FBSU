@@ -6,6 +6,7 @@ import { Button, ButtonLink, Card, CardBody, CardHeader, Input, Label, Textarea 
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/components/i18n/LocaleProvider";
+import { COURSE_COVER_COLORS, courseCoverStyle } from "@/components/courses/cover-tone";
 
 export type CourseFormData = {
   id: string;
@@ -16,7 +17,7 @@ export type CourseFormData = {
   isPublished: boolean;
 };
 
-const COLORS = ["#2563eb", "#16a34a", "#dc2626", "#9333ea", "#ea580c", "#0891b2", "#4f46e5", "#be185d"];
+const COLORS = [...COURSE_COVER_COLORS];
 
 type ApiResult = { ok?: boolean; error?: string; data?: { slug?: string } } | null;
 
@@ -63,7 +64,7 @@ export function CourseForm({ course }: { course?: CourseFormData }) {
       <CardBody>
         <div
           className="relative mb-7 overflow-hidden rounded-2xl px-5 py-4 text-white shadow-card"
-          style={{ background: `linear-gradient(125deg, ${coverColor} 0%, #131f3c 92%)` }}
+          style={courseCoverStyle(coverColor)}
         >
           <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_-20%,rgba(255,255,255,0.25),transparent_55%)]" />
           <span className="pointer-events-none absolute -right-8 -top-12 size-32 rounded-full bg-white/10 blur-2xl" />

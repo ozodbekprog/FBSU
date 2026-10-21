@@ -14,7 +14,7 @@ import type { CatalogCourse } from "@/components/catalog/catalog-course-card";
 const STAT_TONES = {
   brand: "bg-brand-50 text-brand-700 ring-brand-100",
   gold: "bg-gold-300/20 text-gold-800 ring-gold-300/40",
-  emerald: "bg-emerald-50 text-emerald-600 ring-emerald-100",
+  blue: "bg-brand-100 text-brand-800 ring-brand-200",
 } as const;
 
 type CourseStat = {
@@ -132,7 +132,7 @@ export default async function CoursesPage() {
       ? {
           label: dictionary.crsStudents,
           value: studentsTotal,
-          tone: "emerald",
+          tone: "blue",
           icon: (
             <StatIcon>
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -145,7 +145,7 @@ export default async function CoursesPage() {
       : {
           label: dictionary.crsStatsTeachers,
           value: teachersTotal,
-          tone: "emerald",
+          tone: "blue",
           icon: (
             <StatIcon>
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -177,26 +177,26 @@ export default async function CoursesPage() {
         />
       ) : (
         <>
-          <div className="mb-6 grid gap-4 sm:grid-cols-3">
+          <div className="mb-6 grid grid-cols-3 gap-2.5 sm:gap-4">
             {stats.map((stat) => (
               <Card
                 key={stat.label}
-                className="relative flex items-center gap-3.5 overflow-hidden p-4 transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:shadow-lift"
+                className="relative flex flex-col items-start gap-2.5 overflow-hidden p-3.5 transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:shadow-lift sm:flex-row sm:items-center sm:gap-3.5 sm:p-4"
               >
                 <span className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
                 <span
                   className={cn(
-                    "inline-flex size-11 shrink-0 items-center justify-center rounded-xl ring-1",
+                    "inline-flex size-9 shrink-0 items-center justify-center rounded-xl ring-1 sm:size-11",
                     STAT_TONES[stat.tone],
                   )}
                 >
                   {stat.icon}
                 </span>
                 <div className="min-w-0">
-                  <p className="text-2xl font-semibold tracking-tight text-brand-950 tabular-nums">
+                  <p className="text-xl font-semibold tracking-tight text-brand-950 tabular-nums sm:text-2xl">
                     {stat.value}
                   </p>
-                  <p className="truncate text-xs font-medium text-slate-500">{stat.label}</p>
+                  <p className="truncate text-[11px] font-medium text-slate-500 sm:text-xs">{stat.label}</p>
                 </div>
               </Card>
             ))}

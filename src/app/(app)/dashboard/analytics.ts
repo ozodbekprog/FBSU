@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { normalizeQuizScore } from "@/lib/quiz-score";
 import type { AttendanceStatus, Prisma, Role, SubmissionStatus } from "@prisma/client";
 import type { BarChartDatum, DonutChartDatum, LineChartDatum } from "@/components/charts";
 import { t as translate, type Dictionary, type Locale } from "@/i18n";
@@ -21,12 +22,41 @@ export type GradeTrendPoint = LineChartDatum & {
   };
 };
 
+export type CourseAttendanceDetail = {
+  courseId: string;
+  title: string;
+  percent: number;
+  attended: number;
+  total: number;
+};
+
+export type AttendanceCounts = {
+  present: number;
+  late: number;
+  excused: number;
+  absent: number;
+  suspicious: number;
+  leftEarly: number;
+};
+
+export type PerformanceSeries = {
+  weeks: string[];
+  assignments: (number | null)[];
+  quizzes: (number | null)[];
+  attendance: (number | null)[];
+  activity: number[];
+};
+
 export type StudentAnalytics = {
   attendance: DonutChartDatum[];
   attendanceTotal: number;
+  attendanceRate: number | null;
+  attendanceCounts: AttendanceCounts;
   courseAttendance: BarChartDatum[];
+  courseAttendanceDetail: CourseAttendanceDetail[];
   gradeTrend: GradeTrendPoint[];
   gradeTotal: number;
+  performance: PerformanceSeries;
 };
 
 export type TeacherAnalytics = {
@@ -75,17 +105,18 @@ const SUBMISSION_LABELS: Record<SubmissionStatus, keyof Dictionary> = {
 
 const ROLE_COLORS: Record<Role, string> = {
   STUDENT: "#5373b8",
-  TEACHER: "#34497f",
-  REGISTRAR: "#0284c7",
-  BUXGALTER: "#b45309",
-  TYUTOR: "#059669",
-  KAFEDRA_MUDIRI: "#0ea5e9",
-  DEKAN: "#7c3aed",
-  PRO_RECTOR: "#ca8a04",
-  REKTOR: "#c9a227",
-  ADMIN: "#e11d48",
+  TEACHER: "#3f5a9d",
+  REGISTRAR: "#31548c",
+  BUXGALTER: "#8a6d18",
+  TYUTOR: "#2b4b7e",
+  KAFEDRA_MUDIRI: "#496da3",
+  DEKAN: "#24406f",
+  PRO_RECTOR: "#c9a227",
+  REKTOR: "#e3c76a",
+  ADMIN: "#d4af37",
+  OWNER: "#d4af37",
   XODIM: "#64748b",
-  OTA_ONA: "#0d9488",
+  OTA_ONA: "#2b4b7e",
   NAZORATCHI: "#64748b",
 };
 
@@ -100,6 +131,7 @@ const ROLE_LABELS: Record<Role, keyof Dictionary> = {
   PRO_RECTOR: "dashRoleProRectors",
   REKTOR: "dashRoleRector",
   ADMIN: "dashRoleAdmins",
+  OWNER: "dashRoleAdmins",
   XODIM: "dashRoleStaff",
   OTA_ONA: "dashRoleParents",
   NAZORATCHI: "secNazoratTitle",
@@ -153,7 +185,7 @@ export async function getStudentAnalytics(
   const [records, submissions, attempts] = await Promise.all([
     prisma.attendance.findMany({
       where: { studentId, courseId: { in: courseIds } },
-      select: { courseId: true, status: true },
+      select: { courseId: true, status: true, date: true },
     }),
     prisma.submission.findMany({
       where: {
@@ -236,6 +268,21 @@ export async function getStudentAnalytics(
     })
     .filter((item): item is BarChartDatum => item !== null);
 
+  const courseAttendanceDetail: CourseAttendanceDetail[] = enrollments.map((enrollment) => {
+    const statuses = byCourse.get(enrollment.course.id) ?? [];
+    const attended = statuses.filter((status) => ATTENDED.includes(status)).length;
+    return {
+      courseId: enrollment.course.id,
+      title: enrollment.course.title,
+      percent: statuses.length > 0 ? percent(attended, statuses.length) : 0,
+      attended,
+      total: statuses.length,
+    };
+  });
+
+  const attendanceCount = records.length;
+  const attendedTotal = statusTotals.PRESENT + statusTotals.LATE;
+
   const points: {
     at: Date;
     value: number;
@@ -263,23 +310,85 @@ export async function getStudentAnalytics(
     if (attempt.score === null) continue;
     const maxScore = attempt.quiz.questions.reduce((sum, question) => sum + question.points, 0);
     if (maxScore <= 0) continue;
+    const score = normalizeQuizScore(attempt.score, maxScore) ?? 0;
     points.push({
       at: attempt.finishedAt ?? attempt.startedAt,
-      value: percent(attempt.score, maxScore),
+      value: percent(score, maxScore),
       title: attempt.quiz.title,
       course: attempt.quiz.course.title,
       kind: "quiz",
-      score: attempt.score,
+      score,
       max: maxScore,
       feedback: null,
     });
   }
   points.sort((a, b) => a.at.getTime() - b.at.getTime());
 
+  function weekStartOf(value: Date) {
+    const start = new Date(value);
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+    return start;
+  }
+  const currentWeek = weekStartOf(new Date());
+  const weekStarts = Array.from({ length: 8 }, (_, index) => {
+    const week = new Date(currentWeek);
+    week.setDate(week.getDate() - (7 - index) * 7);
+    return week;
+  });
+  const weekKeyOf = (week: Date) => `${week.getFullYear()}-${week.getMonth()}-${week.getDate()}`;
+  const weekKeys = weekStarts.map(weekKeyOf);
+  const weekIndex = new Map(weekKeys.map((key, index) => [key, index]));
+  const assignmentBuckets: number[][] = weekKeys.map(() => []);
+  const quizBuckets: number[][] = weekKeys.map(() => []);
+  const attendanceBuckets: AttendanceStatus[][] = weekKeys.map(() => []);
+  for (const point of points) {
+    const index = weekIndex.get(weekKeyOf(weekStartOf(point.at)));
+    if (index == null) continue;
+    if (point.kind === "assignment") assignmentBuckets[index].push(point.value);
+    else quizBuckets[index].push(point.value);
+  }
+  for (const record of records) {
+    const index = weekIndex.get(weekKeyOf(weekStartOf(record.date)));
+    if (index == null) continue;
+    attendanceBuckets[index].push(record.status);
+  }
+  const averageOf = (values: number[]) =>
+    values.length > 0 ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : null;
+  const attendanceOf = (statuses: AttendanceStatus[]) => {
+    if (statuses.length === 0) return null;
+    const attended = statuses.filter((status) => ATTENDED.includes(status)).length;
+    return Math.round((attended / statuses.length) * 100);
+  };
+  const performance: PerformanceSeries = {
+    weeks: weekStarts.map((week) => {
+      const day = String(week.getDate()).padStart(2, "0");
+      const month = String(week.getMonth() + 1).padStart(2, "0");
+      return `${day}.${month}`;
+    }),
+    assignments: assignmentBuckets.map(averageOf),
+    quizzes: quizBuckets.map(averageOf),
+    attendance: attendanceBuckets.map(attendanceOf),
+    activity: weekKeys.map(
+      (_, index) =>
+        assignmentBuckets[index].length + quizBuckets[index].length + attendanceBuckets[index].length,
+    ),
+  };
+
   return {
     attendance,
-    attendanceTotal: records.length,
+    attendanceTotal: attendanceCount,
+    attendanceRate: attendanceCount > 0 ? percent(attendedTotal, attendanceCount) : null,
+    attendanceCounts: {
+      present: statusTotals.PRESENT,
+      late: statusTotals.LATE,
+      excused: statusTotals.EXCUSED,
+      absent: statusTotals.ABSENT,
+      suspicious: statusTotals.SUSPICIOUS,
+      leftEarly: statusTotals.LEFT_EARLY,
+    },
     courseAttendance,
+    courseAttendanceDetail,
     gradeTrend: points.slice(-10).map((point) => ({
       label: dayLabel(point.at),
       value: point.value,
@@ -294,6 +403,7 @@ export async function getStudentAnalytics(
       },
     })),
     gradeTotal: points.length,
+    performance,
   };
 }
 

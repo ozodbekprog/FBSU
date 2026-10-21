@@ -243,7 +243,11 @@ export function Progress({
       <div
         className={cn(
           "h-full rounded-full transition-[width] duration-300 ease-out",
-          pct >= 80 ? "bg-emerald-500" : pct >= 60 ? "bg-gold-400" : "bg-rose-400",
+          pct >= 80
+            ? "bg-gradient-to-r from-brand-500 to-gold-400"
+            : pct >= 60
+              ? "bg-brand-500"
+              : "bg-rose-400",
         )}
         style={{ width: `${pct}%` }}
       />

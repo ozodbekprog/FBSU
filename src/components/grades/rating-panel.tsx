@@ -11,19 +11,19 @@ const PODIUM_META: Record<
   1: {
     bar: "bg-gradient-to-t from-gold-600 via-gold-400 to-gold-300",
     num: "bg-white/70 text-brand-950",
-    height: "h-24 sm:h-36",
+    height: "h-14 sm:h-24",
     delay: "140ms",
   },
   2: {
-    bar: "bg-gradient-to-t from-slate-500 via-slate-300 to-slate-200",
-    num: "bg-white/50 text-slate-700",
-    height: "h-16 sm:h-24",
+    bar: "bg-gradient-to-t from-brand-800 via-brand-600 to-brand-400",
+    num: "bg-white/20 text-white",
+    height: "h-10 sm:h-16",
     delay: "40ms",
   },
   3: {
-    bar: "bg-gradient-to-t from-amber-800 via-amber-600 to-amber-400",
-    num: "bg-white/25 text-white",
-    height: "h-12 sm:h-20",
+    bar: "bg-gradient-to-t from-brand-900 via-brand-700 to-brand-500",
+    num: "bg-white/15 text-white",
+    height: "h-8 sm:h-12",
     delay: "240ms",
   },
 };
@@ -36,8 +36,8 @@ const ORDER: Record<number, string> = {
 
 const RANK_TONES: Record<number, string> = {
   1: "bg-gradient-to-br from-gold-300 to-gold-500 text-brand-950 shadow-sm shadow-gold-400/40",
-  2: "bg-gradient-to-br from-slate-200 to-slate-400 text-slate-700 shadow-sm shadow-slate-300/40",
-  3: "bg-gradient-to-br from-amber-500 to-amber-700 text-white shadow-sm shadow-amber-600/40",
+  2: "bg-gradient-to-br from-brand-600 to-brand-800 text-white shadow-sm shadow-brand-700/40",
+  3: "bg-gradient-to-br from-brand-800 to-brand-950 text-white shadow-sm shadow-brand-900/40",
 };
 
 function TrophyIcon() {
@@ -146,8 +146,8 @@ function Podium({
                     isFirst
                       ? "ring-gold-400 shadow-lg shadow-gold-400/30"
                       : place === 2
-                        ? "ring-slate-300"
-                        : "ring-amber-600/70",
+                        ? "ring-brand-400"
+                        : "ring-brand-600/70",
                     row.isMe && "ring-brand-500",
                   )}
                 />
@@ -170,7 +170,7 @@ function Podium({
             </div>
             <div
               className={cn(
-                "mt-3 flex w-full origin-bottom items-start justify-center rounded-t-2xl pt-2 animate-grow-y sm:pt-3",
+                "mt-3 flex w-full max-w-[10rem] origin-bottom items-start justify-center rounded-t-2xl pt-2 animate-grow-y sm:pt-3",
                 meta.bar,
                 meta.height,
               )}
@@ -256,7 +256,7 @@ export async function RatingPanel({
             </ol>
           ) : null}
           {me ? (
-            <div className="sticky bottom-4 z-20 px-4 pb-4 sm:px-6">
+            <div className="mt-4 px-4 pb-4 sm:px-6">
               <div className="flex items-center gap-3 rounded-2xl border border-brand-200 bg-white/95 p-3 shadow-[0_10px_30px_-12px_rgba(29,52,96,0.45)] backdrop-blur animate-fade-up">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-900 to-brand-600 text-xs font-bold tabular-nums text-white">
                   #{me.rank}

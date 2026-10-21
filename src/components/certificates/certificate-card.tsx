@@ -3,6 +3,7 @@ import { Badge, Card, CardBody } from "@/components/ui";
 import { fmtDate } from "@/lib/utils";
 import { getDictionary, getLocale } from "@/i18n";
 import { certificateGrade, certificateSerial } from "@/components/certificates/certificate-access";
+import { courseCoverColor } from "@/components/courses/cover-tone";
 
 type CertificateCardData = {
   id: string;
@@ -81,7 +82,7 @@ export async function CertificateCard({ certificate }: { certificate: Certificat
         <div className="flex items-start gap-3">
           <span
             className="mt-1 size-2.5 shrink-0 rounded-full ring-4 ring-slate-100"
-            style={{ backgroundColor: certificate.course.coverColor }}
+            style={{ backgroundColor: courseCoverColor(certificate.course.coverColor) }}
           />
           <div className="min-w-0 flex-1">
             <h3 className="font-serif text-base font-semibold leading-snug text-slate-900">

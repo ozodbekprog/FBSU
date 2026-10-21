@@ -2,8 +2,8 @@ import { cn } from "@/lib/utils";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 const RING_TONES = {
-  high: { from: "#34d399", to: "#059669", glow: "bg-emerald-400/25" },
-  mid: { from: "#e3c76a", to: "#c9a227", glow: "bg-gold-300/35" },
+  high: { from: "#e3c76a", to: "#a9871f", glow: "bg-gold-400/25" },
+  mid: { from: "#5b7fb5", to: "#2b4b7e", glow: "bg-brand-500/25" },
   low: { from: "#fb7185", to: "#e11d48", glow: "bg-rose-400/25" },
   none: { from: "#cbd5e1", to: "#e2e8f0", glow: "bg-slate-200/40" },
 };
@@ -60,7 +60,7 @@ export async function GradeRing({
           cy="60"
           r="52"
           fill="none"
-          stroke="#eef2f7"
+          className="grade-ring-track"
           strokeWidth="11"
           transform="rotate(-90 60 60)"
         />

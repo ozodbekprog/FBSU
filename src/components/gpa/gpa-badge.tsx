@@ -13,9 +13,9 @@ export const LETTER_META: Record<
 > = {
   A: {
     gradient:
-      "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/30",
-    soft: "border-emerald-200/70 bg-emerald-50 text-emerald-700",
-    bar: "bg-emerald-400",
+      "bg-gradient-to-br from-gold-300 to-gold-500 text-brand-950 shadow-gold-500/30",
+    soft: "border-gold-300/70 bg-gold-300/15 text-gold-800",
+    bar: "bg-gold-400",
   },
   B: {
     gradient: "bg-gradient-to-br from-brand-400 to-brand-700 text-white shadow-brand-500/30",
@@ -23,14 +23,14 @@ export const LETTER_META: Record<
     bar: "bg-brand-400",
   },
   C: {
-    gradient: "bg-gradient-to-br from-gold-300 to-gold-600 text-brand-950 shadow-gold-500/30",
-    soft: "border-gold-300/70 bg-gold-300/15 text-gold-800",
-    bar: "bg-gold-400",
+    gradient: "bg-gradient-to-br from-brand-300 to-brand-500 text-white shadow-brand-500/30",
+    soft: "border-brand-200/70 bg-brand-50 text-brand-700",
+    bar: "bg-brand-300",
   },
   D: {
-    gradient: "bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-amber-500/30",
-    soft: "border-amber-200/70 bg-amber-50 text-amber-700",
-    bar: "bg-amber-400",
+    gradient: "bg-gradient-to-br from-slate-400 to-slate-600 text-white shadow-slate-500/30",
+    soft: "border-slate-200/70 bg-slate-100 text-slate-700",
+    bar: "bg-slate-400",
   },
   F: {
     gradient: "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/30",

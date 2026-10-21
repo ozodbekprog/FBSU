@@ -5,13 +5,13 @@ import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { Avatar, Badge, ButtonLink, Card, CardBody, CardHeader, EmptyState } from "@/components/ui";
 import { BarChart, DonutChart, LineChart } from "@/components/charts";
-import { GradeTrendChart } from "@/components/charts/GradeTrendChart";
-import { cn, dayName, fmtDate, initials } from "@/lib/utils";
+import { cn, dayName, fmtDate } from "@/lib/utils";
 import { getAdminAnalytics, getStudentAnalytics, getTeacherAnalytics } from "./analytics";
+import { getStudentGpa } from "@/app/api/gpa/data";
+import { StudentOverview } from "@/components/dashboard/student-overview";
 import { salaryTotalsForMonth } from "@/lib/payroll";
-import type { AdminAnalytics, StudentAnalytics, TeacherAnalytics } from "./analytics";
+import type { AdminAnalytics, TeacherAnalytics } from "./analytics";
 import { getDictionary, getLocale, t as translate, type Locale } from "@/i18n";
-import { CheckInForm } from "@/components/attendance/check-in-form";
 import { LessonBanner } from "@/components/dashboard/lesson-banner";
 import { buildWorkloadData } from "@/components/workload/workload-data";
 import type { WorkloadCourse, WorkloadSummary } from "@/components/workload/workload-data";
@@ -22,10 +22,8 @@ import {
   dateFromIso,
   matchCourseSlug,
   normalizeTeacherName,
-  slotRange,
   todayIso,
 } from "@/components/attendance/lesson-utils";
-import { LessonCountdown } from "@/components/schedule/lesson-countdown";
 import type { CourseOption } from "@/components/attendance/lesson-utils";
 import type { ReactNode } from "react";
 
@@ -213,10 +211,11 @@ function Hero({
   locale: Locale;
 }) {
   return (
-    <section className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-950 via-brand-900 to-brand-700 p-6 text-white shadow-card md:p-8">
+    <section className="app-hero relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-950 via-brand-900 to-brand-700 p-6 text-white shadow-card md:p-8">
       <span className="pointer-events-none absolute -right-16 -top-24 size-64 rounded-full bg-gold-400/10 blur-2xl" />
       <span className="pointer-events-none absolute -bottom-28 left-1/3 size-72 rounded-full bg-brand-400/10 blur-3xl" />
       <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+      <span className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-gold-400/90 via-gold-300/30 to-transparent" />
       <div className="relative">
         <div className="flex flex-wrap items-center gap-4">
           <Avatar name={name} className="size-14! text-base ring-4 ring-white/10" />
@@ -390,97 +389,6 @@ function AnalyticsCard({
         </div>
       </Card>
     </Reveal>
-  );
-}
-
-function GradeTrendHero({ data, locale }: { data: StudentAnalytics; locale: Locale }) {
-  const values = data.gradeTrend.map((point) => point.value);
-  const average = values.length
-    ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
-    : null;
-  const last = values.length > 0 ? values[values.length - 1] : null;
-  const previous = values.length > 1 ? values[values.length - 2] : null;
-  const delta = last != null && previous != null ? last - previous : null;
-
-  return (
-    <Reveal delay={60}>
-      <Card className="flex flex-col overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 pb-3 pt-3.5 sm:px-5">
-          <div className="min-w-0">
-            <h3 className="text-base font-semibold tracking-tight text-brand-950">
-              {translate(locale, "dashGradeTrendTitle")}
-            </h3>
-            <p className="mt-0.5 text-xs text-slate-500">
-              {translate(locale, "dashGradeTrendSubtitle")}
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {average != null ? (
-              <span className="inline-flex items-center gap-1.5 rounded-xl bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">
-                {translate(locale, "grdAverage")}
-                <span className="tabular-nums">{average}%</span>
-              </span>
-            ) : null}
-            {delta != null ? (
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-semibold tabular-nums",
-                  delta >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-600",
-                )}
-              >
-                {delta >= 0 ? "▲" : "▼"} {Math.abs(delta)}%
-              </span>
-            ) : null}
-          </div>
-        </div>
-        <div className="px-4 pb-3.5 pt-2.5 sm:px-5">
-          {data.gradeTrend.length === 0 ? (
-            <EmptyState
-              title={translate(locale, "dashNoDataTitle")}
-              description={translate(locale, "dashGradeTrendEmpty")}
-            />
-          ) : (
-            <GradeTrendChart data={data.gradeTrend} height={170} />
-          )}
-        </div>
-      </Card>
-    </Reveal>
-  );
-}
-
-function StudentAnalyticsSection({ data, locale }: { data: StudentAnalytics; locale: Locale }) {
-  return (
-    <section className="mt-6">
-      <SectionHeading
-        title={translate(locale, "dashAnalyticsTitle")}
-        subtitle={translate(locale, "dashStudentAnalyticsSubtitle")}
-        action={<Badge tone="blue">{translate(locale, "dashRecordsCount", { count: data.attendanceTotal })}</Badge>}
-      />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <AnalyticsCard
-          title={translate(locale, "dashAttendanceDistTitle")}
-          subtitle={translate(locale, "dashAttendanceDistSubtitle")}
-          note={translate(locale, "dashAttendanceDistNote")}
-          delay={60}
-          empty={data.attendanceTotal === 0}
-          emptyDescription={translate(locale, "dashAttendanceDistEmpty")}
-          locale={locale}
-        >
-          <DonutChart data={data.attendance} />
-        </AnalyticsCard>
-        <AnalyticsCard
-          title={translate(locale, "dashCourseAttendanceTitle")}
-          subtitle={translate(locale, "dashCourseAttendanceSubtitle")}
-          note={translate(locale, "dashCourseAttendanceNote")}
-          delay={120}
-          empty={data.courseAttendance.length === 0}
-          emptyDescription={translate(locale, "dashCourseAttendanceEmpty")}
-          locale={locale}
-        >
-          <BarChart data={data.courseAttendance} />
-        </AnalyticsCard>
-      </div>
-    </section>
   );
 }
 
@@ -1219,9 +1127,10 @@ export default async function DashboardPage() {
       : Promise.resolve([]),
   ]);
 
-  const [upcoming, analytics, todayAttendance] = await Promise.all([
+  const courseIds = enrollments.map((enrollment) => enrollment.courseId);
+  const [upcoming, analytics, gpaData, assignmentTotal, submittedTotal, todayAttendance] = await Promise.all([
     prisma.assignment.findMany({
-      where: { courseId: { in: enrollments.map((e) => e.courseId) } },
+      where: { courseId: { in: courseIds } },
       orderBy: { dueAt: "asc" },
       take: 5,
       include: {
@@ -1230,330 +1139,51 @@ export default async function DashboardPage() {
       },
     }),
     getStudentAnalytics(user.id, locale),
+    getStudentGpa(user.id),
+    prisma.assignment.count({ where: { courseId: { in: courseIds } } }),
+    prisma.submission.count({
+      where: { studentId: user.id, assignment: { courseId: { in: courseIds } } },
+    }),
     prisma.attendance.findMany({
       where: { studentId: user.id, date: dateFromIso(todayIso()) },
       select: { courseId: true, status: true },
     }),
   ]);
 
-  const courseOptions: CourseOption[] = enrollments.map((e) => ({
-    slug: e.course.slug,
-    title: e.course.title,
+  const courseOptions: CourseOption[] = enrollments.map((enrollment) => ({
+    slug: enrollment.course.slug,
+    title: enrollment.course.title,
   }));
-  const courseIdBySlug = new Map(enrollments.map((e) => [e.course.slug, e.courseId]));
+  const courseIdBySlug = new Map(enrollments.map((enrollment) => [enrollment.course.slug, enrollment.courseId]));
   const attendanceByCourse = new Map(todayAttendance.map((row) => [row.courseId, row.status]));
+  const lessonAttendance: Record<string, string> = {};
+  for (const lesson of scheduleToday) {
+    const slug = matchCourseSlug(lesson.subject, courseOptions);
+    const courseId = slug ? courseIdBySlug.get(slug) : undefined;
+    const status = courseId ? attendanceByCourse.get(courseId) : undefined;
+    if (status) lessonAttendance[lesson.id] = status;
+  }
 
-  const assignmentsHref = enrollments[0]
-    ? `/courses/${enrollments[0].course.slug}/assignments`
-    : "/courses";
-
-  const actions: QuickAction[] = [
-    { href: "/attendance", label: dict.dashActionAttendance, icon: <CheckCircleIcon /> },
-    { href: "/schedule", label: dict.dashActionSchedule, icon: <CalendarIcon /> },
-    { href: assignmentsHref, label: dict.dashActionAssignments, icon: <ClipboardIcon /> },
-    { href: "/quizzes", label: dict.dashActionQuizzes, icon: <HelpCircleIcon /> },
-  ];
+  const courses = enrollments.map((enrollment) => ({
+    id: enrollment.courseId,
+    title: enrollment.course.title,
+    slug: enrollment.course.slug,
+    teacherName: enrollment.course.teacher.name,
+  }));
 
   return (
-    <>
-      <Hero
-        name={user.name}
-        firstName={firstName}
-        roleLabel={roleLabel}
-        now={now}
-        actions={actions}
-        locale={locale}
-      />
-
-      <div className="mb-6">
-        <GradeTrendHero data={analytics} locale={locale} />
-      </div>
-
-      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-2">
-        <div>
-          <SectionHeading
-            title={dict.dashQrAttendanceTitle}
-            subtitle={dict.dashQrAttendanceSubtitle}
-          />
-          <div data-tour="dash-checkin">
-            <CheckInForm />
-          </div>
-        </div>
-        <div>
-          <SectionHeading
-            title={dict.dashTodayStatusTitle}
-            subtitle={dict.dashTodayStatusSubtitle}
-          />
-          <div className="grid gap-4" data-tour="dash-stats">
-        <Reveal delay={60}>
-          <StatTile
-            href="/courses"
-            label={dict.dashMyCourses}
-            value={enrollments.length}
-            hint={dict.dashMyCoursesHint}
-            icon={
-              <Icon>
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-              </Icon>
-            }
-          />
-        </Reveal>
-        <Reveal delay={120}>
-          <StatTile
-            href="/schedule"
-            label={dict.dashTodayLessons}
-            value={scheduleToday.length}
-            hint={dayName(now.getDay())}
-            tone="emerald"
-            icon={
-              <Icon>
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 7v5l3 2" />
-              </Icon>
-            }
-          />
-        </Reveal>
-          </div>
-        </div>
-      </div>
-
-<div className="mt-6 grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-2">
-        {/* Grid elementlarida `min-width: auto` — ular kontentdan kichik
-            bo'lmaydi va mobil'da kartа kengayib gorizontal scroll hosil
-            qilardi. `min-w-0` ularni siqilishga majbur qiladi. */}
-        <div className="min-w-0 space-y-4">
-          <Reveal delay={240} tour="dash-lessons">
-            <Card className="transition-shadow duration-200">
-              <CardHeader
-                title={dict.dashTodayLessons}
-              subtitle={user.group?.name}
-              action={
-                <Badge tone="blue">
-                  {translate(locale, "dashLessonsCount", { count: scheduleToday.length })}
-                </Badge>
-              }
-            />
-            <CardBody>
-              {scheduleToday.length === 0 ? (
-                <EmptyState
-                  title={dict.dashNoLessonsTodayTitle}
-                  description={dict.dashEmptyScheduleDesc}
-                  action={
-                    <ButtonLink href="/schedule" size="sm" variant="secondary">
-                      {dict.dashViewSchedule}
-                    </ButtonLink>
-                  }
-                />
-              ) : (
-                <ol>
-                  {scheduleToday.map((s, index) => {
-                    const slug = matchCourseSlug(s.subject, courseOptions);
-                    const courseId = slug ? courseIdBySlug.get(slug) : undefined;
-                    const status = courseId ? attendanceByCourse.get(courseId) : undefined;
-                    const badge = status ? ATTENDANCE_BADGES[status] : undefined;
-                    const range = slotRange(s.slot);
-                    const rowClass =
-                      "group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150 hover:bg-slate-50";
-                    const content = (
-                      <>
-                        <span className="flex w-20 shrink-0 flex-col pt-px text-right">
-                          <span className="text-xs font-semibold tabular-nums text-brand-800">
-                            {range?.start ?? translate(locale, "dashPairShort", { slot: s.slot })}
-                          </span>
-                          {range ? (
-                            <span className="text-[11px] tabular-nums text-slate-400">{range.end}</span>
-                          ) : null}
-                        </span>
-                        <span className="relative flex w-3 shrink-0 justify-center">
-                          {index < scheduleToday.length - 1 ? (
-                            <span className="absolute top-3 h-full w-px bg-slate-200" />
-                          ) : null}
-                          <span
-                            className={cn(
-                              "relative z-10 mt-1 size-2.5 rounded-full ring-4 transition-colors duration-150",
-                              badge ? badge.dot : "bg-gold-400 ring-gold-300/25",
-                            )}
-                          />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-medium text-slate-800">
-                            {s.subject}
-                          </span>
-                          <span className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
-                            <Icon className="size-3 shrink-0 text-slate-600">
-                              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />
-                              <circle cx="12" cy="10" r="2.5" />
-                            </Icon>
-                            <span className="truncate">{s.room}</span>
-                            <span className="text-slate-500">·</span>
-                            {range ? (
-                              <LessonCountdown dayOfWeek={today} start={range.start} end={range.end} />
-                            ) : (
-                              <span className="text-slate-600">
-                                {translate(locale, "dashPairShort", { slot: s.slot })}
-                              </span>
-                            )}
-                          </span>
-                        </span>
-                        {badge ? (
-                          <Badge tone={badge.tone}>{translate(locale, badge.key)}</Badge>
-                        ) : (
-                          <Badge tone="slate">{dict.dashNotMarked}</Badge>
-                        )}
-                        <Icon className="size-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-brand-600">
-                          <path d="m9 18 6-6-6-6" />
-                        </Icon>
-                      </>
-                    );
-                    return (
-                      <li key={s.id}>
-                        <Link href={`/schedule/lesson/${s.id}`} className={rowClass}>
-                          {content}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ol>
-              )}
-            </CardBody>
-          </Card>
-          </Reveal>
-          <Reveal delay={300}>
-            <StatTile
-              href="/courses"
-              label={dict.dashUpcomingAssignments}
-              value={upcoming.length}
-              hint={dict.dashByDeadline}
-              tone="amber"
-              icon={
-                <Icon>
-                  <rect x="3" y="5" width="18" height="16" rx="2" />
-                  <path d="M16 3v4M8 3v4M3 11h18" />
-                </Icon>
-              }
-            />
-          </Reveal>
-        </div>
-
-        <Reveal delay={320}>
-            <Card className="transition-shadow duration-200">
-              <CardHeader
-                title={dict.dashUpcomingAssignments}
-                subtitle={dict.dashByDeadline}
-                action={
-                  <Badge tone="amber">
-                    {translate(locale, "dashCountShort", { count: upcoming.length })}
-                  </Badge>
-                }
-              />
-              <CardBody className="space-y-2">
-                {upcoming.length === 0 ? (
-                  <EmptyState
-                    title={dict.dashNoAssignmentsTitle}
-                    description={dict.dashNoAssignmentsDesc}
-                  />
-                ) : (
-                  upcoming.map((a) => {
-                    const due = a.dueAt ? new Date(a.dueAt) : null;
-                    const overdue = Boolean(due && due < now);
-                    const soon = Boolean(
-                      due && !overdue && due.getTime() - now.getTime() <= 3 * 24 * 60 * 60 * 1000,
-                    );
-                    const submitted = a.submissions.length > 0;
-                    return (
-                      <Link
-                        key={a.id}
-                        href={`/courses/${a.course.slug}/assignments/${a.id}`}
-                        className="flex items-start justify-between gap-3 rounded-xl border border-slate-100 p-3 transition-colors duration-150 hover:bg-slate-50"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-slate-800">{a.title}</p>
-                          <p className="mt-0.5 truncate text-xs text-slate-500">{a.course.title}</p>
-                        </div>
-                        <div className="flex shrink-0 flex-col items-end gap-1.5 max-sm:shrink">
-                          <DateChip overdue={overdue && !submitted} soon={soon && !submitted}>
-                            <Icon className="size-3">
-                              <circle cx="12" cy="12" r="9" />
-                              <path d="M12 7v5l3 2" />
-                            </Icon>
-                            {fmtDate(a.dueAt)}
-                          </DateChip>
-                          {submitted ? (
-                            <Badge tone="green">{dict.dashSubmitted}</Badge>
-                          ) : overdue ? (
-                            <Badge tone="rose">{dict.dashOverdue}</Badge>
-                          ) : soon ? (
-                            <Badge tone="amber">{dict.dashDueSoon}</Badge>
-                          ) : null}
-                        </div>
-                      </Link>
-                    );
-                  })
-                )}
-              </CardBody>
-            </Card>
-        </Reveal>
-      </div>
-
-      <Reveal delay={360} className="mt-6">
-        <Card className="transition-shadow duration-200">
-          <CardHeader
-            title={dict.dashMyCourses}
-                subtitle={translate(locale, "dashCoursesCountSubtitle", {
-                  count: enrollments.length,
-                })}
-                action={
-                  <Badge tone="slate">
-                    {translate(locale, "dashCountShort", { count: enrollments.length })}
-                  </Badge>
-                }
-              />
-              <CardBody className="grid gap-2 sm:grid-cols-2">
-                {enrollments.length === 0 ? (
-                  <div className="sm:col-span-2">
-                    <EmptyState
-                      title={dict.dashNoCoursesTitle}
-                      description={dict.dashNoCoursesDesc}
-                      action={
-                        <ButtonLink href="/courses" size="sm" variant="secondary">
-                          {dict.dashViewCourses}
-                        </ButtonLink>
-                      }
-                    />
-                  </div>
-                ) : (
-                  enrollments.map((e) => (
-                    <Link
-                      key={e.id}
-                      href={`/courses/${e.course.slug}`}
-                      className="group flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/40 p-3 transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:bg-white hover:shadow-card"
-                    >
-                      <span
-                        className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl text-xs font-semibold text-white shadow-sm"
-                        style={{ backgroundColor: e.course.coverColor }}
-                      >
-                        {initials(e.course.title)}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-slate-900">
-                          {e.course.title}
-                        </span>
-                        <span className="mt-0.5 block truncate text-xs text-slate-500">
-                          {e.course.teacher.name}
-                        </span>
-                      </span>
-                      <Icon className="size-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-brand-600">
-                        <path d="m9 18 6-6-6-6" />
-                      </Icon>
-                    </Link>
-                  ))
-                )}
-              </CardBody>
-            </Card>
-          </Reveal>
-
-      <StudentAnalyticsSection data={analytics} locale={locale} />
-    </>
+    <StudentOverview
+      firstName={firstName}
+      groupName={user.group?.name ?? null}
+      now={now}
+      locale={locale}
+      gpa={gpaData}
+      scheduleToday={scheduleToday}
+      analytics={analytics}
+      upcoming={upcoming}
+      assignmentStats={{ submitted: submittedTotal, total: assignmentTotal }}
+      lessonAttendance={lessonAttendance}
+      courses={courses}
+    />
   );
 }

@@ -5,6 +5,7 @@ import { cn, initials } from "@/lib/utils";
 import { Avatar, Badge, ButtonLink, Card, CardBody } from "@/components/ui";
 import { EnrollButton } from "@/components/catalog/enroll-button";
 import { useI18n } from "@/components/i18n/LocaleProvider";
+import { courseCoverStyle } from "@/components/courses/cover-tone";
 
 export type CatalogCourse = {
   id: string;
@@ -125,7 +126,7 @@ export function CatalogCourseCard({
     >
       <div
         className="relative isolate h-20 shrink-0 overflow-hidden"
-        style={{ background: `linear-gradient(125deg, ${course.coverColor} 0%, #131f3c 94%)` }}
+        style={courseCoverStyle(course.coverColor)}
       >
         <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_-10%,rgba(255,255,255,0.28),transparent_55%)]" />
         <span

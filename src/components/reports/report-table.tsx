@@ -5,8 +5,8 @@ import type { CourseReport } from "@/components/reports/report-data";
 
 function percentTone(value: number | null) {
   if (value === null) return "text-slate-500";
-  if (value >= 80) return "bg-emerald-50 text-emerald-700 ring-emerald-200/70";
-  if (value >= 60) return "bg-amber-50 text-amber-700 ring-amber-200/70";
+  if (value >= 80) return "bg-brand-50 text-brand-700 ring-brand-200/70";
+  if (value >= 60) return "bg-gold-300/15 text-gold-800 ring-gold-300/40";
   return "bg-rose-50 text-rose-700 ring-rose-200/70";
 }
 

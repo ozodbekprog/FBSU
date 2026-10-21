@@ -27,7 +27,7 @@ const RESULT_ITEMS: { key: GenerateCountKey; label: keyof Dictionary; hint: keyo
     key: "teachers",
     label: "admColTeachers",
     hint: "admGenTeachersHint",
-    tone: "from-sky-400 to-brand-700",
+    tone: "from-brand-400 to-brand-700",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 10 12 5 2 10l10 5 10-5z" />
@@ -39,7 +39,7 @@ const RESULT_ITEMS: { key: GenerateCountKey; label: keyof Dictionary; hint: keyo
     key: "groups",
     label: "admGroups",
     hint: "admGenGroupsHint",
-    tone: "from-violet-400 to-purple-700",
+    tone: "from-brand-300 to-brand-600",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="m12 2 9 5-9 5-9-5 9-5" />
@@ -52,7 +52,7 @@ const RESULT_ITEMS: { key: GenerateCountKey; label: keyof Dictionary; hint: keyo
     key: "students",
     label: "admStudents",
     hint: "admGenStudentsHint",
-    tone: "from-emerald-400 to-teal-600",
+    tone: "from-brand-500 to-brand-800",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -66,7 +66,7 @@ const RESULT_ITEMS: { key: GenerateCountKey; label: keyof Dictionary; hint: keyo
     key: "courses",
     label: "admCourses",
     hint: "admGenCoursesHint",
-    tone: "from-amber-300 to-gold-500",
+    tone: "from-gold-300 to-gold-500",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -78,7 +78,7 @@ const RESULT_ITEMS: { key: GenerateCountKey; label: keyof Dictionary; hint: keyo
     key: "scheduleEntries",
     label: "admGenSchedule",
     hint: "admGenScheduleHint",
-    tone: "from-rose-400 to-pink-600",
+    tone: "from-brand-600 to-brand-900",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4" width="18" height="17" rx="2.5" />
@@ -90,7 +90,7 @@ const RESULT_ITEMS: { key: GenerateCountKey; label: keyof Dictionary; hint: keyo
     key: "attendance",
     label: "admGenAttendance",
     hint: "admGenAttendanceHint",
-    tone: "from-teal-400 to-cyan-700",
+    tone: "from-brand-400 to-brand-800",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         <path d="M9 11l2 2 4-4" />

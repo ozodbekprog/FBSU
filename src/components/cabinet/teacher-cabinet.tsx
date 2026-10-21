@@ -160,10 +160,11 @@ export function TeacherSummaryCard({
 
   return (
     <Card className="mb-6 overflow-hidden">
-      <div className="relative overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-brand-700 p-6 text-white md:p-7">
+      <div className="app-hero relative overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-brand-700 p-6 text-white md:p-7">
         <span className="pointer-events-none absolute -right-16 -top-24 size-64 rounded-full bg-gold-400/10 blur-2xl" />
         <span className="pointer-events-none absolute -bottom-28 left-1/3 size-72 rounded-full bg-brand-400/10 blur-3xl" />
         <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+        <span className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-gold-400/90 via-gold-300/30 to-transparent" />
         <div className="relative">
           <div className="flex flex-wrap items-center gap-4">
             <Avatar name={name} className="size-14! text-base ring-4 ring-white/10" />
@@ -179,7 +180,7 @@ export function TeacherSummaryCard({
               </div>
             </div>
             <Badge
-              tone={faceEnrolled ? "green" : "amber"}
+              tone={faceEnrolled ? "gold" : "slate"}
               className="ring-1 ring-white/15 backdrop-blur"
             >
               {d.cabFace}: {faceEnrolled ? d.cabFaceOk : d.cabFaceNo}

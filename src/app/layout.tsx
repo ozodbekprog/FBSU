@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Manrope, Sora } from "next/font/google";
 import { PwaRegister } from "@/components/pwa/PwaRegister";
 import { CsrfBootstrap } from "@/components/csrf/csrf-bootstrap";
 import { getDictionary, getLocale } from "@/i18n";
@@ -7,8 +7,13 @@ import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+});
+
+const sora = Sora({
+  variable: "--font-sora",
   subsets: ["latin"],
 });
 
@@ -89,7 +94,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${manrope.variable} ${sora.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />

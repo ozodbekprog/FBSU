@@ -194,8 +194,8 @@ const STAT_META = {
     ),
   },
   courses: {
-    bar: "from-sky-400 via-brand-500 to-brand-900",
-    bubble: "from-sky-400 to-brand-700 shadow-sky-500/25",
+    bar: "from-brand-400 via-brand-600 to-brand-900",
+    bubble: "from-brand-400 to-brand-700 shadow-brand-700/25",
     icon: (
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -204,8 +204,8 @@ const STAT_META = {
     ),
   },
   groups: {
-    bar: "from-violet-400 via-purple-500 to-brand-800",
-    bubble: "from-violet-400 to-purple-700 shadow-purple-500/25",
+    bar: "from-brand-300 via-brand-500 to-brand-800",
+    bubble: "from-brand-500 to-brand-800 shadow-brand-800/25",
     icon: (
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="m12 2 9 5-9 5-9-5 9-5" />
@@ -215,8 +215,8 @@ const STAT_META = {
     ),
   },
   submissions: {
-    bar: "from-emerald-400 via-teal-500 to-brand-800",
-    bubble: "from-emerald-400 to-teal-600 shadow-emerald-500/25",
+    bar: "from-brand-500 via-brand-700 to-brand-900",
+    bubble: "from-brand-600 to-brand-900 shadow-brand-900/25",
     icon: (
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 2 11 13" />
@@ -225,8 +225,8 @@ const STAT_META = {
     ),
   },
   quizzes: {
-    bar: "from-amber-300 via-gold-400 to-gold-600",
-    bubble: "from-amber-300 to-gold-500 shadow-gold-500/25",
+    bar: "from-gold-300 via-gold-400 to-gold-600",
+    bubble: "from-gold-300 to-gold-600 shadow-gold-500/25",
     icon: (
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M9 11l2 2 4-4" />
@@ -531,7 +531,7 @@ export default async function AdminPage() {
               <CardHeader
                 title={dictionary.admChartTopCoursesTitle}
                 subtitle={dictionary.admChartTopCoursesSubtitle}
-                action={topCourse ? <Badge tone="purple">{topCourse.label}</Badge> : null}
+                action={topCourse ? <Badge tone="blue">{topCourse.label}</Badge> : null}
               />
               <CardBody className="flex flex-1 flex-col justify-center px-4 pb-4 pt-3">
                 <BarChart data={charts.topCourses} />

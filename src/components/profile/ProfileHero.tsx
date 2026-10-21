@@ -10,22 +10,24 @@ export const ROLE_TONE: Record<
   "brand" | "purple" | "slate" | "gold" | "green" | "blue"
 > = {
   ADMIN: "brand",
+  OWNER: "gold",
   REKTOR: "gold",
   PRO_RECTOR: "gold",
-  DEKAN: "purple",
+  DEKAN: "brand",
   KAFEDRA_MUDIRI: "blue",
   REGISTRAR: "brand",
   BUXGALTER: "gold",
-  TYUTOR: "green",
-  TEACHER: "purple",
+  TYUTOR: "blue",
+  TEACHER: "blue",
   STUDENT: "slate",
   XODIM: "slate",
-  OTA_ONA: "green",
+  OTA_ONA: "blue",
   NAZORATCHI: "slate",
 };
 
 export const ROLE_LABEL_KEY: Record<Role, keyof Dictionary> = {
   ADMIN: "mscRoleAdmin",
+  OWNER: "mscRoleAdmin",
   REKTOR: "mscRoleRector",
   PRO_RECTOR: "mscRoleProRector",
   DEKAN: "mscRoleDean",

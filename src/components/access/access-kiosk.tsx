@@ -31,6 +31,7 @@ type CameraErrorKey = "schCameraUnsupported" | "schCameraPermission" | "schCamer
 
 const ROLE_LABEL_KEY: Record<Role, keyof Dictionary> = {
   ADMIN: "mscRoleAdmin",
+  OWNER: "mscRoleAdmin",
   REKTOR: "mscRoleRector",
   PRO_RECTOR: "mscRoleProRector",
   DEKAN: "mscRoleDean",
@@ -210,7 +211,7 @@ export function AccessKiosk() {
               className={cn(
                 TAB_BASE,
                 direction === "IN"
-                  ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+                  ? "border-brand-600 bg-gradient-to-r from-brand-600 to-brand-800 text-white shadow-lg shadow-brand-900/30"
                   : "border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:bg-slate-50",
               )}
             >
@@ -223,7 +224,7 @@ export function AccessKiosk() {
               className={cn(
                 TAB_BASE,
                 direction === "OUT"
-                  ? "border-slate-900 bg-slate-900 text-white shadow-sm"
+                  ? "border-gold-500/70 bg-gold-500/15 text-gold-300 shadow-sm ring-1 ring-inset ring-gold-400/20"
                   : "border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:bg-slate-50",
               )}
             >

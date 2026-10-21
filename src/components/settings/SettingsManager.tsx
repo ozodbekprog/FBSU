@@ -30,10 +30,10 @@ type ToggleItem = {
 };
 
 const TOGGLE_TONES: Record<ToggleKey, string> = {
-  reminderBot: "from-sky-400 to-blue-600 shadow-sky-500/30",
-  deadlineReminder: "from-amber-300 to-gold-500 shadow-gold-500/30",
-  emailNotify: "from-rose-400 to-pink-600 shadow-rose-500/30",
-  showCharts: "from-emerald-400 to-teal-600 shadow-emerald-500/30",
+  reminderBot: "from-brand-500 to-brand-800 shadow-brand-500/30",
+  deadlineReminder: "from-gold-300 to-gold-600 shadow-gold-500/30",
+  emailNotify: "from-brand-400 to-brand-700 shadow-brand-500/30",
+  showCharts: "from-brand-600 to-brand-900 shadow-brand-900/30",
   scheduleListView: "from-brand-500 to-brand-800 shadow-brand-500/30",
 };
 
@@ -71,9 +71,9 @@ const TOGGLE_ICONS: Record<ToggleKey, ReactNode> = {
   ),
 };
 
-const HOUR_TONE = "from-violet-400 to-purple-600 shadow-purple-500/30";
+const HOUR_TONE = "from-gold-300 to-gold-600 shadow-gold-500/30";
 
-const TELEGRAM_TONE = "from-sky-400 to-blue-600 shadow-sky-500/30";
+const TELEGRAM_TONE = "from-brand-400 to-brand-800 shadow-brand-500/30";
 
 function SectionIcon({ children }: { children: ReactNode }) {
   return (
@@ -273,13 +273,13 @@ export default function SettingsManager({
           >
             {TOGGLE_ICONS[item.key]}
             {enabled ? (
-              <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-emerald-400 ring-2 ring-white" />
+              <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-gold-400 ring-2 ring-white" />
             ) : null}
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-semibold tracking-tight text-brand-950">{item.title}</p>
-              <Badge tone={enabled ? "green" : "slate"}>
+              <Badge tone={enabled ? "gold" : "slate"}>
                 {enabled ? t("mscSettingsEnabled") : t("mscSettingsDisabled")}
               </Badge>
             </div>
@@ -294,7 +294,7 @@ export default function SettingsManager({
             onClick={() => toggle(item)}
             className={cn(
               "relative inline-flex h-8 w-14 shrink-0 items-center rounded-full p-1 transition-[background-color,box-shadow,opacity] duration-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20",
-              enabled ? "bg-gradient-to-r from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/20" : "bg-slate-200",
+              enabled ? "bg-gradient-to-r from-brand-500 to-brand-700 shadow-lg shadow-brand-500/20 ring-1 ring-inset ring-gold-300/30" : "bg-slate-200",
               busy ? "cursor-wait opacity-70" : "cursor-pointer",
             )}
           >
@@ -309,7 +309,7 @@ export default function SettingsManager({
                   <path d="M21 12a9 9 0 1 1-6.2-8.6" />
                 </svg>
               ) : enabled ? (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-brand-800">
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
               ) : null}
@@ -324,7 +324,7 @@ export default function SettingsManager({
 
   return (
     <div className="space-y-8">
-      <div className="flex min-h-8 flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {notice ? (
           <span className="animate-fade-up inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3.5 py-1.5 text-sm font-medium text-emerald-700 ring-1 ring-inset ring-emerald-100">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -467,7 +467,7 @@ export default function SettingsManager({
                 <path d="M22 2 11 13" />
               </svg>
               {telegramLinked ? (
-                <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-emerald-400 ring-2 ring-white" />
+                <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-gold-400 ring-2 ring-white" />
               ) : null}
             </span>
             <div className="min-w-0 flex-1">

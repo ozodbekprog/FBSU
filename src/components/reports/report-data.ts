@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { normalizeQuizScore } from "@/lib/quiz-score";
 import type { AttendanceStatus, Role } from "@prisma/client";
 
 export type ReportStudent = {
@@ -170,12 +171,14 @@ export async function buildCourseReport(course: {
 
   const quizScores = new Map<string, number | null>();
   for (const quiz of quizzes) {
+    const maxScore = quiz.questions.reduce((sum, question) => sum + question.points, 0);
     for (const attempt of quiz.attempts) {
       if (!attempt.finishedAt || attempt.score === null) continue;
       const key = scoreKey(attempt.studentId, quiz.id);
       const current = quizScores.get(key);
-      if (current == null || attempt.score > current) {
-        quizScores.set(key, attempt.score);
+      const normalized = normalizeQuizScore(attempt.score, maxScore);
+      if (current == null || (normalized ?? 0) > current) {
+        quizScores.set(key, normalized);
       }
     }
   }
