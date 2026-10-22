@@ -51,7 +51,7 @@ export async function GET(request: Request) {
     } else {
       where.role = { in: [...REGISTRAR_MANAGED_ROLES] };
     }
-  } else if (role && ROLES.includes(role as Role)) {
+  } else if (role && (ROLES as readonly Role[]).includes(role as Role)) {
     where.role = role as Role;
   }
 

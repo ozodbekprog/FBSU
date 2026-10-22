@@ -67,8 +67,8 @@ function FarizaMark({ className }: { className?: string }) {
   );
 }
 
-function FarizaAvatar({ className, animate }: { className?: string; animate?: boolean }) {
-  return <FarizaMark className={"size-8 shrink-0 select-none " + (animate ? "animate-spin-slow " : "") + (className ?? "")} />;
+function FarizaAvatar({ className }: { className?: string }) {
+  return <FarizaMark className={"size-8 shrink-0 select-none " + (className ?? "")} />;
 }
 
 function SuggestionIcon({ index }: { index: number }) {
@@ -641,7 +641,7 @@ export function AssistantChat({ name, role, status }: { name: string; role: stri
               )}
               {busy ? (
                 <div className="flex items-center gap-3" role="status" aria-label={t("mscBugTyping")}>
-                  <FarizaAvatar animate />
+                  <FarizaAvatar />
                   <span className="flex items-center gap-1.5 py-2">
                     <span className="size-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.3s]" />
                     <span className="size-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.15s]" />

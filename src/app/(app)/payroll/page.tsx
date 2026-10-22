@@ -245,6 +245,7 @@ export default async function PayrollPage() {
         roleProRector: d.payRoleProRector,
         roleRector: d.payRoleRector,
         roleAdmin: d.payRoleAdmin,
+        roleOwner: d.roleOwner,
         roleRegistrar: d.payRoleRegistrar,
         roleTeacher: d.payRoleTeacher,
         roleStudent: d.payRoleStudent,

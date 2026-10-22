@@ -9,6 +9,7 @@ import type { SearchResults } from "./search-data";
 
 const ROLE_KEY: Record<Role, keyof Dictionary> = {
   ADMIN: "mscSrchRoleAdmin",
+  OWNER: "roleOwner",
   REKTOR: "mscSrchRoleRector",
   PRO_RECTOR: "mscSrchRoleProRector",
   DEKAN: "mscSrchRoleDean",
@@ -25,6 +26,7 @@ const ROLE_KEY: Record<Role, keyof Dictionary> = {
 
 const ROLE_TONES: Record<Role, string> = {
   ADMIN: "rose",
+  OWNER: "gold",
   REKTOR: "gold",
   PRO_RECTOR: "gold",
   DEKAN: "purple",
