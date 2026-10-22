@@ -1,4 +1,5 @@
 import { shell } from "./dict/uz/shell";
+import { fb } from "./dict/uz/fb";
 import { dash } from "./dict/uz/dash";
 import { crs } from "./dict/uz/crs";
 import { sch } from "./dict/uz/sch";
@@ -180,6 +181,7 @@ export const uz = {
   ...vid,
   ...res,
   ...ob,
+  ...fb,
   ...sec,
 };
 

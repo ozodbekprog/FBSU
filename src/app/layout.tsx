@@ -6,6 +6,8 @@ import { getDictionary, getLocale } from "@/i18n";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
+import "./fbsu.css";
+import "./fbsu-app.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -93,6 +95,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.documentElement.classList.add('fb-js');setTimeout(function(){if(!window.__fbMotion)document.documentElement.classList.add('fb-reveal-all')},2600);`,
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col">
         {/*

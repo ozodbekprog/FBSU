@@ -1,5 +1,6 @@
 import type { Dictionary } from "./uz";
 import { shell } from "./dict/ru/shell";
+import { fb } from "./dict/ru/fb";
 import { dash } from "./dict/ru/dash";
 import { crs } from "./dict/ru/crs";
 import { sch } from "./dict/ru/sch";
@@ -181,5 +182,6 @@ export const ru: Dictionary = {
   ...vid,
   ...res,
   ...ob,
+  ...fb,
   ...sec,
 };
