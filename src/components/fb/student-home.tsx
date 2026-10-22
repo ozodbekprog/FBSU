@@ -7,6 +7,8 @@ import { prisma } from "@/lib/prisma";
 import { GPA_CREDITS, getStudentGpa } from "@/app/api/gpa/data";
 import { isValidFaceDescriptor } from "@/modules/attendance/face";
 import { CheckInForm } from "@/components/attendance/check-in-form";
+import { GradeTrendChart } from "@/components/charts/GradeTrendChart";
+import { getStudentAnalytics } from "@/app/(app)/dashboard/analytics";
 import { FbMotion } from "@/components/fb/fb-motion";
 import { getDictionary, t as translate, type Dictionary, type Locale } from "@/i18n";
 import { cn, dayName, fmtDate, monthName } from "@/lib/utils";
@@ -96,7 +98,8 @@ export async function StudentHome({
     title: enrollment.course.title,
   }));
 
-  const [schedule, assignments, gpa, attendance, faceRow, announcements] = await Promise.all([
+  const [schedule, assignments, gpa, attendance, faceRow, announcements, studentAnalytics] =
+    await Promise.all([
     groupId
       ? prisma.scheduleEntry.findMany({
           where: { groupId },
@@ -140,7 +143,19 @@ export async function StudentHome({
       take: 3,
       select: { id: true, title: true, body: true },
     }),
+    getStudentAnalytics(userId, locale),
   ]);
+
+  const gradeTrend = studentAnalytics.gradeTrend;
+  const trendValues = gradeTrend.map((point) => point.value);
+  const trendAverage =
+    trendValues.length > 0
+      ? Math.round(trendValues.reduce((sum, value) => sum + value, 0) / trendValues.length)
+      : null;
+  const trendDelta =
+    trendValues.length > 1
+      ? Math.round(trendValues[trendValues.length - 1] - trendValues[trendValues.length - 2])
+      : null;
 
   const faceEnrolled = isValidFaceDescriptor(faceRow?.faceDescriptor);
   const gpaByCourse = new Map(gpa.courses.map((course) => [course.courseId, course]));
@@ -324,6 +339,38 @@ export async function StudentHome({
               </>
             ) : null}
           </div>
+          <nav className="fb-quick" aria-label={dict.dashQuickActions}>
+            <span className="fb-quick-label">{dict.dashQuickActions}</span>
+            <Link href="/attendance">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 11l3 3 8-8" />
+                <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9" />
+              </svg>
+              {dict.navAttendance}
+            </Link>
+            <Link href="/grades">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 20V11M10 20V5M16 20v-6M22 20H2" />
+              </svg>
+              {dict.navGradesStudent}
+            </Link>
+            <Link href="/my-qr">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                <path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20h1" />
+              </svg>
+              {dict.accMyQr}
+            </Link>
+            <Link href="/assistant">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m12 3 1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3Z" />
+                <path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z" />
+              </svg>
+              {dict.navAssistant}
+            </Link>
+          </nav>
         </div>
         <div className="fb-head-actions">
           <Link className="fb-btn" href="/transcript">
@@ -478,7 +525,9 @@ export async function StudentHome({
             style={{ "--to": attendancePct } as CSSProperties}
             aria-hidden="true"
           >
-            <b>{attendancePct}%</b>
+            <b>
+              <i data-fb-count={attendancePct}>{attendancePct}</i>%
+            </b>
           </div>
         </div>
 
@@ -618,6 +667,40 @@ export async function StudentHome({
                 })}
               </div>
             )}
+          </section>
+
+          <section className="fb-card fb-chart" data-fb-reveal data-fb-delay="200">
+            <div className="fb-card-head">
+              <div>
+                <h3>{translate(locale, "dashGradeTrendTitle")}</h3>
+                <span className="fb-tagline">{translate(locale, "dashGradeTrendSubtitle")}</span>
+              </div>
+              <div className="fb-chart-meta">
+                {trendAverage != null ? (
+                  <span className="fb-chart-pill">
+                    {translate(locale, "grdAverage")} {trendAverage}%
+                  </span>
+                ) : null}
+                {trendDelta != null ? (
+                  <span className={cn("fb-chart-pill", trendDelta >= 0 ? "up" : "down")}>
+                    {trendDelta >= 0 ? "▲" : "▼"} {Math.abs(trendDelta)}%
+                  </span>
+                ) : null}
+                <Link className="fb-more" href="/grades">
+                  {dict.fbdCardGrades}
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+            <div className="fb-chart-body">
+              {gradeTrend.length > 0 ? (
+                <GradeTrendChart data={gradeTrend} height={170} />
+              ) : (
+                <p className="fb-chart-empty">{translate(locale, "dashGradeTrendEmpty")}</p>
+              )}
+            </div>
           </section>
 
           <section className="fb-card" data-fb-reveal data-fb-delay="220">
@@ -771,7 +854,9 @@ export async function StudentHome({
                 aria-hidden="true"
               >
                 <span className="fb-donut-in">
-                  <b>{attendancePct}%</b>
+                  <b>
+                    <i data-fb-count={attendancePct}>{attendancePct}</i>%
+                  </b>
                   <span>{dict.fbdAttendanceOverall}</span>
                 </span>
               </div>
