@@ -2,8 +2,8 @@ import { cn } from "@/lib/utils";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 
 const RING_TONES = {
-  high: { from: "#34d399", to: "#059669", glow: "bg-emerald-400/25" },
-  mid: { from: "#e3c76a", to: "#c9a227", glow: "bg-gold-300/35" },
+  high: { from: "#e3c76a", to: "#a9871f", glow: "bg-gold-300/35" },
+  mid: { from: "#5373b8", to: "#1d3460", glow: "bg-brand-300/30" },
   low: { from: "#fb7185", to: "#e11d48", glow: "bg-rose-400/25" },
   none: { from: "#cbd5e1", to: "#e2e8f0", glow: "bg-slate-200/40" },
 };
@@ -37,7 +37,7 @@ export async function GradeRing({
       className={cn("relative inline-flex items-center justify-center", className)}
       style={{ width: size, height: size }}
     >
-      <span className={cn("absolute inset-3 rounded-full blur-xl animate-pulse", tone.glow)} />
+      <span className={cn("absolute inset-3 rounded-full blur-xl", tone.glow)} />
       <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/70 to-transparent" />
       <svg
         viewBox="0 0 120 120"
