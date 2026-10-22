@@ -18,11 +18,14 @@ import {
 import { cn, fmtDateTime } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/components/i18n/LocaleProvider";
+import { remainingAfterPayment, studentTotals } from "./debt";
 
 export type FinanceStudentOption = {
   id: string;
   name: string;
   groupName: string | null;
+  facultyId: string | null;
+  facultyName: string | null;
 };
 
 export type FinanceContractItem = {
@@ -55,6 +58,8 @@ export type FinanceStats = {
   contractTotal: number;
   paidTotal: number;
   debtTotal: number;
+  overpaidTotal: number;
+  debtorCount: number;
 };
 
 const YEARS = [2024, 2025, 2026, 2027];
@@ -91,12 +96,15 @@ export default function FinanceBoard({
   payments,
   canManage,
   stats,
+  facultyRates = {},
 }: {
   contracts: FinanceContractItem[];
   students: FinanceStudentOption[];
   payments: FinancePaymentItem[];
   canManage: boolean;
   stats: FinanceStats;
+  /** facultyId -> belgilangan shartnoma summa (avtomatik to'ldirish uchun). */
+  facultyRates?: Record<string, number>;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -106,7 +114,9 @@ export default function FinanceBoard({
     return YEARS.includes(current) ? String(current) : String(YEARS[YEARS.length - 1]);
   });
   const [studentId, setStudentId] = useState("");
+  const [facultyFilter, setFacultyFilter] = useState("");
   const [amount, setAmount] = useState("");
+  const [amountTouched, setAmountTouched] = useState(false);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,7 +134,50 @@ export default function FinanceBoard({
       .filter((contract) => contract.year === Number(year))
       .map((contract) => contract.studentId),
   );
+
   const availableStudents = students.filter((student) => !contractedIds.has(student.id));
+
+  // Formada tanlanadigan fakultetlar (shartnomasi yo'q talabalari bor).
+  const facultyOptions = (() => {
+    const ids = new Set(
+      students
+        .filter((student) => student.facultyId && !contractedIds.has(student.id))
+        .map((student) => student.facultyId as string),
+    );
+    return [...ids]
+      .map((id) => ({
+        id,
+        name: students.find((student) => student.facultyId === id)?.facultyName ?? id,
+        count: students.filter(
+          (student) => student.facultyId === id && !contractedIds.has(student.id),
+        ).length,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  })();
+
+  const visibleStudents = facultyFilter
+    ? availableStudents.filter((student) => student.facultyId === facultyFilter)
+    : availableStudents;
+
+  // Tanlangan talabaning fakultetiga admin belgilagan summa.
+  // Foydalanuvchi maydonu o'zgartirgan bo'lsa — ustiga yozmaymiz.
+  const suggestedAmount = (() => {
+    if (amountTouched) return null;
+    const student = students.find((item) => item.id === studentId);
+    if (!student?.facultyId) return null;
+    const rate = facultyRates[student.facultyId];
+    return rate && rate > 0 ? rate : null;
+  })();
+
+  // Tanlangan talabaning jami shartnoma / to'lov / qarz ko'rsatkichlari
+  const paymentTotals = paymentStudent
+    ? studentTotals(contracts, paymentStudent.id)
+    : null;
+
+  // Kiritilayotgan summa hisobga olingandan keyingi qarz (jonli)
+  const debtAfterPayment = paymentTotals
+    ? remainingAfterPayment(paymentTotals.debt, Number(payAmount))
+    : null;
 
   async function createContract(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -207,21 +260,26 @@ export default function FinanceBoard({
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat
           label={t("finContract")}
           value={money(stats.contractCount)}
           hint={money(stats.contractTotal)}
         />
         <Stat label={t("finPaid")} value={money(stats.paidTotal)} />
-        <Stat label={t("finDebt")} value={money(stats.debtTotal)} />
+        <Stat
+          label={t("finCurrentDebt")}
+          value={money(stats.debtTotal)}
+          hint={`${stats.debtorCount} / ${stats.contractCount}`}
+        />
+        <Stat label={t("finOverpaid")} value={money(stats.overpaidTotal)} />
       </div>
 
       {canManage ? (
         <Card>
           <CardHeader title={t("finAddContract")} />
           <CardBody>
-            <form className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" onSubmit={createContract}>
+            <form className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5" onSubmit={createContract}>
               <div>
                 <Label>{t("finYear")}</Label>
                 <Select value={year} onChange={(e) => setYear(e.target.value)} required>
@@ -233,14 +291,37 @@ export default function FinanceBoard({
                 </Select>
               </div>
               <div>
+                <Label>{t("finFaculty")}</Label>
+                <Select
+                  value={facultyFilter}
+                  onChange={(e) => {
+                    setFacultyFilter(e.target.value);
+                    setStudentId("");
+                    setAmount("");
+                    setAmountTouched(false);
+                  }}
+                >
+                  <option value="">{t("finFacultyAll")}</option>
+                  {facultyOptions.map((faculty) => (
+                    <option key={faculty.id} value={faculty.id}>
+                      {faculty.name} ({faculty.count})
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div>
                 <Label>{t("grdStudent")}</Label>
                 <Select
                   value={studentId}
-                  onChange={(e) => setStudentId(e.target.value)}
+                  onChange={(e) => {
+                    setStudentId(e.target.value);
+                    setAmount("");
+                    setAmountTouched(false);
+                  }}
                   required
                 >
                   <option value="">—</option>
-                  {availableStudents.map((student) => (
+                  {visibleStudents.map((student) => (
                     <option key={student.id} value={student.id}>
                       {student.name}
                       {student.groupName ? ` — ${student.groupName}` : ""}
@@ -254,8 +335,11 @@ export default function FinanceBoard({
                   type="number"
                   min={0}
                   step={1}
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  value={amountTouched || !suggestedAmount ? amount : String(suggestedAmount)}
+                  onChange={(e) => {
+                    setAmount(e.target.value);
+                    setAmountTouched(true);
+                  }}
                   required
                 />
               </div>
@@ -286,6 +370,27 @@ export default function FinanceBoard({
         <Card>
           <CardHeader title={t("finAddPayment")} subtitle={paymentStudent.name} />
           <CardBody>
+            {paymentTotals ? (
+              <div className="mb-5 grid gap-3 sm:grid-cols-3">
+                <Stat
+                  label={t("finAmount")}
+                  value={money(paymentTotals.amount)}
+                  hint={String(paymentTotals.count)}
+                />
+                <Stat label={t("finPaid")} value={money(paymentTotals.paid)} />
+                <Stat
+                  label={t("finCurrentDebt")}
+                  value={money(paymentTotals.debt)}
+                  hint={
+                    paymentTotals.debt > 0
+                      ? undefined
+                      : paymentTotals.debt < 0
+                        ? t("finOverpaid")
+                        : undefined
+                  }
+                />
+              </div>
+            ) : null}
             <form
               id="finance-payment-form"
               className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
@@ -329,6 +434,22 @@ export default function FinanceBoard({
                 </Button>
               </div>
             </form>
+            {debtAfterPayment !== null ? (
+              <p
+                className={cn(
+                  "mt-3 rounded-xl px-3.5 py-2.5 text-sm",
+                  debtAfterPayment > 0
+                    ? "bg-rose-50 text-rose-700"
+                    : "bg-emerald-50 text-emerald-700",
+                )}
+              >
+                {t("finAfterPayment")}:{" "}
+                <span className="font-semibold">
+                  {debtAfterPayment > 0 ? money(debtAfterPayment) : t("finOverpaid")}
+                  {debtAfterPayment <= 0 ? ` (${money(Math.abs(debtAfterPayment))})` : ""}
+                </span>
+              </p>
+            ) : null}
             {paySaved ? (
               <p className="mt-3 rounded-xl bg-emerald-50 px-3.5 py-2.5 text-sm text-emerald-700">
                 {t("finSaved")}

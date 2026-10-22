@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { jwtVerify, SignJWT } from "jose";
+import { jwtVerify } from "jose";
 
 /**
  * Fast auth pre-check for protected app routes.
@@ -64,16 +64,18 @@ const CSRF_SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
  */
 const CSRF_EXEMPT_API = ["/api/csrf", "/api/health"];
 
-function csrfSecret(): Uint8Array {
+function csrfSecret(): Uint8Array | null {
   const secret = process.env.CSRF_SECRET || process.env.AUTH_SECRET;
-  if (!secret) return new TextEncoder().encode("");
+  if (!secret) return null;
   return new TextEncoder().encode(secret);
 }
 
 async function isValidCsrf(token: string | undefined, cookie: string | undefined): Promise<boolean> {
   if (!token || !cookie || token !== cookie) return false;
+  const secret = csrfSecret();
+  if (!secret) return false;
   try {
-    await jwtVerify(token, csrfSecret());
+    await jwtVerify(token, secret, { algorithms: ["HS256"] });
     return true;
   } catch {
     return false;
@@ -93,7 +95,7 @@ async function enforceCsrf(request: NextRequest): Promise<NextResponse | null> {
 
   const { pathname } = request.nextUrl;
   if (!pathname.startsWith("/api/")) return null;
-  if (CSRF_EXEMPT_API.some((prefix) => pathname.startsWith(prefix))) return null;
+  if (CSRF_EXEMPT_API.some((prefix) => pathname === prefix)) return null;
 
   const ok = await isValidCsrf(
     request.headers.get("x-csrf-token") ?? undefined,
@@ -132,6 +134,45 @@ function looksLikeSessionCookie(value: string | undefined): boolean {
 }
 
 /**
+ * Exam-only rejim: `fbsu-exam.vercel.app` (va EXAM_HOSTS ro'yxatidagi
+ * domenlar) faqat imtihonga oid sahifalarni ko'rsatadi. Boshqa har qanday
+ * LMS yo'li "/" ga qaytariladi, "/" esa imtihon bosh sahifasiga (rewrite
+ * /e) ochiladi. Shu tarzda exam domenida LMS menyusi ko'rinmaydi.
+ */
+const EXAM_HOSTS = (process.env.EXAM_HOSTS ?? "fbsu-exam.vercel.app")
+  .split(",")
+  .map((host) => host.trim().toLowerCase())
+  .filter(Boolean);
+
+const EXAM_ALLOWED_EXACT = new Set(["/login", "/register", "/forgot-password", "/reset-password"]);
+const EXAM_ALLOWED_SECTIONS = ["/e", "/exam", "/secure-exams", "/nazorat", "/quizzes"];
+const EXAM_ALLOWED_PREFIXES = ["/api/", "/_next/", "/uploads/", "/verify/"];
+
+function isExamHost(host: string | null): boolean {
+  if (!host) return false;
+  return EXAM_HOSTS.includes(host.toLowerCase());
+}
+
+function examRequestHost(request: NextRequest): string | null {
+  const raw = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  if (!raw) return null;
+  const first = raw.split(",")[0]?.trim();
+  return first || null;
+}
+
+function isExamHostPath(pathname: string): boolean {
+  if (EXAM_ALLOWED_EXACT.has(pathname)) return true;
+  if (
+    EXAM_ALLOWED_SECTIONS.some(
+      (section) => pathname === section || pathname.startsWith(`${section}/`),
+    )
+  ) {
+    return true;
+  }
+  return EXAM_ALLOWED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+/**
  * Role-gated pages: the proxy verifies the session JWT and answers with a real
  * 307 instead of a streamed page redirect. Real authorization still lives in
  * the page (`requireUser`), this only makes the gate server-side.
@@ -139,17 +180,20 @@ function looksLikeSessionCookie(value: string | undefined): boolean {
 const ROLE_GATED: Record<string, string[]> = {
   "/approvals": ["ADMIN", "REGISTRAR", "REKTOR"],
   "/monitoring": ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR"],
+  "/nazorat": ["ADMIN", "NAZORATCHI"],
 };
 
-function sessionSecret(): Uint8Array {
+function sessionSecret(): Uint8Array | null {
   const secret = process.env.AUTH_SECRET;
-  if (!secret) return new TextEncoder().encode("");
+  if (!secret) return null;
   return new TextEncoder().encode(secret);
 }
 
 async function sessionRole(token: string): Promise<string | null> {
+  const secret = sessionSecret();
+  if (!secret) return null;
   try {
-    const { payload } = await jwtVerify(token, sessionSecret());
+    const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] });
     return typeof payload.role === "string" ? payload.role : null;
   } catch {
     return null;
@@ -162,6 +206,32 @@ export async function proxy(request: NextRequest) {
   // State-changing API calls are CSRF-checked here before anything else runs.
   const csrfError = await enforceCsrf(request);
   if (csrfError) return csrfError;
+
+  // Exam domeni: faqat imtihonga oid yo'llar; qolgani "/" ga qaytadi.
+  if (isExamHost(examRequestHost(request))) {
+    if (pathname === "/") {
+      const session = request.cookies.get(SESSION_COOKIE)?.value;
+      if (!looksLikeSessionCookie(session)) {
+        return NextResponse.redirect(new URL("/login?next=%2Fe", request.url), 307);
+      }
+      return NextResponse.rewrite(new URL("/e", request.url));
+    }
+    if (!isExamHostPath(pathname)) {
+      return NextResponse.redirect(new URL("/", request.url), 307);
+    }
+    if (pathname === "/secure-exams" || pathname.startsWith("/secure-exams/")) {
+      const role = await sessionRole(request.cookies.get(SESSION_COOKIE)?.value ?? "");
+      if (role !== "TEACHER" && role !== "ADMIN") {
+        return NextResponse.redirect(new URL("/", request.url), 307);
+      }
+    }
+    if (pathname === "/nazorat" || pathname.startsWith("/nazorat/")) {
+      const role = await sessionRole(request.cookies.get(SESSION_COOKIE)?.value ?? "");
+      if (role !== "ADMIN" && role !== "NAZORATCHI") {
+        return NextResponse.redirect(new URL("/", request.url), 307);
+      }
+    }
+  }
 
   // Public pages and static/API assets never need the cookie gate.
   if (isPublicPath(pathname)) return NextResponse.next();
@@ -191,10 +261,10 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   /**
-   * `/api/**` is now matched too: the proxy enforces CSRF on state-changing API
-   * calls before any handler runs, and returns `NextResponse.next()` for public
-   * API paths so it never interferes with routing. `.*\..*` still excludes
-   * static files, which need no gate.
+   * Every `/api/` path is matched now — even ones containing dots — so the
+   * proxy can enforce CSRF on state-changing API calls before any handler
+   * runs. Non-API static files (`.*\..*`) are still excluded: they need no
+   * gate.
    */
-  matcher: ["/((?!_next|favicon.ico|.*\\..*).*)"],
+  matcher: ["/(api/.*|(?!_next|favicon.ico|.*\\..*).*)"],
 };

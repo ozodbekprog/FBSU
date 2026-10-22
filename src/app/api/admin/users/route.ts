@@ -4,12 +4,13 @@ import type { Prisma, Role } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { userSelect } from "./select";
+import { textMatches } from "@/lib/encrypted-search";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
 import { getClientIp as getClientIpFromHeaders } from "@/lib/client-ip";
 
-const ROLES = ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "BUXGALTER", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA"] as const;
+const ROLES = ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "BUXGALTER", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA", "NAZORATCHI"] as const;
 
 const REGISTRAR_MANAGED_ROLES: readonly Role[] = ["STUDENT", "TEACHER"];
 
@@ -44,12 +45,6 @@ export async function GET(request: Request) {
   const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
 
   const where: Prisma.UserWhereInput = {};
-  if (q) {
-    where.OR = [
-      { name: { contains: q, mode: "insensitive" } },
-      { email: { contains: q, mode: "insensitive" } },
-    ];
-  }
   if (user.role === "REGISTRAR") {
     if (role && REGISTRAR_MANAGED_ROLES.includes(role as Role)) {
       where.role = role as Role;
@@ -60,13 +55,13 @@ export async function GET(request: Request) {
     where.role = role as Role;
   }
 
-  const users = await prisma.user.findMany({
+  const all = await prisma.user.findMany({
     where,
     select: userSelect,
     orderBy: { createdAt: "desc" },
-    skip: (page - 1) * PAGE_SIZE,
-    take: PAGE_SIZE,
   });
+  const matched = q ? all.filter((row) => textMatches(q, [row.name, row.email])) : all;
+  const users = matched.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return Response.json({ ok: true, data: users });
 }
@@ -128,7 +123,7 @@ export async function POST(request: Request) {
     if (!group) return Response.json({ ok: false, error: "Guruh topilmadi" }, { status: 400 });
   }
 
-  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+  const passwordHash = await bcrypt.hash(parsed.data.password, 12);
   const created = await prisma.user.create({
     data: {
       name: parsed.data.name,

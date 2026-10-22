@@ -101,6 +101,7 @@ async function main() {
     { email: "l.nazarova@ttpu.uz", name: "L. Nazarova", role: "TEACHER", groupId: null },
     { email: "o.makhmudov@ttpu.uz", name: "O. Makhmudov", role: "TEACHER", groupId: null },
     { email: "kh.khamidulla@ttpu.uz", name: "KH. Khamidulla", role: "TEACHER", groupId: null },
+    { email: "t.prog@ttpu.uz", name: "D. Karimberdiyev", role: "TEACHER", groupId: null },
     { email: "ozodbek@ttpu.uz", name: "Ozodbek Hoshimov", role: "STUDENT", groupId: group.id },
     { email: "student2@ttpu.uz", name: "Aziza Karimova", role: "STUDENT", groupId: group.id },
     { email: "student3@ttpu.uz", name: "Bekzod Tursunov", role: "STUDENT", groupId: group.id },

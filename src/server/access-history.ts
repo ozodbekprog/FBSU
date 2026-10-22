@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { textMatches } from "@/lib/encrypted-search";
 import {
   ACCESS_HISTORY_PAGE_SIZE,
   accessHistoryWhere,
@@ -12,6 +13,15 @@ export async function getAccessHistory(
   now: Date = new Date(),
 ): Promise<AccessHistoryResult> {
   const where = accessHistoryWhere(filters, now);
+
+  if (filters.q) {
+    const users = await prisma.user.findMany({ select: { id: true, name: true } });
+    const ids = users
+      .filter((row) => textMatches(filters.q, [row.name]))
+      .map((row) => row.id);
+    delete where.user;
+    where.userId = { in: ids };
+  }
 
   const [total, logs, todayLogs] = await Promise.all([
     prisma.accessLog.count({ where }),

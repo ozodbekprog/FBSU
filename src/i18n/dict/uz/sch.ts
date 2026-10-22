@@ -472,4 +472,8 @@ export const sch = {
   schLessonCapacity: "Sig'imi",
   schLessonEquipment: "Jihozlar",
   schLessonNoRoomInfo: "Bino haqida ma'lumot kiritilmagan",
+
+  schEduPageSyncDone:
+    "Sinxronlandi: {created} yangi dars, {updated} yangilangan, {removed} o'chirilgan · {groups} guruh, {teachers} o'qituvchi, {subjects} fan, {rooms} xona · {manual} eski yozuv tozalandi",
+  schEduPageSyncError: "Sinxronlashda xatolik",
 };

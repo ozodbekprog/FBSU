@@ -1,5 +1,6 @@
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
@@ -14,6 +15,18 @@ const patchSchema = z.object({
   note: z.string().trim().max(1000).nullable().optional(),
   action: z.enum(["enroll"]).optional(),
 });
+
+const TEMP_PASSWORD_LENGTH = 10;
+const TEMP_PASSWORD_ALPHABET = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+function generateTempPassword() {
+  const bytes = randomBytes(TEMP_PASSWORD_LENGTH);
+  let password = "";
+  for (let index = 0; index < TEMP_PASSWORD_LENGTH; index += 1) {
+    password += TEMP_PASSWORD_ALPHABET[bytes[index] % TEMP_PASSWORD_ALPHABET.length];
+  }
+  return password;
+}
 
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -54,7 +67,8 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     if (existing) {
       return Response.json({ ok: false, error: "Bu email allaqachon band" }, { status: 409 });
     }
-    const passwordHash = await bcrypt.hash("ttpu1234", 10);
+    const tempPassword = generateTempPassword();
+    const passwordHash = await bcrypt.hash(tempPassword, 12);
     const student = await prisma.user.create({
       data: {
         email,
@@ -69,7 +83,10 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       data: { status: "ENROLLED", studentId: student.id },
       include: { program: { select: { id: true, name: true } }, student: { select: { id: true, name: true } } },
     });
-    return Response.json({ ok: true, data: updated });
+    return Response.json(
+      { ok: true, data: { ...updated, tempPassword } },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   }
 
   const updated = await prisma.admissionApplication.update({

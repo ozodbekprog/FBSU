@@ -20,6 +20,7 @@ const ROLE_KEY: Record<Role, keyof Dictionary> = {
   STUDENT: "mscSrchRoleStudent",
   XODIM: "mscSrchRoleStaff",
   OTA_ONA: "mscSrchRoleParent",
+  NAZORATCHI: "roleNazoratchi",
 };
 
 const ROLE_TONES: Record<Role, string> = {
@@ -35,6 +36,7 @@ const ROLE_TONES: Record<Role, string> = {
   STUDENT: "slate",
   XODIM: "slate",
   OTA_ONA: "green",
+  NAZORATCHI: "slate",
 };
 
 const MATERIAL_TYPE_KEY: Record<MaterialType, keyof Dictionary> = {

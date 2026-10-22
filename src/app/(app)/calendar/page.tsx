@@ -6,7 +6,7 @@ import { getLocale, t } from "@/i18n";
 export default async function CalendarPage() {
   const user = await requireUser();
   const locale = await getLocale();
-  const canManage = user.role === "TEACHER" || user.role === "ADMIN";
+  const canManage = user.role === "ADMIN";
   return (
     <>
       <PageHeader

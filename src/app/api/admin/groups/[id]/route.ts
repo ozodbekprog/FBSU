@@ -8,6 +8,7 @@ const patchSchema = z.object({
   name: z.string().trim().min(2).max(60).optional(),
   year: z.number().int().min(2000).max(2100).nullable().optional(),
   curatorId: z.string().trim().min(1).nullable().optional(),
+  edupageName: z.string().trim().min(1).max(60).nullable().optional(),
 });
 
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -49,11 +50,23 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     }
   }
 
+  if (parsed.data.edupageName) {
+    const clash = await prisma.group.findFirst({
+      where: { edupageName: parsed.data.edupageName, id: { not: id } },
+      select: { id: true },
+    });
+    if (clash) {
+      return Response.json({ ok: false, error: "Bu EduPage sinfi boshqa guruhga bog'langan" }, { status: 409 });
+    }
+  }
+
   const updated = await prisma.group.update({
     where: { id },
     data: {
       name: parsed.data.name,
       year: parsed.data.year === undefined ? undefined : parsed.data.year,
+      edupageName:
+        parsed.data.edupageName === undefined ? undefined : parsed.data.edupageName,
       curator:
         parsed.data.curatorId === undefined
           ? undefined
@@ -73,6 +86,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       name: parsed.data.name ?? undefined,
       previousCuratorId: group.curatorId,
       curatorId: parsed.data.curatorId === undefined ? undefined : parsed.data.curatorId,
+      edupageName: parsed.data.edupageName ?? undefined,
     },
   });
 

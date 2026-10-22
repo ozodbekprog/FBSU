@@ -11,6 +11,7 @@ import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 import { LogoutForm } from "@/components/auth/logout-form";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { drawerIcon } from "@/components/nav/nav-drawer-icons";
+import { isNavActive, resolveActiveHref } from "@/components/nav/nav-active";
 import { cn } from "@/lib/utils";
 
 function MenuIcon() {
@@ -55,6 +56,10 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
   const [open, setOpen] = useState(false);
   const mounted = useIsClient();
   const pathname = usePathname();
+  const activeHref = resolveActiveHref(
+    pathname,
+    groups.flatMap((group) => group.links.map((link) => link.href)),
+  );
   const [prevPathname, setPrevPathname] = useState(pathname);
   if (prevPathname !== pathname) {
     setPrevPathname(pathname);
@@ -127,7 +132,7 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
               </p>
               <div className="space-y-0.5">
                 {group.links.map((l) => {
-                  const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
+                  const active = isNavActive(pathname, activeHref, l.href);
                   const icon = drawerIcon(l.href);
                   return (
                     <Link

@@ -471,4 +471,8 @@ export const sch = {
   schLessonCapacity: "Capacity",
   schLessonEquipment: "Equipment",
   schLessonNoRoomInfo: "No building info added",
+
+  schEduPageSyncDone:
+    "Synced: {created} new lessons, {updated} updated, {removed} removed · {groups} groups, {teachers} teachers, {subjects} subjects, {rooms} rooms · {manual} manual entries cleaned",
+  schEduPageSyncError: "Sync failed",
 };

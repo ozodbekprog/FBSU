@@ -33,6 +33,9 @@ Setup skripti: kutubxonalar + PostgreSQL (user-space, port 5433) + `.env` + migr
 - **Topshiriqlar** — topshirish, muddat, baholash, feedback
 - **Testlar** — 3 xil savol turi, avtomatik baholash, urinishlar
 - **Jadval** — haftalik dars jadvali, guruh bo'yicha
+- **EduPage avto jadval** — [ttpu.edupage.org](https://ttpu.edupage.org/timetable/) dan
+  avtomatik olinadi (har 15 daqiqada yangilanadi), `Group.edupageName` orqali guruhga
+  bog'lanadi va bazaga sinxronlanadi
 - **Davomat** — belgilash va statistika
 - **Baholar** — talaba va o'qituvchi jurnali
 - **Admin panel** — foydalanuvchilar, guruhlar, kurslar
@@ -165,6 +168,28 @@ curl -fsS https://lms.ttpu.uz/api/health
 
 Health javobi: `{"ok":true,"data":{"status":"healthy","db":true,...}}`. `enable` qilingani uchun
 rebootdan keyin servislar o'zi ko'tariladi.
+
+## EduPage integratsiyasi
+
+Manba: `https://ttpu.edupage.org/timetable/` (aSc EduPage, ommaviy jadval — login kerak emas).
+
+- Ko'rinadigan joylar: `/schedule` (dars jadvali), `/admin/users` (o'qituvchilar),
+  `/admin/groups`, `/admin/dictionaries` (fanlar), `/rooms` (xonalar)
+- Sinxron boshqaruvi: `/admin/import` dagi "EduPage sinxronizatsiyasi" kartasi
+  (oxirgi sinxron, statistika, "Hozir yangilash"); `Jadval` sahifasi ochilganda
+  30 daqiqadan eski bo'lsa fonda avtomatik yangilanadi
+- API: `GET /api/edupage/timetable?class=<sinf>` (auth), `scope=all` bilan barcha sinflar;
+  `POST /api/edupage/sync` — ADMIN/REGISTRAR (CSRF) yoki `Authorization: Bearer $CRON_SECRET`
+- Guruh bog'lash: `PATCH /api/admin/groups/<id> { "edupageName": "AI2-26" }`
+  (mos kelmagan sinf uchun guruh avtomatik yaratiladi)
+- Sinxron mos kelmagan sinflar uchun guruhni **o'zi yaratadi** va o'sha guruhlardagi
+  eski qo'lda/seed jadval yozuvlarini tozalaydi (`source = null`) — manba (EduPage)
+  yagona haqiqat bo'lib qoladi
+- O'qituvchilar (role `TEACHER`), fanlar (rang bilan) va xonalar ham ko'chiriladi;
+  jadval yozuvlari `teacherId` / `subjectId` ga bog'lanadi.
+  Import qilingan o'qituvchi paroli tasodifiy — admin parolni yangilaguncha kira olmaydi
+- Sozlamalar (ixtiyoriy): `EDUPAGE_BASE_URL` — boshqa maktab domeni uchun;
+  `EDUPAGE_SYNC_SECRET` / `CRON_SECRET` — cron endpoint himoyasi
 
 ## Hujjatlar
 

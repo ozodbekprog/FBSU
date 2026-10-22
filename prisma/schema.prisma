@@ -20,6 +20,7 @@ enum Role {
   STUDENT
   XODIM
   OTA_ONA
+  NAZORATCHI
 }
 
 /// Oylik to'lovining bosqichlar.
@@ -116,6 +117,8 @@ model User {
   tasksAssigned        WorkTask[]            @relation("WorkTaskAssignee")
   tasksCreated         WorkTask[]            @relation("WorkTaskCreator")
   quizAttempts         QuizAttempt[]
+  secureExamsCreated   SecureExam[]          @relation("SecureExamCreator")
+  secureExamRuns       SecureExamRun[]       @relation("SecureExamStudent")
   notifications        Notification[]
 
   announcements        Announcement[]
@@ -125,6 +128,9 @@ model User {
   certificatesReceived Certificate[]  @relation("CertificateStudent")
   bonusPointsReceived  BonusPoint[]   @relation("BonusPointStudent")
   bonusPointsAwarded   BonusPoint[]   @relation("BonusPointAwardedBy")
+  teacherPointsReceived TeacherPoint[]   @relation("TeacherPointStudent")
+  teacherPointsAwarded   TeacherPoint[]   @relation("TeacherPointAwardedBy")
+  attendancePointConfigs AttendancePointConfig[]
 
   // Oylik moduli: lavozim, haftalik navbar va oylik yozuvlari
   staffPositionId       String?
@@ -180,6 +186,9 @@ model User {
 model Group {
   id        String          @id @default(cuid())
   name      String          @unique
+  /// EduPage (ttp u.edupage.org) sinf nomi — avto jadval sinxronizatsiyasi uchun.
+  /// Bo'sh bo'lsa `name` bilan solishtiriladi.
+  edupageName String?
   year      Int?
   facultyId String?
   faculty   Faculty?        @relation(fields: [facultyId], references: [id], onDelete: SetNull)
@@ -189,6 +198,7 @@ model Group {
   schedule  ScheduleEntry[]
   subGroups SubGroup[]
   studyPlans StudyPlan[]
+  attendancePointConfigs AttendancePointConfig[]
 
   @@index([curatorId])
 }
@@ -221,8 +231,11 @@ model Course {
   attendanceSessions AttendanceSession[]
   reviews            CourseReview[]
   examSessions       ExamSession[]
+  secureExams        SecureExam[]
   bankQuestions      BankQuestion[]
   bonusPoints        BonusPoint[]
+  teacherPoints      TeacherPoint[]
+  attendancePointConfigs AttendancePointConfig[]
   studyPlans         StudyPlan[]
 
   @@index([teacherId])
@@ -407,9 +420,10 @@ model Quiz {
   isPublished  Boolean   @default(false)
   createdAt    DateTime  @default(now())
 
-  course    Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  questions Question[]
-  attempts  QuizAttempt[]
+  course     Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions  Question[]
+  attempts   QuizAttempt[]
+  secureExams SecureExam[]
 }
 
 model Question {
@@ -437,6 +451,8 @@ model QuizAttempt {
   quiz    Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
   student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
+  secureExamRun SecureExamRun?
+
   @@index([studentId])
   @@index([quizId])
 }
@@ -457,6 +473,10 @@ model ScheduleEntry {
   approval   ScheduleApproval @default(APPROVED)
   note       String?
   sectionId  String?
+  /// Manba: `null` — qo'lda kiritilgan, `"edupage"` — avto sinxronlangan.
+  source     String?
+  /// Manba tizimidagi identifikator (karta:kun:guruh) — takroriy importni oldini oladi.
+  externalId String?
   updatedAt  DateTime         @default(now()) @updatedAt
 
   group      Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
@@ -466,6 +486,7 @@ model ScheduleEntry {
 
   subGroup String?
 
+  @@unique([source, externalId])
   @@index([groupId, dayOfWeek])
   @@index([subjectId])
   @@index([teacherId])
@@ -591,6 +612,45 @@ model BonusPoint {
   @@unique([courseId, studentId, awardedById])
   @@index([studentId])
   @@index([courseId])
+}
+
+/// O'qituvchi ballari — o'qituvchi oquvchilarga beriladigan max 15 balllik chegirma.
+model TeacherPoint {
+  id          String   @id @default(cuid())
+  courseId    String
+  studentId   String
+  awardedById String
+  points      Float    // 0.1..15 ball
+  category    String   // masalan: davomat, faollik, aloqadirilish va h.k.
+  reason      String?
+  createdAt   DateTime @default(now())
+
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student User   @relation("TeacherPointStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  awardedBy User @relation("TeacherPointAwardedBy", fields: [awardedById], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, studentId, awardedById, category])
+  @@index([studentId])
+  @@index([courseId])
+}
+
+/// Davomat balli — o'qituvchi har bir kurs/sinf uchun davomat ballini belgilaydi.
+model AttendancePointConfig {
+  id         String  @id @default(cuid())
+  courseId   String
+  groupId    String?
+  points     Float   @default(1) // 0.1..15
+  teacherId  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  group   Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  teacher User   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, groupId])
+  @@index([courseId])
+  @@index([groupId])
 }
 
 /// Xodimning lavozimi.
@@ -958,6 +1018,103 @@ model ExamSheet {
   @@index([studentId])
 }
 
+enum SecureExamStatus {
+  SCHEDULED
+  ACTIVE
+  CLOSED
+}
+
+enum SecureExamRunStatus {
+  ACTIVE
+  SUBMITTED
+  TERMINATED
+}
+
+enum SecureExamLimitAction {
+  WARN
+  TERMINATE
+}
+
+model SecureExam {
+  id                String                @id @default(cuid())
+  quizId            String
+  courseId          String
+  createdById       String
+  title             String
+  code              String                @unique
+  startsAt          DateTime
+  endsAt            DateTime
+  durationMin       Int?
+  requireFullscreen Boolean               @default(true)
+  blockCopy         Boolean               @default(true)
+  requireClient     Boolean               @default(false)
+  webcamEnabled     Boolean               @default(false)
+  maxWarnings       Int                   @default(3)
+  limitAction       SecureExamLimitAction @default(TERMINATE)
+  status            SecureExamStatus      @default(SCHEDULED)
+  createdAt         DateTime              @default(now())
+
+  quiz      Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdBy User   @relation("SecureExamCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  runs      SecureExamRun[]
+
+  @@index([courseId, startsAt])
+  @@index([status, startsAt])
+}
+
+model SecureExamRun {
+  id            String              @id @default(cuid())
+  examId        String
+  studentId     String
+  attemptId     String              @unique
+  status        SecureExamRunStatus @default(ACTIVE)
+  warnings      Int                 @default(0)
+  clientId      String?
+  clientVersion String?
+  screens       Int?
+  fullscreen    Boolean             @default(false)
+  webcam        Boolean             @default(false)
+  extraMin      Int                 @default(0)
+  lastSeenAt    DateTime            @default(now())
+  startedAt     DateTime            @default(now())
+  finishedAt    DateTime?
+
+  exam    SecureExam      @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student User            @relation("SecureExamStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  attempt   QuizAttempt         @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  events    SecureExamEvent[]
+  snapshots SecureExamSnapshot[]
+
+  @@unique([examId, studentId])
+  @@index([examId, status])
+}
+
+model SecureExamSnapshot {
+  id    String   @id @default(cuid())
+  runId String
+  at    DateTime @default(now())
+  mime  String   @default("image/jpeg")
+  data  String
+
+  run SecureExamRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, at])
+}
+
+model SecureExamEvent {
+  id       String   @id @default(cuid())
+  runId    String
+  type     String
+  severity String   @default("INFO")
+  at       DateTime @default(now())
+  meta     Json?
+
+  run SecureExamRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, at])
+}
+
 model BankQuestion {
   id         String       @id @default(cuid())
   courseId   String?
@@ -987,12 +1144,30 @@ model SubGroup {
 }
 
 model Faculty {
-  id          String       @id @default(cuid())
-  name        String       @unique
-  code        String?
-  groups      Group[]
-  users       User[]
-  departments Department[]
+  id            String       @id @default(cuid())
+  name          String       @unique
+  code          String?
+  groups        Group[]
+  users         User[]
+  departments   Department[]
+  contractRates FacultyContractRate[]
+}
+
+/// Fakultetning bir shartnoma uchun to'laydigan summasi (o'quv yili bo'yicha).
+/// Admin belgilaydi, Moliya bo'limida hisob-kitobda ishlatiladi.
+model FacultyContractRate {
+  id        String   @id @default(cuid())
+  facultyId String
+  year      Int
+  amount    Int
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  faculty Faculty @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+
+  @@unique([facultyId, year])
+  @@index([year])
 }
 
 model Department {

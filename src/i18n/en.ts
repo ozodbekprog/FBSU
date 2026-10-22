@@ -25,6 +25,7 @@ import { sim } from "./dict/en/sim";
 import { vid } from "./dict/en/vid";
 import { res } from "./dict/en/res";
 import { ob } from "./dict/en/ob";
+import { sec } from "./dict/en/sec";
 
 export const en: Dictionary = {
   commonSave: "Save",
@@ -140,6 +141,19 @@ export const en: Dictionary = {
   certGradeUnsatisfactory: "Unsatisfactory",
   certGradeNone: "Not graded",
 
+
+  tchStudents: "students",
+  tchAttendanceTitle: "Attendance points",
+  tchAttendanceSubtitle: "Set per group — a student who attends gets that many points",
+  tchNoGroups: "No groups enrolled in this course",
+  tchNoGroupTitle: "No group",
+  tchNoGroupSubtitle: "For students without a group",
+  tchSave: "Save",
+  tchGivePointsSubtitle: "By selected category and points",
+  tchTotalForStudent: "Student total",
+  tchHistory: "Awarded points",
+  tchHistorySubtitle: "records",
+
   settingsEyebrow: "Account",
   settingsTitle: "Settings",
   settingsSubtitle: "Notifications, appearance and contact",
@@ -169,4 +183,5 @@ export const en: Dictionary = {
   ...res,
   ...ob,
   ...fb,
+  ...sec,
 };

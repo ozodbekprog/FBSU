@@ -24,6 +24,7 @@ import { sim } from "./dict/uz/sim";
 import { vid } from "./dict/uz/vid";
 import { res } from "./dict/uz/res";
 import { ob } from "./dict/uz/ob";
+import { sec } from "./dict/uz/sec";
 
 export const uz = {
   commonSave: "Saqlash",
@@ -139,6 +140,19 @@ export const uz = {
   certGradeUnsatisfactory: "Qoniqarsiz",
   certGradeNone: "Baholanmagan",
 
+
+  tchStudents: "ta",
+  tchAttendanceTitle: "Davamat balli",
+  tchAttendanceSubtitle: "Har bir sinf uchun alohida — darsga kelgan talaba shuncha ball oladi",
+  tchNoGroups: "Bu kursga yozilgan sinf topilmadi",
+  tchNoGroupTitle: "Sinfsiz",
+  tchNoGroupSubtitle: "Sinfgа biriktirilmagan talabalar uchun",
+  tchSave: "Saqlash",
+  tchGivePointsSubtitle: "Tanlangan kategoriya va ballar bo'yicha",
+  tchTotalForStudent: "Talabaning jami bali",
+  tchHistory: "Berilgan ballar",
+  tchHistorySubtitle: "yozuv",
+
   settingsEyebrow: "Hisob",
   settingsTitle: "Sozlamalar",
   settingsSubtitle: "Bildirishnomalar, ko'rinish va aloqa",
@@ -168,6 +182,7 @@ export const uz = {
   ...res,
   ...ob,
   ...fb,
+  ...sec,
 };
 
 export type Dictionary = typeof uz;

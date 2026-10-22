@@ -83,7 +83,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+  const passwordHash = await bcrypt.hash(parsed.data.password, 12);
 
   await prisma.$transaction([
     prisma.passwordResetToken.updateMany({

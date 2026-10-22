@@ -25,6 +25,7 @@ import { sim } from "./dict/ru/sim";
 import { vid } from "./dict/ru/vid";
 import { res } from "./dict/ru/res";
 import { ob } from "./dict/ru/ob";
+import { sec } from "./dict/ru/sec";
 
 export const ru: Dictionary = {
   commonSave: "Сохранить",
@@ -140,6 +141,19 @@ export const ru: Dictionary = {
   certGradeUnsatisfactory: "Неудовлетворительно",
   certGradeNone: "Без оценки",
 
+
+  tchStudents: "чел.",
+  tchAttendanceTitle: "Баллы за посещаемость",
+  tchAttendanceSubtitle: "Отдельно для каждой группы — пришедший на занятие получает столько баллов",
+  tchNoGroups: "Для этого курса группы не найдены",
+  tchNoGroupTitle: "Без группы",
+  tchNoGroupSubtitle: "Для студентов без группы",
+  tchSave: "Сохранить",
+  tchGivePointsSubtitle: "По выбранной категории и баллам",
+  tchTotalForStudent: "Всего баллов у студента",
+  tchHistory: "Выданные баллы",
+  tchHistorySubtitle: "записей",
+
   settingsEyebrow: "Аккаунт",
   settingsTitle: "Настройки",
   settingsSubtitle: "Уведомления, интерфейс и связь",
@@ -169,4 +183,5 @@ export const ru: Dictionary = {
   ...res,
   ...ob,
   ...fb,
+  ...sec,
 };

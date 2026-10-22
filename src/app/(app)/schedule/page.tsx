@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { requireUser, isStaff, isRegistrar } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ButtonLink, PageHeader } from "@/components/ui";
@@ -6,6 +7,7 @@ import { ScheduleBoard } from "@/components/schedule/schedule-board";
 import type { BoardEntry, PaletteBlock } from "@/components/schedule/builder/types";
 import { isoWeekday, resolveWeekStart } from "@/components/schedule/week-utils";
 import { todayIso } from "@/components/attendance/lesson-utils";
+import { autoSyncEduPageSchedule } from "@/lib/edupage-sync";
 
 type TeacherChoice = { id: string; name: string };
 
@@ -33,6 +35,7 @@ export default async function SchedulePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const user = await requireUser();
+  after(() => autoSyncEduPageSchedule());
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
   const params = await searchParams;

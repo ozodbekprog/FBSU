@@ -8,6 +8,7 @@ import { useI18n } from "@/components/i18n/LocaleProvider";
 import { useMediaQuery } from "@/components/nav/nav-3d-env";
 import { drawerIcon } from "@/components/nav/nav-drawer-icons";
 import { useNavCollapsed } from "@/components/nav/nav-collapsed";
+import { isNavActive, resolveActiveHref } from "@/components/nav/nav-active";
 import { useCallback, useRef, useState } from "react";
 
 export type NavLink = { href: string; label: string; badge?: ReactNode };
@@ -61,6 +62,7 @@ const TAB_ICONS: Record<MobileTabIcon, ReactNode> = {
 export function MobileTabBar({ tabs }: { tabs: MobileTab[] }) {
   const pathname = usePathname();
   const { t } = useI18n();
+  const activeHref = resolveActiveHref(pathname, tabs.map((tab) => tab.href));
 
   return (
     <nav
@@ -70,7 +72,7 @@ export function MobileTabBar({ tabs }: { tabs: MobileTab[] }) {
     >
       <div className="mx-auto flex max-w-md items-stretch px-1.5">
         {tabs.map((tab) => {
-          const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+          const active = isNavActive(pathname, activeHref, tab.href);
           return (
             <div key={tab.href} className="relative flex-1">
               <Link
@@ -143,6 +145,10 @@ function BurgerIcon() {
 export function NavLinks({ groups }: { groups: NavGroup[] }) {
   const pathname = usePathname();
   const { t } = useI18n();
+  const activeHref = resolveActiveHref(
+    pathname,
+    groups.flatMap((group) => group.links.map((link) => link.href)),
+  );
   const shellRef = useRef<HTMLDivElement>(null);
   const desktop = useMediaQuery("(min-width: 768px)");
   const { collapsed, toggle } = useNavCollapsed();
@@ -218,7 +224,7 @@ export function NavLinks({ groups }: { groups: NavGroup[] }) {
             </p>
             <div className="space-y-0.5">
               {group.links.map((l, index) => {
-                const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
+                const active = isNavActive(pathname, activeHref, l.href);
                 const icon = drawerIcon(l.href);
                 return (
                   <Link

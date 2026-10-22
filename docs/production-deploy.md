@@ -46,3 +46,72 @@ Repo'dagi `.github/workflows/vercel-deploy.yml` `VERCEL_TOKEN` secreti bekor bo'
 2. Repo's GitHub secret'larida `VERCEL_TOKEN` ni yangilang (token egalari `ozodbekprog/FBSU` repo adminsi bo'lishi kerak).
 
 Token yangilangan bo'lsa, workflow migratsiyani ham, deploy'ni ham o'zi qiladi va `vercel-build`ga zarurat qolmaydi.
+
+## EduPage jadvalini soatlik avtomatik yangilash
+
+`.github/workflows/edupage-sync.yml` har soatda (UTC `:07` da) `GET /api/edupage/sync`
+ni chaqiradi. Qo'shimcha ravishda `Jadval` sahifasi ochilganda ma'lumot 30 daqiqadan
+eski bo'lsa fonda sinxronlanadi. Ikki sinxron bir vaqtda ishga tushsa, DB'dagi
+`edupage:sync-lock` qulfi ikkinchisini 409 bilan qaytaradi.
+
+Sozlash (bir marta):
+
+1. Vercel'da `EDUPAGE_SYNC_SECRET` (yoki mavjud `CRON_SECRET`) environment variable
+   qo'shing — uzun tasodifiy satr.
+2. GitHub repo'da bir xil qiymatni secret sifatida qo'shing:
+
+```bash
+gh secret set EDUPAGE_SYNC_SECRET -R ozodbekprog/FBSU
+```
+
+3. Agar sayt `fbsu.vercel.app` bo'lmasa, repo variable qo'shing:
+
+```bash
+gh variable set APP_URL -R ozodbekprog/FBSU --body https://fbsu.vercel.app
+```
+
+4. Qo'lda sinab ko'rish:
+
+```bash
+gh workflow run edupage-sync.yml -R ozodbekprog/FBSU
+```
+
+Workflow faqat default branch'dan (odatda `main`) jadval bo'yicha ishlaydi, shuning
+uchun merge qilingandan keyin faollashadi. Vercel Pro bo'lsa, GitHub Actions o'rniga
+`vercel.json` dagi cron'dan ham foydalanish mumkin:
+
+```json
+{ "crons": [{ "path": "/api/edupage/sync", "schedule": "0 * * * *" }] }
+```
+
+Vercel cron so'roviga `Authorization: Bearer $CRON_SECRET` avtomatik qo'shiladi.
+
+## PII shifrlash (DATA_ENCRYPTION_KEY)
+
+`src/lib/db-encryption.ts` PII maydonlarini AES-256-GCM bilan shifrlaydi, lekin faqat
+`DATA_ENCRYPTION_KEY` mavjud bo'lsa. Kalit bo'lmasa shifrlash o'chirilgan holda ishlaydi
+va server logiga bir marta ogohlantirish yoziladi — bu productionni kalitsiz ishga
+tushirib yubormaslik uchun himoya.
+
+Kalitni yoqish (productionda hozircha kalit yo'q, shifrlash o'chiq):
+
+1. **Avval backup** oling (Neon snapshot yoki `pg_dump`).
+2. 32 baytli kalit yarating: `openssl rand -base64 32`.
+3. Kalitni va **production DB URL** ni lokal `.env` ga qo'ying, so'ng mavjud
+   yozuvlarni shifrlang:
+
+```bash
+npm run db:encrypt
+```
+
+4. Faqat shundan keyin Vercel'da `DATA_ENCRYPTION_KEY` ni qo'shing va qayta deploy
+   qiling. Ixtiyoriy: `DATA_ENCRYPTION_KEY_ID` (default `k1`).
+
+Tartib muhim: kalit Vercel'ga backfill'dan oldin qo'yilsa, deterministik maydonlar
+(`User.email`, hujjat/diplom raqamlari) bo'yicha qidiruv va login ishlamaydi, chunki
+eski yozuvlar hali ochiq matnda bo'ladi. `db:encrypt` idempotent — allaqachon
+shifrlangan qiymatlarni o'tkazib yuboradi.
+
+Kalitni yo'qotmang: u bilan shifrlangan ma'lumotni tiklab bo'lmaydi. Kalit aylanishi
+uchun eski kalitni `DATA_ENCRYPTION_KEY_<id>` sifatida qoldirib, yangisini
+`DATA_ENCRYPTION_KEY` va `DATA_ENCRYPTION_KEY_ID` bilan bering.

@@ -3,6 +3,8 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
+import { openboardDataSchema } from "@/lib/openboard/types";
+import { sanitizeHtml } from "@/lib/openboard/sanitize";
 
 const MAX_BYTES = 1_500_000;
 
@@ -61,7 +63,27 @@ export async function PUT(request: Request) {
       return Response.json({ ok: false, error: "Topshiriq topilmadi" }, { status: 404 });
     }
   }
-  const boardData = (parsed.data.data ?? {}) as Prisma.InputJsonValue;
+  const rawData: unknown = parsed.data.data ?? {};
+  const openboardParsed = openboardDataSchema.safeParse(rawData);
+  const boardData = (
+    openboardParsed.success
+      ? {
+          ...openboardParsed.data,
+          notes: openboardParsed.data.notes.map((note) => ({
+            ...note,
+            blocks: note.blocks.map((block) => {
+              if (block.type === "text") {
+                return { ...block, html: sanitizeHtml(block.html) };
+              }
+              if (block.type === "heading") {
+                return { ...block, html: sanitizeHtml(block.html) };
+              }
+              return block;
+            }),
+          })),
+        }
+      : rawData
+  ) as Prisma.InputJsonValue;
   const serialized = JSON.stringify(boardData);
   if (serialized.length > MAX_BYTES) {
     return Response.json({ ok: false, error: "Doska ma'lumotlari juda katta" }, { status: 413 });

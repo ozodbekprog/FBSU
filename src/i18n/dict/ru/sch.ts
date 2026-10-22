@@ -472,4 +472,8 @@ export const sch = {
   schLessonCapacity: "Вместимость",
   schLessonEquipment: "Оборудование",
   schLessonNoRoomInfo: "Информация о корпусе не добавлена",
+
+  schEduPageSyncDone:
+    "Синхронизировано: {created} новых занятий, {updated} обновлено, {removed} удалено · групп: {groups}, преподавателей: {teachers}, предметов: {subjects}, аудиторий: {rooms} · очищено ручных записей: {manual}",
+  schEduPageSyncError: "Ошибка синхронизации",
 };
