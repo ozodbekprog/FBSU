@@ -224,8 +224,9 @@ export default function LoginPage() {
         return;
       }
       const nextParam = new URLSearchParams(window.location.search).get("next");
-      const target =
-        nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
+      const target = json?.tempPasswordUsed === true
+        ? "/profile?password=1"
+        : nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
           ? nextParam
           : "/dashboard";
       router.push(target);

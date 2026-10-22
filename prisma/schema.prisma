@@ -21,6 +21,7 @@ enum Role {
   XODIM
   OTA_ONA
   NAZORATCHI
+  OWNER
 }
 
 /// Oylik to'lovining bosqichlar.

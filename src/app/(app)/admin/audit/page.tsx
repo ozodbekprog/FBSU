@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import type { Prisma } from "@prisma/client";
-import { requireRole } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Button, Card, CardBody, Input, Label, PageHeader, Select } from "@/components/ui";
 import AuditLogTable, { type AuditLogItem } from "@/components/admin/AuditLogTable";
@@ -14,7 +15,8 @@ export default async function AdminAuditPage({
 }: {
   searchParams: Promise<{ action?: string; date?: string; page?: string }>;
 }) {
-  await requireRole(["ADMIN"]);
+  const user = await requireUser();
+  if (user.role !== "OWNER") notFound();
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
   const tr = (key: keyof Dictionary, params?: Record<string, string | number>) => translate(locale, key, params);

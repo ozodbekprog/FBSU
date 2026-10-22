@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Role } from "@prisma/client";
 import {
   Avatar,
   Badge,
   Button,
+  ButtonLink,
   Card,
   CardBody,
   CardHeader,
@@ -64,6 +66,7 @@ const ROLE_META: Record<
   { label: keyof Dictionary; tone: "brand" | "purple" | "slate" | "blue" | "green" | "gold"; dot: string; ring: string }
 > = {
   ADMIN: { label: "admRoleAdmin", tone: "brand", dot: "bg-brand-500", ring: "ring-brand-200/80" },
+  OWNER: { label: "roleOwner", tone: "gold", dot: "bg-gold-500", ring: "ring-gold-300/60" },
   REKTOR: { label: "admRoleRector", tone: "gold", dot: "bg-gold-500", ring: "ring-gold-300/60" },
   PRO_RECTOR: { label: "admRoleProRector", tone: "gold", dot: "bg-gold-400", ring: "ring-gold-300/60" },
   DEKAN: { label: "admRoleDean", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
@@ -420,7 +423,12 @@ export default function UsersManager({
                     <div className="flex items-center gap-3">
                       <Avatar name={user.name} className="size-9 text-[11px] ring-1 ring-slate-900/10" />
                       <div className="min-w-0">
-                        <span className="block truncate font-medium text-slate-900">{user.name}</span>
+                        <Link
+                          href={`/admin/users/${user.id}`}
+                          className="block truncate font-medium text-slate-900 transition-colors hover:text-brand-700"
+                        >
+                          {user.name}
+                        </Link>
                         <span className="block truncate text-xs text-slate-500">{user.email}</span>
                       </div>
                     </div>
@@ -441,6 +449,9 @@ export default function UsersManager({
                   <td className="px-5 py-3 text-xs text-slate-500">{fmtDate(user.createdAt)}</td>
                   <td className="px-5 py-3">
                     <div className="flex items-center justify-end gap-1.5">
+                      <ButtonLink href={`/admin/users/${user.id}`} size="sm" variant="secondary">
+                        Ko'rish
+                      </ButtonLink>
                       <Button size="sm" variant="secondary" onClick={() => openEdit(user)}>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M12 20h9" />

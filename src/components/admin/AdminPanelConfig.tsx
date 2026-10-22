@@ -7,15 +7,14 @@ import { AnimatePresence, motion } from "motion/react";
 import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 
-export const ADMIN_WIDGETS = ["stats", "quick", "upload", "charts", "recent"] as const;
+export const ADMIN_WIDGETS = ["stats", "quick", "upload", "charts"] as const;
 export type AdminWidget = (typeof ADMIN_WIDGETS)[number];
 
-const WIDGET_LABEL_KEYS: Record<AdminWidget, "admPanelWStats" | "admPanelWQuick" | "admPanelWUpload" | "admPanelWCharts" | "admPanelWRecent"> = {
+const WIDGET_LABEL_KEYS: Record<AdminWidget, "admPanelWStats" | "admPanelWQuick" | "admPanelWUpload" | "admPanelWCharts"> = {
   stats: "admPanelWStats",
   quick: "admPanelWQuick",
   upload: "admPanelWUpload",
   charts: "admPanelWCharts",
-  recent: "admPanelWRecent",
 };
 
 export function AdminPanelConfig({ hidden }: { hidden: AdminWidget[] }) {

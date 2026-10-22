@@ -42,6 +42,7 @@ export const shell = {
   navAdmin: "Admin panel",
 
   roleAdmin: "Administrator",
+  roleOwner: "Egasi",
   roleRector: "Rektor",
   roleProRector: "Prorektor",
   roleStaff: "Xodim",

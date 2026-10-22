@@ -20,7 +20,7 @@ export default async function AdminUsersPage({
 }: {
   searchParams: Promise<{ q?: string; role?: string; page?: string }>;
 }) {
-  const admin = await requireRole(["ADMIN", "REGISTRAR"]);
+  const admin = await requireRole(["ADMIN", "REGISTRAR", "OWNER"]);
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
   const params = await searchParams;
@@ -102,7 +102,7 @@ export default async function AdminUsersPage({
               <option value="">{dictionary.admUsersAllRoles}</option>
               <option value="STUDENT">{dictionary.admRoleStudent}</option>
               <option value="TEACHER">{dictionary.admRoleTeacher}</option>
-              {admin.role === "ADMIN" ? (
+              {admin.role === "ADMIN" || admin.role === "OWNER" ? (
                 <>
                   <option value="TYUTOR">{dictionary.admRoleTutor}</option>
                   <option value="XODIM">{dictionary.admRoleStaff}</option>
@@ -151,7 +151,7 @@ export default async function AdminUsersPage({
         groups={groups}
         departments={departments}
         currentUserId={admin.id}
-        allowedRoles={admin.role === "ADMIN" ? null : ["STUDENT", "TEACHER"]}
+        allowedRoles={admin.role === "REGISTRAR" ? ["STUDENT", "TEACHER"] : null}
       />
 
       {pageCount > 1 ? (
