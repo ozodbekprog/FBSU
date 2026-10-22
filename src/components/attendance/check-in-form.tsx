@@ -42,9 +42,11 @@ type PendingBody = {
 export function CheckInForm({
   initialPayload,
   faceEnrolled = false,
+  compact = false,
 }: {
   initialPayload?: QrScanPayload;
   faceEnrolled?: boolean;
+  compact?: boolean;
 }) {
   const { t } = useI18n();
   const [status, setStatus] = useState<"idle" | "scanning" | "loading" | "face" | "success" | "suspicious" | "error">(
@@ -341,6 +343,36 @@ export function CheckInForm({
           )}
         </CardBody>
       </Card>
+    );
+  }
+
+  if (compact) {
+    return (
+      <div className="fb-qr">
+        <span className="fb-qr-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+            <rect x="3" y="14" width="7" height="7" rx="1.5" />
+            <path d="M14 14h3v3h-3zM21 14v.01M14 21v.01M21 21v.01M17.5 21v.01M21 17.5v.01" />
+          </svg>
+        </span>
+        <div className="fb-qr-copy">
+          <b>{t("fbdCheckinTitle")}</b>
+          <span>{t("fbdCheckinSubtitle")}</span>
+          {message ? <span className="fb-qr-msg">{message}</span> : null}
+        </div>
+        <button
+          type="button"
+          className="fb-qr-btn"
+          onClick={() => {
+            setMessage(null);
+            setStatus("scanning");
+          }}
+        >
+          {t("schScanQr")}
+        </button>
+      </div>
     );
   }
 

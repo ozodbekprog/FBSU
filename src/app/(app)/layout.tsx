@@ -13,6 +13,7 @@ import { LogoutForm } from "@/components/auth/logout-form";
 import { Logo } from "@/components/brand/logo";
 import { MobileTabBar, NavLinks, type MobileTab, type MobileTabIcon } from "./nav-links";
 import { MobileNav } from "@/components/nav/mobile-nav";
+import { AppTopbar } from "@/components/fb/app-topbar";
 import { BugAssistant } from "@/components/bugs/bug-assistant";
 import { OfflineBanner } from "@/components/pwa/OfflineBanner";
 import { TourGuide } from "@/components/tour/tour-guide";
@@ -288,68 +289,88 @@ export default async function AppLayout({
         ]
       : tabs;
 
+  const topbarItems = visibleGroups.flatMap((group) =>
+    group.links.map((link) => ({ href: link.href, label: link.label })),
+  );
+  const scopeLabel = user.role === "STUDENT" ? dictionary.fbdRoleChip : roleLabel;
+
   return (
     <LocaleProvider locale={locale} dictionary={dictionary}>
-      <div className="flex min-h-screen">
-      {/* Sidebar HAR DOIM ko'rinadi. Avval `hidden md:flex` edi — brauzerda
-          kattalashtirganda (Ctrl/Cmd + yoki pinch-zoom) CSS kenglik 768px
-          dan pastga tushardi va sidebar butunlay yo'qolardi (videodagi
-          holat). Endi u faqat kichrayadi (icon rail), lekin yo'qolmaydi. */}
-      <aside className="app-shell-sidebar sticky top-0 z-30 flex h-dvh w-64 shrink-0 flex-col border-r border-slate-200/60 bg-white/85 backdrop-blur-xl">
-        <div className="flex h-16 items-center justify-between border-b border-slate-100 px-5">
-          <Link href="/dashboard" className="transition-opacity hover:opacity-80">
-            <Logo />
-          </Link>
-          <div className="flex items-center gap-1">
-            <NotificationBell align="left" />
-            <ThemeToggle />
-          </div>
-        </div>
-        <NavLinks groups={visibleGroups} />
-        <div className="border-t border-slate-100 p-3">
-          <div className="mb-2 flex justify-center">
-            <LanguageSwitcher locale={locale} />
-          </div>
-          <Link
-            href="/profile"
-            className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2.5 transition-colors hover:bg-brand-50"
-          >
-            <Avatar name={user.name} src={user.avatarUrl} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-slate-900">{user.name}</p>
-              <p className="truncate text-xs text-slate-500">{roleLabel}</p>
-            </div>
-          </Link>
-          <LogoutForm />
-        </div>
-      </aside>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-slate-200/70 bg-white/90 px-4 backdrop-blur md:hidden">
-          <div className="flex min-w-0 items-center gap-1">
-            <MobileNav groups={visibleGroups} />
-            <Link href="/dashboard" className="transition-opacity hover:opacity-80">
-              <Logo size={28} withText={false} />
+      <div className="fb-shell flex min-h-screen" data-fb-root="dashboard">
+        {/* Sidebar HAR DOIM ko'rinadi. Avval `hidden md:flex` edi — brauzerda
+            kattalashtirganda CSS kenglik 768px dan pastga tushardi va sidebar
+            butunlay yo'qolardi. Endi u faqat kichrayadi (icon rail). */}
+        <aside className="app-shell-sidebar fb-sidebar sticky top-0 z-30 flex h-dvh shrink-0 flex-col">
+          <div className="fb-side-head">
+            <Link href="/dashboard" className="fb-side-brand">
+              <img src="/logo.svg" alt="FBSU" width={28} height={28} />
+              <span className="fb-side-name">
+                <b>FBSU</b>
+                <small>TURIN POLYTECHNIC</small>
+              </span>
             </Link>
           </div>
-          <div className="flex items-center gap-1">
-            <NotificationBell align="right" />
-            <ThemeToggle />
+          <Link href="/profile" className="fb-side-cabinet">
+            <span>
+              <em>{dictionary.fbdCabinet}</em>
+              <b>{roleLabel}</b>
+            </span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </Link>
+          <NavLinks groups={visibleGroups} />
+          <div className="fb-side-foot border-t border-slate-100">
             <Link
               href="/profile"
-              aria-label={dictionary.shellProfile}
-              className="rounded-full transition-opacity hover:opacity-80"
+              className="fb-side-user flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors"
             >
-              <Avatar name={user.name} src={user.avatarUrl} size={30} />
+              <Avatar name={user.name} src={user.avatarUrl} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-slate-900">{user.name}</p>
+                <p className="truncate text-xs text-slate-500">{roleLabel}</p>
+              </div>
             </Link>
+            <div className="fb-side-actions">
+              <LanguageSwitcher locale={locale} />
+              <LogoutForm />
+            </div>
           </div>
-        </header>
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 pt-6 pb-20 md:px-8 md:pt-8 md:pb-8">{children}</main>
+        </aside>
+        <div className="fb-shell-main flex min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-slate-200/70 bg-white/90 px-4 backdrop-blur md:hidden">
+            <div className="flex min-w-0 items-center gap-1">
+              <MobileNav groups={visibleGroups} />
+              <Link href="/dashboard" className="transition-opacity hover:opacity-80">
+                <Logo size={28} withText={false} />
+              </Link>
+            </div>
+            <div className="flex items-center gap-1">
+              <NotificationBell align="right" />
+              <ThemeToggle />
+              <Link
+                href="/profile"
+                aria-label={dictionary.shellProfile}
+                className="rounded-full transition-opacity hover:opacity-80"
+              >
+                <Avatar name={user.name} src={user.avatarUrl} size={30} />
+              </Link>
+            </div>
+          </header>
+          <AppTopbar
+            name={user.name}
+            avatarUrl={user.avatarUrl}
+            roleLabel={roleLabel}
+            scopeLabel={scopeLabel}
+            items={topbarItems}
+          />
+          <main className="fb-main">{children}</main>
+        </div>
+        <MobileTabBar tabs={visibleTabs} />
+        <BugAssistant />
+        <TourGuide role={user.role} />
+        <OfflineBanner />
       </div>
-      <MobileTabBar tabs={visibleTabs} />
-      <BugAssistant />
-      <TourGuide role={user.role} />
-      <OfflineBanner />
-    </div>
     </LocaleProvider>
   );
 }

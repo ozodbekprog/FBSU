@@ -1,5 +1,6 @@
 import type { Dictionary } from "./uz";
 import { shell } from "./dict/en/shell";
+import { fb } from "./dict/en/fb";
 import { dash } from "./dict/en/dash";
 import { crs } from "./dict/en/crs";
 import { sch } from "./dict/en/sch";
@@ -167,4 +168,5 @@ export const en: Dictionary = {
   ...vid,
   ...res,
   ...ob,
+  ...fb,
 };

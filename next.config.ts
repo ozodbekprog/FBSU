@@ -51,6 +51,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Dev rejimida pastdagi "N" indikatori yangi sidebar footer'ini to'sib qo'yardi.
+  devIndicators: false,
   transpilePackages: ["@excalidraw/excalidraw"],
   async headers() {
     return [
