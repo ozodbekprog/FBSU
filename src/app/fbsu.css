@@ -3330,3 +3330,186 @@ html:not(.fb-js) .fb-landing .fb-ph-bars span {
     transform: none !important;
   }
 }
+
+/* ============ landing polish: rhythm + gold accents ============ */
+.fb-landing .fb-stats {
+  padding-bottom: 64px;
+}
+
+.fb-landing .fb-bento-sec {
+  padding: 104px 0 108px;
+}
+
+.fb-landing .fb-features {
+  padding: 100px 0 32px;
+}
+
+.fb-landing .fb-day {
+  padding: 100px 0 106px;
+}
+
+.fb-landing .fb-quote {
+  position: relative;
+  overflow: hidden;
+  padding: 92px 0 96px;
+}
+
+.fb-landing .fb-quote::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(560px 280px at 50% 46%, rgba(212, 175, 55, 0.08), transparent 72%);
+}
+
+.fb-landing .fb-quote .fb-in {
+  position: relative;
+  z-index: 1;
+}
+
+.fb-landing .fb-app {
+  padding: 104px 0 108px;
+}
+
+.fb-landing .fb-cta-sec {
+  padding: 100px 0 104px;
+}
+
+.fb-landing .fb-cta-sec::before {
+  background:
+    radial-gradient(700px 360px at 50% 40%, rgba(29, 52, 96, 0.06), transparent 70%),
+    radial-gradient(520px 260px at 50% 102%, rgba(212, 175, 55, 0.12), transparent 72%);
+}
+
+.fb-landing .fb-sec-kicker,
+.fb-landing .fb-tile .fb-t-kick {
+  color: #8a6d18;
+}
+
+.fb-landing .fb-hero-note b {
+  color: #e3c76a;
+  font-weight: 600;
+}
+
+.fb-landing .fb-stat b {
+  background: linear-gradient(180deg, #ffffff 15%, #e3c76a 130%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.fb-landing .fb-quote .fb-mark {
+  color: #d4af37;
+}
+
+.fb-landing .fb-quote .fb-ava {
+  box-shadow: 0 0 0 2px #d4af37, 0 0 0 5px rgba(212, 175, 55, 0.16);
+}
+
+.fb-landing .fb-feature .fb-copy .fb-li i {
+  background: #f6efd9;
+}
+
+.fb-landing .fb-feature .fb-copy .fb-li i::after {
+  border-color: #8a6d18;
+}
+
+.fb-landing .fb-feature .fb-copy .fb-more {
+  color: #8a6d18;
+}
+
+.fb-landing .fb-ms-row.now .fb-st {
+  background: #d4af37;
+  border-color: #d4af37;
+  color: #131f3c;
+}
+
+.fb-landing .fb-ms-row.now time {
+  color: #8a6d18;
+}
+
+.fb-landing .fb-cta-sec .fb-btn-primary {
+  background: #d4af37;
+  color: #131f3c;
+  box-shadow: 0 12px 34px -12px rgba(212, 175, 55, 0.55);
+}
+
+.fb-landing .fb-cta-sec .fb-btn-primary:hover {
+  background: #e3c76a;
+  box-shadow: 0 18px 40px -14px rgba(212, 175, 55, 0.6);
+}
+
+.fb-landing .fb-cta-sec .fb-link-play {
+  color: #8a6d18;
+}
+
+.fb-landing .fb-footer {
+  border-top: 2px solid #d4af37;
+}
+
+.fb-landing .fb-f-col b {
+  font-size: 12px;
+  color: #8a6d18;
+}
+
+.fb-landing .fb-f-col a:hover,
+.fb-landing .fb-f-bot a:hover {
+  color: #8a6d18;
+}
+
+.fb-landing .fb-f-bot span,
+.fb-landing .fb-f-bot a {
+  font-size: 12px;
+}
+
+@media (max-width: 767px) {
+  .fb-landing .fb-stats .fb-in {
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 14px;
+  }
+
+  .fb-landing .fb-stats .fb-intro {
+    grid-column: 1 / -1;
+    border-right: 0;
+    padding-right: 0;
+  }
+
+  .fb-landing .fb-stat {
+    display: block;
+    padding: 14px 0 0;
+    border-right: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .fb-landing .fb-stat b {
+    font-size: 32px;
+    min-width: 0;
+  }
+
+  .fb-landing .fb-stat > span {
+    margin-top: 7px;
+  }
+
+  .fb-landing .fb-bento-sec {
+    padding: 72px 0 80px;
+  }
+
+  .fb-landing .fb-features {
+    padding: 76px 0 24px;
+  }
+
+  .fb-landing .fb-day {
+    padding: 76px 0 82px;
+  }
+
+  .fb-landing .fb-quote {
+    padding: 64px 0 68px;
+  }
+
+  .fb-landing .fb-app {
+    padding: 76px 0 80px;
+  }
+
+  .fb-landing .fb-cta-sec {
+    padding: 76px 0 80px;
+  }
+}
