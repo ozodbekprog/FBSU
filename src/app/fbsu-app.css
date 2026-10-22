@@ -2857,3 +2857,25 @@ html:not(.fb-js) .fb-dash [data-fb-reveal] {
   background: rgba(212, 175, 55, 0.14);
   color: #e3c76a;
 }
+
+/* ---------- global page transitions for legacy pages ---------- */
+@keyframes fb-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.fb-shell .fb-main > :not(.fb-dash) {
+  animation: fb-page-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-shell .fb-main > * {
+    animation: none !important;
+  }
+}
