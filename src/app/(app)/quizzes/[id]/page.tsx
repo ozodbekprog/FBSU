@@ -190,7 +190,8 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
   });
   const active = attempts.find((attempt) => attempt.finishedAt === null);
   const finished = attempts.filter((attempt) => attempt.finishedAt !== null);
-  const canStart = !active && finished.length < quiz.maxAttempts;
+  const expired = quiz.dueAt ? quiz.dueAt.getTime() < Date.now() : false;
+  const canStart = !active && !expired && finished.length < quiz.maxAttempts;
   const scoredCount = finished.filter((attempt) => attempt.score != null).length;
   const bestScore =
     scoredCount > 0
@@ -234,6 +235,8 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
                 </ButtonLink>
               ) : canStart ? (
                 <StartAttemptButton quizId={quiz.id} />
+              ) : expired ? (
+                <Badge tone="slate">{dictionary.grdGroupPast}</Badge>
               ) : (
                 <Badge tone="slate">{dictionary.grdCompleted}</Badge>
               )}
