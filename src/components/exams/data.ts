@@ -64,7 +64,7 @@ export async function getStudentExams(
     where: {
       isPublished: true,
       dueAt: { not: null },
-      course: { enrollments: { some: { userId: studentId } } },
+      course: { enrollments: { some: { userId: studentId, status: "ACTIVE" } } },
     },
     orderBy: { dueAt: "asc" },
     include: {
