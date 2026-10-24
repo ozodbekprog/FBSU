@@ -108,7 +108,7 @@ export const shell = {
   landCourseDiffEq: "Differential equations",
   landCourseProg: "Programming fundamentals",
   landCoursePhysics: "Physics (practical)",
-  landGpaShort: "GPA 3.8",
+  landGpaShort: "GPA 3.00",
   landSemesterRating: "Semester rating",
   landAssignmentGraded: "Assignment graded",
   landMathScore: "Mathematics · 92 points",

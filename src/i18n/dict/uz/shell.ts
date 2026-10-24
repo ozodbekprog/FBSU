@@ -108,7 +108,7 @@ export const shell = {
   landCourseDiffEq: "Differensial tenglamalar",
   landCourseProg: "Programmalash asoslari",
   landCoursePhysics: "Fizika (amaliy)",
-  landGpaShort: "GPA 3.8",
+  landGpaShort: "GPA 3.00",
   landSemesterRating: "Semestr reytingi",
   landAssignmentGraded: "Topshiriq baholandi",
   landMathScore: "Matematika · 92 ball",

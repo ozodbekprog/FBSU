@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, Card, Input, Label } from "@/components/ui";
 import { Logo } from "@/components/brand/logo";
+import { BetaBadge } from "@/components/brand/beta-badge";
 import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useI18n } from "@/components/i18n/LocaleProvider";
@@ -173,6 +174,14 @@ const DEMO_ACCOUNTS = [
   },
 ];
 
+const PRIMARY_DEMO_EMAILS = ["ozodbek@ttpu.uz", "t.prog@ttpu.uz", "admin@ttpu.uz"];
+const PRIMARY_DEMO_ACCOUNTS = PRIMARY_DEMO_EMAILS.map((email) =>
+  DEMO_ACCOUNTS.find((account) => account.email === email),
+).filter((account): account is (typeof DEMO_ACCOUNTS)[number] => Boolean(account));
+const OTHER_DEMO_ACCOUNTS = DEMO_ACCOUNTS.filter(
+  (account) => !PRIMARY_DEMO_EMAILS.includes(account.email),
+);
+
 const PANEL_FEATURES = [
   "authLoginFeature1",
   "authLoginFeature2",
@@ -249,9 +258,12 @@ export default function LoginPage() {
         <div className="pointer-events-none absolute -left-24 top-24 size-80 rounded-full bg-brand-500/25 blur-3xl" />
         <div className="pointer-events-none absolute -right-20 bottom-8 size-72 rounded-full bg-gold-400/15 blur-3xl" />
         <div className="relative">
-          <span className="inline-flex rounded-2xl bg-white p-2.5 shadow-lift">
-            <Logo size={40} />
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex rounded-2xl bg-white p-2.5 shadow-lift">
+              <Logo size={40} />
+            </span>
+            <BetaBadge onDark />
+          </div>
           <h2 className="mt-10 max-w-md text-3xl font-bold leading-tight tracking-tight text-white xl:text-4xl">
             {t("authLoginPanelTitle")}
           </h2>
@@ -300,6 +312,9 @@ export default function LoginPage() {
           </div>
           <Card className="mt-6 p-7 sm:p-9">
             <div className="text-center">
+              <div className="mb-3 flex justify-center">
+                <BetaBadge />
+              </div>
               <h1 className="text-2xl font-semibold tracking-tight text-brand-950">
                 {t("authLoginTitle")}
               </h1>
@@ -410,28 +425,57 @@ export default function LoginPage() {
             <div className="mt-8">
               <div className="flex items-center gap-3">
                 <span className="h-px flex-1 bg-slate-100" />
-                <span className="text-xs font-medium uppercase tracking-[0.14em] text-slate-600">
+                <span className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-slate-600">
                   {t("authDemoTitle")}
+                  <BetaBadge />
                 </span>
                 <span className="h-px flex-1 bg-slate-100" />
               </div>
-              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {DEMO_ACCOUNTS.map((account) => (
+              <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                {t("authDemoMainRoles")}
+              </p>
+              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                {PRIMARY_DEMO_ACCOUNTS.map((account) => (
                   <button
                     key={account.email}
                     type="button"
                     onClick={() => fillDemo(account.email)}
-                    className="group flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-3 transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-150 hover:border-brand-300 hover:bg-brand-50"
+                    className="group flex flex-col items-center gap-2 rounded-xl border border-brand-200 bg-brand-50/40 px-2 py-3 text-center transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-150 hover:-translate-y-0.5 hover:border-brand-400 hover:bg-brand-50 hover:shadow-sm"
                   >
-                    <span className="inline-flex size-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700 transition-colors duration-150 group-hover:bg-brand-100">
+                    <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-brand-700 shadow-sm ring-1 ring-brand-100 transition-colors duration-150 group-hover:bg-brand-100">
                       {account.icon}
                     </span>
-                    <span className="text-center text-xs font-medium leading-tight text-slate-700 group-hover:text-brand-800">
+                    <span className="min-w-0 text-[11px] font-semibold leading-tight text-brand-900">
                       {t(account.roleKey)}
                     </span>
                   </button>
                 ))}
               </div>
+              <details className="group mt-4 rounded-xl border border-slate-200 bg-slate-50/40">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 [&::-webkit-details-marker]:hidden">
+                  {t("authDemoOtherRoles")}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-3.5 transition-transform duration-200 group-open:rotate-180" aria-hidden="true">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </summary>
+                <div className="grid grid-cols-2 gap-2 border-t border-slate-200/70 p-2 sm:grid-cols-3">
+                  {OTHER_DEMO_ACCOUNTS.map((account) => (
+                    <button
+                      key={account.email}
+                      type="button"
+                      onClick={() => fillDemo(account.email)}
+                      className="group/item flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-3 transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-150 hover:border-brand-300 hover:bg-brand-50"
+                    >
+                      <span className="inline-flex size-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700 transition-colors duration-150 group-hover/item:bg-brand-100">
+                        {account.icon}
+                      </span>
+                      <span className="text-center text-xs font-medium leading-tight text-slate-700 group-hover/item:text-brand-800">
+                        {t(account.roleKey)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </details>
               <p className="mt-3 text-center text-[11px] text-slate-600">
                 {t("authDemoHint")}
               </p>

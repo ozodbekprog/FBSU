@@ -11,6 +11,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { UnreadBadge } from "@/components/chat/UnreadBadge";
 import { LogoutForm } from "@/components/auth/logout-form";
 import { Logo } from "@/components/brand/logo";
+import { BetaBadge } from "@/components/brand/beta-badge";
 import { MobileTabBar, NavLinks, type MobileTab, type MobileTabIcon } from "./nav-links";
 import { MobileNav } from "@/components/nav/mobile-nav";
 import { BugAssistant } from "@/components/bugs/bug-assistant";
@@ -331,6 +332,9 @@ export default async function AppLayout({
         </div>
         <NavLinks groups={visibleGroups} />
         <div className="border-t border-slate-100 p-3">
+          <div className="mb-2 flex justify-center">
+            <BetaBadge />
+          </div>
           <div className="mb-2 flex justify-center">
             <LanguageSwitcher locale={locale} />
           </div>

@@ -108,7 +108,7 @@ export const shell = {
   landCourseDiffEq: "Дифференциальные уравнения",
   landCourseProg: "Основы программирования",
   landCoursePhysics: "Физика (практика)",
-  landGpaShort: "GPA 3.8",
+  landGpaShort: "GPA 3.00",
   landSemesterRating: "Рейтинг семестра",
   landAssignmentGraded: "Задание оценено",
   landMathScore: "Математика · 92 балла",

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Badge, ButtonLink, Card } from "@/components/ui";
 import { Logo } from "@/components/brand/logo";
+import { BetaBadge } from "@/components/brand/beta-badge";
 import { AppInstallButton } from "@/components/pwa/AppInstallButton";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { getDictionary, getLocale } from "@/i18n";
@@ -69,52 +70,6 @@ export default async function HomePage() {
     { href: "#ilova", label: dictionary.landNavApp },
     { href: "#statistika", label: dictionary.landNavStats },
     { href: "#aloqa", label: dictionary.landNavContact },
-  ];
-
-  const dashNav = [
-    { label: dictionary.landDashControl, active: true },
-    { label: dictionary.navCourses, active: false },
-    { label: dictionary.navSchedule, active: false },
-    { label: dictionary.navGradesStudent, active: false },
-    { label: dictionary.navTranscript, active: false },
-    { label: dictionary.landDashBooking, active: false },
-  ];
-
-  const dashStats = [
-    { label: dictionary.navGpa, value: "3.8" },
-    { label: dictionary.navAttendance, value: "94%" },
-    { label: dictionary.landDashAssignments, value: "12" },
-  ];
-
-  const dashBars = [
-    { day: dictionary.landDayMon, value: 44, highlight: false },
-    { day: dictionary.landDayTue, value: 66, highlight: false },
-    { day: dictionary.landDayWed, value: 52, highlight: false },
-    { day: dictionary.landDayThu, value: 78, highlight: false },
-    { day: dictionary.landDayFri, value: 60, highlight: true },
-    { day: dictionary.landDaySat, value: 90, highlight: true },
-    { day: dictionary.landDaySun, value: 48, highlight: false },
-  ];
-
-  const dashSchedule = [
-    {
-      time: "09:00",
-      title: dictionary.landCourseDiffEq,
-      room: "A-204",
-      tone: "bg-brand-500",
-    },
-    {
-      time: "10:30",
-      title: dictionary.landCourseProg,
-      room: "B-311",
-      tone: "bg-gold-400",
-    },
-    {
-      time: "13:00",
-      title: dictionary.landCoursePhysics,
-      room: "Lab-2",
-      tone: "bg-emerald-500",
-    },
   ];
 
   const trustItems = [
@@ -437,8 +392,9 @@ export default async function HomePage() {
       </a>
       <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/85 backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link href="/" className="transition-opacity duration-150 hover:opacity-80">
+          <Link href="/" className="flex items-center gap-2.5 transition-opacity duration-150 hover:opacity-80">
             <Logo />
+            <BetaBadge className="hidden sm:inline-flex" />
           </Link>
           <nav className="hidden items-center gap-7 text-sm font-medium text-slate-600 lg:flex">
             {navLinks.map((link) => (
@@ -528,111 +484,14 @@ export default async function HomePage() {
                   </span>
                   <span className="size-5 rounded-md bg-brand-50" />
                 </div>
-                <div className="flex gap-2.5 rounded-xl bg-surface p-2.5 sm:p-3">
-                  <aside aria-hidden="true" className="hidden w-36 shrink-0 flex-col gap-1 rounded-xl border border-slate-100 bg-white p-2.5 sm:flex">
-                    {dashNav.map((item) => (
-                      <span
-                        key={item.label}
-                        className={
-                          item.active
-                            ? "flex items-center gap-2 rounded-lg bg-brand-50 px-2.5 py-1.5 text-[11px] font-semibold text-brand-800"
-                            : "flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-500"
-                        }
-                      >
-                        <span
-                          className={
-                            item.active
-                              ? "size-1.5 rounded-full bg-brand-600"
-                              : "size-1.5 rounded-full bg-slate-300"
-                          }
-                        />
-                        {item.label}
-                      </span>
-                    ))}
-                  </aside>
-                  <div className="min-w-0 flex-1 space-y-2.5">
-                    <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-white px-3.5 py-2.5">
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-800 to-brand-600 text-[11px] font-semibold text-white">
-                          OZ
-                        </span>
-                        <div className="min-w-0">
-                          <p className="truncate text-[11px] font-semibold text-slate-800">
-                            {dictionary.landDashGreeting}
-                          </p>
-                          <p className="truncate text-[11px] text-slate-600">
-                            {dictionary.landDashSemester}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
-                        {dictionary.landDashActive}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {dashStats.map((stat) => (
-                        <div
-                          key={stat.label}
-                          className="rounded-xl border border-slate-100 bg-white px-3 py-2.5"
-                        >
-                          <p className="text-[11px] font-medium text-slate-600">{stat.label}</p>
-                          <p className="mt-0.5 text-sm font-semibold tracking-tight text-brand-900">
-                            {stat.value}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="rounded-xl border border-slate-100 bg-white p-3.5">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[11px] font-semibold text-slate-700">
-                          {dictionary.landWeeklyActivity}
-                        </p>
-                        <span className="text-[11px] font-medium text-slate-600">
-                          {dictionary.landSixOfSeven}
-                        </span>
-                      </div>
-                      <div className="mt-3 flex h-20 items-end gap-1.5">
-                        {dashBars.map((bar) => (
-                          <div
-                            key={bar.day}
-                            className="flex h-full flex-1 flex-col items-center justify-end gap-1.5"
-                          >
-                            <span
-                              className={
-                                bar.highlight
-                                  ? "w-full rounded-t-md bg-gradient-to-t from-brand-800 to-brand-500"
-                                  : "w-full rounded-t-md bg-brand-100"
-                              }
-                              style={{ height: `${bar.value}%` }}
-                            />
-                            <span className="text-[10px] font-medium text-slate-600">
-                              {bar.day}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      {dashSchedule.map((item) => (
-                        <div
-                          key={item.time}
-                          className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white px-3.5 py-2.5"
-                        >
-                          <span className="w-9 shrink-0 text-[11px] font-semibold text-brand-700">
-                            {item.time}
-                          </span>
-                          <span className={`h-7 w-1 shrink-0 rounded-full ${item.tone}`} />
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-[11px] font-semibold text-slate-800">
-                              {item.title}
-                            </p>
-                            <p className="text-[11px] text-slate-600">{item.room}</p>
-                          </div>
-                          <span className="size-1.5 shrink-0 rounded-full bg-slate-200" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                <div className="overflow-hidden rounded-xl bg-[#0b1220]">
+                  <img
+                    src="/beta-dashboard.png"
+                    alt="FBSU talaba dashboardi"
+                    width={1200}
+                    height={833}
+                    className="block h-auto w-full"
+                  />
                 </div>
               </div>
 
