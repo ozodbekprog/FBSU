@@ -419,7 +419,7 @@ export async function StudentHome({
       )}
 
       <section className="fb-kpis">
-        <div className="fb-kpi" data-fb-reveal data-fb-delay="120">
+        <div className="fb-kpi" data-kpi="gpa" data-fb-reveal data-fb-delay="120">
           <div className="fb-kpi-top">
             <span className="fb-kpi-label">{dict.fbdKpiGpa}</span>
             <span className="fb-kpi-ico">
@@ -771,7 +771,11 @@ export async function StudentHome({
                 aria-hidden="true"
               >
                 <span className="fb-donut-in">
-                  <b>{attendancePct}%</b>
+                  <b>
+                    <span data-fb-count={attendancePct} data-fb-count-sync="true">
+                      {attendancePct}
+                    </span>%
+                  </b>
                   <span>{dict.fbdAttendanceOverall}</span>
                 </span>
               </div>

@@ -107,6 +107,19 @@ export async function POST(request: Request) {
       },
     });
 
+    await prisma.notification
+      .create({
+        data: {
+          userId: studentId,
+          title: "Bonus ball qo'shildi",
+          body: `${course.title} fanidan +${points.toFixed(1)} ball (+${tenths}%). Sabab: ${reason}`,
+          link: "/bonus-points",
+        },
+      })
+      .catch((notificationError) => {
+        console.error("bonus notification failed", notificationError);
+      });
+
     return Response.json(
       {
         ok: true,

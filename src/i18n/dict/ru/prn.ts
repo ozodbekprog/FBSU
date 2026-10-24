@@ -11,4 +11,7 @@ export const prn = {
   parentEmpty: "Данные не найдены",
   parentSwitch: "Выбрать ребёнка",
   parentRiskLow: "Низкая посещаемость — обратите внимание",
+  parentCourseGrades: "Результаты по предметам",
+  parentCourseGradesNote: "Процент освоения по каждому предмету.",
+  parentCourseGradesEmpty: "Оценённых предметов пока нет.",
 };

@@ -441,7 +441,7 @@ export default async function HomePage() {
                 <h2>
                   {dictionary.fbGpaTitleA}
                   <br />
-                  {dictionary.fbGpaTitleB}
+                  <span className="fb-soft">{dictionary.fbGpaTitleB}</span>
                 </h2>
                 <p>{dictionary.fbGpaDesc}</p>
                 <div className="fb-list">
@@ -572,7 +572,7 @@ export default async function HomePage() {
                 <h2>
                   {dictionary.fbSchedTitleA}
                   <br />
-                  {dictionary.fbSchedTitleB}
+                  <span className="fb-soft">{dictionary.fbSchedTitleB}</span>
                 </h2>
                 <p>{dictionary.fbSchedDesc}</p>
                 <div className="fb-list">

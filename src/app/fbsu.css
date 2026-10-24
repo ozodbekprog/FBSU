@@ -1,5 +1,5 @@
 /* ============================================================
-   FBSU redesign — landing (Apple-like, graphite + blue)
+   FBSU redesign — landing (Apple-like, graphite + blue + gold)
    Scoped under .fb-landing so the rest of the LMS is untouched.
    ============================================================ */
 
@@ -17,6 +17,10 @@
   --fb-blue-2: #0062c4;
   --fb-blue-l: #2997ff;
   --fb-green: #30d158;
+  --fb-gold: #d4af37;
+  --fb-gold-ink: #856817;
+  --fb-gold-l: #e8cf8a;
+  --fb-gold-line: rgba(212, 175, 55, 0.3);
   --fb-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --fb-ease-2: cubic-bezier(0.16, 1, 0.3, 1);
   min-height: 100vh;
@@ -56,8 +60,21 @@
   display: block;
 }
 
+.fb-landing :focus-visible {
+  outline: 2px solid var(--fb-gold-ink);
+  outline-offset: 3px;
+}
+
+.fb-landing .fb-gnav :focus-visible,
+.fb-landing .fb-hero :focus-visible,
+.fb-landing .fb-stats :focus-visible,
+.fb-landing .fb-day :focus-visible,
+.fb-landing .fb-app :focus-visible {
+  outline-color: var(--fb-gold-l);
+}
+
 .fb-landing ::selection {
-  background: rgba(0, 113, 227, 0.2);
+  background: rgba(212, 175, 55, 0.24);
 }
 
 .fb-landing .fb-mono {
@@ -76,7 +93,7 @@
 }
 
 .fb-landing .fb-grad {
-  background: linear-gradient(180deg, #ffffff 8%, #8e8e93 108%);
+  background: linear-gradient(180deg, #ffffff 6%, #f0e6c9 52%, #c9a85c 96%, #a9821b 112%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -110,7 +127,7 @@
   right: 0;
   bottom: -1px;
   height: 2px;
-  background: linear-gradient(90deg, #0062c4, #2997ff);
+  background: linear-gradient(90deg, #0062c4, #2997ff 46%, #d4af37);
   transform: scaleX(var(--fb-prog, 0));
   transform-origin: 0 50%;
   opacity: 0.95;
@@ -138,6 +155,10 @@
   width: 27px;
   height: 27px;
   opacity: 0.96;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgba(212, 175, 55, 0.62),
+    0 0 18px -6px rgba(212, 175, 55, 0.55);
 }
 
 .fb-landing .fb-g-brand b {
@@ -178,7 +199,7 @@
   right: 0;
   bottom: -8px;
   height: 1px;
-  background: rgba(255, 255, 255, 0.8);
+  background: linear-gradient(90deg, transparent, var(--fb-gold) 30%, var(--fb-gold-l) 70%, transparent);
   transform: scaleX(0);
   transform-origin: 0 50%;
   transition: transform 0.45s var(--fb-ease);
@@ -204,6 +225,10 @@
   font-weight: 450;
   color: #d2d2d7;
   transition: color 0.25s ease;
+}
+
+.fb-landing .fb-g-right .fb-login:hover {
+  color: var(--fb-gold-l);
 }
 
 .fb-landing .fb-g-right .fb-cta {
@@ -270,21 +295,21 @@
   height: 27px;
   padding: 0 12px;
   border-radius: 15px;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.11), rgba(212, 175, 55, 0.035));
+  border: 1px solid rgba(212, 175, 55, 0.26);
   font-size: 9.5px;
   font-weight: 500;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #a1a1a6;
+  color: #b9b9be;
 }
 
 .fb-landing .fb-eyebrow i {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--fb-blue-l);
-  box-shadow: 0 0 0 3px rgba(41, 151, 255, 0.14);
+  background: var(--fb-gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.16);
 }
 
 .fb-landing .fb-eyebrow b {
@@ -410,7 +435,7 @@
 }
 
 .fb-landing .fb-hero-note b {
-  color: #a1a1a6;
+  color: var(--fb-gold-l);
   font-weight: 500;
 }
 
@@ -553,7 +578,7 @@
   font-size: 18px;
   font-weight: 600;
   letter-spacing: -0.03em;
-  color: #fff;
+  color: var(--fb-gold-l);
 }
 
 .fb-landing .fb-float .fb-val span {
@@ -627,7 +652,7 @@
   display: grid;
   grid-template-columns: 1.15fr repeat(4, 1fr);
   gap: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid var(--fb-gold-line);
   padding-top: 36px;
 }
 
@@ -641,7 +666,7 @@
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #6e6e73;
+  color: var(--fb-gold-l);
 }
 
 .fb-landing .fb-stats .fb-intro p {
@@ -667,7 +692,7 @@
   font-weight: 600;
   letter-spacing: -0.045em;
   line-height: 1;
-  background: linear-gradient(180deg, #ffffff 20%, #8e8e93 120%);
+  background: linear-gradient(180deg, #f7e8ba 8%, #d4af37 62%, #a9821b 112%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -692,11 +717,26 @@
 }
 
 .fb-landing .fb-sec-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: var(--fb-blue);
+  color: var(--fb-gold-ink);
+}
+
+.fb-landing .fb-sec-kicker::before,
+.fb-landing .fb-sec-kicker::after {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--fb-gold));
+}
+
+.fb-landing .fb-sec-kicker::after {
+  background: linear-gradient(90deg, var(--fb-gold), transparent);
 }
 
 .fb-landing .fb-sec-title {
@@ -709,7 +749,7 @@
 }
 
 .fb-landing .fb-sec-title .fb-soft {
-  color: #86868b;
+  color: var(--fb-gold-ink);
 }
 
 .fb-landing .fb-sec-sub {
@@ -755,7 +795,7 @@
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--fb-muted-2);
+  color: var(--fb-gold-ink);
 }
 
 .fb-landing .fb-tile h3 {
@@ -806,7 +846,10 @@
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-.fb-landing .fb-tile.dark .fb-t-kick,
+.fb-landing .fb-tile.dark .fb-t-kick {
+  color: var(--fb-gold-l);
+}
+
 .fb-landing .fb-tile.dark p {
   color: #a1a1a6;
 }
@@ -969,7 +1012,7 @@
   font-weight: 600;
   letter-spacing: -0.06em;
   line-height: 0.9;
-  background: linear-gradient(180deg, #1d1d1f 10%, #6e6e73 120%);
+  background: linear-gradient(180deg, #a9821b 10%, #7a5f14 120%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1018,6 +1061,15 @@
   font-weight: 600;
   color: #0071e3;
   letter-spacing: -0.02em;
+}
+
+.fb-landing .fb-t2 .fb-t-kick,
+.fb-landing .fb-t2 .fb-gpa-ring b {
+  color: var(--fb-gold-ink);
+}
+
+.fb-landing .fb-t2 .fb-gpa-ring {
+  background: conic-gradient(var(--fb-gold) 0 calc(var(--p) * 1%), #e5e5ea 0);
 }
 
 .fb-landing .fb-checklist {
@@ -1271,6 +1323,10 @@
   letter-spacing: -0.045em;
 }
 
+.fb-landing .fb-feature .fb-copy h2 .fb-soft {
+  color: var(--fb-gold-ink);
+}
+
 .fb-landing .fb-feature .fb-copy p {
   margin-top: 15px;
   font-size: 15px;
@@ -1377,7 +1433,7 @@
   font-weight: 600;
   letter-spacing: -0.07em;
   line-height: 0.8;
-  background: linear-gradient(180deg, #ffffff 6%, #8e8e93 112%);
+  background: linear-gradient(180deg, #f7e8ba 6%, #d4af37 62%, #a9821b 112%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1439,7 +1495,7 @@
   display: block;
   height: 100%;
   border-radius: 3px;
-  background: linear-gradient(90deg, #0071e3, #2997ff);
+  background: linear-gradient(90deg, #8a6d18, var(--fb-gold) 62%, var(--fb-gold-l));
   transform: scaleX(0);
   transform-origin: 0 50%;
   transition: transform 1.15s var(--fb-ease) 0.2s;
@@ -1504,7 +1560,7 @@
 
 .fb-landing .fb-float-stat .fb-spark path {
   fill: none;
-  stroke: #0071e3;
+  stroke: var(--fb-gold-ink);
   stroke-width: 1.6;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -1728,11 +1784,15 @@
 }
 
 .fb-landing .fb-day .fb-sec-kicker {
-  color: var(--fb-blue-l);
+  color: var(--fb-gold-l);
 }
 
 .fb-landing .fb-day .fb-sec-title {
   color: #fff;
+}
+
+.fb-landing .fb-day .fb-sec-title .fb-soft {
+  color: var(--fb-gold-l);
 }
 
 .fb-landing .fb-day .fb-sec-sub {
@@ -1757,8 +1817,8 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.18),
-    rgba(255, 255, 255, 0.18),
+    rgba(212, 175, 55, 0.45),
+    rgba(212, 175, 55, 0.45),
     transparent
   );
   transform: scaleX(0);
@@ -1838,7 +1898,7 @@
   margin-top: 14px;
   font-family: var(--font-plex-mono), ui-monospace, monospace;
   font-size: 10px;
-  color: #86868b;
+  color: rgba(232, 207, 138, 0.72);
   letter-spacing: 0.02em;
 }
 
@@ -1918,7 +1978,7 @@
 .fb-landing .fb-quote .fb-mark {
   font-size: 64px;
   line-height: 0.6;
-  color: #d2d2d7;
+  color: var(--fb-gold);
   font-weight: 600;
   opacity: 0;
   translate: 0 12px;
@@ -1941,7 +2001,7 @@
 }
 
 .fb-landing .fb-quote blockquote span {
-  color: #86868b;
+  color: var(--fb-gold-ink);
 }
 
 .fb-landing .fb-quote .fb-who {
@@ -2000,7 +2060,7 @@
 }
 
 .fb-landing .fb-app .fb-copy .fb-sec-kicker {
-  color: var(--fb-blue-l);
+  color: var(--fb-gold-l);
 }
 
 .fb-landing .fb-app .fb-copy h2 {
@@ -2012,7 +2072,7 @@
 }
 
 .fb-landing .fb-app .fb-copy h2 span {
-  color: #86868b;
+  color: var(--fb-gold-l);
 }
 
 .fb-landing .fb-app .fb-copy p {
@@ -2243,7 +2303,7 @@
   border-radius: 50%;
   right: -40px;
   top: -45px;
-  background: radial-gradient(circle, rgba(0, 113, 227, 0.6), transparent 70%);
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.45), transparent 70%);
 }
 
 .fb-landing .fb-ph-gpa .fb-l {
@@ -2261,6 +2321,10 @@
   font-size: 30px;
   font-weight: 600;
   letter-spacing: -0.05em;
+}
+
+.fb-landing .fb-ph-gpa .fb-v b {
+  color: var(--fb-gold-l);
 }
 
 .fb-landing .fb-ph-gpa .fb-v span {
@@ -2493,7 +2557,8 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(700px 360px at 50% 40%, rgba(0, 113, 227, 0.06), transparent 70%);
+  background: radial-gradient(700px 360px at 50% 40%, rgba(0, 113, 227, 0.06), transparent 70%),
+    radial-gradient(520px 300px at 12% 92%, rgba(212, 175, 55, 0.09), transparent 70%);
 }
 
 .fb-landing .fb-cta-sec .fb-in {
@@ -2506,7 +2571,7 @@
   font-weight: 600;
   letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: var(--fb-blue);
+  color: var(--fb-gold-ink);
 }
 
 .fb-landing .fb-cta-sec h2 {
@@ -2518,7 +2583,7 @@
 }
 
 .fb-landing .fb-cta-sec h2 span {
-  color: #86868b;
+  color: var(--fb-gold-ink);
 }
 
 .fb-landing .fb-cta-sec p {
@@ -2552,7 +2617,7 @@
 .fb-landing .fb-footer {
   background: var(--fb-white);
   padding: 52px 0 30px;
-  border-top: 1px solid var(--fb-line);
+  border-top: 1px solid var(--fb-gold-line);
 }
 
 .fb-landing .fb-f-top {
@@ -2572,6 +2637,8 @@
 .fb-landing .fb-f-brand img {
   width: 38px;
   height: 38px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.5);
 }
 
 .fb-landing .fb-f-brand .fb-n {
@@ -2618,7 +2685,7 @@
 }
 
 .fb-landing .fb-f-col a:hover {
-  color: var(--fb-blue);
+  color: var(--fb-gold-ink);
   transform: translateX(2px);
 }
 
@@ -2649,7 +2716,7 @@
 }
 
 .fb-landing .fb-f-bot a:hover {
-  color: var(--fb-ink);
+  color: var(--fb-gold-ink);
 }
 
 /* ================= MOTION ================= */

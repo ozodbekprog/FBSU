@@ -62,9 +62,9 @@ const ATTENDANCE_LABELS: Record<AttendanceStatus, keyof Dictionary> = {
 };
 
 const SUBMISSION_COLORS: Record<SubmissionStatus, string> = {
-  SUBMITTED: "#5373b8",
-  GRADED: "#10b981",
-  LATE: "#f59e0b",
+  SUBMITTED: "#0071e3",
+  GRADED: "#248a5a",
+  LATE: "#d4af37",
 };
 
 const SUBMISSION_LABELS: Record<SubmissionStatus, keyof Dictionary> = {
@@ -74,18 +74,18 @@ const SUBMISSION_LABELS: Record<SubmissionStatus, keyof Dictionary> = {
 };
 
 const ROLE_COLORS: Record<Role, string> = {
-  STUDENT: "#5373b8",
-  TEACHER: "#34497f",
-  REGISTRAR: "#0284c7",
-  BUXGALTER: "#b45309",
-  TYUTOR: "#059669",
-  KAFEDRA_MUDIRI: "#0ea5e9",
-  DEKAN: "#7c3aed",
-  PRO_RECTOR: "#ca8a04",
-  REKTOR: "#c9a227",
-  ADMIN: "#e11d48",
-  XODIM: "#64748b",
-  OTA_ONA: "#0d9488",
+  STUDENT: "#0071e3",
+  TEACHER: "#86868b",
+  REGISTRAR: "#2997ff",
+  BUXGALTER: "#b08c2e",
+  TYUTOR: "#248a5a",
+  KAFEDRA_MUDIRI: "#6e6e73",
+  DEKAN: "#1d1d1f",
+  PRO_RECTOR: "#a9821b",
+  REKTOR: "#d4af37",
+  ADMIN: "#c7362b",
+  XODIM: "#a1a1a6",
+  OTA_ONA: "#0062c4",
 };
 
 const ROLE_LABELS: Record<Role, keyof Dictionary> = {
@@ -376,7 +376,21 @@ export async function getAdminAnalytics(locale: Locale, scope?: AnalyticsScope):
   const departmentScope = scope?.departmentId ?? null;
 
   const userWhere: Prisma.UserWhereInput = facultyScope
-    ? { facultyId: facultyScope }
+    ? {
+        OR: [
+          { facultyId: facultyScope },
+          { department: { facultyId: facultyScope } },
+          {
+            role: "STUDENT",
+            enrollments: {
+              some: {
+                status: "ACTIVE",
+                course: { teacher: { department: { facultyId: facultyScope } } },
+              },
+            },
+          },
+        ],
+      }
     : departmentScope
       ? {
           OR: [
@@ -391,7 +405,16 @@ export async function getAdminAnalytics(locale: Locale, scope?: AnalyticsScope):
         }
       : {};
   const submissionWhere: Prisma.SubmissionWhereInput = facultyScope
-    ? { student: { facultyId: facultyScope } }
+    ? {
+        OR: [
+          { student: { facultyId: facultyScope } },
+          {
+            assignment: {
+              course: { teacher: { department: { facultyId: facultyScope } } },
+            },
+          },
+        ],
+      }
     : departmentScope
       ? { assignment: { course: { teacher: { departmentId: departmentScope } } } }
       : {};

@@ -50,7 +50,8 @@ export function DonutChart({ data }: { data: DonutChartDatum[] }) {
           r={RADIUS}
           fill="none"
           strokeWidth={STROKE}
-          className="animate-fade-in stroke-slate-100"
+          stroke="var(--fb-track, #f1f5f9)"
+          className="animate-fade-in"
         />
         {segments.map((segment, segmentIndex) => {
           if (segment.value <= 0) return null;
@@ -73,12 +74,13 @@ export function DonutChart({ data }: { data: DonutChartDatum[] }) {
             </circle>
           );
         })}
-        <circle cx={CENTER} cy={CENTER} r={46} className="fill-white/80" />
+        <circle cx={CENTER} cy={CENTER} r={46} fill="var(--fb-card, #ffffff)" />
         <text
           x={CENTER}
           y={CENTER - 1}
           textAnchor="middle"
-          className="animate-fade-in fill-brand-950"
+          className="animate-fade-in"
+          fill="var(--fb-ink, #1d1d1f)"
           fontSize={24}
           fontWeight={700}
           style={{ animationDelay: "220ms" }}
@@ -89,7 +91,8 @@ export function DonutChart({ data }: { data: DonutChartDatum[] }) {
           x={CENTER}
           y={CENTER + 14}
           textAnchor="middle"
-          className="animate-fade-in fill-slate-400"
+          className="animate-fade-in"
+          fill="var(--fb-muted-2, #94a3b8)"
           fontSize={9.5}
           style={{ animationDelay: "220ms" }}
         >
@@ -107,9 +110,24 @@ export function DonutChart({ data }: { data: DonutChartDatum[] }) {
               style={{ animationDelay: `${280 + index * 60}ms` }}
             >
               <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
-              <span className="min-w-0 flex-1 truncate text-xs text-slate-600">{item.label}</span>
-              <span className="text-xs font-semibold text-slate-900">{item.value}</span>
-              <span className="w-9 text-right text-[11px] tabular-nums text-slate-500">{percent}%</span>
+              <span
+                className="min-w-0 flex-1 truncate text-xs"
+                style={{ color: "var(--fb-muted, #475569)" }}
+              >
+                {item.label}
+              </span>
+              <span
+                className="text-xs font-semibold"
+                style={{ color: "var(--fb-ink, #0f172a)" }}
+              >
+                {item.value}
+              </span>
+              <span
+                className="w-9 text-right text-[11px] tabular-nums"
+                style={{ color: "var(--fb-muted-2, #64748b)" }}
+              >
+                {percent}%
+              </span>
             </li>
           );
         })}

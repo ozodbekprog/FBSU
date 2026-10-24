@@ -82,6 +82,9 @@ export default async function AppLayout({
         { href: "/exams", label: dictionary.navExams },
         { href: "/grades", label: isStaff(user.role) ? dictionary.navGradesStaff : dictionary.navGradesStudent },
         { href: "/gpa", label: dictionary.navGpa },
+        ...(user.role === "TEACHER"
+          ? [{ href: "/bonus-points", label: dictionary.grdBonusPoints }]
+          : []),
         { href: "/transcript", label: dictionary.navTranscript },
         { href: "/attendance", label: dictionary.navAttendance },
         ...(isStaff(user.role) ? [{ href: "/journal", label: dictionary.navJournal }] : []),
@@ -206,7 +209,7 @@ export default async function AppLayout({
     ],
     TEACHER: [
       "/dashboard", "/assistant", "/courses", "/journal", "/journals",
-      "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/attendance",
+      "/question-bank", "/bonus-points", "/schedule", "/calendar", "/academic-calendar", "/exams", "/attendance",
       "/reports", "/workload", "/staff", "/tasks", "/my-qr", "/messages", "/bookings", "/rooms",
       "/research", "/search", "/help", "/bounty", "/settings",
     ],
@@ -338,20 +341,24 @@ export default async function AppLayout({
           </div>
         </aside>
         <div className="fb-shell-main flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-slate-200/70 bg-white/90 px-4 backdrop-blur md:hidden">
-            <div className="flex min-w-0 items-center gap-1">
+          <header className="fb-mobile-head md:hidden">
+            <div className="fb-mh-left">
               <MobileNav groups={visibleGroups} />
-              <Link href="/dashboard" className="transition-opacity hover:opacity-80">
-                <Logo size={28} withText={false} />
+              <Link href="/dashboard" className="fb-side-brand">
+                <img src="/logo.svg" alt="FBSU" width={26} height={26} />
+                <span className="fb-side-name">
+                  <b>FBSU</b>
+                  <small>TURIN POLYTECHNIC</small>
+                </span>
               </Link>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="fb-mh-right">
               <NotificationBell align="right" />
               <ThemeToggle />
               <Link
                 href="/profile"
                 aria-label={dictionary.shellProfile}
-                className="rounded-full transition-opacity hover:opacity-80"
+                className="fb-mobile-avatar"
               >
                 <Avatar name={user.name} src={user.avatarUrl} size={30} />
               </Link>

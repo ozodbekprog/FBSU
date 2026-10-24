@@ -334,6 +334,11 @@ const S: Record<string, ReactNode> = {
       <path d="M8.5 13.3 7 22l5-2.6L17 22l-1.5-8.7" />
     </>
   ),
+"/bonus-points": (
+    <>
+      <path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />
+    </>
+  ),
 };
 
 /** Berilgan href uchun drawer ikonkasi (yo'q bo'lsa `null`). */

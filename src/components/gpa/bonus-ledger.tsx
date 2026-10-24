@@ -55,6 +55,11 @@ export async function BonusLedger({ rows }: { rows: Row[] }) {
                     <td className="px-3 py-3 text-slate-600">{row.courseTitle}</td>
                     <td className="px-3 py-3">
                       <Badge tone="blue">+{row.points.toFixed(1)}</Badge>
+                      <div className="mt-1 text-[11px] text-slate-500">
+                        {translate(locale, "grdBonusPercent", {
+                          percent: Math.round(row.points * 10),
+                        })}
+                      </div>
                     </td>
                     <td className="max-w-xs px-3 py-3 text-slate-600">{row.reason}</td>
                     <td className="px-6 py-3 text-xs text-slate-500">{row.createdAt}</td>

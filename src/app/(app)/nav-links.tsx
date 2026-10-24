@@ -66,9 +66,9 @@ export function MobileTabBar({ tabs }: { tabs: MobileTab[] }) {
     <nav
       aria-label={t("shellMobileNav")}
       data-tour="mobile-nav"
-      className="app-shell-tabbar fixed bottom-0 left-0 z-30 w-full border-t border-slate-200/70 bg-white/90 pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_-18px_rgba(29,52,96,0.45)] backdrop-blur md:hidden"
+      className="fb-tabbar md:hidden"
     >
-      <div className="mx-auto flex max-w-md items-stretch px-1.5">
+      <div className="fb-tabbar-in">
         {tabs.map((tab) => {
           const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
           return (
@@ -76,17 +76,9 @@ export function MobileTabBar({ tabs }: { tabs: MobileTab[] }) {
               <Link
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
-                className={cn(
-                  "flex flex-col items-center gap-1 pt-2 pb-1.5 text-[11px] font-medium transition-colors duration-150",
-                  active ? "text-brand-900" : "text-slate-500 hover:text-brand-700",
-                )}
+                className="fb-tab"
               >
-                <span
-                  className={cn(
-                    "relative flex h-7 w-12 items-center justify-center rounded-xl transition-colors duration-150",
-                    active ? "bg-brand-50 text-brand-900" : "text-slate-500",
-                  )}
-                >
+                <span className="fb-tab-ico">
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -94,22 +86,15 @@ export function MobileTabBar({ tabs }: { tabs: MobileTab[] }) {
                     strokeWidth="1.8"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="size-5"
                     aria-hidden="true"
                   >
                     {TAB_ICONS[tab.icon]}
                   </svg>
-                  {active ? (
-                    <span className="absolute -top-0.5 right-1/2 size-1.5 translate-x-4 rounded-full bg-gold-400" />
-                  ) : null}
                 </span>
-                <span className="whitespace-nowrap">{tab.label}</span>
+                <span className="fb-tab-label">{tab.label}</span>
               </Link>
               {tab.badge ? (
-                <span
-                  inert
-                  className="pointer-events-none absolute top-1.5 right-1/2 translate-x-3 [&>span]:size-0 [&_svg]:hidden"
-                >
+                <span inert className="fb-tab-badge pointer-events-none">
                   {tab.badge}
                 </span>
               ) : null}

@@ -1,21 +1,19 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Fragment, type ReactNode } from "react";
 import { canViewSalary, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
-import { Avatar, Badge, ButtonLink, Card, CardBody, CardHeader, EmptyState } from "@/components/ui";
 import { BarChart, DonutChart, LineChart } from "@/components/charts";
-import { GradeTrendChart } from "@/components/charts/GradeTrendChart";
-import { cn, dayName, fmtDate, initials } from "@/lib/utils";
-import { getAdminAnalytics, getStudentAnalytics, getTeacherAnalytics } from "./analytics";
+import { cn, dayName, fmtDate } from "@/lib/utils";
+import { getAdminAnalytics, getTeacherAnalytics } from "./analytics";
+import type { AdminAnalytics, TeacherAnalytics } from "./analytics";
 import { salaryTotalsForMonth } from "@/lib/payroll";
-import type { AdminAnalytics, StudentAnalytics, TeacherAnalytics } from "./analytics";
-import { getDictionary, getLocale, t as translate, type Locale } from "@/i18n";
+import { getDictionary, getLocale, t as translate, type Dictionary, type Locale } from "@/i18n";
 import { StudentHome } from "@/components/fb/student-home";
-import { LessonBanner } from "@/components/dashboard/lesson-banner";
+import { FbMotion } from "@/components/fb/fb-motion";
 import { buildWorkloadData } from "@/components/workload/workload-data";
 import type { WorkloadCourse, WorkloadSummary } from "@/components/workload/workload-data";
-import { TeacherCoursesCard, TeacherSummaryCard } from "@/components/cabinet/teacher-cabinet";
 import { isValidFaceDescriptor } from "@/modules/attendance/face";
 import {
   SLOT_TIMES,
@@ -25,38 +23,7 @@ import {
   slotRange,
   todayIso,
 } from "@/components/attendance/lesson-utils";
-import { LessonCountdown } from "@/components/schedule/lesson-countdown";
 import type { CourseOption } from "@/components/attendance/lesson-utils";
-import type { ReactNode } from "react";
-
-const ATTENDANCE_BADGES: Record<
-  string,
-  {
-    key:
-      | "dashAttendancePresent"
-      | "dashAttendanceLate"
-      | "dashAttendanceExcused"
-      | "dashAttendanceAbsent"
-      | "dashAttendanceSuspicious"
-      | "dashAttendanceLeftEarly";
-    tone: "green" | "amber" | "blue" | "rose" | "slate";
-    dot: string;
-  }
-> = {
-  PRESENT: { key: "dashAttendancePresent", tone: "green", dot: "bg-emerald-500 ring-emerald-100" },
-  LATE: { key: "dashAttendanceLate", tone: "amber", dot: "bg-amber-500 ring-amber-100" },
-  EXCUSED: { key: "dashAttendanceExcused", tone: "blue", dot: "bg-blue-500 ring-blue-100" },
-  ABSENT: { key: "dashAttendanceAbsent", tone: "rose", dot: "bg-rose-500 ring-rose-100" },
-  SUSPICIOUS: { key: "dashAttendanceSuspicious", tone: "amber", dot: "bg-amber-500 ring-amber-100" },
-  LEFT_EARLY: { key: "dashAttendanceLeftEarly", tone: "slate", dot: "bg-slate-400 ring-slate-100" },
-};
-
-const STAT_TONES = {
-  brand: "bg-brand-50 text-brand-700 ring-brand-100",
-  gold: "bg-gold-300/20 text-gold-800 ring-gold-300/40",
-  emerald: "bg-emerald-50 text-emerald-600 ring-emerald-100",
-  amber: "bg-amber-50 text-amber-600 ring-amber-100",
-} as const;
 
 type TodayLesson = {
   id: string;
@@ -75,506 +42,511 @@ type QuickAction = {
   icon: ReactNode;
 };
 
-function Icon({ children, className }: { children: ReactNode; className?: string }) {
+type FocusStat = { value: ReactNode; label: string };
+
+const NUMBER = new Intl.NumberFormat("ru-RU");
+
+const SALARY_TONE: Record<string, string> = {
+  DRAFT: "",
+  PENDING: "amber",
+  APPROVED: "green",
+  PAID: "blue",
+};
+
+function fmtNumber(value: number) {
+  return NUMBER.format(value);
+}
+
+function minutesOf(value: string) {
+  const [hours, mins] = value.split(":").map(Number);
+  return hours * 60 + mins;
+}
+
+function dayMonth(date: Date) {
+  return `${String(date.getDate()).padStart(2, "0")}.${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function salaryLabel(status: string, dict: Dictionary) {
+  if (status === "DRAFT") return dict.payDraft;
+  if (status === "PENDING") return dict.payPending;
+  if (status === "APPROVED") return dict.payApproved;
+  if (status === "PAID") return dict.payPaid;
+  return status;
+}
+
+function Svg({ children }: { children: ReactNode }) {
   return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
       {children}
     </svg>
   );
 }
 
-function CheckCircleIcon() {
+function ArrowIcon() {
   return (
-    <Icon className="size-4">
-      <circle cx="12" cy="12" r="9" />
-      <path d="m8.5 12.5 2.5 2.5 4.5-5" />
-    </Icon>
+    <Svg>
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </Svg>
   );
 }
 
 function CalendarIcon() {
   return (
-    <Icon className="size-4">
-      <rect x="3" y="5" width="18" height="16" rx="2" />
-      <path d="M16 3v4M8 3v4M3 11h18" />
-    </Icon>
+    <Svg>
+      <rect x="3" y="5" width="18" height="16" rx="3" />
+      <path d="M8 3v4M16 3v4M3 10h18" />
+    </Svg>
   );
 }
 
-function ClipboardIcon() {
+function BookIcon() {
   return (
-    <Icon className="size-4">
-      <path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1z" />
-      <path d="M16 5h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2" />
-      <path d="m9 13 2 2 4-4" />
-    </Icon>
-  );
-}
-
-function HelpCircleIcon() {
-  return (
-    <Icon className="size-4">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M9.5 9.5a2.5 2.5 0 1 1 3.3 2.4c-.8.3-1.3 1-1.3 1.8v.3" />
-      <path d="M12 17h.01" />
-    </Icon>
-  );
-}
-
-function BarChartIcon() {
-  return (
-    <Icon className="size-4">
-      <path d="M3 20V10" />
-      <path d="M9 20V4" />
-      <path d="M15 20v-6" />
-      <path d="M21 20H3" />
-    </Icon>
+    <Svg>
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </Svg>
   );
 }
 
 function UsersIcon() {
   return (
-    <Icon className="size-4">
+    <Svg>
       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
       <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </Icon>
+    </Svg>
   );
 }
 
-function FileTextIcon() {
+function ClipboardIcon() {
   return (
-    <Icon className="size-4">
+    <Svg>
+      <path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1z" />
+      <path d="M16 5h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2" />
+      <path d="m9 13 2 2 4-4" />
+    </Svg>
+  );
+}
+
+function HelpIcon() {
+  return (
+    <Svg>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 9.5a2.5 2.5 0 1 1 3.3 2.4c-.8.3-1.3 1-1.3 1.8v.3" />
+      <path d="M12 17h.01" />
+    </Svg>
+  );
+}
+
+function ChartIcon() {
+  return (
+    <Svg>
+      <path d="M3 20V10" />
+      <path d="M9 20V4" />
+      <path d="M15 20v-6" />
+      <path d="M21 20H3" />
+    </Svg>
+  );
+}
+
+function FileIcon() {
+  return (
+    <Svg>
       <path d="M14 3v5h5" />
       <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
       <path d="M9 13h6M9 17h4" />
-    </Icon>
+    </Svg>
   );
 }
 
-function Reveal({
-  delay = 0,
-  className,
-  tour,
-  children,
-}: {
-  delay?: number;
-  className?: string;
-  tour?: string;
-  children: ReactNode;
-}) {
+function CheckIcon() {
   return (
-    <div
-      data-tour={tour}
-      className={cn("animate-fade-up", className)}
-      style={{ animationDelay: `${Math.min(delay, 200)}ms` }}
-    >
-      {children}
-    </div>
+    <Svg>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8.5 12.5 2.5 2.5 4.5-5" />
+    </Svg>
   );
 }
 
-function QuickActionLink({ href, label, icon }: QuickAction) {
+function WalletIcon() {
   return (
-    <Link
-      href={href}
-      className="group inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3.5 py-2 text-sm font-medium text-white backdrop-blur transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-200 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/20"
-    >
-      <span className="text-gold-300 transition-transform duration-200 group-hover:scale-110">{icon}</span>
-      {label}
-    </Link>
+    <Svg>
+      <path d="M3 7a2 2 0 0 1 2-2h13v4" />
+      <rect x="3" y="7" width="18" height="13" rx="2" />
+      <path d="M16 13h2" />
+    </Svg>
   );
 }
 
-function Hero({
+function BuildingIcon() {
+  return (
+    <Svg>
+      <path d="M3 21h18" />
+      <path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16" />
+      <path d="M9 7h2M9 11h2M9 15h2M15 21v-8h4v8" />
+    </Svg>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <Svg>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </Svg>
+  );
+}
+
+function DoorIcon() {
+  return (
+    <Svg>
+      <path d="M4 21h16" />
+      <path d="M7 21V4h10v17" />
+      <path d="M13.5 12h.01" />
+    </Svg>
+  );
+}
+
+function GearIcon() {
+  return (
+    <Svg>
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 8.96 4.6H9a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z" />
+    </Svg>
+  );
+}
+
+function StaffHead({
   name,
-  firstName,
   roleLabel,
+  scopeLabel,
   now,
-  actions,
   locale,
+  stats,
+  actions,
 }: {
   name: string;
-  firstName: string;
   roleLabel: string;
+  scopeLabel: string | null;
   now: Date;
-  actions: QuickAction[];
   locale: Locale;
+  stats: string[];
+  actions: QuickAction[];
+}) {
+  const dict = getDictionary(locale);
+  const greeting =
+    now.getHours() < 12
+      ? dict.fbdGreetingMorning
+      : now.getHours() < 18
+        ? dict.fbdGreetingDay
+        : dict.fbdGreetingEvening;
+  const [primary, secondary] = actions;
+
+  return (
+    <header className="fb-dash-head" data-fb-reveal>
+      <div>
+        <div className="fb-chips">
+          <span className="fb-chip blue">{roleLabel}</span>
+          {scopeLabel ? <span className="fb-chip">{scopeLabel}</span> : null}
+          <span className="fb-chip">
+            {dayName(now.getDay(), locale)} · {dayMonth(now)}
+          </span>
+        </div>
+        <h1 className="fb-greet">
+          {greeting} <span className="fb-serif">{name}.</span>
+        </h1>
+        <div className="fb-subline">
+          {scopeLabel ? <span>{scopeLabel}</span> : null}
+          {scopeLabel && stats.length > 0 ? <i /> : null}
+          {stats.map((stat, index) => (
+            <Fragment key={stat}>
+              {index > 0 ? <i /> : null}
+              <span>{stat}</span>
+            </Fragment>
+          ))}
+        </div>
+      </div>
+      <div className="fb-head-actions">
+        {secondary ? (
+          <Link className="fb-btn" href={secondary.href}>
+            {secondary.icon}
+            {secondary.label}
+          </Link>
+        ) : null}
+        {primary ? (
+          <Link className="fb-btn primary" href={primary.href}>
+            {primary.icon}
+            {primary.label}
+          </Link>
+        ) : null}
+      </div>
+    </header>
+  );
+}
+
+function FocusJoin({
+  chip,
+  href,
+  label,
+  icon,
+}: {
+  chip: ReactNode;
+  href: string;
+  label: string;
+  icon: ReactNode;
 }) {
   return (
-    <section className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-950 via-brand-900 to-brand-700 p-6 text-white shadow-card md:p-8">
-      <span className="pointer-events-none absolute -right-16 -top-24 size-64 rounded-full bg-gold-400/10 blur-2xl" />
-      <span className="pointer-events-none absolute -bottom-28 left-1/3 size-72 rounded-full bg-brand-400/10 blur-3xl" />
-      <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-      <div className="relative">
-        <div className="flex flex-wrap items-center gap-4">
-          <Avatar name={name} className="size-14! text-base ring-4 ring-white/10" />
-          <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-              {translate(locale, "dashGreeting", { name: firstName })}
-            </h1>
-            <div className="mt-2.5 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-medium text-brand-100 ring-1 ring-white/15">
-                {roleLabel}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-300/15 px-2.5 py-0.5 text-xs font-medium text-gold-300 ring-1 ring-gold-300/25">
-                <Icon className="size-3.5">
-                  <rect x="3" y="5" width="18" height="16" rx="2" />
-                  <path d="M16 3v4M8 3v4M3 11h18" />
-                </Icon>
-                {dayName(now.getDay())}, {fmtDate(now)}
-              </span>
-            </div>
-          </div>
+    <>
+      <span className="fb-zoom">
+        <i />
+        {chip}
+      </span>
+      <Link className="fb-join-btn" href={href}>
+        {icon}
+        {label}
+      </Link>
+    </>
+  );
+}
+
+function StaffFocus({
+  eyebrow,
+  title,
+  meta,
+  stats,
+  progress,
+  side,
+}: {
+  eyebrow: ReactNode;
+  title: ReactNode;
+  meta?: ReactNode;
+  stats?: FocusStat[];
+  progress?: { top: string; right: string; pct: number; bottom: ReactNode };
+  side: ReactNode;
+}) {
+  return (
+    <section className="fb-focus staff" data-fb-reveal data-fb-delay="80">
+      <div>
+        <div className="fb-focus-eyebrow">
+          <i />
+          {eyebrow}
         </div>
-        <div className="mt-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-200/80">
-            {translate(locale, "dashQuickActions")}
-          </p>
-          <div className="mt-2.5 flex flex-wrap gap-2" data-tour="dash-actions">
-            {actions.map((action) => (
-              <QuickActionLink key={action.href} {...action} />
+        <h2>{title}</h2>
+        {meta ? <div className="fb-focus-meta">{meta}</div> : null}
+        {stats && stats.length > 0 ? (
+          <div className="fb-focus-stats">
+            {stats.map((stat, index) => (
+              <span className="fb-focus-stat" key={index}>
+                <b>{stat.value}</b>
+                {stat.label}
+              </span>
             ))}
           </div>
-        </div>
+        ) : null}
+      </div>
+      <div className="fb-focus-side">
+        {progress ? (
+          <div className="fb-focus-progress">
+            <div className="fb-fp-top">
+              <span>{progress.top}</span>
+              <b>{progress.right}</b>
+            </div>
+            <div className="fb-fp-track">
+              <i style={{ width: `${Math.max(0, Math.min(100, progress.pct))}%` }} />
+            </div>
+            <div className="fb-fp-bot">{progress.bottom}</div>
+          </div>
+        ) : null}
+        <div className="fb-focus-join">{side}</div>
       </div>
     </section>
   );
 }
 
-function StatTile({
+function StaffKpi({
   label,
   value,
-  hint,
-  tone = "brand",
+  unit,
+  foot,
   icon,
   href,
+  accent,
+  delay,
 }: {
   label: string;
   value: ReactNode;
-  hint?: string;
-  tone?: keyof typeof STAT_TONES;
+  unit?: string;
+  foot: ReactNode;
   icon: ReactNode;
   href?: string;
+  accent?: boolean;
+  delay: number;
 }) {
-  const tile = (
-    <Card className="group relative h-full overflow-hidden p-5 transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:shadow-lift">
-      <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400 opacity-60 transition-opacity duration-200 group-hover:opacity-100" />
-      {href ? (
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="absolute right-3 top-3 size-4 text-slate-300 transition-[transform,color] duration-200 group-hover:translate-x-0.5 group-hover:text-brand-600"
-        >
-          <path d="M7 17 17 7" />
-          <path d="m8 7 9 0 0 9" />
-        </svg>
-      ) : null}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-slate-500">{label}</p>
-          <p className="mt-2 text-3xl font-semibold tracking-tight text-brand-950">{value}</p>
-          {hint ? <p className="mt-1 truncate text-xs text-slate-600">{hint}</p> : null}
-        </div>
-        <span
-          className={cn(
-            "inline-flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 transition-transform duration-200 group-hover:scale-105",
-            STAT_TONES[tone],
-          )}
-        >
-          {icon}
-        </span>
+  const body = (
+    <>
+      <div className="fb-kpi-top">
+        <span className="fb-kpi-label">{label}</span>
+        <span className="fb-kpi-ico">{icon}</span>
       </div>
-    </Card>
+      <div className="fb-kpi-val">
+        <b data-fb-count={typeof value === "number" ? value : undefined}>{value}</b>
+        {unit ? <span>{unit}</span> : null}
+      </div>
+      <div className="fb-kpi-foot no-viz">{foot}</div>
+    </>
   );
-  if (!href) return tile;
+
+  if (!href) {
+    return (
+      <div className="fb-kpi" data-kpi={accent ? "gpa" : undefined} data-fb-reveal data-fb-delay={delay}>
+        {body}
+      </div>
+    );
+  }
+
   return (
-    <Link href={href} className="block h-full" aria-label={label}>
-      {tile}
+    <Link
+      className="fb-kpi"
+      data-kpi={accent ? "gpa" : undefined}
+      data-fb-reveal
+      data-fb-delay={delay}
+      href={href}
+    >
+      {body}
     </Link>
   );
 }
 
-function DateChip({ overdue, soon, children }: { overdue: boolean; soon: boolean; children: ReactNode }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium",
-        overdue ? "bg-rose-50 text-rose-600" : soon ? "bg-amber-50 text-amber-600" : "bg-slate-100 text-slate-500",
-      )}
-    >
-      {children}
-    </span>
-  );
-}
-
-function SectionHeading({
+function StaffPanel({
   title,
   subtitle,
   action,
+  note,
+  delay = 0,
+  children,
 }: {
-  title: string;
-  subtitle: string;
-  action?: ReactNode;
+  title: ReactNode;
+  subtitle?: ReactNode;
+  action?: { href: string; label: string };
+  note?: ReactNode;
+  delay?: number;
+  children: ReactNode;
 }) {
   return (
-    <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-      <div className="flex items-start gap-3">
-        <span className="mt-1 hidden h-8 w-1 rounded-full bg-gradient-to-b from-brand-700 to-gold-400 sm:block" />
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight text-brand-950">{title}</h2>
-          <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
-        </div>
+    <section className="fb-card" data-fb-reveal data-fb-delay={delay}>
+      <div className="fb-card-head">
+        <h3>{title}</h3>
+        {subtitle ? <span className="fb-tagline">{subtitle}</span> : null}
+        {action ? (
+          <Link className="fb-more" href={action.href}>
+            {action.label}
+            <ArrowIcon />
+          </Link>
+        ) : null}
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
-    </div>
+      {children}
+      {note ? <p className="fb-panel-note">{note}</p> : null}
+    </section>
   );
 }
 
-function AnalyticsCard({
+function StaffChart({
   title,
   subtitle,
   note,
-  delay,
   empty,
+  emptyTitle,
   emptyDescription,
-  locale,
+  delay,
   children,
-  className,
 }: {
   title: string;
   subtitle: string;
   note: string;
-  delay: number;
   empty: boolean;
+  emptyTitle: string;
   emptyDescription: string;
-  locale: Locale;
+  delay: number;
   children: ReactNode;
-  className?: string;
 }) {
   return (
-    <Reveal delay={delay} className={className}>
-      <Card className="flex h-full flex-col overflow-hidden">
-        <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 pb-2.5 pt-3.5">
-          <div className="min-w-0">
-            <h3 className="text-sm font-semibold tracking-tight text-brand-950">{title}</h3>
-            <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>
-          </div>
-        </div>
-        <div className="flex flex-1 flex-col px-4 pb-3.5 pt-3">
-          {empty ? (
-            <EmptyState title={translate(locale, "dashNoDataTitle")} description={emptyDescription} />
-          ) : (
-            <>
-              <div className="flex flex-1 items-center">{children}</div>
-              <p className="mt-3 border-t border-slate-100 pt-2.5 text-[11px] leading-relaxed text-slate-500">
-                {note}
-              </p>
-            </>
-          )}
-        </div>
-      </Card>
-    </Reveal>
-  );
-}
-
-function GradeTrendHero({ data, locale }: { data: StudentAnalytics; locale: Locale }) {
-  const values = data.gradeTrend.map((point) => point.value);
-  const average = values.length
-    ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
-    : null;
-  const last = values.length > 0 ? values[values.length - 1] : null;
-  const previous = values.length > 1 ? values[values.length - 2] : null;
-  const delta = last != null && previous != null ? last - previous : null;
-
-  return (
-    <Reveal delay={60}>
-      <Card className="flex flex-col overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 pb-3 pt-3.5 sm:px-5">
-          <div className="min-w-0">
-            <h3 className="text-base font-semibold tracking-tight text-brand-950">
-              {translate(locale, "dashGradeTrendTitle")}
-            </h3>
-            <p className="mt-0.5 text-xs text-slate-500">
-              {translate(locale, "dashGradeTrendSubtitle")}
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {average != null ? (
-              <span className="inline-flex items-center gap-1.5 rounded-xl bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">
-                {translate(locale, "grdAverage")}
-                <span className="tabular-nums">{average}%</span>
-              </span>
-            ) : null}
-            {delta != null ? (
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-semibold tabular-nums",
-                  delta >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-600",
-                )}
-              >
-                {delta >= 0 ? "▲" : "▼"} {Math.abs(delta)}%
-              </span>
-            ) : null}
-          </div>
-        </div>
-        <div className="px-4 pb-3.5 pt-2.5 sm:px-5">
-          {data.gradeTrend.length === 0 ? (
-            <EmptyState
-              title={translate(locale, "dashNoDataTitle")}
-              description={translate(locale, "dashGradeTrendEmpty")}
-            />
-          ) : (
-            <GradeTrendChart data={data.gradeTrend} height={170} />
-          )}
-        </div>
-      </Card>
-    </Reveal>
-  );
-}
-
-function StudentAnalyticsSection({ data, locale }: { data: StudentAnalytics; locale: Locale }) {
-  return (
-    <section className="mt-6">
-      <SectionHeading
-        title={translate(locale, "dashAnalyticsTitle")}
-        subtitle={translate(locale, "dashStudentAnalyticsSubtitle")}
-        action={<Badge tone="blue">{translate(locale, "dashRecordsCount", { count: data.attendanceTotal })}</Badge>}
-      />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <AnalyticsCard
-          title={translate(locale, "dashAttendanceDistTitle")}
-          subtitle={translate(locale, "dashAttendanceDistSubtitle")}
-          note={translate(locale, "dashAttendanceDistNote")}
-          delay={60}
-          empty={data.attendanceTotal === 0}
-          emptyDescription={translate(locale, "dashAttendanceDistEmpty")}
-          locale={locale}
-        >
-          <DonutChart data={data.attendance} />
-        </AnalyticsCard>
-        <AnalyticsCard
-          title={translate(locale, "dashCourseAttendanceTitle")}
-          subtitle={translate(locale, "dashCourseAttendanceSubtitle")}
-          note={translate(locale, "dashCourseAttendanceNote")}
-          delay={120}
-          empty={data.courseAttendance.length === 0}
-          emptyDescription={translate(locale, "dashCourseAttendanceEmpty")}
-          locale={locale}
-        >
-          <BarChart data={data.courseAttendance} />
-        </AnalyticsCard>
+    <section className="fb-card" data-fb-reveal data-fb-delay={delay}>
+      <div className="fb-card-head">
+        <h3>{title}</h3>
+        <span className="fb-tagline">{subtitle}</span>
       </div>
+      {empty ? (
+        <div className="fb-empty">
+          <b>{emptyTitle}</b>
+          <p>{emptyDescription}</p>
+        </div>
+      ) : (
+        <>
+          <div className="fb-chart-body">{children}</div>
+          <p className="fb-panel-note">{note}</p>
+        </>
+      )}
     </section>
   );
 }
 
-function TeacherAnalyticsSection({ data, locale }: { data: TeacherAnalytics; locale: Locale }) {
+function ActionTiles({ actions }: { actions: QuickAction[] }) {
   return (
-    <section className="mt-6">
-      <SectionHeading
-        title={translate(locale, "dashAnalyticsTitle")}
-        subtitle={translate(locale, "dashTeacherAnalyticsSubtitle")}
-        action={<Badge tone="slate">{translate(locale, "dashLast14Days")}</Badge>}
-      />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <AnalyticsCard
-          title={translate(locale, "dashAttendanceTrendTitle")}
-          subtitle={translate(locale, "dashAttendanceTrendSubtitle")}
-          note={translate(locale, "dashAttendanceTrendNote")}
-          delay={60}
-          empty={data.attendanceByDay.length === 0}
-          emptyDescription={translate(locale, "dashAttendanceTrendEmpty")}
-          locale={locale}
-        >
-          <LineChart data={data.attendanceByDay} />
-        </AnalyticsCard>
-        <AnalyticsCard
-          title={translate(locale, "dashSubmissionsTitle")}
-          subtitle={translate(locale, "dashSubmissionsSubtitle")}
-          note={translate(locale, "dashSubmissionsNote")}
-          delay={120}
-          empty={!data.submissionsByDay.some((point) => point.value > 0)}
-          emptyDescription={translate(locale, "dashSubmissionsEmpty")}
-          locale={locale}
-        >
-          <BarChart data={data.submissionsByDay} />
-        </AnalyticsCard>
-        <AnalyticsCard
-          title={translate(locale, "dashCourseStudentsTitle")}
-          subtitle={translate(locale, "dashCourseStudentsSubtitle")}
-          note={translate(locale, "dashCourseStudentsNote")}
-          delay={180}
-          empty={data.studentsByCourse.length === 0}
-          emptyDescription={translate(locale, "dashCourseStudentsEmpty")}
-          locale={locale}
-        >
-          <BarChart data={data.studentsByCourse} />
-        </AnalyticsCard>
-        <AnalyticsCard
-          title={translate(locale, "dashSubmissionStatusTitle")}
-          subtitle={translate(locale, "dashSubmissionStatusSubtitle")}
-          note={translate(locale, "dashSubmissionStatusNote")}
-          delay={240}
-          empty={!data.submissionStatus.some((slice) => slice.value > 0)}
-          emptyDescription={translate(locale, "dashSubmissionStatusEmpty")}
-          locale={locale}
-        >
-          <DonutChart data={data.submissionStatus} />
-        </AnalyticsCard>
+    <div className="fb-tiles">
+      {actions.map((action) => (
+        <Link key={action.href} className="fb-tile" href={action.href}>
+          <span className="fb-tile-ico">{action.icon}</span>
+          <span className="fb-tile-main">
+            <b>{action.label}</b>
+          </span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function StaffStrip({
+  announcements,
+  dict,
+}: {
+  announcements: { id: string; title: string; body: string }[];
+  dict: Dictionary;
+}) {
+  return (
+    <section className="fb-strip" data-fb-reveal data-fb-delay="340">
+      <span className="fb-strip-label">
+        <i />
+        {dict.fbdAnnouncements}
+      </span>
+      <div className="fb-strip-items">
+        {announcements.length === 0 ? (
+          <span className="fb-strip-empty">{dict.fbdAnnouncementsEmpty}</span>
+        ) : (
+          announcements.map((announcement) => (
+            <span className="fb-strip-item" key={announcement.id}>
+              <b>{announcement.title}</b>
+              {announcement.body.replace(/\s+/g, " ").slice(0, 90)}
+            </span>
+          ))
+        )}
       </div>
+      <Link className="fb-strip-arrow" href="/messages" aria-label={dict.fbdAnnouncements}>
+        <ArrowIcon />
+      </Link>
     </section>
   );
 }
 
-function AdminAnalyticsSection({ data, locale }: { data: AdminAnalytics; locale: Locale }) {
+function StaffFoot({ locale, time }: { locale: Locale; time: string }) {
   return (
-    <section className="mt-6">
-      <SectionHeading
-        title={translate(locale, "dashAnalyticsTitle")}
-        subtitle={translate(locale, "dashAdminAnalyticsSubtitle")}
-        action={<Badge tone="slate">{translate(locale, "dashLast14Days")}</Badge>}
-      />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <AnalyticsCard
-          title={translate(locale, "dashUserRolesTitle")}
-          subtitle={translate(locale, "dashUserRolesSubtitle")}
-          note={translate(locale, "dashUserRolesNote")}
-          delay={60}
-          empty={data.usersByRole.every((slice) => slice.value === 0)}
-          emptyDescription={translate(locale, "dashUserRolesEmpty")}
-          locale={locale}
-        >
-          <DonutChart data={data.usersByRole} />
-        </AnalyticsCard>
-        <AnalyticsCard
-          title={translate(locale, "dashSubmissionsTrendTitle")}
-          subtitle={translate(locale, "dashSubmissionsSubtitle")}
-          note={translate(locale, "dashSubmissionsNote")}
-          delay={120}
-          empty={!data.submissionsByDay.some((point) => point.value > 0)}
-          emptyDescription={translate(locale, "dashSubmissionsEmpty")}
-          locale={locale}
-        >
-          <BarChart data={data.submissionsByDay} />
-        </AnalyticsCard>
-      </div>
-    </section>
+    <div className="fb-foot-note">
+      <span>FBSU LMS · Turin Polytechnic University in Tashkent</span>
+      <span className="fb-foot-sync">
+        <i />
+        {translate(locale, "fbdStable", { time })}
+      </span>
+    </div>
   );
 }
 
@@ -584,7 +556,6 @@ export default async function DashboardPage() {
   const locale = await getLocale();
   const dict = getDictionary(locale);
   const now = new Date();
-  const firstName = user.name.split(" ")[0];
   const roleLabel =
     user.role === "ADMIN"
       ? dict.dashRoleAdminPanel
@@ -609,36 +580,251 @@ export default async function DashboardPage() {
                         : translate(locale, "dashRoleGroup", {
                             group: user.group?.name ?? dict.dashRoleStudent,
                           });
+  const scopeLabel =
+    user.role === "DEKAN"
+      ? user.faculty?.name ?? null
+      : user.role === "KAFEDRA_MUDIRI" || user.role === "TEACHER"
+        ? user.department?.name ?? user.faculty?.name ?? null
+        : user.role === "XODIM" || user.role === "BUXGALTER"
+          ? user.department?.name ?? null
+          : user.role === "TYUTOR"
+            ? user.group?.name ?? null
+            : null;
+  const timeLabel = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const announcements =
+    user.role === "STUDENT"
+      ? []
+      : await prisma.announcement.findMany({
+          where: { courseId: null },
+          orderBy: { createdAt: "desc" },
+          take: 3,
+          select: { id: true, title: true, body: true },
+        });
 
   if (user.role === "XODIM") {
+    const [rooms, bookings] = await Promise.all([
+      prisma.room.findMany({
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, building: true, capacity: true },
+      }),
+      prisma.roomBooking.findMany({
+        where: { date: dateFromIso(todayIso()), status: "ACTIVE" },
+        orderBy: { slot: "asc" },
+        select: {
+          id: true,
+          roomName: true,
+          slot: true,
+          purpose: true,
+          userId: true,
+          user: { select: { name: true } },
+        },
+      }),
+    ]);
+    const busyRooms = new Set(bookings.map((booking) => booking.roomName.toLowerCase()));
+    const freeRooms = rooms.filter((room) => !busyRooms.has(room.name.toLowerCase()));
+    const myBookings = bookings.filter((booking) => booking.userId === user.id);
+    const actions: QuickAction[] = [
+      { href: "/rooms", label: dict.navRooms, icon: <DoorIcon /> },
+      { href: "/schedule", label: dict.navSchedule, icon: <CalendarIcon /> },
+      { href: "/settings", label: dict.navSettings, icon: <GearIcon /> },
+      { href: "/help", label: dict.navHelp, icon: <HelpIcon /> },
+    ];
+    const focusTitle =
+      rooms.length === 0
+        ? dict.fbdRoomsEmpty
+        : freeRooms.length > 0
+          ? translate(locale, "fbdFreeRoomsTitle", { count: freeRooms.length })
+          : dict.fbdAllRoomsBusy;
+    const freePct = rooms.length > 0 ? Math.round((freeRooms.length / rooms.length) * 100) : 0;
+
     return (
-      <>
-        <Hero
+      <div className="fb-dash">
+        <FbMotion variant="dashboard" />
+        <StaffHead
           name={user.name}
-          firstName={firstName}
           roleLabel={roleLabel}
+          scopeLabel={scopeLabel}
           now={now}
-          actions={[
-            { href: "/schedule", label: dict.navSchedule, icon: <CalendarIcon /> },
-            { href: "/rooms", label: dict.navRooms, icon: <HelpCircleIcon /> },
-            { href: "/settings", label: dict.navSettings, icon: <ClipboardIcon /> },
-            { href: "/help", label: dict.navHelp, icon: <FileTextIcon /> },
-          ]}
           locale={locale}
+          stats={[
+            translate(locale, "fbdRoomsTag", { count: rooms.length }),
+            translate(locale, "fbdBookingsTag", { count: bookings.length }),
+          ]}
+          actions={actions}
         />
-      </>
+
+        <StaffFocus
+          eyebrow={`${dict.fbdFocusToday} · ${dayName(now.getDay(), locale)}, ${dayMonth(now)}`}
+          title={focusTitle}
+          meta={
+            <>
+              <b>{roleLabel}</b>
+              <i />
+              <span>{dict.fbdRoomsSub}</span>
+              <i />
+              <span>{bookings.length > 0 ? dict.fbdBookingsTitle : dict.fbdBookingEmpty}</span>
+            </>
+          }
+          stats={[
+            { value: rooms.length, label: dict.navRooms },
+            { value: bookings.length, label: dict.fbdBookingsLabel },
+            { value: freeRooms.length, label: dict.fbdFreeLabel },
+          ]}
+          progress={{
+            top: dict.fbdRoomsTitle,
+            right: `${freeRooms.length} / ${rooms.length}`,
+            pct: freePct,
+            bottom: dict.fbdRoomsSub,
+          }}
+          side={
+            <FocusJoin
+              chip={dict.fbdFocusToday}
+              href="/rooms"
+              label={dict.navRooms}
+              icon={<DoorIcon />}
+            />
+          }
+        />
+
+        <section className="fb-kpis">
+          <StaffKpi
+            accent
+            href="/rooms"
+            label={dict.navRooms}
+            value={rooms.length}
+            foot={dict.fbdRoomsSub}
+            icon={<DoorIcon />}
+            delay={120}
+          />
+          <StaffKpi
+            href="/rooms"
+            label={dict.fbdBookingsTitle}
+            value={bookings.length}
+            foot={dict.fbdBookingsSub}
+            icon={<CalendarIcon />}
+            delay={160}
+          />
+          <StaffKpi
+            href="/rooms"
+            label={dict.fbdMyBookingsFoot}
+            value={myBookings.length}
+            foot={dict.fbdFocusToday}
+            icon={<CheckIcon />}
+            delay={200}
+          />
+          <StaffKpi
+            href="/rooms"
+            label={dict.fbdFreeLabel}
+            value={freeRooms.length}
+            foot={dict.fbdRoomsSub}
+            icon={<BuildingIcon />}
+            delay={240}
+          />
+        </section>
+
+        <div className="fb-grid">
+          <div className="fb-col">
+            <StaffPanel
+              title={dict.fbdBookingsTitle}
+              subtitle={translate(locale, "fbdBookingsTag", { count: bookings.length })}
+              action={{ href: "/rooms", label: dict.fbdCardAll }}
+              delay={160}
+            >
+              {bookings.length === 0 ? (
+                <div className="fb-empty">
+                  <b>{dict.fbdBookingEmpty}</b>
+                  <p>{dict.fbdBookingEmptyDesc}</p>
+                </div>
+              ) : (
+                <div className="fb-list">
+                  {bookings.slice(0, 6).map((booking) => (
+                    <div className="fb-listrow" key={booking.id}>
+                      <div className="fb-listrow-main">
+                        <b>{booking.roomName}</b>
+                        <span>
+                          {booking.purpose || "—"} · {booking.user.name}
+                        </span>
+                      </div>
+                      <div className="fb-listrow-end">
+                        <span className="fb-pill blue">
+                          {translate(locale, "fbdSlotShort", { slot: booking.slot })}
+                        </span>
+                        <span className="fb-listrow-val">{SLOT_TIMES[booking.slot] ?? "—"}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </StaffPanel>
+
+            <StaffPanel title={dict.dashQuickActions} delay={200}>
+              <ActionTiles actions={actions} />
+            </StaffPanel>
+          </div>
+
+          <div className="fb-col">
+            <StaffPanel
+              title={dict.navRooms}
+              subtitle={dict.fbdRoomsSub}
+              action={{ href: "/rooms", label: dict.fbdCardAll }}
+              delay={220}
+            >
+              {rooms.length === 0 ? (
+                <div className="fb-empty">
+                  <b>{dict.fbdRoomsEmpty}</b>
+                  <p>{dict.fbdBookingEmptyDesc}</p>
+                </div>
+              ) : (
+                <div className="fb-list">
+                  {rooms.slice(0, 6).map((room) => {
+                    const busy = busyRooms.has(room.name.toLowerCase());
+                    const detail = [
+                      room.building,
+                      room.capacity != null
+                        ? translate(locale, "fbdCapacity", { count: room.capacity })
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ");
+                    return (
+                      <div className="fb-listrow" key={room.id}>
+                        <div className="fb-listrow-main">
+                          <b>{room.name}</b>
+                          <span>{detail || "—"}</span>
+                        </div>
+                        <span className={cn("fb-pill", busy ? "amber" : "green")}>
+                          {busy ? dict.fbdRoomBusy : dict.fbdRoomFree}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </StaffPanel>
+          </div>
+        </div>
+
+        <StaffStrip announcements={announcements} dict={dict} />
+        <StaffFoot locale={locale} time={timeLabel} />
+      </div>
     );
   }
 
   if (user.role === "BUXGALTER") {
     const month = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const monthKey = `${month.getUTCFullYear()}-${String(month.getUTCMonth() + 1).padStart(2, "0")}`;
     const [records, totals, pending, staffCount] = await Promise.all([
       prisma.salaryRecord.findMany({
         where: { month },
         orderBy: [{ status: "asc" }, { total: "desc" }],
         take: 6,
         select: {
-          id: true, total: true, status: true, baseAmount: true, bonusAmount: true,
+          id: true,
+          total: true,
+          status: true,
+          baseAmount: true,
+          bonusAmount: true,
           user: {
             select: {
               name: true,
@@ -652,141 +838,183 @@ export default async function DashboardPage() {
       prisma.salaryRecord.count({ where: { month, status: "PENDING" } }),
       prisma.user.count({ where: { isActive: true, role: { not: "STUDENT" } } }),
     ]);
-
-    const statusTone: Record<string, "slate" | "amber" | "green" | "blue"> = {
-      DRAFT: "slate", PENDING: "amber", APPROVED: "green", PAID: "blue",
-    };
-    const statusText: Record<string, string> = {
-      DRAFT: dict.payDraft, PENDING: dict.payPending,
-      APPROVED: dict.payApproved, PAID: dict.payPaid,
-    };
-    const sum = (n: number) => new Intl.NumberFormat("ru-RU").format(n);
+    const actions: QuickAction[] = [
+      { href: "/payroll", label: dict.payTitle, icon: <WalletIcon /> },
+      { href: "/calendar", label: dict.navCalendar, icon: <CalendarIcon /> },
+      { href: "/help", label: dict.navHelp, icon: <HelpIcon /> },
+    ];
+    const approved = Math.max(0, totals.totalCount - pending);
+    const approvedPct =
+      totals.totalCount > 0 ? Math.round((approved / totals.totalCount) * 100) : 0;
 
     return (
-      <div className="space-y-6">
-        <Hero
+      <div className="fb-dash">
+        <FbMotion variant="dashboard" />
+        <StaffHead
           name={user.name}
-          firstName={firstName}
           roleLabel={roleLabel}
+          scopeLabel={scopeLabel}
           now={now}
-          actions={[
-            { href: "/payroll", label: dict.payTitle, icon: <ClipboardIcon /> },
-            { href: "/calendar", label: dict.navCalendar, icon: <CalendarIcon /> },
-            { href: "/help", label: dict.navHelp, icon: <HelpCircleIcon /> },
-          ]}
           locale={locale}
+          stats={[
+            translate(locale, "fbdActiveStaff", { count: staffCount }),
+            translate(locale, "fbdPayPendingTitle", { count: pending }),
+          ]}
+          actions={actions}
         />
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatTile
+        <StaffFocus
+          eyebrow={`${dict.payMonth} · ${monthKey}`}
+          title={
+            pending > 0
+              ? translate(locale, "fbdPayPendingTitle", { count: pending })
+              : dict.fbdPayPendingNone
+          }
+          meta={
+            <>
+              <b>{translate(locale, "fbdActiveStaff", { count: staffCount })}</b>
+              <i />
+              <span>{dict.paySummarySubtitle}</span>
+            </>
+          }
+          stats={[
+            { value: fmtNumber(totals.grandTotal), label: dict.payGrandTotal },
+            { value: totals.totalCount, label: dict.payStaffCount },
+            { value: totals.byGroup.length, label: dict.payDepartment },
+          ]}
+          progress={{
+            top: dict.fbdPayApproved,
+            right: `${approved} / ${totals.totalCount}`,
+            pct: approvedPct,
+            bottom: `${dict.payMonth}: ${monthKey}`,
+          }}
+          side={
+            <FocusJoin
+              chip={monthKey}
+              href="/payroll"
+              label={dict.payTitle}
+              icon={<WalletIcon />}
+            />
+          }
+        />
+
+        <section className="fb-kpis">
+          <StaffKpi
+            accent
             href="/payroll"
             label={dict.payGrandTotal}
-            value={sum(totals.grandTotal)}
-            hint={dict.payMonth}
-            tone="brand"
-            icon={<Icon><path d="M12 2v20" /><path d="M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></Icon>}
+            value={fmtNumber(totals.grandTotal)}
+            foot={monthKey}
+            icon={<WalletIcon />}
+            delay={120}
           />
-          <StatTile
+          <StaffKpi
             href="/payroll"
             label={dict.payStaffCount}
             value={totals.totalCount}
-            hint={`${staffCount} ta faol`}
-            tone="emerald"
-            icon={<Icon><circle cx="9" cy="7" r="4" /><path d="M16 21v-1a5 5 0 0 0-5-5h-3a5 5 0 0 0-5 5v1" /></Icon>}
+            foot={translate(locale, "fbdActiveStaff", { count: staffCount })}
+            icon={<UsersIcon />}
+            delay={160}
           />
-          <StatTile
+          <StaffKpi
             href="/payroll"
             label={dict.payPending}
             value={pending}
-            hint={dict.payApprove}
-            tone="gold"
-            icon={<Icon><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></Icon>}
+            foot={dict.payApprove}
+            icon={<ClockIcon />}
+            delay={200}
           />
-          <StatTile
+          <StaffKpi
             href="/payroll"
             label={dict.payDepartment}
             value={totals.byGroup.length}
-            hint={dict.paySummarySubtitle}
-            tone="brand"
-            icon={<Icon><path d="M4 4h5l2 3h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></Icon>}
+            foot={dict.paySummarySubtitle}
+            icon={<BuildingIcon />}
+            delay={240}
           />
-        </div>
+        </section>
 
-        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,21rem)]">
-          <div className="min-w-0 space-y-4">
-            <Reveal delay={120}>
-              <Card className="transition-shadow duration-200">
-                <CardHeader
-                  title={dict.payTabRecords}
-                  subtitle={`${dict.payMonth}: ${month.toISOString().slice(0, 7)}`}
-                  action={<Badge tone="blue">{records.length}</Badge>}
-                />
-                <CardBody>
-                  {records.length === 0 ? (
-                    <EmptyState title={dict.payEmpty} />
-                  ) : (
-                    <div className="space-y-2">
-                      {records.map((r) => (
-                        <div key={r.id}
-                          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 px-3 py-2.5">
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-slate-900">{r.user.name}</p>
-                            <p className="text-xs text-slate-500">
-                              {[r.user.staffPosition?.name, r.user.department?.name]
-                                .filter(Boolean).join(" · ") || "—"}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold tabular-nums text-slate-900">
-                              {sum(r.total)}
-                            </span>
-                            <Badge tone={statusTone[r.status] ?? "slate"}>
-                              {statusText[r.status] ?? r.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardBody>
-              </Card>
-            </Reveal>
-          </div>
-
-          <Reveal delay={180} className="min-w-0">
-            <Card className="transition-shadow duration-200">
-              <CardHeader title={dict.paySummaryTitle} subtitle={dict.paySummarySubtitle} />
-              <CardBody>
-                {totals.byGroup.length === 0 ? (
-                  <p className="py-3 text-center text-sm text-slate-500">{dict.payNoGroupData}</p>
-                ) : (
-                  <div className="space-y-2">
-                    {totals.byGroup.map((g) => (
-                      <div key={g.group}
-                        className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-slate-800">{g.group}</p>
-                          <p className="text-xs text-slate-500">
-                            {dict.payStaffCount}: {g.count}
-                          </p>
-                        </div>
-                        <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-900">
-                          {sum(g.total)}
+        <div className="fb-grid">
+          <div className="fb-col">
+            <StaffPanel
+              title={dict.payTabRecords}
+              subtitle={monthKey}
+              action={{ href: "/payroll", label: dict.fbdCardAll }}
+              delay={160}
+            >
+              {records.length === 0 ? (
+                <div className="fb-empty">
+                  <b>{dict.payEmpty}</b>
+                  <p>{dict.paySummarySubtitle}</p>
+                </div>
+              ) : (
+                <div className="fb-list">
+                  {records.map((record) => (
+                    <div className="fb-listrow" key={record.id}>
+                      <div className="fb-listrow-main">
+                        <b>{record.user.name}</b>
+                        <span>
+                          {[record.user.staffPosition?.name, record.user.department?.name]
+                            .filter(Boolean)
+                            .join(" · ") || "—"}
                         </span>
                       </div>
-                    ))}
-                    <div className="flex items-center justify-between gap-2 rounded-xl bg-brand-900 px-3 py-2 text-white">
-                      <span className="text-sm font-medium">{dict.payGrandTotal}</span>
-                      <span className="text-sm font-semibold tabular-nums">
-                        {sum(totals.grandTotal)}
-                      </span>
+                      <div className="fb-listrow-end">
+                        <span className={cn("fb-pill", SALARY_TONE[record.status])}>
+                          {salaryLabel(record.status, dict)}
+                        </span>
+                        <span className="fb-listrow-val">{fmtNumber(record.total)}</span>
+                      </div>
                     </div>
+                  ))}
+                </div>
+              )}
+            </StaffPanel>
+
+            <StaffPanel title={dict.dashQuickActions} delay={200}>
+              <ActionTiles actions={actions} />
+            </StaffPanel>
+          </div>
+
+          <div className="fb-col">
+            <StaffPanel
+              title={dict.paySummaryTitle}
+              subtitle={dict.payMonth}
+              action={{ href: "/payroll", label: dict.fbdCardAll }}
+              delay={220}
+            >
+              {totals.byGroup.length === 0 ? (
+                <div className="fb-empty">
+                  <b>{dict.payNoGroupData}</b>
+                  <p>{dict.paySummarySubtitle}</p>
+                </div>
+              ) : (
+                <>
+                  <div className="fb-list">
+                    {totals.byGroup.map((group) => (
+                      <div className="fb-listrow" key={group.group}>
+                        <div className="fb-listrow-main">
+                          <b>{group.group}</b>
+                          <span>
+                            {dict.payStaffCount}: {group.count}
+                          </span>
+                        </div>
+                        <span className="fb-listrow-val">{fmtNumber(group.total)}</span>
+                      </div>
+                    ))}
                   </div>
-                )}
-              </CardBody>
-            </Card>
-          </Reveal>
+                  <div className="fb-totalrow">
+                    <span>{dict.payGrandTotal}</span>
+                    <b>{fmtNumber(totals.grandTotal)}</b>
+                  </div>
+                </>
+              )}
+            </StaffPanel>
+          </div>
         </div>
+
+        <StaffStrip announcements={announcements} dict={dict} />
+        <StaffFoot locale={locale} time={timeLabel} />
       </div>
     );
   }
@@ -798,20 +1026,44 @@ export default async function DashboardPage() {
     const courseWhere: Prisma.CourseWhereInput = isTeacherRole
       ? { teacherId: user.id }
       : facultyScope
-        ? { teacher: { facultyId: facultyScope } }
+        ? {
+            OR: [
+              { teacher: { facultyId: facultyScope } },
+              { teacher: { department: { facultyId: facultyScope } } },
+            ],
+          }
         : departmentScope
           ? { teacher: { departmentId: departmentScope } }
           : {};
     const quizWhere: Prisma.QuizWhereInput = isTeacherRole
       ? { course: { teacherId: user.id } }
       : facultyScope
-        ? { course: { teacher: { facultyId: facultyScope } } }
+        ? {
+            OR: [
+              { course: { teacher: { facultyId: facultyScope } } },
+              { course: { teacher: { department: { facultyId: facultyScope } } } },
+            ],
+          }
         : departmentScope
           ? { course: { teacher: { departmentId: departmentScope } } }
           : {};
     const studentWhere: Prisma.UserWhereInput = {
       role: "STUDENT",
-      ...(facultyScope ? { facultyId: facultyScope } : {}),
+      ...(facultyScope
+        ? {
+            OR: [
+              { facultyId: facultyScope },
+              {
+                enrollments: {
+                  some: {
+                    status: "ACTIVE",
+                    course: { teacher: { department: { facultyId: facultyScope } } },
+                  },
+                },
+              },
+            ],
+          }
+        : {}),
       ...(departmentScope
         ? {
             enrollments: {
@@ -823,7 +1075,16 @@ export default async function DashboardPage() {
     const submissionWhere: Prisma.SubmissionWhereInput = isTeacherRole
       ? { assignment: { course: { teacherId: user.id } } }
       : facultyScope
-        ? { student: { facultyId: facultyScope } }
+        ? {
+            OR: [
+              { student: { facultyId: facultyScope } },
+              {
+                assignment: {
+                  course: { teacher: { department: { facultyId: facultyScope } } },
+                },
+              },
+            ],
+          }
         : departmentScope
           ? { assignment: { course: { teacher: { departmentId: departmentScope } } } }
           : {};
@@ -953,29 +1214,36 @@ export default async function DashboardPage() {
 
     const actions: QuickAction[] =
       user.role === "ADMIN"
+        ? [
+            { href: "/admin", label: dict.dashActionStats, icon: <ChartIcon /> },
+            { href: "/admin/users", label: dict.dashActionUsers, icon: <UsersIcon /> },
+            { href: "/schedule", label: dict.dashActionSchedule, icon: <CalendarIcon /> },
+            { href: "/reports", label: dict.dashActionReports, icon: <FileIcon /> },
+          ]
+        : user.role === "REGISTRAR"
           ? [
-              { href: "/admin", label: dict.dashActionStats, icon: <BarChartIcon /> },
-              { href: "/admin/users", label: dict.dashActionUsers, icon: <UsersIcon /> },
-              { href: "/schedule", label: dict.dashActionSchedule, icon: <CalendarIcon /> },
-              { href: "/reports", label: dict.dashActionReports, icon: <FileTextIcon /> },
+              { href: "/monitoring", label: dict.navMonitoring, icon: <ChartIcon /> },
+              { href: "/approvals", label: dict.navApprovals, icon: <CheckIcon /> },
+              { href: "/admin/users", label: dict.admNavUsers, icon: <UsersIcon /> },
+              { href: "/schedule", label: dict.navSchedule, icon: <CalendarIcon /> },
             ]
-          : user.role === "REGISTRAR"
+          : user.role === "TYUTOR"
             ? [
-                { href: "/monitoring", label: dict.navMonitoring, icon: <BarChartIcon /> },
-                { href: "/approvals", label: dict.navApprovals, icon: <CheckCircleIcon /> },
-                { href: "/admin/users", label: dict.admNavUsers, icon: <UsersIcon /> },
+                { href: "/curator", label: dict.navCurator, icon: <UsersIcon /> },
+                { href: "/attendance", label: dict.dashActionAttendance, icon: <CheckIcon /> },
                 { href: "/schedule", label: dict.navSchedule, icon: <CalendarIcon /> },
+                { href: "/help", label: dict.navHelp, icon: <HelpIcon /> },
               ]
-            : user.role === "TYUTOR"
+            : user.role === "TEACHER"
               ? [
-                  { href: "/curator", label: dict.navCurator, icon: <UsersIcon /> },
-                  { href: "/attendance", label: dict.dashActionAttendance, icon: <CheckCircleIcon /> },
                   { href: "/schedule", label: dict.navSchedule, icon: <CalendarIcon /> },
-                  { href: "/help", label: dict.navHelp, icon: <FileTextIcon /> },
+                  { href: "/workload", label: dict.navWorkload, icon: <ClipboardIcon /> },
+                  { href: "/courses", label: dict.navCourses, icon: <BookIcon /> },
+                  { href: "/journal", label: dict.navJournal, icon: <FileIcon /> },
                 ]
               : [
-                  { href: "/monitoring", label: dict.navMonitoring, icon: <BarChartIcon /> },
-                        { href: "/workload", label: dict.navWorkload, icon: <ClipboardIcon /> },
+                  { href: "/monitoring", label: dict.navMonitoring, icon: <ChartIcon /> },
+                  { href: "/workload", label: dict.navWorkload, icon: <ClipboardIcon /> },
                   { href: "/schedule", label: dict.navSchedule, icon: <CalendarIcon /> },
                 ];
 
@@ -997,211 +1265,531 @@ export default async function DashboardPage() {
             ? "/monitoring"
             : "/reports";
 
-    return (
-      <>
-        {user.role === "TEACHER" ? (
-          <TeacherSummaryCard
+    if (analytics.kind === "teacher") {
+      const lessonRows = todayLessons.map((lesson) => {
+        const range = slotRange(lesson.slot);
+        const start = range ? minutesOf(range.start) : 0;
+        const end = range ? minutesOf(range.end) : 0;
+        const state: "done" | "now" | "next" = !range
+          ? "next"
+          : nowMin >= end
+            ? "done"
+            : nowMin >= start
+              ? "now"
+              : "next";
+        return { ...lesson, range, start, end, state };
+      });
+      const focusLesson =
+        lessonRows.find((lesson) => lesson.state === "now") ??
+        lessonRows.find((lesson) => lesson.state === "next") ??
+        null;
+      const focusTotal = focusLesson?.range ? focusLesson.end - focusLesson.start : 0;
+      const focusElapsed =
+        focusLesson?.range != null
+          ? Math.max(0, Math.min(focusTotal, nowMin - focusLesson.start))
+          : 0;
+      const focusPct = focusTotal > 0 ? Math.round((focusElapsed / focusTotal) * 100) : 0;
+
+      return (
+        <div className="fb-dash">
+          <FbMotion variant="dashboard" />
+          <StaffHead
             name={user.name}
-            email={user.email}
-            avatarUrl={user.avatarUrl}
-            greeting={translate(locale, "dashGreeting", { name: firstName })}
             roleLabel={roleLabel}
-            dateLabel={`${dayName(now.getDay())}, ${fmtDate(now)}`}
-            position={cabinetPosition ?? dict.roleTeacher}
-            department={user.department?.name ?? "—"}
-            faculty={user.faculty?.name ?? "—"}
-            joinedAt={fmtDate(user.createdAt)}
-            faceEnrolled={cabinetFace}
-            salary={cabinetSalary}
-            salaryVisible={cabinetSalaryVisible}
-            d={dict}
-          />
-        ) : (
-          <Hero
-            name={user.name}
-            firstName={firstName}
-            roleLabel={roleLabel}
+            scopeLabel={scopeLabel}
             now={now}
-            actions={actions}
             locale={locale}
+            stats={[
+              translate(locale, "dashCoursesCountSubtitle", {
+                count: cabinetSummary.courseCount,
+              }),
+              translate(locale, "fbdStudentsTag", { count: cabinetSummary.studentCount }),
+              translate(locale, "dashLessonsCount", { count: lessonRows.length }),
+            ]}
+            actions={actions}
           />
-        )}
 
-        {analytics.kind === "teacher" ? (
-          <TeacherAnalyticsSection data={analytics} locale={locale} />
-        ) : null}
+          {focusLesson && focusLesson.range ? (
+            <StaffFocus
+              eyebrow={`${focusLesson.state === "now" ? dict.fbdFocusNow : dict.fbdFocusNext} · ${focusLesson.range.start}–${focusLesson.range.end}`}
+              title={focusLesson.subject}
+              meta={
+                <>
+                  <b>{focusLesson.groupName}</b>
+                  <i />
+                  <span>{focusLesson.room ?? dict.fbdFocusRoomUnknown}</span>
+                  <i />
+                  <span>{focusLesson.statusText}</span>
+                </>
+              }
+              progress={
+                focusLesson.state === "now"
+                  ? {
+                      top: dict.fbdFocusDuration,
+                      right: translate(locale, "fbdFocusMinutes", {
+                        elapsed: focusElapsed,
+                        total: focusTotal,
+                      }),
+                      pct: focusPct,
+                      bottom: translate(locale, "fbdFocusRemaining", {
+                        min: Math.max(0, focusLesson.end - nowMin),
+                      }),
+                    }
+                  : undefined
+              }
+              side={
+                <FocusJoin
+                  chip={
+                    focusLesson.state === "now" ? dict.fbdFocusNow : dict.fbdFocusNext
+                  }
+                  href={
+                    focusLesson.href ?? `/schedule/lesson/${focusLesson.id}`
+                  }
+                  label={
+                    focusLesson.href ? dict.dashMarkAttendance : dict.navSchedule
+                  }
+                  icon={focusLesson.href ? <ClipboardIcon /> : <CalendarIcon />}
+                />
+              }
+            />
+          ) : (
+            <StaffFocus
+              eyebrow={dict.fbdFocusToday}
+              title={
+                lessonRows.length > 0 ? dict.fbdTeacherDoneTitle : dict.fbdFocusNoLesson
+              }
+              meta={
+                <span>
+                  {lessonRows.length > 0
+                    ? dict.fbdTeacherDoneDesc
+                    : dict.fbdFocusNoLessonDesc}
+                </span>
+              }
+              side={
+                <FocusJoin
+                  chip={dict.fbdFocusToday}
+                  href="/schedule"
+                  label={dict.navSchedule}
+                  icon={<CalendarIcon />}
+                />
+              }
+            />
+          )}
 
-        {user.role === "TEACHER" ? (
-          <div className="mt-6">
-            <LessonBanner teacherId={user.id} />
-          </div>
-        ) : null}
-
-        <SectionHeading
-          title={user.role === "TEACHER" ? dict.dashTeacherLoadTitle : dict.dashStatsTitle}
-          subtitle={
-            user.role === "TEACHER" ? dict.dashTeacherLoadSubtitle : dict.dashStatsSubtitle
-          }
-        />
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Reveal delay={60}>
-            <StatTile
+          <section className="fb-kpis">
+            <StaffKpi
+              accent
+              href="/journal"
+              label={dict.dashStatStudents}
+              value={cabinetSummary.studentCount}
+              foot={translate(locale, "dashCoursesCountSubtitle", {
+                count: cabinetSummary.courseCount,
+              })}
+              icon={<UsersIcon />}
+              delay={120}
+            />
+            <StaffKpi
               href="/courses"
               label={dict.dashStatCourses}
-              value={courses}
-              hint={
-                user.role === "TEACHER"
-                  ? dict.dashStatCoursesTeacherHint
-                  : dict.dashStatCoursesAdminHint
-              }
-              icon={
-                <Icon>
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                </Icon>
-              }
+              value={cabinetSummary.courseCount}
+              foot={dict.dashStatCoursesTeacherHint}
+              icon={<BookIcon />}
+              delay={160}
             />
-          </Reveal>
-          <Reveal delay={120}>
-            <StatTile
-              href={staffStudentsHref}
-              label={dict.dashStatStudents}
-              value={students}
-              hint={dict.dashStatStudentsHint}
-              tone="emerald"
-              icon={
-                <Icon>
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </Icon>
-              }
+            <StaffKpi
+              href="/grades"
+              label={dict.fbdPendingReviews}
+              value={cabinetSummary.pendingReviews}
+              foot={dict.fbdPendingReviewsFoot}
+              icon={<ClipboardIcon />}
+              delay={200}
             />
-          </Reveal>
-          <Reveal delay={180}>
-            <StatTile
-              href={staffSubmissionsHref}
-              label={dict.dashStatAssignments}
-              value={submissions}
-              hint={dict.dashStatAssignmentsHint}
-              tone="amber"
-              icon={
-                <Icon>
-                  <path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1z" />
-                  <path d="M16 5h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2" />
-                  <path d="m9 13 2 2 4-4" />
-                </Icon>
-              }
+            <StaffKpi
+              href="/workload"
+              label={dict.fbdWeeklyHours}
+              value={cabinetSummary.weeklyHours}
+              unit={dict.fbdHoursUnit}
+              foot={dict.fbdWorkloadFoot}
+              icon={<ClockIcon />}
+              delay={240}
             />
-          </Reveal>
-          <Reveal delay={240}>
-            <StatTile
-              href="/quizzes"
-              label={dict.dashStatQuizzes}
-              value={quizzes}
-              hint={dict.dashStatQuizzesHint}
-              tone="gold"
-              icon={
-                <Icon>
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M9.5 9.5a2.5 2.5 0 1 1 3.3 2.4c-.8.3-1.3 1-1.3 1.8v.3" />
-                  <path d="M12 17h.01" />
-                </Icon>
-              }
-            />
-          </Reveal>
-        </div>
+          </section>
 
-        {user.role === "TEACHER" ? (
-          <Reveal delay={300} className="mt-6">
-            <Card className="transition-shadow duration-200">
-              <CardHeader
+          <div className="fb-grid">
+            <div className="fb-col">
+              <StaffPanel
                 title={dict.dashMyTodayLessons}
-                subtitle={translate(locale, "dashTodayLessonsSubtitle", {
-                  day: dayName(now.getDay()),
-                  date: fmtDate(now),
-                  count: todayLessons.length,
-                })}
-                action={
-                  <Badge tone="blue">
-                    {translate(locale, "dashLessonsCount", { count: todayLessons.length })}
-                  </Badge>
-                }
-              />
-              <CardBody className="space-y-2">
-                {todayLessons.length === 0 ? (
-                  <EmptyState
-                    title={dict.dashNoLessonsTodayTitle}
-                    description={dict.dashNoLessonsTodayDesc}
-                  />
+                subtitle={translate(locale, "dashLessonsCount", { count: lessonRows.length })}
+                action={{ href: "/schedule", label: dict.fbdCardFullSchedule }}
+                delay={160}
+              >
+                {lessonRows.length === 0 ? (
+                  <div className="fb-empty">
+                    <b>{dict.dashNoLessonsTodayTitle}</b>
+                    <p>{dict.dashNoLessonsTodayDesc}</p>
+                  </div>
                 ) : (
-                  todayLessons.map((lesson) => (
-                    <div
-                      key={lesson.id}
-                      className={cn(
-                        "flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-card",
-                        lesson.marked ? "border-emerald-100 bg-emerald-50/40" : "border-slate-100",
-                      )}
-                    >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <span className="inline-flex w-24 shrink-0 flex-col rounded-xl bg-brand-50 px-3 py-1.5 text-brand-800">
-                          <span className="text-xs font-semibold">
-                            {translate(locale, "dashPairNumber", { slot: lesson.slot })}
-                          </span>
-                          <span className="text-[11px] text-brand-600">
-                            {SLOT_TIMES[lesson.slot] ?? ""}
+                  <div className="fb-sched">
+                    {lessonRows.map((lesson) => (
+                      <div
+                        className={cn("fb-srow", lesson.state === "now" && "now")}
+                        key={lesson.id}
+                      >
+                        <span className="fb-stime">
+                          {lesson.range?.start ?? `#${lesson.slot}`}
+                          {lesson.range ? <span>{lesson.range.end}</span> : null}
+                        </span>
+                        <span className="fb-sinfo">
+                          <b>
+                            <Link href={`/schedule/lesson/${lesson.id}`}>
+                              {lesson.subject}
+                            </Link>
+                          </b>
+                          <span>
+                            {lesson.room ?? dict.fbdFocusRoomUnknown}
+                            <i />
+                            {lesson.groupName}
                           </span>
                         </span>
-                        <span className="min-w-0">
-                          <Link
-                            href={`/schedule/lesson/${lesson.id}`}
-                            className="block truncate text-sm font-medium text-slate-900 underline-offset-2 hover:text-brand-700 hover:underline"
-                          >
-                            {lesson.subject}
-                          </Link>
-                          <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
-                            {lesson.room ? (
-                              <>
-                                <span className="truncate">{lesson.room}</span>
-                                <span className="text-slate-500">·</span>
-                              </>
-                            ) : null}
-                            <span className="truncate">{lesson.groupName}</span>
+                        <span className="fb-srow-end">
+                          <span className={cn("fb-pill", lesson.marked ? "green" : undefined)}>
+                            {lesson.statusText}
                           </span>
+                          {lesson.href ? (
+                            <Link className="fb-srow-cta" href={lesson.href}>
+                              {dict.fbdMarkShort}
+                            </Link>
+                          ) : null}
                         </span>
                       </div>
-                      {/* `shrink-0` mobil'da sig'maydi (Badge + tugma ~209px),
-                          shuning uchun kichik ekranda o'ralishga ruxsat beramiz. */}
-                      <div className="flex flex-wrap items-center gap-3 sm:shrink-0">
-                        <Badge tone={lesson.marked ? "green" : "slate"}>{lesson.statusText}</Badge>
-                        {lesson.href ? (
-                          <ButtonLink href={lesson.href} size="sm">
-                            {dict.dashMarkAttendance}
-                          </ButtonLink>
-                        ) : null}
+                    ))}
+                  </div>
+                )}
+              </StaffPanel>
+
+              <StaffPanel
+                title={dict.dashMyCourses}
+                subtitle={translate(locale, "dashCoursesCountSubtitle", {
+                  count: cabinetCourses.length,
+                })}
+                action={{ href: "/courses", label: dict.fbdCardAll }}
+                delay={200}
+              >
+                {cabinetCourses.length === 0 ? (
+                  <div className="fb-empty">
+                    <b>{dict.dashNoCoursesTitle}</b>
+                    <p>{dict.dashNoCoursesDesc}</p>
+                  </div>
+                ) : (
+                  <div className="fb-table-wrap">
+                    <table className="fb-table">
+                      <thead>
+                        <tr>
+                          <th>{dict.fbdColSubject}</th>
+                          <th>{dict.dashStatStudents}</th>
+                          <th>{dict.fbdPendingReviews}</th>
+                          <th>{dict.fbdWeeklyHours}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {cabinetCourses.map((course, index) => (
+                          <tr key={course.id}>
+                            <td>
+                              <Link className="fb-tname" href={`/courses/${course.slug}`}>
+                                <i
+                                  style={{
+                                    background: ["#0071e3", "#d4af37", "#1d1d1f"][index % 3],
+                                  }}
+                                />
+                                {course.title}
+                              </Link>
+                            </td>
+                            <td className="fb-mono-num">{course.studentCount}</td>
+                            <td>
+                              <span
+                                className={cn(
+                                  "fb-pill",
+                                  course.pendingSubmissions > 0 ? "amber" : "green",
+                                )}
+                              >
+                                {course.pendingSubmissions}
+                              </span>
+                            </td>
+                            <td className="fb-mono-num">{course.weeklyHours}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </StaffPanel>
+            </div>
+
+            <div className="fb-col">
+              <StaffPanel title={dict.fbdProfileTitle} subtitle={dict.fbdProfileSub} delay={160}>
+                <div className="fb-kv">
+                  <div>
+                    <dt>{dict.payPosition}</dt>
+                    <dd>{cabinetPosition ?? dict.roleTeacher}</dd>
+                  </div>
+                  <div>
+                    <dt>{dict.payDepartment}</dt>
+                    <dd>{user.department?.name ?? "—"}</dd>
+                  </div>
+                  <div>
+                    <dt>{dict.fbdFaculty}</dt>
+                    <dd>{user.faculty?.name ?? "—"}</dd>
+                  </div>
+                  <div>
+                    <dt>{dict.fbdJoined}</dt>
+                    <dd>{fmtDate(user.createdAt, locale)}</dd>
+                  </div>
+                  <div>
+                    <dt>Face ID</dt>
+                    <dd>
+                      <span className={cn("fb-pill", cabinetFace ? "green" : "amber")}>
+                        {cabinetFace ? dict.fbdFaceOn : dict.fbdFaceOff}
+                      </span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Email</dt>
+                    <dd>{user.email}</dd>
+                  </div>
+                </div>
+              </StaffPanel>
+
+              <StaffPanel title={dict.fbdSalaryTitle} subtitle={dict.fbdSalarySub} delay={220}>
+                {!cabinetSalaryVisible ? (
+                  <div className="fb-empty">
+                    <b>{dict.payNoGrant}</b>
+                  </div>
+                ) : !cabinetSalary ? (
+                  <div className="fb-empty">
+                    <b>{dict.fbdSalaryNone}</b>
+                  </div>
+                ) : (
+                  <div className="fb-list">
+                    <div className="fb-listrow">
+                      <div className="fb-listrow-main">
+                        <b>{cabinetSalary.monthLabel}</b>
+                        <span>{dict.payTotal}</span>
+                      </div>
+                      <div className="fb-listrow-end">
+                        <span className={cn("fb-pill", SALARY_TONE[cabinetSalary.status])}>
+                          {salaryLabel(cabinetSalary.status, dict)}
+                        </span>
+                        <span className="fb-listrow-val">{fmtNumber(cabinetSalary.total)}</span>
                       </div>
                     </div>
-                  ))
+                  </div>
                 )}
-              </CardBody>
-            </Card>
-          </Reveal>
-        ) : null}
+              </StaffPanel>
 
-        {user.role === "TEACHER" ? (
-          <div className="mt-6">
-            <TeacherCoursesCard courses={cabinetCourses} summary={cabinetSummary} d={dict} />
+              <StaffPanel title={dict.dashQuickActions} delay={260}>
+                <ActionTiles actions={actions} />
+              </StaffPanel>
+            </div>
           </div>
-        ) : null}
 
-        {analytics.kind === "teacher" ? null : (
-          <AdminAnalyticsSection data={analytics} locale={locale} />
-        )}
-      </>
+          <div className="fb-sechead" data-fb-reveal data-fb-delay="280">
+            <div>
+              <span className="fb-kicker">{dict.dashAnalyticsTitle}</span>
+              <h2>{dict.dashLast14Days}</h2>
+              <p>{dict.dashTeacherAnalyticsSubtitle}</p>
+            </div>
+          </div>
+
+          <div className="fb-grid even">
+            <StaffChart
+              title={dict.dashAttendanceTrendTitle}
+              subtitle={dict.dashLast14Days}
+              note={dict.dashAttendanceTrendNote}
+              empty={analytics.attendanceByDay.length === 0}
+              emptyTitle={dict.dashNoDataTitle}
+              emptyDescription={dict.dashAttendanceTrendEmpty}
+              delay={300}
+            >
+              <LineChart data={analytics.attendanceByDay} />
+            </StaffChart>
+            <StaffChart
+              title={dict.dashSubmissionsTitle}
+              subtitle={dict.dashLast14Days}
+              note={dict.dashSubmissionsNote}
+              empty={!analytics.submissionsByDay.some((point) => point.value > 0)}
+              emptyTitle={dict.dashNoDataTitle}
+              emptyDescription={dict.dashSubmissionsEmpty}
+              delay={320}
+            >
+              <BarChart data={analytics.submissionsByDay} />
+            </StaffChart>
+            <StaffChart
+              title={dict.dashCourseStudentsTitle}
+              subtitle={dict.dashStatStudents}
+              note={dict.dashCourseStudentsNote}
+              empty={analytics.studentsByCourse.length === 0}
+              emptyTitle={dict.dashNoDataTitle}
+              emptyDescription={dict.dashCourseStudentsEmpty}
+              delay={340}
+            >
+              <BarChart data={analytics.studentsByCourse} />
+            </StaffChart>
+            <StaffChart
+              title={dict.dashSubmissionStatusTitle}
+              subtitle={dict.dashStatAssignments}
+              note={dict.dashSubmissionStatusNote}
+              empty={!analytics.submissionStatus.some((slice) => slice.value > 0)}
+              emptyTitle={dict.dashNoDataTitle}
+              emptyDescription={dict.dashSubmissionStatusEmpty}
+              delay={360}
+            >
+              <DonutChart data={analytics.submissionStatus} />
+            </StaffChart>
+          </div>
+
+          <StaffStrip announcements={announcements} dict={dict} />
+          <StaffFoot locale={locale} time={timeLabel} />
+        </div>
+      );
+    }
+
+    const activeDays = analytics.submissionsByDay.filter((point) => point.value > 0).length;
+    const activePct = Math.round((activeDays / 14) * 100);
+
+    return (
+      <div className="fb-dash">
+        <FbMotion variant="dashboard" />
+        <StaffHead
+          name={user.name}
+          roleLabel={roleLabel}
+          scopeLabel={scopeLabel}
+          now={now}
+          locale={locale}
+          stats={[
+            translate(locale, "dashCoursesCountSubtitle", { count: courses }),
+            translate(locale, "fbdStudentsTag", { count: students }),
+            translate(locale, "fbdActiveDays", { active: activeDays, total: 14 }),
+          ]}
+          actions={actions}
+        />
+
+        <StaffFocus
+          eyebrow={`${dict.fbdFocusToday} · ${dayName(now.getDay(), locale)}, ${dayMonth(now)}`}
+          title={dict.fbdStaffFocusTitle}
+          meta={
+            <>
+              <b>{roleLabel}</b>
+              {scopeLabel ? (
+                <>
+                  <i />
+                  <span>{scopeLabel}</span>
+                </>
+              ) : null}
+              <i />
+              <span>{dict.fbdStaffFocusMeta}</span>
+            </>
+          }
+          stats={[
+            { value: students, label: dict.dashStatStudents },
+            { value: courses, label: dict.dashStatCourses },
+            { value: submissions, label: dict.dashStatAssignments },
+            { value: quizzes, label: dict.dashStatQuizzes },
+          ]}
+          progress={{
+            top: dict.dashLast14Days,
+            right: translate(locale, "fbdActiveDays", { active: activeDays, total: 14 }),
+            pct: activePct,
+            bottom: dict.fbdActiveNote,
+          }}
+          side={
+            <FocusJoin
+              chip={dict.dashLast14Days}
+              href={actions[0]?.href ?? "/monitoring"}
+              label={actions[0]?.label ?? dict.navMonitoring}
+              icon={<ArrowIcon />}
+            />
+          }
+        />
+
+        <section className="fb-kpis">
+          <StaffKpi
+            accent
+            href={staffStudentsHref}
+            label={dict.dashStatStudents}
+            value={students}
+            foot={dict.dashStatStudentsHint}
+            icon={<UsersIcon />}
+            delay={120}
+          />
+          <StaffKpi
+            href="/courses"
+            label={dict.dashStatCourses}
+            value={courses}
+            foot={
+              user.role === "TEACHER"
+                ? dict.dashStatCoursesTeacherHint
+                : dict.dashStatCoursesAdminHint
+            }
+            icon={<BookIcon />}
+            delay={160}
+          />
+          <StaffKpi
+            href={staffSubmissionsHref}
+            label={dict.dashStatAssignments}
+            value={submissions}
+            foot={dict.dashStatAssignmentsHint}
+            icon={<ClipboardIcon />}
+            delay={200}
+          />
+          <StaffKpi
+            href="/quizzes"
+            label={dict.dashStatQuizzes}
+            value={quizzes}
+            foot={dict.dashStatQuizzesHint}
+            icon={<HelpIcon />}
+            delay={240}
+          />
+        </section>
+
+        <div className="fb-grid">
+          <div className="fb-col">
+            <StaffChart
+              title={dict.dashSubmissionsTrendTitle}
+              subtitle={dict.dashLast14Days}
+              note={dict.dashSubmissionsNote}
+              empty={!analytics.submissionsByDay.some((point) => point.value > 0)}
+              emptyTitle={dict.dashNoDataTitle}
+              emptyDescription={dict.dashSubmissionsEmpty}
+              delay={160}
+            >
+              <BarChart data={analytics.submissionsByDay} />
+            </StaffChart>
+
+            <StaffPanel title={dict.dashQuickActions} delay={200}>
+              <ActionTiles actions={actions} />
+            </StaffPanel>
+          </div>
+
+          <div className="fb-col">
+            <StaffChart
+              title={dict.dashUserRolesTitle}
+              subtitle={dict.dashLast14Days}
+              note={dict.dashUserRolesNote}
+              empty={analytics.usersByRole.every((slice) => slice.value === 0)}
+              emptyTitle={dict.dashNoDataTitle}
+              emptyDescription={dict.dashUserRolesEmpty}
+              delay={220}
+            >
+              <DonutChart data={analytics.usersByRole} />
+            </StaffChart>
+          </div>
+        </div>
+
+        <StaffStrip announcements={announcements} dict={dict} />
+        <StaffFoot locale={locale} time={timeLabel} />
+      </div>
     );
   }
-
 
   return (
     <StudentHome

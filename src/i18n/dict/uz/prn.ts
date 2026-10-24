@@ -11,4 +11,7 @@ export const prn = {
   parentEmpty: "Ma'lumot topilmadi",
   parentSwitch: "Farzandni tanlash",
   parentRiskLow: "Davomat past — e'tibor bering",
+  parentCourseGrades: "Fanlar kesimida natijalar",
+  parentCourseGradesNote: "Har bir fan bo'yicha o'zlashtirish foizi.",
+  parentCourseGradesEmpty: "Baholangan fanlar hali yo'q.",
 };

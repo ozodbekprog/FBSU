@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Button, Card, CardBody, CardHeader, Input, Select } from "@/components/ui";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 
@@ -18,6 +19,7 @@ const TENTHS_MAX = 40;
 
 export function BonusAwardForm({ courses, students }: Props) {
   const { t } = useI18n();
+  const router = useRouter();
   const [courseId, setCourseId] = useState(courses[0]?.id ?? "");
   const [studentId, setStudentId] = useState(students[0]?.id ?? "");
   const [tenths, setTenths] = useState(6);
@@ -53,9 +55,11 @@ export function BonusAwardForm({ courses, students }: Props) {
         text: t("grdBonusAwarded", {
           name: selectedStudent?.name ?? t("grdPupil"),
           points: (tenths / 10).toFixed(1),
+          percent: tenths,
         }),
       });
       setReason("");
+      router.refresh();
     } catch {
       setMessage({ tone: "error", text: t("grdServerError") });
     }
@@ -109,7 +113,9 @@ export function BonusAwardForm({ courses, students }: Props) {
           <label className="grid gap-1.5">
             <span className="text-sm font-medium text-slate-700">
               {t("grdScoreLabelColon")}{" "}
-              <span className="text-brand-700">+{(tenths / 10).toFixed(1)}</span>
+              <span className="text-brand-700">
+                +{(tenths / 10).toFixed(1)} = +{tenths}%
+              </span>
             </span>
             <input
               type="range"

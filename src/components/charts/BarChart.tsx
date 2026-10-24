@@ -54,8 +54,8 @@ export function BarChart({ data, height = 190 }: { data: BarChartDatum[]; height
     <svg viewBox={`0 0 ${WIDTH} ${height}`} className="h-auto w-full" role="img">
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#5373b8" />
-          <stop offset="100%" stopColor="#1d3460" />
+          <stop offset="0%" stopColor="#2997ff" />
+          <stop offset="100%" stopColor="#0062c4" />
         </linearGradient>
       </defs>
       {ticks.map((tick) => (
@@ -65,7 +65,7 @@ export function BarChart({ data, height = 190 }: { data: BarChartDatum[]; height
             x2={WIDTH - pad.right}
             y1={yFor(tick)}
             y2={yFor(tick)}
-            className="stroke-slate-200"
+            stroke="var(--fb-line, #e2e8f0)"
             strokeWidth={1}
             strokeDasharray="3 5"
           />
@@ -73,7 +73,7 @@ export function BarChart({ data, height = 190 }: { data: BarChartDatum[]; height
             x={pad.left - 6}
             y={yFor(tick) + 2.5}
             textAnchor="end"
-            className="fill-slate-400"
+            fill="var(--fb-muted-2, #94a3b8)"
             fontSize={8.5}
           >
             {tick}
@@ -86,7 +86,7 @@ export function BarChart({ data, height = 190 }: { data: BarChartDatum[]; height
         x2={WIDTH - pad.right}
         y1={pad.top + innerHeight}
         y2={pad.top + innerHeight}
-        className="stroke-slate-300"
+        stroke="var(--fb-line, #cbd5e1)"
         strokeWidth={1}
       />
 
@@ -118,7 +118,7 @@ export function BarChart({ data, height = 190 }: { data: BarChartDatum[]; height
                 x={centerX}
                 y={valueY - 5}
                 textAnchor="middle"
-                className="fill-slate-500"
+                fill="var(--fb-muted, #64748b)"
                 fontSize={9}
               >
                 {item.value}
@@ -128,7 +128,7 @@ export function BarChart({ data, height = 190 }: { data: BarChartDatum[]; height
               x={centerX}
               y={height - 9}
               textAnchor="middle"
-              className="fill-slate-400"
+              fill="var(--fb-muted-2, #94a3b8)"
               fontSize={labelFont}
             >
               {shortLabel(item.label)}

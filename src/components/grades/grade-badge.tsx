@@ -9,9 +9,10 @@ const BADGE_SIZES = {
 
 export function gradeBadgeTone(percent: number | null) {
   if (percent == null) return "bg-slate-100 text-slate-600 ring-1 ring-slate-200/70";
-  if (percent >= 80)
+  const value = Math.min(100, percent);
+  if (value >= 80)
     return "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-sm shadow-emerald-500/30";
-  if (percent >= 60)
+  if (value >= 60)
     return "bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-sm shadow-amber-500/30";
   return "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-sm shadow-rose-500/30";
 }
@@ -25,6 +26,7 @@ export function GradeBadge({
   size?: keyof typeof BADGE_SIZES;
   className?: string;
 }) {
+  const shown = percent == null ? null : Math.min(100, Math.max(0, Math.round(percent)));
   return (
     <span
       className={cn(
@@ -34,7 +36,7 @@ export function GradeBadge({
         className,
       )}
     >
-      {percent != null ? `${percent}%` : "—"}
+      {shown != null ? `${shown}%` : "—"}
     </span>
   );
 }

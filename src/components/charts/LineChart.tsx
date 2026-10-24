@@ -108,13 +108,13 @@ export function LineChart({ data, height = 210 }: { data: LineChartDatum[]; heig
     <svg viewBox={`0 0 ${WIDTH} ${height}`} className="h-auto w-full" role="img">
       <defs>
         <linearGradient id={areaId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#5373b8" stopOpacity="0.34" />
-          <stop offset="62%" stopColor="#5373b8" stopOpacity="0.08" />
-          <stop offset="100%" stopColor="#5373b8" stopOpacity="0" />
+          <stop offset="0%" stopColor="#0071e3" stopOpacity="0.3" />
+          <stop offset="62%" stopColor="#0071e3" stopOpacity="0.07" />
+          <stop offset="100%" stopColor="#0071e3" stopOpacity="0" />
         </linearGradient>
         <linearGradient id={lineId} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#1d3460" />
-          <stop offset="55%" stopColor="#5373b8" />
+          <stop offset="0%" stopColor="#0062c4" />
+          <stop offset="55%" stopColor="#0071e3" />
           <stop offset="100%" stopColor="#d4af37" />
         </linearGradient>
         <radialGradient id={glowId}>
@@ -130,7 +130,8 @@ export function LineChart({ data, height = 210 }: { data: LineChartDatum[]; heig
             x2={WIDTH - PAD.right}
             y1={yFor(tick)}
             y2={yFor(tick)}
-            className="animate-fade-in stroke-slate-200"
+            className="animate-fade-in"
+            stroke="var(--fb-line, #e2e8f0)"
             strokeWidth={1}
             strokeDasharray="3 5"
             style={{ animationDelay: `${tickIndex * 50}ms` }}
@@ -139,7 +140,8 @@ export function LineChart({ data, height = 210 }: { data: LineChartDatum[]; heig
             x={PAD.left - 6}
             y={yFor(tick) + 2.5}
             textAnchor="end"
-            className="animate-fade-in fill-slate-400"
+            className="animate-fade-in"
+            fill="var(--fb-muted-2, #94a3b8)"
             fontSize={8.5}
             style={{ animationDelay: `${tickIndex * 50}ms` }}
           >
@@ -173,7 +175,7 @@ export function LineChart({ data, height = 210 }: { data: LineChartDatum[]; heig
           x2={WIDTH - PAD.right}
           y1={averageY}
           y2={averageY}
-          className="stroke-gold-500"
+          stroke="var(--fb-gold, #d4af37)"
           strokeWidth={1.2}
           strokeDasharray="5 5"
           strokeOpacity={0.65}
@@ -182,7 +184,7 @@ export function LineChart({ data, height = 210 }: { data: LineChartDatum[]; heig
           x={WIDTH - PAD.right}
           y={averageY - 5}
           textAnchor="end"
-          className="fill-gold-600"
+          fill="var(--fb-gold-ink, #a16207)"
           fontSize={9}
           fontWeight={600}
         >
@@ -224,11 +226,9 @@ export function LineChart({ data, height = 210 }: { data: LineChartDatum[]; heig
               cx={point.x}
               cy={point.y}
               r={isLast ? 5.5 : 4}
-              className={
-                isLast
-                  ? "animate-pop-in fill-gold-500 stroke-white transition-transform duration-150 hover:scale-125"
-                  : "animate-pop-in fill-white stroke-brand-700 transition-transform duration-150 hover:scale-150"
-              }
+              fill={isLast ? "var(--fb-gold, #d4af37)" : "var(--fb-card, #ffffff)"}
+              stroke={isLast ? "var(--fb-card, #ffffff)" : "var(--fb-blue, #0071e3)"}
+              className="animate-pop-in transition-transform duration-150 hover:scale-125"
               strokeWidth={2.4}
               style={{
                 animationDelay: `${280 + index * 55}ms`,
@@ -243,7 +243,8 @@ export function LineChart({ data, height = 210 }: { data: LineChartDatum[]; heig
                 x={point.x}
                 y={height - 9}
                 textAnchor="middle"
-                className="animate-fade-in fill-slate-400"
+                className="animate-fade-in"
+                fill="var(--fb-muted-2, #94a3b8)"
                 fontSize={8.5}
                 style={{ animationDelay: `${320 + index * 40}ms` }}
               >
@@ -259,7 +260,8 @@ export function LineChart({ data, height = 210 }: { data: LineChartDatum[]; heig
           x={Math.min(Math.max(lastPoint.x, PAD.left + 16), WIDTH - PAD.right - 16)}
           y={Math.max(lastPoint.y - 15, PAD.top + 8)}
           textAnchor="middle"
-          className="animate-pop-in fill-brand-950"
+          className="animate-pop-in"
+          fill="var(--fb-ink, #1d1d1f)"
           fontSize={12}
           fontWeight={700}
           style={{ animationDelay: `${420 + data.length * 55}ms` }}

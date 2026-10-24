@@ -11,4 +11,7 @@ export const prn = {
   parentEmpty: "No data found",
   parentSwitch: "Select child",
   parentRiskLow: "Low attendance — please pay attention",
+  parentCourseGrades: "Results by subject",
+  parentCourseGradesNote: "Mastery percentage for each subject.",
+  parentCourseGradesEmpty: "No graded subjects yet.",
 };

@@ -107,6 +107,20 @@ export function FbMotion({ variant }: FbMotionProps) {
         reveals.forEach(revealNow);
       }
 
+      const startCount = (el: HTMLElement) => {
+        const card = el.closest<HTMLElement>("[data-fb-reveal]");
+        if (el.dataset.fbCountSync !== "true" || !card || card.classList.contains("is-in")) {
+          animateCount(el);
+          return;
+        }
+        const sync = new MutationObserver(() => {
+          if (!card.classList.contains("is-in")) return;
+          sync.disconnect();
+          animateCount(el);
+        });
+        sync.observe(card, { attributes: true, attributeFilter: ["class"] });
+      };
+
       const countObserver =
         "IntersectionObserver" in window
           ? new IntersectionObserver(
@@ -114,14 +128,14 @@ export function FbMotion({ variant }: FbMotionProps) {
                 entries.forEach((entry) => {
                   if (!entry.isIntersecting) return;
                   countObserver?.unobserve(entry.target);
-                  animateCount(entry.target as HTMLElement);
+                  startCount(entry.target as HTMLElement);
                 });
               },
               { threshold: 0.4, rootMargin: "0px 0px 0px 0px" },
             )
           : null;
       if (countObserver) counters.forEach((el) => countObserver.observe(el));
-      else counters.forEach(animateCount);
+      else counters.forEach(startCount);
 
       const quoteMark = root.querySelector<HTMLElement>(".fb-mark");
       if (quoteMark && observer) observer.observe(quoteMark);

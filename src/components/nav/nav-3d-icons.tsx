@@ -854,6 +854,7 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/journal": Journal,
   "/certificates": Certificates,
   "/bounty": Bounty,
+  "/bonus-points": Bounty,
   "/journals": Journals,
   "/question-bank": Questions,
   "/research": Research,
