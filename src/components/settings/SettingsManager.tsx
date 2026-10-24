@@ -417,7 +417,7 @@ export default function SettingsManager({
             <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
             <CardBody className="flex flex-col gap-3">
               <div className="flex items-center gap-4">
-                <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 text-white shadow-lg">
+                <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-700 to-brand-950 text-white shadow-lg">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
                   </svg>
@@ -459,7 +459,7 @@ export default function SettingsManager({
             <span
               className={cn(
                 "relative inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg",
-                telegramLinked ? TELEGRAM_TONE : "from-slate-300 to-slate-500 shadow-slate-400/30",
+                telegramLinked ? TELEGRAM_TONE : "from-brand-600 to-brand-900 shadow-brand-500/30",
               )}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

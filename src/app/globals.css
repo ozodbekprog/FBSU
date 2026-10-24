@@ -276,13 +276,18 @@ body {
 
 .dark .text-rose-600 { color: #fb7185; }
 .dark .text-rose-700 { color: #fda4af; }
+.dark .text-rose-800 { color: #fda4af; }
 .dark .text-emerald-600 { color: #34d399; }
 .dark .text-emerald-700 { color: #6ee7b7; }
+.dark .text-emerald-800 { color: #6ee7b7; }
 .dark .text-amber-600 { color: #fbbf24; }
 .dark .text-amber-700 { color: #fcd34d; }
+.dark .text-amber-800 { color: #fcd34d; }
 .dark .text-sky-600 { color: #38bdf8; }
 .dark .text-sky-700 { color: #7dd3fc; }
+.dark .text-sky-800 { color: #7dd3fc; }
 .dark .text-purple-700 { color: #c4b5fd; }
+.dark .text-purple-800 { color: #c4b5fd; }
 .dark .text-gold-800 { color: #e0c168; }
 
 .dark .bg-gold-400,

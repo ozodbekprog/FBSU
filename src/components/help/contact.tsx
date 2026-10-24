@@ -78,21 +78,28 @@ export async function ContactCards() {
             <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-500">{channel.hint}</p>
           </Card>
         ))}
-        <Card className="relative overflow-hidden border-brand-900/40 bg-brand-950 p-5 text-white">
-          <span className="absolute -right-10 -top-12 size-36 rounded-full bg-brand-500/25 blur-2xl" />
-          <span className="absolute -bottom-14 left-6 size-32 rounded-full bg-gold-400/10 blur-2xl" />
+        <Card className="relative overflow-hidden border-brand-200/70 bg-gradient-to-br from-brand-50 via-white to-brand-50 p-5">
+          <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
+          <span className="pointer-events-none absolute -right-10 -top-12 size-36 rounded-full bg-brand-500/15 blur-2xl" />
+          <span className="pointer-events-none absolute -bottom-14 left-6 size-32 rounded-full bg-gold-400/10 blur-2xl" />
           <div className="relative">
-            <span className="inline-flex size-10 items-center justify-center rounded-xl bg-white/10 text-gold-300 ring-1 ring-white/15">
+            <span className="inline-flex size-10 items-center justify-center rounded-xl bg-brand-100 text-brand-800 ring-1 ring-brand-200">
               <HelpIcon name="shield" size={19} />
             </span>
-            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-brand-200">
+            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-brand-600">
               {dictionary.mscHelpContactBeforeTitle}
             </p>
-            <p className="mt-1 font-semibold tracking-tight">{dictionary.mscHelpContactBeforeDesc}</p>
+            <p className="mt-1 font-semibold tracking-tight text-brand-950">
+              {dictionary.mscHelpContactBeforeDesc}
+            </p>
             <ul className="mt-3 space-y-2">
               {CHECKLIST.map((item) => (
-                <li key={item} className="flex items-start gap-2 text-sm text-brand-100">
-                  <HelpIcon name="check" size={15} className="mt-0.5 shrink-0 text-gold-300" />
+                <li key={item} className="flex items-start gap-2 text-sm text-slate-600">
+                  <HelpIcon
+                    name="check"
+                    size={15}
+                    className="mt-0.5 shrink-0 text-gold-700 dark:text-gold-300"
+                  />
                   <span>{item}</span>
                 </li>
               ))}

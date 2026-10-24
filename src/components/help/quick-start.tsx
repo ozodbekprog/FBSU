@@ -32,7 +32,7 @@ export async function QuickStart({ steps }: { steps: QuickStartStep[] }) {
               <span className="inline-flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700 ring-1 ring-brand-100 transition-colors duration-200 group-hover:bg-brand-900 group-hover:text-gold-300 group-hover:ring-brand-800">
                 <HelpIcon name={step.icon} size={19} />
               </span>
-              <span className="bg-gradient-to-br from-slate-300 via-slate-200 to-slate-100 bg-clip-text text-2xl font-semibold tracking-tight text-transparent transition-[--tw-gradient-from,--tw-gradient-via,--tw-gradient-to] duration-300 group-hover:from-gold-400 group-hover:via-brand-400 group-hover:to-brand-300">
+              <span className="bg-gradient-to-br from-slate-300 via-slate-200 to-slate-100 bg-clip-text text-2xl font-semibold tracking-tight text-transparent transition-[--tw-gradient-from,--tw-gradient-via,--tw-gradient-to] duration-300 group-hover:from-gold-400 group-hover:via-brand-400 group-hover:to-brand-300 dark:from-slate-500 dark:via-slate-600 dark:to-slate-700">
                 {String(index + 1).padStart(2, "0")}
               </span>
             </div>
