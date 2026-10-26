@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Badge, ButtonLink, Card } from "@/components/ui";
 import { Logo } from "@/components/brand/logo";
 import { BetaBadge } from "@/components/brand/beta-badge";
+import { LandingLoader } from "@/components/landing/landing-loader";
 import { AppInstallButton } from "@/components/pwa/AppInstallButton";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { getDictionary, getLocale } from "@/i18n";
@@ -380,6 +381,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-slate-900">
+      <LandingLoader />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
@@ -426,20 +428,22 @@ export default async function HomePage() {
           <div className="pointer-events-none absolute inset-0 [background-image:linear-gradient(to_right,var(--color-brand-100)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-brand-100)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(ellipse_75%_60%_at_50%_0%,black,transparent_75%)]" />
           <div className="relative mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-20 sm:px-6 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-12 lg:py-28">
             <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
-              <Badge tone="brand" className="gap-2 px-3.5 py-1.5 text-xs">
-                <span className="size-1.5 rounded-full bg-gold-400" />
-                {dictionary.landUniversity}
-              </Badge>
-              <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight text-brand-950 sm:text-5xl lg:text-[3.4rem]">
+              <div className="landing-rise" style={{ animationDelay: "650ms" }}>
+                <Badge tone="brand" className="gap-2 px-3.5 py-1.5 text-xs">
+                  <span className="size-1.5 rounded-full bg-gold-400" />
+                  {dictionary.landUniversity}
+                </Badge>
+              </div>
+              <h1 className="landing-rise mt-6 text-4xl font-bold leading-tight tracking-tight text-brand-950 sm:text-5xl lg:text-[3.4rem]" style={{ animationDelay: "730ms" }}>
                 {dictionary.landHeroTitleA}{" "}
                 <span className="underline decoration-gold-400 decoration-2 underline-offset-[6px]">
                   {dictionary.landHeroTitleB}
                 </span>
               </h1>
-              <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-slate-600 lg:mx-0">
+              <p className="landing-rise mx-auto mt-6 max-w-xl text-lg leading-relaxed text-slate-600 lg:mx-0" style={{ animationDelay: "810ms" }}>
                 {dictionary.landHeroSubtitle}
               </p>
-              <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
+              <div className="landing-rise mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start" style={{ animationDelay: "890ms" }}>
                 <ButtonLink href="/login" size="lg" className="w-full min-w-44 sm:w-auto">
                   {dictionary.authLoginLink}
                 </ButtonLink>
@@ -452,7 +456,7 @@ export default async function HomePage() {
                   {dictionary.authLoginRegister}
                 </ButtonLink>
               </div>
-              <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5 lg:justify-start">
+              <ul className="landing-rise mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5 lg:justify-start" style={{ animationDelay: "970ms" }}>
                 {trustItems.map((item) => (
                   <li key={item} className="inline-flex items-center gap-2 text-sm text-slate-500">
                     <svg aria-hidden="true"
@@ -472,7 +476,7 @@ export default async function HomePage() {
               </ul>
             </div>
 
-            <div className="relative mx-auto w-full max-w-xl">
+            <div className="landing-rise relative mx-auto w-full max-w-xl" style={{ animationDelay: "600ms" }}>
               <div className="pointer-events-none absolute -inset-8 rounded-[2.5rem] bg-gradient-to-tr from-brand-200/60 via-white to-gold-300/30 blur-2xl" />
               <div className="relative rounded-2xl border border-slate-200 bg-white p-2 shadow-lift">
                 <div className="flex items-center gap-2 px-2 py-1.5">
