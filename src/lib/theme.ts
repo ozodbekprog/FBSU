@@ -1,4 +1,7 @@
-export const THEME_STORAGE_KEY = "ttpu-theme";
+// v2 "Bahor" relizi: eski `ttpu-theme=dark` qiymati yangi dizaynni
+// qoraytirib yubormasligi uchun kalit yangilandi. Yangi sessiya —
+// standart oq (light) ko'rinish; quyosh/oy tugmasi bilan qayta tanlash mumkin.
+export const THEME_STORAGE_KEY = "ttpu-theme-v2";
 export const THEME_CHANGE_EVENT = "ttpu-theme-change";
 export const THEME_LIGHT_COLOR = "#1d3460";
 export const THEME_DARK_COLOR = "#060910";

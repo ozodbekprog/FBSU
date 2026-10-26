@@ -6,9 +6,8 @@ import type { Prisma } from "@prisma/client";
 import { Avatar, Badge, ButtonLink, Card, CardBody, CardHeader, EmptyState } from "@/components/ui";
 import { BarChart, DonutChart, LineChart } from "@/components/charts";
 import { cn, dayName, fmtDate } from "@/lib/utils";
-import { getAdminAnalytics, getStudentAnalytics, getTeacherAnalytics } from "./analytics";
-import { getStudentGpa } from "@/app/api/gpa/data";
-import { StudentOverview } from "@/components/dashboard/student-overview";
+import { getStudentAnalytics, getAdminAnalytics, getTeacherAnalytics } from "./analytics";
+import { StudentHome } from "@/components/fb/student-home";
 import { salaryTotalsForMonth } from "@/lib/payroll";
 import type { AdminAnalytics, TeacherAnalytics } from "./analytics";
 import { getDictionary, getLocale, t as translate, type Locale } from "@/i18n";
@@ -1110,80 +1109,13 @@ export default async function DashboardPage() {
     );
   }
 
-  const today = new Date().getDay() === 0 ? 7 : new Date().getDay();
-  const [enrollments, scheduleToday] = await Promise.all([
-    prisma.enrollment.findMany({
-      where: { userId: user.id, status: "ACTIVE" },
-      include: {
-        course: { include: { teacher: true } },
-      },
-      orderBy: { createdAt: "asc" },
-    }),
-    user.groupId
-      ? prisma.scheduleEntry.findMany({
-          where: { groupId: user.groupId, dayOfWeek: today },
-          orderBy: { slot: "asc" },
-        })
-      : Promise.resolve([]),
-  ]);
-
-  const courseIds = enrollments.map((enrollment) => enrollment.courseId);
-  const [upcoming, analytics, gpaData, assignmentTotal, submittedTotal, todayAttendance] = await Promise.all([
-    prisma.assignment.findMany({
-      where: { courseId: { in: courseIds } },
-      orderBy: { dueAt: "asc" },
-      take: 5,
-      include: {
-        course: true,
-        submissions: { where: { studentId: user.id } },
-      },
-    }),
-    getStudentAnalytics(user.id, locale),
-    getStudentGpa(user.id),
-    prisma.assignment.count({ where: { courseId: { in: courseIds } } }),
-    prisma.submission.count({
-      where: { studentId: user.id, assignment: { courseId: { in: courseIds } } },
-    }),
-    prisma.attendance.findMany({
-      where: { studentId: user.id, date: dateFromIso(todayIso()) },
-      select: { courseId: true, status: true },
-    }),
-  ]);
-
-  const courseOptions: CourseOption[] = enrollments.map((enrollment) => ({
-    slug: enrollment.course.slug,
-    title: enrollment.course.title,
-  }));
-  const courseIdBySlug = new Map(enrollments.map((enrollment) => [enrollment.course.slug, enrollment.courseId]));
-  const attendanceByCourse = new Map(todayAttendance.map((row) => [row.courseId, row.status]));
-  const lessonAttendance: Record<string, string> = {};
-  for (const lesson of scheduleToday) {
-    const slug = matchCourseSlug(lesson.subject, courseOptions);
-    const courseId = slug ? courseIdBySlug.get(slug) : undefined;
-    const status = courseId ? attendanceByCourse.get(courseId) : undefined;
-    if (status) lessonAttendance[lesson.id] = status;
-  }
-
-  const courses = enrollments.map((enrollment) => ({
-    id: enrollment.courseId,
-    title: enrollment.course.title,
-    slug: enrollment.course.slug,
-    teacherName: enrollment.course.teacher.name,
-  }));
-
   return (
-    <StudentOverview
-      firstName={firstName}
+    <StudentHome
+      userId={user.id}
+      userName={user.name}
+      groupId={user.groupId}
       groupName={user.group?.name ?? null}
-      now={now}
       locale={locale}
-      gpa={gpaData}
-      scheduleToday={scheduleToday}
-      analytics={analytics}
-      upcoming={upcoming}
-      assignmentStats={{ submitted: submittedTotal, total: assignmentTotal }}
-      lessonAttendance={lessonAttendance}
-      courses={courses}
     />
   );
 }

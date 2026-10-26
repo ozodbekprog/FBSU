@@ -6,6 +6,7 @@ import { getDictionary, getLocale } from "@/i18n";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
+import "./fbsu-app.css";
 
 const manrope = Manrope({
   variable: "--font-manrope",

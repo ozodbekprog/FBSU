@@ -493,7 +493,7 @@ export default async function HomePage() {
                     src="/beta-dashboard.png"
                     alt="FBSU talaba dashboardi"
                     width={1200}
-                    height={833}
+                    height={800}
                     className="block h-auto w-full"
                   />
                 </div>
