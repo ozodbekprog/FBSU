@@ -396,7 +396,7 @@ export default async function HomePage() {
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5 transition-opacity duration-150 hover:opacity-80">
             <Logo />
-            <BetaBadge className="hidden sm:inline-flex" />
+            <BetaBadge className="max-sm:hidden" />
           </Link>
           <nav className="hidden items-center gap-7 text-sm font-medium text-slate-600 lg:flex">
             {navLinks.map((link) => (
@@ -634,7 +634,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section id="ilova" className="py-20 sm:py-24">
+        <section id="ilova" className="relative overflow-hidden py-20 sm:py-24">
           <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
             <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16">
               <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
