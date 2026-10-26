@@ -6,6 +6,7 @@ import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { canManageCourse } from "@/components/courses/course-access";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { finalizeExpiredAttendanceSessions } from "@/modules/attendance/auto-close";
+import { tashkentWall } from "@/lib/tz";
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const CODE_LENGTH = 6;
@@ -36,7 +37,8 @@ async function uniqueCode() {
 }
 
 function startOfToday() {
-  return new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`);
+  const wall = tashkentWall(new Date());
+  return new Date(Date.UTC(wall.year, wall.month - 1, wall.day));
 }
 
 export async function POST(request: Request) {

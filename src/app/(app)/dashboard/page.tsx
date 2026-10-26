@@ -6,6 +6,7 @@ import type { Prisma } from "@prisma/client";
 import { Avatar, Badge, ButtonLink, Card, CardBody, CardHeader, EmptyState } from "@/components/ui";
 import { BarChart, DonutChart, LineChart } from "@/components/charts";
 import { cn, dayName, fmtDate } from "@/lib/utils";
+import { tashkentNow } from "@/lib/tz";
 import { getStudentAnalytics, getAdminAnalytics, getTeacherAnalytics } from "./analytics";
 import { StudentHome } from "@/components/fb/student-home";
 import { salaryTotalsForMonth } from "@/lib/payroll";
@@ -490,7 +491,7 @@ export default async function DashboardPage() {
   if (user.role === "OTA_ONA") redirect("/parent");
   const locale = await getLocale();
   const dict = getDictionary(locale);
-  const now = new Date();
+  const now = tashkentNow();
   const firstName = user.name.split(" ")[0];
   const roleLabel =
     user.role === "ADMIN"
@@ -538,7 +539,7 @@ export default async function DashboardPage() {
   }
 
   if (user.role === "BUXGALTER") {
-    const month = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const month = new Date(now.getFullYear(), now.getMonth(), 1);
     const [records, totals, pending, staffCount] = await Promise.all([
       prisma.salaryRecord.findMany({
         where: { month },

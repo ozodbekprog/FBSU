@@ -1,6 +1,7 @@
 import type { Role } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { tashkentWall } from "@/lib/tz";
 
 const OVERVIEW_ROLES: Role[] = ["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"];
 
@@ -16,7 +17,8 @@ const STAFF_ROLES: Role[] = [
 ];
 
 function todayDate() {
-  return new Date(new Date().toISOString().slice(0, 10) + "T00:00:00.000Z");
+  const wall = tashkentWall(new Date());
+  return new Date(Date.UTC(wall.year, wall.month - 1, wall.day));
 }
 
 export async function GET() {

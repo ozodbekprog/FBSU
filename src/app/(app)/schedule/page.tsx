@@ -7,6 +7,7 @@ import { ScheduleBoard } from "@/components/schedule/schedule-board";
 import type { BoardEntry, PaletteBlock } from "@/components/schedule/builder/types";
 import { isoWeekday, resolveWeekStart } from "@/components/schedule/week-utils";
 import { todayIso } from "@/components/attendance/lesson-utils";
+import { tashkentNow } from "@/lib/tz";
 import { autoSyncEduPageSchedule } from "@/lib/edupage-sync";
 
 type TeacherChoice = { id: string; name: string };
@@ -57,7 +58,7 @@ export default async function SchedulePage({
   const weekStart = resolveWeekStart(weekParam);
   const dateToday = todayIso();
   const currentWeekStart = resolveWeekStart(dateToday);
-  const now = new Date();
+  const now = tashkentNow();
 
   const where = staff
     ? {}

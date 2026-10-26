@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { normalizeQuizScore } from "@/lib/quiz-score";
+import { asTashkent, tashkentNow, tashkentWindowStartUtc } from "@/lib/tz";
 import type { AttendanceStatus, Prisma, Role, SubmissionStatus } from "@prisma/client";
 import type { BarChartDatum, DonutChartDatum, LineChartDatum } from "@/components/charts";
 import { t as translate, type Dictionary, type Locale } from "@/i18n";
@@ -152,13 +153,13 @@ function dayLabel(date: Date) {
 }
 
 function buildWindow(size: number) {
-  const today = startOfDay(new Date());
+  const today = startOfDay(tashkentNow());
   const days = Array.from({ length: size }, (_, index) => {
     const date = new Date(today);
     date.setDate(today.getDate() - (size - 1 - index));
     return date;
   });
-  return { start: days[0], days };
+  return { start: new Date(tashkentWindowStartUtc(size - 1)), days };
 }
 
 function shorten(title: string, max = 18) {
@@ -330,7 +331,7 @@ export async function getStudentAnalytics(
     start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
     return start;
   }
-  const currentWeek = weekStartOf(new Date());
+  const currentWeek = weekStartOf(tashkentNow());
   const weekStarts = Array.from({ length: 8 }, (_, index) => {
     const week = new Date(currentWeek);
     week.setDate(week.getDate() - (7 - index) * 7);
@@ -343,13 +344,13 @@ export async function getStudentAnalytics(
   const quizBuckets: number[][] = weekKeys.map(() => []);
   const attendanceBuckets: AttendanceStatus[][] = weekKeys.map(() => []);
   for (const point of points) {
-    const index = weekIndex.get(weekKeyOf(weekStartOf(point.at)));
+    const index = weekIndex.get(weekKeyOf(weekStartOf(asTashkent(point.at))));
     if (index == null) continue;
     if (point.kind === "assignment") assignmentBuckets[index].push(point.value);
     else quizBuckets[index].push(point.value);
   }
   for (const record of records) {
-    const index = weekIndex.get(weekKeyOf(weekStartOf(record.date)));
+    const index = weekIndex.get(weekKeyOf(weekStartOf(asTashkent(record.date))));
     if (index == null) continue;
     attendanceBuckets[index].push(record.status);
   }
@@ -390,7 +391,7 @@ export async function getStudentAnalytics(
     courseAttendance,
     courseAttendanceDetail,
     gradeTrend: points.slice(-10).map((point) => ({
-      label: dayLabel(point.at),
+      label: dayLabel(asTashkent(point.at)),
       value: point.value,
       detail: {
         title: point.title,
@@ -437,7 +438,7 @@ export async function getTeacherAnalytics(
 
   const submissionBuckets = new Map<string, number>();
   for (const submission of submissions) {
-    const key = dayKey(submission.submittedAt);
+    const key = dayKey(asTashkent(submission.submittedAt));
     submissionBuckets.set(key, (submissionBuckets.get(key) ?? 0) + 1);
   }
   const submissionsByDay: BarChartDatum[] = days.map((date) => ({
@@ -447,7 +448,7 @@ export async function getTeacherAnalytics(
 
   const attendanceBuckets = new Map<string, { attended: number; total: number }>();
   for (const record of records) {
-    const key = dayKey(record.date);
+    const key = dayKey(asTashkent(record.date));
     const bucket = attendanceBuckets.get(key) ?? { attended: 0, total: 0 };
     bucket.total += 1;
     if (ATTENDED.includes(record.status)) bucket.attended += 1;

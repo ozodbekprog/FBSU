@@ -1,3 +1,5 @@
+import { asTashkent } from "@/lib/tz";
+
 export type CourseOption = { slug: string; title: string };
 
 export const SLOT_TIMES: Record<number, string> = {
@@ -46,7 +48,7 @@ export function matchCourseSlug(subject: string, courses: CourseOption[]): strin
 }
 
 export function todayIso() {
-  const date = new Date();
+  const date = asTashkent(new Date());
   const pad = (part: number) => String(part).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
@@ -56,7 +58,7 @@ export function dateFromIso(value: string) {
 }
 
 export function isoForWeekday(day: number, today: number) {
-  const date = new Date();
+  const date = asTashkent(new Date());
   date.setDate(date.getDate() + (day - today));
   const pad = (part: number) => String(part).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;

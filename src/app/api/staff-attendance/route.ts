@@ -3,13 +3,15 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
+import { tashkentWall } from "@/lib/tz";
 
 const actionSchema = z.object({
   action: z.enum(["in", "out"]),
 });
 
 function todayDate() {
-  return new Date(new Date().toISOString().slice(0, 10) + "T00:00:00.000Z");
+  const wall = tashkentWall(new Date());
+  return new Date(Date.UTC(wall.year, wall.month - 1, wall.day));
 }
 
 export async function GET() {

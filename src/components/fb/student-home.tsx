@@ -12,6 +12,7 @@ import { getStudentAnalytics } from "@/app/(app)/dashboard/analytics";
 import { FbMotion } from "@/components/fb/fb-motion";
 import { getDictionary, t as translate, type Dictionary, type Locale } from "@/i18n";
 import { cn, dayName, fmtDate, monthName } from "@/lib/utils";
+import { asTashkent, tashkentNow } from "@/lib/tz";
 import { matchCourseSlug, slotRange } from "@/components/attendance/lesson-utils";
 
 const DAY_MS = 86_400_000;
@@ -80,7 +81,7 @@ export async function StudentHome({
   locale: Locale;
 }) {
   const dict = getDictionary(locale);
-  const now = new Date();
+  const now = tashkentNow();
   const todayDow = now.getDay() === 0 ? 7 : now.getDay();
   const nowMin = now.getHours() * 60 + now.getMinutes();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -180,11 +181,11 @@ export async function StudentHome({
     (assignment) => assignment.submissions.length === 0 && assignment.dueAt,
   );
   const overdueCount = pending.filter(
-    (assignment) => assignment.dueAt && new Date(assignment.dueAt) < now,
+    (assignment) => assignment.dueAt && asTashkent(new Date(assignment.dueAt)) < now,
   ).length;
   const soonCount = pending.filter((assignment) => {
     if (!assignment.dueAt) return false;
-    const due = new Date(assignment.dueAt);
+    const due = asTashkent(new Date(assignment.dueAt));
     return due >= now && due.getTime() - now.getTime() <= 7 * DAY_MS;
   }).length;
   const deadlineRows = pending.slice(0, 4);
@@ -270,14 +271,14 @@ export async function StudentHome({
   });
   for (const record of attendance) {
     const day = weekDays.find(
-      (item) => item.date.toDateString() === new Date(record.date).toDateString(),
+      (item) => item.date.toDateString() === asTashkent(new Date(record.date)).toDateString(),
     );
     if (day) day.count += 1;
   }
   for (const assignment of assignments) {
     for (const submission of assignment.submissions) {
       const day = weekDays.find(
-        (item) => item.date.toDateString() === new Date(submission.submittedAt).toDateString(),
+        (item) => item.date.toDateString() === asTashkent(new Date(submission.submittedAt)).toDateString(),
       );
       if (day) day.count += 1;
     }
@@ -946,7 +947,7 @@ export async function StudentHome({
             ) : (
               <div className="fb-dls">
                 {deadlineRows.map((assignment) => {
-                  const due = assignment.dueAt ? new Date(assignment.dueAt) : null;
+                  const due = assignment.dueAt ? asTashkent(new Date(assignment.dueAt)) : null;
                   if (!due) return null;
                   const diff = Math.ceil(
                     (new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime() -

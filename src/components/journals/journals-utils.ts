@@ -1,3 +1,5 @@
+import { tashkentWall } from "@/lib/tz";
+
 export type JournalLessonStatus = "done" | "partial" | "empty";
 
 export type JournalScheduleStatus = "NORMAL" | "CHANGED" | "MOVED" | "CANCELLED";
@@ -27,8 +29,6 @@ export type JournalWeekData = {
   lessons: JournalLesson[];
 };
 
-const TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1000;
-
 function pad(value: number) {
   return String(value).padStart(2, "0");
 }
@@ -55,7 +55,8 @@ export function isoFromDate(date: Date) {
 }
 
 export function tashkentToday() {
-  return isoFromDate(new Date(Date.now() + TASHKENT_OFFSET_MS));
+  const wall = tashkentWall(new Date());
+  return isoFromDate(new Date(Date.UTC(wall.year, wall.month - 1, wall.day)));
 }
 
 export function addDaysIso(value: string, days: number) {

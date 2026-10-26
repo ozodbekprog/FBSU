@@ -1,3 +1,5 @@
+import { tashkentWall } from "@/lib/tz";
+
 export const TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1000;
 
 function pad(value: number) {
@@ -26,7 +28,8 @@ export function isoFromDate(date: Date) {
 }
 
 export function tashkentToday() {
-  return isoFromDate(new Date(Date.now() + TASHKENT_OFFSET_MS));
+  const wall = tashkentWall(new Date());
+  return isoFromDate(new Date(Date.UTC(wall.year, wall.month - 1, wall.day)));
 }
 
 export function addDays(iso: string, days: number) {

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { Role } from "@prisma/client";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { tashkentWall } from "@/lib/tz";
 import { PageHeader } from "@/components/ui";
 import { getDictionary, getLocale } from "@/i18n";
 import StaffAttendanceCard, { type StaffOverviewData } from "@/components/staff/staff-attendance-card";
@@ -24,7 +25,8 @@ export default async function StaffPage() {
   if (user.role === "STUDENT") redirect("/dashboard");
 
   const dictionary = getDictionary(await getLocale());
-  const date = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00.000Z");
+  const wall = tashkentWall(new Date());
+  const date = new Date(Date.UTC(wall.year, wall.month - 1, wall.day));
 
   const [today, history] = await Promise.all([
     prisma.staffAttendance.findUnique({
