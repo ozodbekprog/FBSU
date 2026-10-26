@@ -1054,3 +1054,26 @@ main#main-content > .student-dash {
     animation: none;
   }
 }
+
+
+/* "Bahor" (light) rejim: sidebar aktiv punkti yumshoq, navy matn va gold belgi. */
+:root:not(.dark) aside .nav-link[data-active="true"] {
+  position: relative;
+  background: #eef3fa;
+  color: #162a4d;
+  box-shadow: inset 0 0 0 1px rgba(29, 52, 96, 0.12);
+}
+:root:not(.dark) aside .nav-link[data-active="true"] .nav-icon svg {
+  color: #a9871f;
+}
+:root:not(.dark) aside .nav-link[data-active="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0.3rem;
+  top: 26%;
+  bottom: 26%;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #e3c76a, #c9a227);
+  box-shadow: 0 0 8px rgba(201, 162, 39, 0.35);
+}

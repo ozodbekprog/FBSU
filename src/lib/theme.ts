@@ -25,7 +25,7 @@ export function systemPrefersDark(): boolean {
 
 export function effectiveTheme(mode: ThemeMode | null): ThemeMode {
   if (mode) return mode;
-  return "dark";
+  return "light";
 }
 
 export function resolveIsDark(mode: ThemeMode | null): boolean {
@@ -51,4 +51,4 @@ export function setStoredTheme(mode: ThemeMode): void {
   window.dispatchEvent(new CustomEvent(THEME_CHANGE_EVENT, { detail: mode }));
 }
 
-export const THEME_INIT_SCRIPT = `(function(){try{var m=localStorage.getItem("${THEME_STORAGE_KEY}");if(m!=="light"&&m!=="dark")m="dark";var d=m==="dark";var e=document.documentElement;if(d)e.classList.add("dark");e.style.colorScheme=d?"dark":"light";var t=document.querySelector('meta[name="theme-color"]');if(t)t.setAttribute("content",d?"${THEME_DARK_COLOR}":"${THEME_LIGHT_COLOR}");}catch(e){}})();`;
+export const THEME_INIT_SCRIPT = `(function(){try{var m=localStorage.getItem("${THEME_STORAGE_KEY}");if(m!=="light"&&m!=="dark")m="light";var d=m==="dark";var e=document.documentElement;if(d)e.classList.add("dark");e.style.colorScheme=d?"dark":"light";var t=document.querySelector('meta[name="theme-color"]');if(t)t.setAttribute("content",d?"${THEME_DARK_COLOR}":"${THEME_LIGHT_COLOR}");}catch(e){}})();`;
