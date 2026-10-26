@@ -336,15 +336,6 @@ export default async function AppLayout({
             </span>
           </Link>
         </div>
-        <Link href="/profile" className="fb-side-cabinet">
-          <span>
-            <em>{dictionary.fbdCabinet}</em>
-            <b>{roleLabel}</b>
-          </span>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="m6 9 6 6 6-6" />
-          </svg>
-        </Link>
         <NavLinks groups={visibleGroups} />
         <div className="fb-side-foot border-t border-slate-100">
           <div className="mb-2 flex justify-center">
