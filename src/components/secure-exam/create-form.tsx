@@ -362,7 +362,12 @@ export function CreateForm({
             <div className="grid gap-2.5 md:col-span-2 md:grid-cols-2">
               <Toggle label={t("secFieldFullscreen")} checked={requireFullscreen} onChange={setRequireFullscreen} />
               <Toggle label={t("secFieldBlockCopy")} checked={blockCopy} onChange={setBlockCopy} />
-              <Toggle label={t("secFieldWebcam")} checked={webcamEnabled} onChange={setWebcamEnabled} />
+              <Toggle
+                label={t("secFieldWebcam")}
+                hint={t("secFieldWebcamHint")}
+                checked={webcamEnabled}
+                onChange={setWebcamEnabled}
+              />
               <Toggle
                 label={t("secFieldClient")}
                 hint={t("secFieldClientHint")}

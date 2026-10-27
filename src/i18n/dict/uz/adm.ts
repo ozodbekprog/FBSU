@@ -643,7 +643,7 @@ export const adm = {
   admEduPageCounts: "{groups} guruh · {teachers} o'qituvchi · {subjects} fan · {rooms} xona · {lessons} dars",
   admEduPageSyncNow: "Hozir yangilash",
   admEduPageSyncing: "Yangilanmoqda…",
-  admEduPageAuto: "Har 30 daqiqada avtomatik tekshiriladi (Jadval sahifasi ochilganda yangilanadi).",
+  admEduPageAuto: "Har soatda avtomatik yangilanadi; Jadval sahifasi ochilganda 30 daqiqadan eski ma'lumot bo'lsa ham sinxronlanadi.",
   admEduPageSource: "Manba sayt",
   admImportPageTitle: "CSV import",
   admImportPageSubtitle: "Talabalar, guruhlar va fanlarni CSV fayl orqali ommaviy yuklang",

@@ -30,6 +30,15 @@ export const SECURE_EVENT_TYPES = [
   "KEY_ANOMALY",
   "MOUSE_ANOMALY",
   "AUTOMATION_DETECTED",
+  "DUPLICATE_TAB",
+  "MOUSE_LEFT",
+  "DRAG_ATTEMPT",
+  "AUX_CLICK",
+  "CAMERA_BLOCKED",
+  "SNAPSHOT",
+  "FACE_MISSING",
+  "FACE_TURNED",
+  "MULTIPLE_FACES",
 ] as const;
 
 export type SecureEventType = (typeof SECURE_EVENT_TYPES)[number];
@@ -64,6 +73,15 @@ export const EVENT_SEVERITY: Record<SecureEventType, EventSeverity> = {
   KEY_ANOMALY: "WARNING",
   MOUSE_ANOMALY: "WARNING",
   AUTOMATION_DETECTED: "CRITICAL",
+  DUPLICATE_TAB: "WARNING",
+  MOUSE_LEFT: "INFO",
+  DRAG_ATTEMPT: "WARNING",
+  AUX_CLICK: "WARNING",
+  CAMERA_BLOCKED: "WARNING",
+  SNAPSHOT: "INFO",
+  FACE_MISSING: "WARNING",
+  FACE_TURNED: "WARNING",
+  MULTIPLE_FACES: "CRITICAL",
 };
 
 export function severityOf(type: SecureEventType): EventSeverity {

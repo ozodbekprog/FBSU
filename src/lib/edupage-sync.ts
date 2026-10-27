@@ -17,9 +17,18 @@ import {
 const MAX_REPORTED = 25;
 const WRITE_CHUNK = 200;
 const SYNC_STATE_KEY = "edupage:last-sync";
+const SYNC_LOCK_KEY = "edupage:sync-lock";
+const SYNC_LOCK_TTL_MS = 10 * 60 * 1000;
 const AUTO_SYNC_MAX_AGE_MINUTES = 30;
 const AUTO_SYNC_MIN_GAP_MS = 10 * 60 * 1000;
 const DEFAULT_SUBJECT_COLOR = "#3f5a9d";
+
+export class EduPageSyncBusyError extends Error {
+  constructor() {
+    super("EduPage sinxronizatsiyasi allaqachon ketmoqda");
+    this.name = "EduPageSyncBusyError";
+  }
+}
 
 export type EduPageSyncResult = {
   ttNum: string;
@@ -265,7 +274,39 @@ async function ensureRooms(timetable: EduPageTimetable) {
   return { created: missing.length, total: timetable.rooms.length };
 }
 
+async function acquireSyncLock(): Promise<string | null> {
+  const token = randomUUID();
+  const nowIso = new Date().toISOString();
+  const untilIso = new Date(Date.now() + SYNC_LOCK_TTL_MS).toISOString();
+  const rows = await prisma.$queryRaw<{ key: string }[]>`
+    INSERT INTO "AppSetting" ("key", "value", "updatedAt")
+    VALUES (${SYNC_LOCK_KEY}, jsonb_build_object('token', ${token}, 'until', ${untilIso}), NOW())
+    ON CONFLICT ("key") DO UPDATE
+      SET "value" = EXCLUDED."value", "updatedAt" = NOW()
+      WHERE COALESCE("AppSetting"."value"->>'until', '') < ${nowIso}
+    RETURNING "key"
+  `;
+  return rows.length > 0 ? token : null;
+}
+
+async function releaseSyncLock(token: string): Promise<void> {
+  await prisma.$executeRaw`
+    DELETE FROM "AppSetting"
+    WHERE "key" = ${SYNC_LOCK_KEY} AND "value"->>'token' = ${token}
+  `;
+}
+
 export async function syncEduPageSchedule(): Promise<EduPageSyncResult> {
+  const lockToken = await acquireSyncLock();
+  if (!lockToken) throw new EduPageSyncBusyError();
+  try {
+    return await runEduPageSync();
+  } finally {
+    await releaseSyncLock(lockToken).catch(() => {});
+  }
+}
+
+async function runEduPageSync(): Promise<EduPageSyncResult> {
   const timetable = await fetchEduPageTimetable();
 
   const { groups, groupsCreated } = await ensureGroups(timetable);
@@ -519,7 +560,7 @@ export async function autoSyncEduPageSchedule(
   try {
     if (!(await isEduPageSyncStale(maxAgeMinutes))) return;
     await syncEduPageSchedule();
-  } catch {
-    lastAutoSyncAttempt = 0;
+  } catch (error) {
+    if (!(error instanceof EduPageSyncBusyError)) lastAutoSyncAttempt = 0;
   }
 }

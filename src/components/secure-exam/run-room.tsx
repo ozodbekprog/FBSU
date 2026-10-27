@@ -10,7 +10,7 @@ import { SYNC_INTERVAL_MS } from "@/modules/secure-exam/config";
 import { severityOf, type SecureEventType } from "@/modules/secure-exam/events";
 import type { RunState } from "@/modules/secure-exam/types";
 import { EVENT_LABEL_KEY } from "@/components/secure-exam/labels";
-import { FaceScan } from "@/components/face/face-scan";
+import { FaceScan, ensureFaceModels } from "@/components/face/face-scan";
 import { useFaceGuard } from "@/components/secure-exam/use-face-guard";
 import { useInputGuard } from "@/components/secure-exam/use-input-guard";
 import {
@@ -103,6 +103,9 @@ export function RunRoom({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [fullscreenActive, setFullscreenActive] = useState(false);
   const [multiMonitor, setMultiMonitor] = useState(false);
+  const [duplicateTab, setDuplicateTab] = useState(false);
+  const [faceAlert, setFaceAlert] = useState(false);
+  const [faceStatus, setFaceStatus] = useState<"off" | "ok" | "away" | "turned" | "multi">("off");
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState(false);
   const [toast, setToast] = useState<{ label: string; tone: "amber" | "rose" } | null>(null);
@@ -115,6 +118,10 @@ export function RunRoom({
   const multiRaisedRef = useRef(false);
   const blurredRef = useRef(false);
   const wasHiddenRef = useRef(false);
+  const dupRaisedRef = useRef(false);
+  const darkCountRef = useRef(0);
+  const faceCooldownRef = useRef(0);
+  const faceMissingStreakRef = useRef(0);
   const phaseRef = useRef(phase);
   const finishedRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -433,6 +440,205 @@ export function RunRoom({
     [],
   );
 
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return;
+    const channel = new BroadcastChannel(`secure-exam-room-${runId}`);
+    const clientId = clientIdRef.current;
+    const flagDuplicate = () => {
+      if (dupRaisedRef.current) return;
+      dupRaisedRef.current = true;
+      setDuplicateTab(true);
+      eventsRef.current.push({ type: "DUPLICATE_TAB" });
+      showToast("DUPLICATE_TAB");
+    };
+    channel.onmessage = (event: MessageEvent) => {
+      const data = event.data as { clientId?: string; type?: string } | null;
+      if (!data || typeof data.clientId !== "string") return;
+      if (data.clientId === clientId) return;
+      flagDuplicate();
+      if (data.type === "hello") {
+        channel.postMessage({ clientId, type: "here" });
+      }
+    };
+    channel.postMessage({ clientId, type: "hello" });
+    const heartbeat = window.setInterval(
+      () => channel.postMessage({ clientId, type: "beat" }),
+      5000,
+    );
+    return () => {
+      window.clearInterval(heartbeat);
+      channel.close();
+    };
+  }, [runId, showToast]);
+
+  useEffect(() => {
+    if (phase !== "running") return;
+    const onAux = (event: MouseEvent) => {
+      if (event.button !== 1) return;
+      event.preventDefault();
+      pushEvent("AUX_CLICK");
+    };
+    const onDrag = (event: Event) => {
+      event.preventDefault();
+      pushEvent("DRAG_ATTEMPT");
+    };
+    const onMouseOut = (event: MouseEvent) => {
+      if (event.relatedTarget === null) pushEvent("MOUSE_LEFT");
+    };
+    document.addEventListener("auxclick", onAux, true);
+    document.addEventListener("dragstart", onDrag, true);
+    document.addEventListener("drop", onDrag, true);
+    document.addEventListener("mouseout", onMouseOut, true);
+    return () => {
+      document.removeEventListener("auxclick", onAux, true);
+      document.removeEventListener("dragstart", onDrag, true);
+      document.removeEventListener("drop", onDrag, true);
+      document.removeEventListener("mouseout", onMouseOut, true);
+    };
+  }, [phase, pushEvent]);
+
+  useEffect(() => {
+    if (!cameraReady || phase !== "running") return;
+    const canvas = document.createElement("canvas");
+    canvas.width = 160;
+    canvas.height = 120;
+    const timer = window.setInterval(() => {
+      const video = videoRef.current;
+      const context = canvas.getContext("2d");
+      if (!video || !context || video.readyState < 2) return;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const frame = context.getImageData(0, 0, canvas.width, canvas.height);
+      let sum = 0;
+      for (let index = 0; index < frame.data.length; index += 4) {
+        sum += frame.data[index] + frame.data[index + 1] + frame.data[index + 2];
+      }
+      const average = sum / (frame.data.length / 4) / 3;
+      if (average < 12) {
+        darkCountRef.current += 1;
+      } else {
+        darkCountRef.current = 0;
+      }
+      if (darkCountRef.current >= 3) {
+        darkCountRef.current = 0;
+        pushEvent("CAMERA_BLOCKED");
+      }
+    }, 20_000);
+    return () => window.clearInterval(timer);
+  }, [cameraReady, phase, pushEvent]);
+
+  useEffect(() => {
+    if (!cameraReady || phase !== "running") return;
+    const sendSnapshot = async () => {
+      const video = videoRef.current;
+      if (!video || video.readyState < 2) return;
+      const canvas = document.createElement("canvas");
+      canvas.width = 320;
+      canvas.height = 240;
+      const context = canvas.getContext("2d");
+      if (!context) return;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const image = canvas.toDataURL("image/jpeg", 0.55);
+      if (image.length > 250_000) return;
+      eventsRef.current.push({ type: "SNAPSHOT" });
+      await apiFetch(
+        `/api/secure-exams/runs/${runId}/snapshot`,
+        "POST",
+        { image },
+        t("commonNetworkError"),
+      );
+    };
+    const first = window.setTimeout(() => void sendSnapshot(), 8_000);
+    const timer = window.setInterval(() => void sendSnapshot(), 60_000);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(timer);
+    };
+  }, [cameraReady, phase, runId, t]);
+
+  useEffect(() => {
+    if (!cameraReady || phase !== "running") return;
+    let cancelled = false;
+    let interval: number | null = null;
+    const startMonitoring = async () => {
+      try {
+        const faceapi = await ensureFaceModels();
+        if (cancelled) return;
+        const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 });
+        interval = window.setInterval(async () => {
+          const video = videoRef.current;
+          if (!video || video.readyState < 2) return;
+          const now = Date.now();
+          try {
+            const detections = await faceapi
+              .detectAllFaces(video, options)
+              .withFaceLandmarks();
+            if (cancelled) return;
+            if (detections.length === 0) {
+              faceMissingStreakRef.current += 1;
+              setFaceAlert(true);
+              setFaceStatus("away");
+              if (
+                faceMissingStreakRef.current >= 2 &&
+                now - faceCooldownRef.current > 12_000
+              ) {
+                faceCooldownRef.current = now;
+                faceMissingStreakRef.current = 0;
+                pushEvent("FACE_MISSING");
+              }
+              return;
+            }
+            faceMissingStreakRef.current = 0;
+            if (detections.length > 1) {
+              setFaceAlert(true);
+              setFaceStatus("multi");
+              if (now - faceCooldownRef.current > 12_000) {
+                faceCooldownRef.current = now;
+                pushEvent("MULTIPLE_FACES", { count: detections.length });
+              }
+              return;
+            }
+            const landmarks = detections[0].landmarks;
+            const leftEye = landmarks.getLeftEye();
+            const rightEye = landmarks.getRightEye();
+            const nose = landmarks.getNose();
+            const leftCenter = leftEye.reduce((sum, p) => sum + p.x, 0) / leftEye.length;
+            const rightCenter = rightEye.reduce((sum, p) => sum + p.x, 0) / rightEye.length;
+            const eyeDistance = Math.abs(rightCenter - leftCenter) || 1;
+            const noseTip = nose[nose.length - 1];
+            const eyeMid = (leftCenter + rightCenter) / 2;
+            const yaw = Math.abs(noseTip.x - eyeMid) / eyeDistance;
+            const dLeft = Math.abs(noseTip.x - leftCenter);
+            const dRight = Math.abs(noseTip.x - rightCenter);
+            const asym = Math.abs(dLeft - dRight) / (dLeft + dRight || 1);
+            if (yaw > 0.18 || asym > 0.28) {
+              setFaceAlert(true);
+              setFaceStatus("turned");
+              if (now - faceCooldownRef.current > 12_000) {
+                faceCooldownRef.current = now;
+                pushEvent("FACE_TURNED", {
+                  yaw: Number(yaw.toFixed(2)),
+                  asym: Number(asym.toFixed(2)),
+                });
+              }
+              return;
+            }
+            setFaceAlert(false);
+            setFaceStatus("ok");
+          } catch {
+            void 0;
+          }
+        }, 3000);
+      } catch {
+        void 0;
+      }
+    };
+    void startMonitoring();
+    return () => {
+      cancelled = true;
+      if (interval !== null) window.clearInterval(interval);
+    };
+  }, [cameraReady, phase, pushEvent]);
+
   async function start() {
     setError(null);
     setCameraError(false);
@@ -550,10 +756,16 @@ export function RunRoom({
               </li>
             ) : null}
             {settings.webcamEnabled ? (
-              <li className="flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-brand-600" />
-                {t("secGateCameraTitle")}
-              </li>
+              <>
+                <li className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-brand-600" />
+                  {t("secGateCameraTitle")}
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-brand-600" />
+                  {t("secFaceHint")}
+                </li>
+              </>
             ) : null}
             <li className="flex items-center gap-2">
               <span className="size-1.5 rounded-full bg-brand-600" />
@@ -651,6 +863,16 @@ export function RunRoom({
 
   return (
     <div className="mx-auto max-w-3xl">
+      {duplicateTab ? (
+        <div className="mb-3 flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="3" width="13" height="13" rx="2" />
+            <path d="M9 21h11a2 2 0 0 0 2-2V9" />
+          </svg>
+          {t("secDuplicateTab")}
+        </div>
+      ) : null}
+
       {multiMonitor ? (
         <div className="mb-4 flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -815,11 +1037,35 @@ export function RunRoom({
       </div>
 
       {cameraReady ? (
-        <div className="fixed right-3 top-20 z-40 overflow-hidden rounded-xl border border-slate-200 bg-black shadow-lg md:right-4 md:top-24">
+        <div
+          className={cn(
+            "fixed bottom-24 right-4 z-40 overflow-hidden rounded-xl border bg-black shadow-lg transition-[border-color,box-shadow] duration-300",
+            faceAlert
+              ? "border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.35)]"
+              : "border-slate-200",
+          )}
+        >
           <video ref={videoRef} autoPlay muted playsInline className="h-28 w-40 object-cover" />
           <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white">
-            <span className="size-1.5 animate-pulse rounded-full bg-rose-500" />
-            {t("secCamera")}
+            <span
+              className={cn(
+                "size-1.5 rounded-full",
+                faceStatus === "ok"
+                  ? "bg-emerald-400"
+                  : faceStatus === "off"
+                    ? "animate-pulse bg-rose-500"
+                    : "animate-pulse bg-rose-500",
+              )}
+            />
+            {faceStatus === "ok"
+              ? t("secFaceOk")
+              : faceStatus === "away"
+                ? t("secFaceAway")
+                : faceStatus === "turned"
+                  ? t("secFaceTurned")
+                  : faceStatus === "multi"
+                    ? t("secFaceMulti")
+                    : t("secCamera")}
           </span>
           {settings.faceEnrolled && faceChip ? (
             <span

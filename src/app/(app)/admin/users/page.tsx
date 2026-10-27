@@ -7,8 +7,9 @@ import UsersManager from "@/components/admin/UsersManager";
 import UserBulkBar from "@/components/admin/UserBulkBar";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { cn } from "@/lib/utils";
+import { textMatches } from "@/lib/encrypted-search";
 
-const ALL_ROLES: readonly Role[] = ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA"];
+const ALL_ROLES: readonly Role[] = ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "BUXGALTER", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA", "NAZORATCHI"];
 
 const ROLES: readonly Role[] = ALL_ROLES.filter((role) => role !== "OWNER");
 
@@ -22,7 +23,7 @@ export default async function AdminUsersPage({
 }: {
   searchParams: Promise<{ q?: string; role?: string; page?: string }>;
 }) {
-  const admin = await requireRole(["ADMIN", "REGISTRAR"]);
+  const admin = await requireRole(["ADMIN", "REGISTRAR", "OWNER"]);
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
   const params = await searchParams;
@@ -36,12 +37,6 @@ export default async function AdminUsersPage({
   const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
 
   const where: Prisma.UserWhereInput = {};
-  if (q) {
-    where.OR = [
-      { name: { contains: q, mode: "insensitive" } },
-      { email: { contains: q, mode: "insensitive" } },
-    ];
-  }
   if (admin.role === "REGISTRAR") {
     if (role === "STUDENT" || role === "TEACHER") {
       where.role = role;
@@ -52,8 +47,7 @@ export default async function AdminUsersPage({
     where.role = role;
   }
 
-  const [total, users, groups, departments] = await Promise.all([
-    prisma.user.count({ where }),
+  const [allUsers, groups, departments] = await Promise.all([
     prisma.user.findMany({
       where,
       select: {
@@ -67,8 +61,6 @@ export default async function AdminUsersPage({
         department: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: "desc" },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
     }),
     prisma.group.findMany({
       select: { id: true, name: true },
@@ -79,6 +71,9 @@ export default async function AdminUsersPage({
       orderBy: { name: "asc" },
     }),
   ]);
+  const matched = q ? allUsers.filter((row) => textMatches(q, [row.name, row.email])) : allUsers;
+  const total = matched.length;
+  const users = matched.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const pageParams = new URLSearchParams();
@@ -110,7 +105,7 @@ export default async function AdminUsersPage({
               <option value="">{dictionary.admUsersAllRoles}</option>
               <option value="STUDENT">{dictionary.admRoleStudent}</option>
               <option value="TEACHER">{dictionary.admRoleTeacher}</option>
-              {admin.role === "ADMIN" ? (
+              {admin.role === "ADMIN" || admin.role === "OWNER" ? (
                 <>
                   <option value="TYUTOR">{dictionary.admRoleTutor}</option>
                   <option value="XODIM">{dictionary.admRoleStaff}</option>
@@ -171,7 +166,7 @@ export default async function AdminUsersPage({
         groups={groups}
         departments={departments}
         currentUserId={admin.id}
-        allowedRoles={admin.role === "ADMIN" ? null : ["STUDENT", "TEACHER"]}
+        allowedRoles={admin.role === "REGISTRAR" ? ["STUDENT", "TEACHER"] : null}
       />
 
       {pageCount > 1 ? (

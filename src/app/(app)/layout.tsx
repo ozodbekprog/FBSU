@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { requireUser, isStaff, canViewSalary, canManageSalary } from "@/lib/auth";
 import { canViewAnalysis } from "@/modules/roles/access";
-import { hasCapability } from "@/modules/capabilities";
 import { getModuleFlags } from "@/server/settings";
 import { getMaintenanceMode } from "@/server/maintenance";
 import { getDictionary, getLocale } from "@/i18n";
@@ -12,9 +11,9 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { UnreadBadge } from "@/components/chat/UnreadBadge";
 import { LogoutForm } from "@/components/auth/logout-form";
 import { Logo } from "@/components/brand/logo";
-import { VersionBadge } from "@/components/version/version-badge";
 import { MobileTabBar, NavLinks, type MobileTab, type MobileTabIcon } from "./nav-links";
 import { MobileNav } from "@/components/nav/mobile-nav";
+import { AppTopbar } from "@/components/fb/app-topbar";
 import { BugAssistant } from "@/components/bugs/bug-assistant";
 import { OfflineBanner } from "@/components/pwa/OfflineBanner";
 import { TourGuide } from "@/components/tour/tour-guide";
@@ -71,7 +70,7 @@ export default async function AppLayout({
       links: [
         { href: "/dashboard", label: dictionary.navDashboard },
         { href: "/assistant", label: dictionary.navAssistant },
-        ...(hasCapability(user.role, "parent.viewChild") ? [{ href: "/parent", label: dictionary.parentTitle }] : []),
+        ...(user.role === "OTA_ONA" ? [{ href: "/parent", label: dictionary.parentTitle }] : []),
         { href: "/courses", label: dictionary.navCourses },
         { href: "/schedule", label: dictionary.navSchedule },
         { href: "/calendar", label: dictionary.navCalendar },
@@ -85,21 +84,10 @@ export default async function AppLayout({
           ? [{ href: "/secure-exams", label: dictionary.navSecureExams }]
           : []),
         { href: "/grades", label: isStaff(user.role) ? dictionary.navGradesStaff : dictionary.navGradesStudent },
-        ...(hasCapability(user.role, "course.grade") || user.role === "STUDENT"
-          ? [
-              {
-                href: "/gradebook",
-                label: hasCapability(user.role, "course.grade")
-                  ? dictionary.navGradebook
-                  : dictionary.navMyGrades,
-              },
-            ]
-          : []),
         { href: "/gpa", label: dictionary.navGpa },
         { href: "/transcript", label: dictionary.navTranscript },
         { href: "/attendance", label: dictionary.navAttendance },
         { href: "/board", label: dictionary.brdTitle },
-        { href: "/office", label: dictionary.ofsTitle },
         ...(isStaff(user.role) ? [{ href: "/journal", label: dictionary.navJournal }] : []),
         ...(modules.certificates ? [{ href: "/certificates", label: dictionary.navCertificates }] : []),
         ...(isStaff(user.role) ? [{ href: "/journals", label: dictionary.navJournals }] : []),
@@ -133,17 +121,23 @@ export default async function AppLayout({
               },
             ]
           : []),
-        ...(hasCapability(user.role, "documents.view")
+        ...(["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"].includes(user.role)
           ? [{ href: "/documents", label: dictionary.docTitle }]
           : []),
-        ...(hasCapability(user.role, "diplomas.view")
+        ...(["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"].includes(user.role)
           ? [{ href: "/diplomas", label: dictionary.dipTitle }]
           : []),
-        ...(hasCapability(user.role, "finance.view") || user.role === "STUDENT"
+        ...(["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR", "STUDENT"].includes(user.role)
           ? [{ href: "/finance", label: dictionary.finTitle }]
           : []),
+        ...(["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"].includes(user.role)
+          ? [{ href: "/finance/rates", label: dictionary.finNavRates }]
+          : []),
+        ...(user.role === "TEACHER" || user.role === "ADMIN"
+          ? [{ href: "/teacher-points", label: dictionary.tchNavPoints }]
+          : []),
         { href: "/my-qr", label: dictionary.accMyQr },
-        ...(hasCapability(user.role, "access.viewLogs")
+        ...(["ADMIN", "REGISTRAR", "XODIM", "REKTOR", "PRO_RECTOR"].includes(user.role)
           ? [{ href: "/access", label: dictionary.accTitle }]
           : []),
         // Buxgalter oylik hisobini qo'lda kiritadi — turniket qo'riqchisi
@@ -153,7 +147,6 @@ export default async function AppLayout({
           : []),
         { href: "/search", label: dictionary.navSearch },
         { href: "/help", label: dictionary.navHelp },
-        { href: "/versions", label: dictionary.verTitle },
         { href: "/bounty", label: dictionary.navBounty },
         { href: "/settings", label: dictionary.navSettings },
       ],
@@ -161,17 +154,20 @@ export default async function AppLayout({
     {
       label: dictionary.navGroupManage,
       links: [
-        ...(hasCapability(user.role, "monitoring.view")
+        ...(["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR"].includes(user.role)
           ? [{ href: "/monitoring", label: dictionary.navMonitoring }]
           : []),
         ...(["ADMIN", "REKTOR", "PRO_RECTOR", "REGISTRAR"].includes(user.role)
           ? [{ href: "/admissions", label: dictionary.qblTitle }]
           : []),
-        ...(hasCapability(user.role, "approvals.decide")
+        ...(user.role === "ADMIN" || user.role === "REGISTRAR"
           ? [{ href: "/approvals", label: dictionary.navApprovals }]
           : []),
-        ...(hasCapability(user.role, "curator.manage")
+        ...(isStaff(user.role) || user.role === "TYUTOR"
           ? [{ href: "/curator", label: dictionary.navCurator }]
+          : []),
+        ...(user.role === "ADMIN" || user.role === "NAZORATCHI"
+          ? [{ href: "/nazorat", label: dictionary.navNazorat }]
           : []),
         ...(user.role === "REGISTRAR"
           ? [
@@ -188,66 +184,67 @@ export default async function AppLayout({
 
   const ROLE_MENU: Record<string, string[]> = {
     REKTOR: [
-      "/office", "/versions", "/dashboard", "/assistant", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
+      "/dashboard", "/assistant", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
       "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar", "/research",
       "/messages", "/search", "/help", "/bounty", "/settings", "/access",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     PRO_RECTOR: [
-      "/office", "/versions", "/dashboard", "/assistant", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
+      "/dashboard", "/assistant", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
       "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar", "/research",
       "/messages", "/search", "/help", "/bounty", "/settings", "/access",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     DEKAN: [
-      "/office", "/versions", "/dashboard", "/assistant", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
+      "/dashboard", "/assistant", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
       "/schedule", "/calendar", "/academic-calendar", "/research", "/messages", "/search", "/help", "/bounty", "/settings",
-      "/admin/audit",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     KAFEDRA_MUDIRI: [
-      "/office", "/versions", "/dashboard", "/assistant", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
+      "/dashboard", "/assistant", "/monitoring", "/reports", "/workload", "/staff", "/tasks", "/my-qr",
       "/schedule", "/calendar", "/academic-calendar", "/research", "/messages", "/search", "/help", "/bounty", "/settings",
-      "/admin/audit",
     ],
     REGISTRAR: [
-      "/office", "/versions", "/dashboard", "/assistant", "/monitoring", "/admissions", "/approvals", "/finance", "/documents", "/diplomas", "/staff",
+      "/dashboard", "/assistant", "/monitoring", "/admissions", "/approvals", "/finance", "/documents", "/diplomas", "/staff",
       "/tasks", "/admin/users", "/admin/groups", "/admin/import", "/admin/hemis", "/schedule",
       "/calendar", "/academic-calendar", "/rooms", "/messages", "/search", "/help", "/bounty", "/settings",
       "/my-qr", "/access",
     ],
     TYUTOR: [
-      "/office", "/versions", "/dashboard", "/assistant", "/curator", "/attendance", "/schedule", "/calendar", "/academic-calendar",
+      "/dashboard", "/assistant", "/curator", "/attendance", "/schedule", "/calendar", "/academic-calendar",
       "/tasks", "/staff", "/my-qr", "/messages", "/search", "/help", "/bounty", "/settings",
     ],
     TEACHER: [
-      "/office", "/versions", "/dashboard", "/assistant", "/courses", "/board", "/journal", "/journals",
+      "/dashboard", "/assistant", "/courses", "/board", "/journal", "/journals",
       "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/secure-exams", "/attendance",
       "/reports", "/workload", "/staff", "/tasks", "/my-qr", "/messages", "/bookings", "/rooms",
-      "/research", "/search", "/help", "/bounty", "/settings",
+      "/research", "/teacher-points", "/search", "/help", "/bounty", "/settings",
     ],
     STUDENT: [
-      "/office", "/versions", "/dashboard", "/assistant", "/courses", "/board", "/schedule", "/calendar",
+      "/dashboard", "/assistant", "/courses", "/board", "/schedule", "/calendar",
       "/academic-calendar", "/exams", "/secure-exams", "/grades", "/gpa", "/transcript", "/attendance",
       "/certificates", "/finance", "/my-qr", "/messages", "/orders", "/bookings", "/rooms",
       "/search", "/help", "/bounty", "/settings",
     ],
     XODIM: [
-      "/office", "/versions", "/dashboard", "/assistant", "/staff", "/tasks", "/my-qr", "/access", "/schedule", "/calendar",
+      "/dashboard", "/assistant", "/staff", "/tasks", "/my-qr", "/access", "/schedule", "/calendar",
       "/academic-calendar", "/messages", "/rooms", "/bookings", "/search", "/help", "/bounty", "/settings",
+    ],
+    NAZORATCHI: [
+      "/dashboard", "/nazorat", "/messages", "/search", "/help", "/settings",
     ],
     // Buxgalter: moliyaviy vazifa uchun faqat kerakli bo'limlar.
     // Jadval, davomat va xodimlar davomati olib tashlandi — ular oylik
     // hisobiga to'g'ridan-to'g'ri kirmaydi, `/payroll` ichida o'z
     // lavozim/navbar/grafik boshqaruvi bor.
     BUXGALTER: [
-      "/office", "/versions", "/dashboard", "/assistant", "/payroll", "/turniket", "/calendar",
+      "/dashboard", "/assistant", "/payroll", "/turniket", "/calendar",
       "/messages", "/my-qr", "/search", "/help", "/bounty", "/settings",
     ],
-    OTA_ONA: ["/office", "/versions", "/assistant", "/parent", "/messages", "/help", "/bounty", "/settings"],
+    OTA_ONA: ["/assistant", "/parent", "/messages", "/help", "/bounty", "/settings"],
   };
 
   const allowedHrefs = ROLE_MENU[user.role];
@@ -261,10 +258,8 @@ export default async function AppLayout({
     : groups;
 
   const roleLabel =
-    user.role === "OWNER"
-      ? dictionary.roleOwner
-      : user.role === "ADMIN"
-        ? dictionary.roleAdmin
+    user.role === "ADMIN"
+      ? dictionary.roleAdmin
       : user.role === "REKTOR"
         ? dictionary.roleRector
         : user.role === "PRO_RECTOR"
@@ -283,6 +278,8 @@ export default async function AppLayout({
                     ? dictionary.roleStaff
                     : user.role === "OTA_ONA"
                       ? dictionary.roleParent
+                    : user.role === "NAZORATCHI"
+                      ? dictionary.roleNazoratchi
                     : user.role === "TEACHER"
                   ? dictionary.roleTeacher
                   : user.group?.name ?? dictionary.roleStudent;
@@ -310,77 +307,94 @@ export default async function AppLayout({
         ]
       : tabs;
 
+  const topbarItems = visibleGroups.flatMap((group) =>
+    group.links.map((link) => ({ href: link.href, label: link.label })),
+  );
+  const scopeLabel = user.role === "STUDENT" ? dictionary.fbdRoleChip : roleLabel;
+
   return (
     <LocaleProvider locale={locale} dictionary={dictionary}>
-      <div className="flex min-h-screen">
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-brand-900 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white focus:shadow-lift"
-        >
-          {dictionary.landSkipToContent}
-        </a>
-      {/* Sidebar HAR DOIM ko'rinadi. Avval `hidden md:flex` edi — brauzerda
-          kattalashtirganda (Ctrl/Cmd + yoki pinch-zoom) CSS kenglik 768px
-          dan pastga tushardi va sidebar butunlay yo'qolardi (videodagi
-          holat). Endi u faqat kichrayadi (icon rail), lekin yo'qolmaydi. */}
-      <aside className="app-shell-sidebar sticky top-0 z-30 flex h-dvh w-64 shrink-0 flex-col border-r border-slate-200/60 bg-white/85 backdrop-blur-xl">
-        <div className="flex h-16 items-center justify-between border-b border-slate-100 px-5">
-          <Link href="/dashboard" className="transition-opacity hover:opacity-80">
-            <Logo />
-          </Link>
-          <div className="flex items-center gap-1">
-            <NotificationBell align="left" />
-            <ThemeToggle />
-          </div>
-        </div>
-        <NavLinks groups={visibleGroups} />
-        <div className="border-t border-slate-100 p-3">
-          <div className="mb-2 flex justify-center">
-            <VersionBadge />
-          </div>
-          <div className="mb-2 flex justify-center">
-            <LanguageSwitcher locale={locale} />
-          </div>
-          <Link
-            href="/profile"
-            className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2.5 transition-colors hover:bg-brand-50"
-          >
-            <Avatar name={user.name} src={user.avatarUrl} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-slate-900">{user.name}</p>
-              <p className="truncate text-xs text-slate-500">{roleLabel}</p>
-            </div>
-          </Link>
-          <LogoutForm />
-        </div>
-      </aside>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-slate-200/70 bg-white/90 px-4 backdrop-blur md:hidden">
-          <div className="flex min-w-0 items-center gap-1">
-            <MobileNav groups={visibleGroups} />
-            <Link href="/dashboard" className="transition-opacity hover:opacity-80">
-              <Logo size={28} withText={false} />
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-brand-900 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white focus:shadow-lift"
+      >
+        {dictionary.landSkipToContent}
+      </a>
+      <div className="fb-shell flex min-h-screen" data-fb-root="dashboard">
+        {/* Sidebar HAR DOIM ko'rinadi. Avval `hidden md:flex` edi — brauzerda
+            kattalashtirganda CSS kenglik 768px dan pastga tushardi va sidebar
+            butunlay yo'qolardi. Endi u faqat kichrayadi (icon rail). */}
+        <aside className="app-shell-sidebar fb-sidebar sticky top-0 z-30 flex h-dvh shrink-0 flex-col">
+          <div className="fb-side-head">
+            <Link href="/dashboard" className="fb-side-brand">
+              <img src="/logo.svg" alt="FBSU" width={28} height={28} />
+              <span className="fb-side-name">
+                <b>FBSU</b>
+                <small>TURIN POLYTECHNIC</small>
+              </span>
             </Link>
           </div>
-          <div className="flex items-center gap-1">
-            <NotificationBell align="right" />
-            <ThemeToggle />
+          <Link href="/profile" className="fb-side-cabinet">
+            <span>
+              <em>{dictionary.fbdCabinet}</em>
+              <b>{roleLabel}</b>
+            </span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </Link>
+          <NavLinks groups={visibleGroups} />
+          <div className="fb-side-foot border-t border-slate-100">
             <Link
               href="/profile"
-              aria-label={dictionary.shellProfile}
-              className="rounded-full transition-opacity hover:opacity-80"
+              className="fb-side-user flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors"
             >
-              <Avatar name={user.name} src={user.avatarUrl} size={30} />
+              <Avatar name={user.name} src={user.avatarUrl} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-slate-900">{user.name}</p>
+                <p className="truncate text-xs text-slate-500">{roleLabel}</p>
+              </div>
             </Link>
+            <div className="fb-side-actions">
+              <LanguageSwitcher locale={locale} />
+              <LogoutForm />
+            </div>
           </div>
-        </header>
-        <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-4 pt-6 pb-20 focus:outline-none md:px-8 md:pt-8 md:pb-8">{children}</main>
+        </aside>
+        <div className="fb-shell-main flex min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-slate-200/70 bg-white/90 px-4 backdrop-blur md:hidden">
+            <div className="flex min-w-0 items-center gap-1">
+              <MobileNav groups={visibleGroups} />
+              <Link href="/dashboard" className="transition-opacity hover:opacity-80">
+                <Logo size={28} withText={false} />
+              </Link>
+            </div>
+            <div className="flex items-center gap-1">
+              <NotificationBell align="right" />
+              <ThemeToggle />
+              <Link
+                href="/profile"
+                aria-label={dictionary.shellProfile}
+                className="rounded-full transition-opacity hover:opacity-80"
+              >
+                <Avatar name={user.name} src={user.avatarUrl} size={30} />
+              </Link>
+            </div>
+          </header>
+          <AppTopbar
+            name={user.name}
+            avatarUrl={user.avatarUrl}
+            roleLabel={roleLabel}
+            scopeLabel={scopeLabel}
+            items={topbarItems}
+          />
+          <main id="main-content" tabIndex={-1} className="fb-main">{children}</main>
+        </div>
+        <MobileTabBar tabs={visibleTabs} />
+        <BugAssistant />
+        <TourGuide role={user.role} />
+        <OfflineBanner />
       </div>
-      <MobileTabBar tabs={visibleTabs} />
-      <BugAssistant />
-      <TourGuide role={user.role} />
-      <OfflineBanner />
-    </div>
     </LocaleProvider>
   );
 }

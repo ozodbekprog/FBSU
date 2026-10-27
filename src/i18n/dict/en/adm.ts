@@ -643,7 +643,7 @@ export const adm = {
   admEduPageCounts: "{groups} groups · {teachers} teachers · {subjects} subjects · {rooms} rooms · {lessons} lessons",
   admEduPageSyncNow: "Update now",
   admEduPageSyncing: "Updating…",
-  admEduPageAuto: "Checked automatically every 30 minutes (updated when the Schedule page is opened).",
+  admEduPageAuto: "Updated automatically every hour; also refreshed when the Schedule page opens if the data is older than 30 minutes.",
   admEduPageSource: "Source site",
   admImportPageTitle: "CSV import",
   admImportPageSubtitle: "Bulk upload students, groups, and subjects via a CSV file",

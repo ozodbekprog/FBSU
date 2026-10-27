@@ -1,5 +1,9 @@
 # FBSU
 
+> **Egalik:** FBSU LMS **Xoshimov Group** tomonidan ishlab chiqilgan.
+> Mualliflik huquqi (c) 2026 **Ozodbek Xoshimov Xusanovich**ga tegishli. Barcha huquqlar himoyalangan.
+> Litsenziya va savdo shartlari — [LICENSE](LICENSE). Litsenziyasiz foydalanish taqiqlanadi.
+
 Turin Politexnika Universiteti uchun kompakt o'quv boshqaruv tizimi.
 Moodle'ga alternativa: sodda, tez, mobil-qulay.
 

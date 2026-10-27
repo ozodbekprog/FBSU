@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Role } from "@prisma/client";
 import {
   Avatar,
   Badge,
   Button,
+  ButtonLink,
   Card,
   CardBody,
   CardHeader,
@@ -76,6 +78,7 @@ const ROLE_META: Record<
   STUDENT: { label: "admRoleStudent", tone: "slate", dot: "bg-slate-400", ring: "ring-slate-200" },
   XODIM: { label: "admRoleStaff", tone: "slate", dot: "bg-slate-500", ring: "ring-slate-200" },
   OTA_ONA: { label: "admRoleParent", tone: "green", dot: "bg-teal-500", ring: "ring-teal-200/80" },
+  NAZORATCHI: { label: "admRoleNazoratchi", tone: "slate", dot: "bg-slate-600", ring: "ring-slate-300/80" },
 };
 
 export default function UsersManager({
@@ -95,7 +98,7 @@ export default function UsersManager({
   const { t } = useI18n();
   const roleOptions: Role[] =
     allowedRoles ??
-    ["STUDENT", "TEACHER", "TYUTOR", "XODIM", "OTA_ONA", "KAFEDRA_MUDIRI", "DEKAN", "PRO_RECTOR", "REKTOR", "REGISTRAR", "ADMIN"];
+    ["STUDENT", "TEACHER", "TYUTOR", "XODIM", "OTA_ONA", "NAZORATCHI", "KAFEDRA_MUDIRI", "DEKAN", "PRO_RECTOR", "REKTOR", "REGISTRAR", "ADMIN"];
   const [mode, setMode] = useState<FormMode | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -420,7 +423,12 @@ export default function UsersManager({
                     <div className="flex items-center gap-3">
                       <Avatar name={user.name} className="size-9 text-[11px] ring-1 ring-slate-900/10" />
                       <div className="min-w-0">
-                        <span className="block truncate font-medium text-slate-900">{user.name}</span>
+                        <Link
+                          href={`/admin/users/${user.id}`}
+                          className="block truncate font-medium text-slate-900 transition-colors hover:text-brand-700"
+                        >
+                          {user.name}
+                        </Link>
                         <span className="block truncate text-xs text-slate-500">{user.email}</span>
                       </div>
                     </div>
@@ -441,6 +449,9 @@ export default function UsersManager({
                   <td className="px-5 py-3 text-xs text-slate-500">{fmtDate(user.createdAt)}</td>
                   <td className="px-5 py-3">
                     <div className="flex items-center justify-end gap-1.5">
+                      <ButtonLink href={`/admin/users/${user.id}`} size="sm" variant="secondary">
+                        Ko'rish
+                      </ButtonLink>
                       <Button size="sm" variant="secondary" onClick={() => openEdit(user)}>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M12 20h9" />

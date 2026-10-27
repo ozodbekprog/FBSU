@@ -430,7 +430,7 @@ export function useCallSignaling(currentUserId: string) {
         const res = await fetch("/api/calls", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ conversationId }),
+          body: JSON.stringify({ conversationId, media: video ? "video" : "audio" }),
         });
         const json = (await res.json().catch(() => null)) as { ok: boolean; error?: string } | null;
         if (!res.ok || !json?.ok) {

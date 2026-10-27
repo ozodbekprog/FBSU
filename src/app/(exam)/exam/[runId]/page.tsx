@@ -17,6 +17,7 @@ import {
 } from "@/modules/secure-exam/order";
 import { effectiveDeadline } from "@/modules/secure-exam/policy";
 import { isValidFaceDescriptor } from "@/modules/attendance/face";
+import { finalizeRun } from "@/server/secure-exam";
 
 export const metadata: Metadata = {
   title: "Xavfsiz imtihon",
@@ -47,6 +48,30 @@ export default async function SecureRunPage({
   if (!run || run.studentId !== user.id) notFound();
   if (run.attempt.finishedAt) redirect(`/quizzes/${run.exam.quizId}/results`);
 
+
+  const durationMin = run.exam.durationMin ?? run.exam.quiz.timeLimitMin;
+  const deadline = effectiveDeadline({
+    startedAt: run.startedAt,
+    durationMin,
+    sittingEndsAt: run.exam.endsAt,
+    extraMin: run.extraMin,
+  });
+
+  if (deadline && Date.now() >= deadline.getTime()) {
+    await prisma.$transaction(async (tx) => {
+      await tx.secureExamEvent.create({
+        data: {
+          runId: run.id,
+          type: "TIMEOUT",
+          severity: "INFO",
+          meta: { reason: "reopen_after_deadline" },
+        },
+      });
+      await finalizeRun(tx, run.id, "SUBMITTED", new Date());
+    });
+    redirect(`/quizzes/${run.exam.quizId}/results`);
+  }
+
   const fullQuestions: QuestionFull[] = run.exam.quiz.questions.map(toQuestionFull);
   const ordered = shuffledQuestions(fullQuestions.map(toQuestionPublic), run.attemptId);
   const questions = ordered.map((question) => ({
@@ -56,14 +81,6 @@ export default async function SecureRunPage({
         ? question.options
         : permutedOptions(question.options, optionSeed(run.attemptId, question.id)),
   }));
-
-  const durationMin = run.exam.durationMin ?? run.exam.quiz.timeLimitMin;
-  const deadline = effectiveDeadline({
-    startedAt: run.startedAt,
-    durationMin,
-    sittingEndsAt: run.exam.endsAt,
-    extraMin: run.extraMin,
-  });
 
   const initialAnswers = remapAnswersToDisplay(
     asAnswers(run.attempt.answers),

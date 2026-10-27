@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useI18n } from "@/components/i18n/LocaleProvider";
-import { sanitizeHtml } from "@/lib/openboard/sanitize";
+import { sanitizeHtml } from "@/lib/openboard/sanitize-browser";
 import type { HeadingBlock } from "@/lib/openboard/types";
 
 const LEVEL_STYLES: Record<1 | 2 | 3, string> = {

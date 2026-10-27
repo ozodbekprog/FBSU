@@ -13,7 +13,7 @@ const patchSchema = z.object({
   email: z.string().trim().email().optional(),
   password: z.string().min(12).max(100).optional(),
   role: z
-    .enum(["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "BUXGALTER", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA"])
+    .enum(["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "BUXGALTER", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA", "NAZORATCHI"])
     .optional(),
   groupId: z.string().trim().min(1).nullable().optional(),
   subGroupId: z.string().trim().min(1).nullable().optional(),
@@ -41,6 +41,9 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   const { id } = await ctx.params;
   const target = await prisma.user.findUnique({ where: { id } });
   if (!target) return Response.json({ ok: false, error: "Foydalanuvchi topilmadi" }, { status: 404 });
+  if (target.role === "OWNER" && user.role !== "OWNER") {
+    return Response.json({ ok: false, error: "OWNER akkauntiga ruxsat yo'q" }, { status: 403 });
+  }
 
   const body = await request.json().catch(() => null);
   const parsed = patchSchema.safeParse(body);
@@ -163,6 +166,14 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   if (parsed.data.password !== undefined) {
     data.passwordHash = await bcrypt.hash(parsed.data.password, 12);
     data.sessionEpoch = { increment: 1 };
+    const preferences =
+      target.preferences && typeof target.preferences === "object" && !Array.isArray(target.preferences)
+        ? { ...(target.preferences as Record<string, unknown>) }
+        : {};
+    delete preferences.tempPassword;
+    delete preferences.tempPasswordUsed;
+    delete preferences.tempPasswordCreatedAt;
+    data.preferences = preferences as Prisma.InputJsonValue;
   }
 
   const updated = await prisma.user.update({ where: { id }, data, select: userSelect });

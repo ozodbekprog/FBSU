@@ -21,6 +21,7 @@ enum Role {
   STUDENT
   XODIM
   OTA_ONA
+  NAZORATCHI
 }
 
 /// Oylik to'lovining bosqichlar.
@@ -133,6 +134,9 @@ model User {
   certificatesReceived Certificate[]  @relation("CertificateStudent")
   bonusPointsReceived  BonusPoint[]   @relation("BonusPointStudent")
   bonusPointsAwarded   BonusPoint[]   @relation("BonusPointAwardedBy")
+  teacherPointsReceived TeacherPoint[]   @relation("TeacherPointStudent")
+  teacherPointsAwarded   TeacherPoint[]   @relation("TeacherPointAwardedBy")
+  attendancePointConfigs AttendancePointConfig[]
 
   // Oylik moduli: lavozim, haftalik navbar va oylik yozuvlari
   staffPositionId       String?
@@ -208,6 +212,7 @@ model Group {
   schedule  ScheduleEntry[]
   subGroups SubGroup[]
   studyPlans StudyPlan[]
+  attendancePointConfigs AttendancePointConfig[]
 
   @@index([curatorId])
 }
@@ -244,6 +249,8 @@ model Course {
   bankQuestions      BankQuestion[]
   selfEnrollment     Boolean             @default(false)
   bonusPoints        BonusPoint[]
+  teacherPoints      TeacherPoint[]
+  attendancePointConfigs AttendancePointConfig[]
   studyPlans         StudyPlan[]
   gradeCategories    GradeCategory[]
   gradeItems         GradeItem[]
@@ -628,6 +635,45 @@ model BonusPoint {
   @@unique([courseId, studentId, awardedById])
   @@index([studentId])
   @@index([courseId])
+}
+
+/// O'qituvchi ballari — o'qituvchi oquvchilarga beriladigan max 15 balllik chegirma.
+model TeacherPoint {
+  id          String   @id @default(cuid())
+  courseId    String
+  studentId   String
+  awardedById String
+  points      Float    // 0.1..15 ball
+  category    String   // masalan: davomat, faollik, aloqadirilish va h.k.
+  reason      String?
+  createdAt   DateTime @default(now())
+
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student User   @relation("TeacherPointStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  awardedBy User @relation("TeacherPointAwardedBy", fields: [awardedById], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, studentId, awardedById, category])
+  @@index([studentId])
+  @@index([courseId])
+}
+
+/// Davomat balli — o'qituvchi har bir kurs/sinf uchun davomat ballini belgilaydi.
+model AttendancePointConfig {
+  id         String  @id @default(cuid())
+  courseId   String
+  groupId    String?
+  points     Float   @default(1) // 0.1..15
+  teacherId  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  group   Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  teacher User   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, groupId])
+  @@index([courseId])
+  @@index([groupId])
 }
 
 /// Xodimning lavozimi.
@@ -1059,11 +1105,24 @@ model SecureExamRun {
 
   exam    SecureExam      @relation(fields: [examId], references: [id], onDelete: Cascade)
   student User            @relation("SecureExamStudent", fields: [studentId], references: [id], onDelete: Cascade)
-  attempt QuizAttempt     @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  events  SecureExamEvent[]
+  attempt   QuizAttempt         @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  events    SecureExamEvent[]
+  snapshots SecureExamSnapshot[]
 
   @@unique([examId, studentId])
   @@index([examId, status])
+}
+
+model SecureExamSnapshot {
+  id    String   @id @default(cuid())
+  runId String
+  at    DateTime @default(now())
+  mime  String   @default("image/jpeg")
+  data  String
+
+  run SecureExamRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, at])
 }
 
 model SecureExamEvent {
@@ -1108,12 +1167,30 @@ model SubGroup {
 }
 
 model Faculty {
-  id          String       @id @default(cuid())
-  name        String       @unique
-  code        String?
-  groups      Group[]
-  users       User[]
-  departments Department[]
+  id            String       @id @default(cuid())
+  name          String       @unique
+  code          String?
+  groups        Group[]
+  users         User[]
+  departments   Department[]
+  contractRates FacultyContractRate[]
+}
+
+/// Fakultetning bir shartnoma uchun to'laydigan summasi (o'quv yili bo'yicha).
+/// Admin belgilaydi, Moliya bo'limida hisob-kitobda ishlatiladi.
+model FacultyContractRate {
+  id        String   @id @default(cuid())
+  facultyId String
+  year      Int
+  amount    Int
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  faculty Faculty @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+
+  @@unique([facultyId, year])
+  @@index([year])
 }
 
 model Department {
@@ -1435,6 +1512,12 @@ enum CallStatus {
   MISSED
 }
 
+/// Qo'ng'iroq turi — ovozli yoki video.
+enum CallMedia {
+  AUDIO
+  VIDEO
+}
+
 /// WebRTC signal turi. Media oqimi P2P; server faqat bu signallarni
 /// almashtiradi (polling orqali — Vercel serverless WebSocket serverini
 /// qo'llab-quvvatlamaydi).
@@ -1451,6 +1534,7 @@ model CallSession {
   callerId       String
   calleeId       String
   status         CallStatus @default(RINGING)
+  media          CallMedia  @default(VIDEO)
   startedAt      DateTime?
   endedAt        DateTime?
   createdAt      DateTime   @default(now())

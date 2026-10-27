@@ -2,6 +2,7 @@ import "server-only";
 import type { MaterialType, Prisma, Role } from "@prisma/client";
 import { isStaff } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { textMatches } from "@/lib/encrypted-search";
 
 export const SEARCH_MIN_LENGTH = 2;
 export const SEARCH_TAKE = 10;
@@ -150,18 +151,17 @@ export async function searchAll(user: SearchUser, rawQuery: string): Promise<Sea
       },
     }),
     isStaff(user.role)
-      ? prisma.user.findMany({
-          where: {
-            isActive: true,
-            OR: [
-              { name: { contains: q, mode: "insensitive" } },
-              { email: { contains: q, mode: "insensitive" } },
-            ],
-          },
-          orderBy: { name: "asc" },
-          take: SEARCH_TAKE,
-          select: { id: true, name: true, email: true, role: true, avatarUrl: true },
-        })
+      ? prisma.user
+          .findMany({
+            where: { isActive: true },
+            select: { id: true, name: true, email: true, role: true, avatarUrl: true },
+          })
+          .then((rows) =>
+            rows
+              .filter((row) => textMatches(q, [row.name, row.email]))
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .slice(0, SEARCH_TAKE),
+          )
       : Promise.resolve([] as SearchUserItem[]),
   ]);
 

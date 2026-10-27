@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Avatar, Badge, Card } from "@/components/ui";
+import { brandCoverGradient } from "@/lib/brand-cover";
 import { initials } from "@/lib/utils";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 
@@ -102,7 +103,7 @@ export function CourseCard({ course, staff = false }: { course: CourseCardData; 
       <Card className="relative flex h-full flex-col overflow-hidden transition-[transform,translate,box-shadow,border-color] duration-300 group-hover:-translate-y-1.5 group-hover:border-brand-200 group-hover:shadow-lift">
         <div
           className="relative h-24 shrink-0 overflow-hidden"
-          style={{ background: `linear-gradient(125deg, ${course.coverColor} 0%, #131f3c 94%)` }}
+          style={{ background: brandCoverGradient(course.coverColor) }}
         >
           <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_-10%,rgba(255,255,255,0.28),transparent_55%)]" />
           <span

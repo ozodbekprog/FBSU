@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { textMatches } from "@/lib/encrypted-search";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { clientIpFromHeaders } from "@/modules/attendance-security/verify";
@@ -29,27 +30,19 @@ export async function GET(request: Request) {
   const query = (searchParams.get("q") ?? "").trim();
 
   const applications = await prisma.admissionApplication.findMany({
-    where: {
-      status: statusParsed.success ? statusParsed.data : undefined,
-      ...(query
-        ? {
-            OR: [
-              { applicantName: { contains: query, mode: "insensitive" as const } },
-              { phone: { contains: query } },
-              { email: { contains: query, mode: "insensitive" as const } },
-            ],
-          }
-        : {}),
-    },
+    where: { status: statusParsed.success ? statusParsed.data : undefined },
     orderBy: { createdAt: "desc" },
-    take: 200,
     include: {
       program: { select: { id: true, name: true } },
       student: { select: { id: true, name: true } },
     },
   });
 
-  return Response.json({ ok: true, data: applications });
+  const matched = query
+    ? applications.filter((row) => textMatches(query, [row.applicantName, row.phone, row.email]))
+    : applications;
+
+  return Response.json({ ok: true, data: matched.slice(0, 200) });
 }
 
 export async function POST(request: Request) {

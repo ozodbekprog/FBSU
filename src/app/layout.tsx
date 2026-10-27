@@ -1,3 +1,8 @@
+/*
+ * FBSU LMS — Xoshimov Group tomonidan ishlab chiqilgan.
+ * Mualliflik huquqi (c) 2026 Ozodbek Xoshimov Xusanovich. Barcha huquqlar himoyalangan.
+ * Ushbu kodni nusxalash, tarqatish yoki sub-litsenziyalash taqiqlanadi (LICENSE faylini ko'ring).
+ */
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PwaRegister } from "@/components/pwa/PwaRegister";
@@ -6,6 +11,8 @@ import { getDictionary, getLocale } from "@/i18n";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
+import "./fbsu.css";
+import "./fbsu-app.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +44,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: resolveSiteUrl(),
+    authors: [{ name: "Ozodbek Xoshimov Xusanovich" }],
+    creator: "Xoshimov Group",
+    publisher: "Xoshimov Group",
+    other: {
+      copyright: "Copyright (c) 2026 Ozodbek Xoshimov Xusanovich (Xoshimov Group)",
+    },
     title: {
       default: title,
       template: "%s — FBSU",
@@ -80,6 +93,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.documentElement.classList.add('fb-js');setTimeout(function(){if(!window.__fbMotion)document.documentElement.classList.add('fb-reveal-all')},2600);`,
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col">
         <LocaleProvider locale={locale} dictionary={dictionary}>

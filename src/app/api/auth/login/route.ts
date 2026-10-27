@@ -1,6 +1,7 @@
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { createHash, randomInt, randomUUID } from "node:crypto";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/auth";
 import { checkRateLimit, clearRateLimit } from "@/lib/rate-limit";
@@ -100,6 +101,39 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: "Email yoki parol xato" }, { status: 401 });
   }
 
+  const preferences =
+    user.preferences && typeof user.preferences === "object" && !Array.isArray(user.preferences)
+      ? (user.preferences as Record<string, unknown>)
+      : {};
+  const tempPassword = preferences.tempPassword === true;
+  if (tempPassword && preferences.tempPasswordUsed === true) {
+    await createAuditLog({
+      action: "LOGIN_FAILED",
+      meta: { email, userId: user.id, reason: "temp_password_used" },
+      ip: clientInfo.ip,
+      userAgent: clientInfo.userAgent,
+    });
+    return Response.json(
+      {
+        ok: false,
+        error: "Vaqtinchalik parol allaqachon ishlatilgan. Yangi parol uchun administratorga murojaat qiling.",
+      },
+      { status: 401 },
+    );
+  }
+
+  if (tempPassword) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        preferences: {
+          ...preferences,
+          tempPasswordUsed: true,
+        } as Prisma.InputJsonValue,
+      },
+    });
+  }
+
   await clearRateLimit(limitKey, "auth");
 
   if (user.role === "OWNER") {
@@ -157,12 +191,13 @@ export async function POST(request: Request) {
     action: "LOGIN_SUCCESS",
     entity: "User",
     entityId: user.id,
-    meta: { email, role: user.role },
+    meta: { email, role: user.role, tempPassword },
     ip: clientInfo.ip,
     userAgent: clientInfo.userAgent,
   });
   return Response.json({
     ok: true,
     user: { id: user.id, name: user.name, role: user.role },
+    tempPasswordUsed: tempPassword,
   });
 }

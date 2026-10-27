@@ -1,23 +1,26 @@
 # STATUS — qurilish holati
 
-Oxirgi yangilanish: Xavfsiz imtihon — yuz nazorati + kiritma anomaliyasi (2026-10-15)
+Oxirgi yangilanish: PII shifrlash fallback + EduPage soatlik avtosinxron (2026-10-21)
 
-## Xavfsiz imtihon — yuz nazorati + kiritma anomaliyasi (2026-10-15)
+## PII shifrlash fallback (2026-10-21)
 
-- [x] **Face guard**: imtihon davomida yuz kuzatuvi — yuz yo'qligi (FACE_ABSENT),
-      2+ shaxs (FACE_MULTIPLE), yonga qarash (LOOK_AWAY), blink yo'qligi (FACE_LIVENESS);
-      darvoza'da FaceScan jonli tekshiruvi va shaxs tasdiqlash (FACE_MISMATCH bo'lsa
-      imtihon boshlanmaydi); davomida har ~30s deskriptor solishtiruvi (FACE_OK/FACE_MISMATCH)
-- [x] **Kiritma anomaliyasi**: robot yozish (KEY_ANOMALY), avtoklik/sakrash (MOUSE_ANOMALY),
-      soxta hodisa/webdriver (AUTOMATION_DETECTED); hammasi mavjud ogohlantirish → monitor
-      quvuriga tushadi (DB o'zgarmagan)
-- [x] Yangi sof modullar: `face-guard.ts`, `input-anomaly.ts` + 19 yangi unit test;
-      E2E `e2e/secure-exam.spec.ts` 2/2 yashil; tsc 0 xato; `next build` yashil
-- [x] Kamera preview yonida holat chipi; i18n uz/ru/en to'liq
-- [x] v2 yaxshilanishlar: kamera panel imtihon tepasida; LOOK_AWAY sezgirroq (1.4s / 0.24,
-      10s cooldown); WINDOW_BLUR → WARNING + talabaga toast; DevTools kombinatsiyalari
-      kengaytirildi (Ctrl/Cmd+Shift+I/J/C/K/U, Cmd+Opt+I/J/C/U); WARNING+ hodisalar
-      o'qituvchiga Notification orqali boradi
+- [x] `DATA_ENCRYPTION_KEY` bo'lmasa Prisma kengaytmasi shifrlashni o'tkazib yuboradi
+      (avval har qanday PII yozuvi/`where.email` 500 berardi — login ham)
+- [x] Bir marta logga ogohlantirish; kalit qo'yilganda avtomatik yoqiladi
+- [x] Test: `isEncryptionConfigured()` kalit bor/yo'q holatda
+- [ ] Keyingi: kalit + backup + `npm run db:encrypt` bilan shifrlashni yoqish
+      (`docs/production-deploy.md`)
+
+## EduPage soatlik avtosinxron (2026-10-21)
+
+- [x] `.github/workflows/edupage-sync.yml` — har soatda `GET /api/edupage/sync`
+      (Bearer secret), qo'lda `workflow_dispatch` ham bor
+- [x] `edupage:sync-lock` — DB darajasidagi qulf; cron, sahifa va qo'lda sinxron
+      bir vaqtda ketsa ikkinchisi 409 bilan qaytadi (10 daqiqa TTL)
+- [x] `autoSyncEduPageSchedule` band qulfni xato deb hisoblamaydi
+- [x] Sozlash: `EDUPAGE_SYNC_SECRET` (yoki `CRON_SECRET`) Vercel + GitHub secret;
+      ixtiyoriy `APP_URL` repo variable
+- [x] Hujjat: `docs/production-deploy.md`; admin kartada yangilanish tavsifi uz/ru/en
 
 ## EduPage avto jadval (2026-10-15)
 

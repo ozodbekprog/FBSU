@@ -18,11 +18,13 @@ export function AvatarUpload({
   src,
   size = 112,
   className,
+  endpoint = "/api/profile/avatar",
 }: {
   name: string;
   src: string | null;
   size?: number;
   className?: string;
+  endpoint?: string;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -49,7 +51,7 @@ export function AvatarUpload({
     try {
       const body = new FormData();
       body.append("file", file);
-      const res = await apiFetch("/api/profile/avatar", { method: "POST", body });
+      const res = await apiFetch(endpoint, { method: "POST", body });
       const json = (await res.json().catch(() => null)) as ApiResult;
       if (!res.ok || !json?.ok) {
         setError(json?.error ?? t("mscUploadError"));

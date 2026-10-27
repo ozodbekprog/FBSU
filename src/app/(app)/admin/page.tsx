@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Badge, Card, CardBody, CardHeader, PageHeader } from "@/components/ui";
 import { BarChart, DonutChart, LineChart } from "@/components/charts";
 import { getAdminCharts } from "@/app/api/admin/charts/data";
-import { cn, fmtDateTime } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import FileUpload from "@/components/admin/FileUpload";
 import { getDictionary, getLocale, t as translate, type Dictionary } from "@/i18n";
 import { AdminPanelConfig, ADMIN_WIDGETS, type AdminWidget } from "@/components/admin/AdminPanelConfig";
@@ -152,18 +152,6 @@ const QUICK_LINKS: { href: string; title: keyof Dictionary; description: keyof D
         <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
         <path d="m16 6-4-4-4 4" />
         <path d="M12 2v13" />
-      </svg>
-    ),
-  },
-  {
-    href: "/admin/audit",
-    title: "admNavAudit",
-    description: "admQuickAuditDesc",
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <path d="M14 2v6h6" />
-        <path d="M8 13h8M8 17h5" />
       </svg>
     ),
   },
@@ -321,7 +309,6 @@ export default async function AdminPage() {
     charts,
     newOrders,
     admissionCount,
-    recentLogs,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.course.count(),
@@ -333,11 +320,6 @@ export default async function AdminPage() {
     getAdminCharts(),
     prisma.order.count({ where: { status: "NEW" } }),
     prisma.admissionApplication.count(),
-    prisma.auditLog.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 8,
-      include: { actor: { select: { name: true } } },
-    }),
   ]);
 
   const roleTotal = charts.usersByRole.reduce((sum, slice) => sum + slice.value, 0);
@@ -439,35 +421,6 @@ export default async function AdminPage() {
               <CardHeader title={dictionary.admFileUploadTitle} subtitle={dictionary.admFileUploadHint} />
               <CardBody>
                 <FileUpload />
-              </CardBody>
-            </Card>
-          ) : null}
-
-          {showWidget("recent") ? (
-            <Card className="animate-fade-up">
-              <CardHeader title={dictionary.admRecentTitle} subtitle={dictionary.admRecentSubtitle} />
-              <CardBody className="space-y-2">
-                {recentLogs.length === 0 ? (
-                  <p className="text-sm text-slate-500">{dictionary.admRecentEmpty}</p>
-                ) : (
-                  recentLogs.map((log) => (
-                    <div
-                      key={log.id}
-                      className="flex items-start justify-between gap-3 rounded-xl border border-slate-100 px-3 py-2.5"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-slate-800">{log.action}</p>
-                        <p className="mt-0.5 truncate text-xs text-slate-500">
-                          {log.actor?.name ?? "—"}
-                          {log.entity ? ` · ${log.entity}` : ""}
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-[11px] tabular-nums text-slate-500">
-                        {fmtDateTime(log.createdAt)}
-                      </span>
-                    </div>
-                  ))
-                )}
               </CardBody>
             </Card>
           ) : null}

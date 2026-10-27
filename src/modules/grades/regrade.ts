@@ -1,17 +1,6 @@
-export type RegradeRole =
-  | "OWNER"
-  | "ADMIN"
-  | "REKTOR"
-  | "PRO_RECTOR"
-  | "DEKAN"
-  | "KAFEDRA_MUDIRI"
-  | "REGISTRAR"
-  | "BUXGALTER"
-  | "TYUTOR"
-  | "TEACHER"
-  | "STUDENT"
-  | "XODIM"
-  | "OTA_ONA";
+import type { Role } from "@prisma/client";
+
+export type RegradeRole = Role;
 
 /**
  * Baho allaqachon qo'yilgan (GRADED) va o'qituvchi ballni o'zgartirmoqchi bo'lsa —

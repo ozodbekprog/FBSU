@@ -117,7 +117,7 @@ const DEMO_ACCOUNTS = [
   },
   {
     roleKey: "authRoleTeacher" as const,
-    email: "o.ismoilova@ttpu.uz",
+    email: "t.prog@ttpu.uz",
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -176,6 +176,7 @@ const DEMO_ACCOUNTS = [
 type LoginResponse = {
   ok?: boolean;
   error?: string;
+  tempPasswordUsed?: boolean;
   user?: { id: string; name: string; role: string };
   data?: { twoFactor?: boolean; loginId?: string; verified?: boolean };
 };
@@ -248,7 +249,7 @@ export default function LoginPage() {
         setOwnerCode("");
         return;
       }
-      router.push(nextTarget());
+      router.push(json?.tempPasswordUsed === true ? "/profile?password=1" : nextTarget());
       router.refresh();
     } catch {
       setError(t("commonNetworkError"));

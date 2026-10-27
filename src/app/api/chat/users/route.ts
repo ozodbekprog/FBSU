@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { textMatches } from "@/lib/encrypted-search";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
@@ -12,19 +13,22 @@ export async function GET(request: Request) {
     return Response.json({ ok: true, data: { users: [] } });
   }
 
-  const users = await prisma.user.findMany({
-    where: {
-      isActive: true,
-      id: { not: user.id },
-      OR: [
-        { name: { contains: q, mode: "insensitive" } },
-        { email: { contains: q, mode: "insensitive" } },
-      ],
-    },
-    select: { id: true, name: true, avatarUrl: true, role: true },
-    orderBy: { name: "asc" },
-    take: 10,
+  const candidates = await prisma.user.findMany({
+    where: { isActive: true, id: { not: user.id } },
+    select: { id: true, name: true, email: true, avatarUrl: true, role: true },
+    take: 2000,
   });
+
+  const users = candidates
+    .filter((candidate) => textMatches(q, [candidate.name, candidate.email]))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .slice(0, 10)
+    .map((candidate) => ({
+      id: candidate.id,
+      name: candidate.name,
+      avatarUrl: candidate.avatarUrl,
+      role: candidate.role,
+    }));
 
   return Response.json({ ok: true, data: { users } });
 }

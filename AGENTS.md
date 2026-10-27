@@ -83,8 +83,9 @@ export default async function Page() {
   `/admin/users` (o'qituvchilar), `/admin/groups` (guruhlar), `/admin/dictionaries` (fanlar),
   `/rooms` (xonalar); sinxron boshqaruvi `/admin/import` da.
 - API: `GET /api/edupage/timetable`, sinxron `POST /api/edupage/sync`
-  (ADMIN/REGISTRAR + CSRF yoki `Bearer CRON_SECRET`). `Jadval` sahifasi ochilganda
-  30 daqiqadan eski bo'lsa fonda avtomatik sinxronlanadi.
+  (ADMIN/REGISTRAR + CSRF yoki `Bearer CRON_SECRET`). Har soatda GitHub Actions
+  cron orqali, `Jadval` sahifasi ochilganda esa 30 daqiqadan eski bo'lsa fonda
+  avtomatik sinxronlanadi. Parallel sinxronlarni `edupage:sync-lock` to'xtatadi.
 - Sinf ↔ guruh bog'lanishi `Group.edupageName` orqali; mos kelmagan sinf uchun guruh
   avtomatik yaratiladi, bog'langan guruhdagi eski qo'lda yozuvlar tozalanadi.
 - Import qilingan yozuvlar `ScheduleEntry.source = "edupage"` + `externalId` bilan belgilanadi —
@@ -92,7 +93,7 @@ export default async function Page() {
 
 <!-- BEGIN:nextjs-agent-rules -->
 
-## This is NOT the Next.js you know
+# This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 

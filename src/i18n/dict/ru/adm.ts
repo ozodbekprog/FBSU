@@ -643,7 +643,7 @@ export const adm = {
   admEduPageCounts: "{groups} групп · {teachers} преподавателей · {subjects} предметов · {rooms} аудиторий · {lessons} занятий",
   admEduPageSyncNow: "Обновить сейчас",
   admEduPageSyncing: "Обновление…",
-  admEduPageAuto: "Проверяется автоматически каждые 30 минут (обновляется при открытии страницы Расписание).",
+  admEduPageAuto: "Обновляется автоматически каждый час; также при открытии страницы Расписание, если данным больше 30 минут.",
   admEduPageSource: "Сайт-источник",
   admImportPageTitle: "Импорт CSV",
   admImportPageSubtitle: "Массовая загрузка студентов, групп и предметов через CSV-файл",

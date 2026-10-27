@@ -1,5 +1,6 @@
 import type { Dictionary } from "./uz";
 import { shell } from "./dict/en/shell";
+import { fb } from "./dict/en/fb";
 import { dash } from "./dict/en/dash";
 import { crs } from "./dict/en/crs";
 import { sch } from "./dict/en/sch";
@@ -142,6 +143,19 @@ export const en: Dictionary = {
   certGradeUnsatisfactory: "Unsatisfactory",
   certGradeNone: "Not graded",
 
+
+  tchStudents: "students",
+  tchAttendanceTitle: "Attendance points",
+  tchAttendanceSubtitle: "Set per group — a student who attends gets that many points",
+  tchNoGroups: "No groups enrolled in this course",
+  tchNoGroupTitle: "No group",
+  tchNoGroupSubtitle: "For students without a group",
+  tchSave: "Save",
+  tchGivePointsSubtitle: "By selected category and points",
+  tchTotalForStudent: "Student total",
+  tchHistory: "Awarded points",
+  tchHistorySubtitle: "records",
+
   settingsEyebrow: "Account",
   settingsTitle: "Settings",
   settingsSubtitle: "Notifications, appearance and contact",
@@ -170,6 +184,7 @@ export const en: Dictionary = {
   ...vid,
   ...res,
   ...ob,
+  ...fb,
   ...sec,
   ...ofs,
   ...ver,

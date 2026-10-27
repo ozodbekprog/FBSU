@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import type { ChatMessage } from "./shared";
-import { fmtClock } from "./shared";
+import { callMissedTone, callTitleKey, fmtCallDuration, fmtClock } from "./shared";
 
 type Props = {
   message: ChatMessage;
@@ -23,6 +23,8 @@ type Props = {
   onReply: (message: ChatMessage) => void;
   onEdit: (message: ChatMessage) => void;
   onDelete: (message: ChatMessage) => void;
+  /** Qo'ng'iroq yozuvidagi "qayta qo'ng'iroq" tugmasi. */
+  onCallBack?: (media: "AUDIO" | "VIDEO") => void;
 };
 
 function formatBytes(bytes: number): string {
@@ -31,7 +33,24 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function MessageBubble({ message, own, currentUserId, onReply, onEdit, onDelete }: Props) {
+function PhoneGlyph() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92Z" />
+    </svg>
+  );
+}
+
+function VideoGlyph() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="6.5" width="12" height="11" rx="2.5" />
+      <path d="m15 11 5.2-3v8L15 13" />
+    </svg>
+  );
+}
+
+export function MessageBubble({ message, own, currentUserId, onReply, onEdit, onDelete, onCallBack }: Props) {
   const { t } = useI18n();
   const isVoice = message.type === "VOICE";
   const isFile = message.type === "FILE";
@@ -113,6 +132,76 @@ export function MessageBubble({ message, own, currentUserId, onReply, onEdit, on
   function openMenu(e: React.MouseEvent) {
     e.preventDefault();
     setMenuAt((prev) => (prev ? null : { x: e.clientX, y: e.clientY }));
+  }
+
+  if (message.type === "CALL" && message.call) {
+    const call = message.call;
+    const missed = callMissedTone(call, own);
+    return (
+      <div className={cn("flex animate-fade-up relative group", own ? "justify-end" : "justify-start")}>
+        <div
+          className={cn(
+            "flex max-w-[85%] items-center gap-3 rounded-3xl px-4 py-2.5 sm:max-w-[70%]",
+            own
+              ? "rounded-br-lg bg-gradient-to-br from-brand-800 to-brand-950 text-white shadow-[0_8px_20px_-12px_rgba(19,31,60,0.75)]"
+              : "rounded-bl-lg border border-slate-200/70 bg-white text-slate-800 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_10px_24px_-16px_rgba(29,52,96,0.45)]",
+          )}
+        >
+          <span
+            aria-hidden="true"
+            className={cn(
+              "flex size-10 shrink-0 items-center justify-center rounded-full",
+              own
+                ? missed
+                  ? "bg-white/15 text-rose-200"
+                  : "bg-white/15 text-white"
+                : missed
+                  ? "bg-rose-50 text-rose-600"
+                  : "bg-brand-50 text-brand-700",
+            )}
+          >
+            {call.media === "VIDEO" ? <VideoGlyph /> : <PhoneGlyph />}
+          </span>
+          <span className="min-w-0">
+            <span
+              className={cn(
+                "block text-sm font-semibold",
+                own
+                  ? missed
+                    ? "text-rose-200"
+                    : "text-white"
+                  : missed
+                    ? "text-rose-600"
+                    : "text-slate-800",
+              )}
+            >
+              {t(callTitleKey(call, own))}
+            </span>
+            <span className={cn("block text-[11px] tabular-nums", own ? "text-brand-200" : "text-slate-500")}>
+              {fmtClock(message.createdAt)}
+              {call.durationSec !== null && call.durationSec > 0
+                ? ` · ${fmtCallDuration(call.durationSec, t)}`
+                : null}
+            </span>
+          </span>
+          {onCallBack ? (
+            <button
+              type="button"
+              data-call-back=""
+              onClick={() => onCallBack(call.media)}
+              aria-label={t("callLogAgain")}
+              title={t("callLogAgain")}
+              className={cn(
+                "ml-1 flex size-9 shrink-0 items-center justify-center rounded-full transition-colors",
+                own ? "text-gold-300 hover:bg-white/15" : "text-brand-700 hover:bg-brand-50",
+              )}
+            >
+              {call.media === "VIDEO" ? <VideoGlyph /> : <PhoneGlyph />}
+            </button>
+          ) : null}
+        </div>
+      </div>
+    );
   }
 
   return (

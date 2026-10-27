@@ -87,6 +87,7 @@ const ROLE_COLORS: Record<Role, string> = {
   XODIM: "#64748b",
   OTA_ONA: "#0d9488",
   OWNER: "#c9a227",
+  NAZORATCHI: "#64748b",
 };
 
 const ROLE_LABELS: Record<Role, keyof Dictionary> = {
@@ -103,6 +104,7 @@ const ROLE_LABELS: Record<Role, keyof Dictionary> = {
   XODIM: "dashRoleStaff",
   OTA_ONA: "dashRoleParents",
   OWNER: "roleOwner",
+  NAZORATCHI: "secNazoratTitle",
 };
 
 const ATTENDED: AttendanceStatus[] = ["PRESENT", "LATE"];
