@@ -176,8 +176,8 @@ const S: Record<string, ReactNode> = {
   ),
 "/assistant": (
     <>
-      {/* Fariza — 4 qirrali AI uchquni (sparkle) */}
-      <path d="M12 3l2 7 7 2-7 2-2 7-2-7-7-2 7-2z" />
+      {/* Fariza — «F» monogrammasi (Negativ F logotipi) */}
+      <path d="M9 5h9M9 5v14M9 12h6" />
     </>
   ),
 "/help": (
@@ -345,6 +345,19 @@ const S: Record<string, ReactNode> = {
     <>
       <circle cx="12" cy="9" r="5" />
       <path d="M8.5 13.3 7 22l5-2.6L17 22l-1.5-8.7" />
+    </>
+  ),
+"/office": (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="3" />
+      <path d="M3 12h18M12 3v18" />
+    </>
+  ),
+"/versions": (
+    <>
+      <path d="M3 12a9 9 0 1 0 3-6.7" />
+      <path d="M3 4v5h5" />
+      <path d="M12 8v4l3 2" />
     </>
   ),
 };

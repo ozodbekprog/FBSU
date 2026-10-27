@@ -121,32 +121,32 @@ const TEACHERS = [
 ];
 
 const GROUPS_NEW = [
-  { name: "AI-2", size: 16, facultyCode: "KI", prefix: "ai2s", curator: "tyutor-1@ttpu.uz" },
-  { name: "ME-2", size: 16, facultyCode: "MEX", prefix: "me2s", curator: "tyutor-2@ttpu.uz" },
+  { name: "AI2-26", size: 16, facultyCode: "KI", prefix: "ai2s", curator: "tyutor-1@ttpu.uz" },
+  { name: "ME2-26", size: 16, facultyCode: "MEX", prefix: "me2s", curator: "tyutor-2@ttpu.uz" },
   { name: "ARX-1", size: 16, facultyCode: "ARX", prefix: "arx1s", curator: "tyutor-3@ttpu.uz" },
   { name: "IQT-1", size: 16, facultyCode: "IQT", prefix: "iqt1s", curator: "tyutor-3@ttpu.uz" },
 ];
 
 const GROUPS_OLD = [
-  { name: "AI-1", facultyCode: "KI", curator: "tyutor-1@ttpu.uz" },
-  { name: "ME-1", facultyCode: "MEX", curator: "tyutor-2@ttpu.uz" },
+  { name: "AI1-26", facultyCode: "KI", curator: "tyutor-1@ttpu.uz" },
+  { name: "ME1-26", facultyCode: "MEX", curator: "tyutor-2@ttpu.uz" },
 ];
 
 const COURSES = [
-  { slug: "prog", title: "Dasturlash asoslari", dept: "DI", teacher: "t.prog@ttpu.uz", groups: ["AI-1", "AI-2"], color: "#2563eb", days: [1, 3], slots: [2, 3] },
-  { slug: "db", title: "Ma'lumotlar bazasi", dept: "DI", teacher: "t.db@ttpu.uz", groups: ["AI-1", "AI-2"], color: "#0ea5e9", days: [2, 4], slots: [2, 4] },
-  { slug: "web", title: "Web texnologiyalar", dept: "DI", teacher: "t.web@ttpu.uz", groups: ["AI-1"], color: "#7c3aed", days: [1, 4], slots: [3, 2] },
-  { slug: "os", title: "Operatsion tizimlar", dept: "KT", teacher: "t.os@ttpu.uz", groups: ["AI-2"], color: "#334155", days: [3, 5], slots: [2, 3] },
-  { slug: "math", title: "Matematika 1", dept: "FF", teacher: "t.math@ttpu.uz", groups: ["AI-1", "AI-2", "ME-1", "ME-2", "ARX-1", "IQT-1"], color: "#16a34a", days: [1, 3], slots: [1, 2] },
-  { slug: "eng", title: "Ingliz tili 1", dept: "FF", teacher: "t.eng@ttpu.uz", groups: ["AI-1", "AI-2", "ME-1", "ME-2", "ARX-1", "IQT-1"], color: "#9333ea", days: [2, 5], slots: [1, 2] },
-  { slug: "mech", title: "Nazariy mexanika", dept: "MEXD", teacher: "t.mex@ttpu.uz", groups: ["ME-1", "ME-2"], color: "#dc2626", days: [1, 4], slots: [3, 3] },
-  { slug: "mat-sci", title: "Materialshunoslik", dept: "MAT", teacher: "t.mat@ttpu.uz", groups: ["ME-1", "ME-2"], color: "#b45309", days: [2, 5], slots: [3, 4] },
+  { slug: "prog", title: "Dasturlash asoslari", dept: "DI", teacher: "t.prog@ttpu.uz", groups: ["AI1-26", "AI2-26"], color: "#2563eb", days: [1, 3], slots: [2, 3] },
+  { slug: "db", title: "Ma'lumotlar bazasi", dept: "DI", teacher: "t.db@ttpu.uz", groups: ["AI1-26", "AI2-26"], color: "#0ea5e9", days: [2, 4], slots: [2, 4] },
+  { slug: "web", title: "Web texnologiyalar", dept: "DI", teacher: "t.web@ttpu.uz", groups: ["AI1-26"], color: "#7c3aed", days: [1, 4], slots: [3, 2] },
+  { slug: "os", title: "Operatsion tizimlar", dept: "KT", teacher: "t.os@ttpu.uz", groups: ["AI2-26"], color: "#334155", days: [3, 5], slots: [2, 3] },
+  { slug: "math", title: "Matematika 1", dept: "FF", teacher: "t.math@ttpu.uz", groups: ["AI1-26", "AI2-26", "ME1-26", "ME2-26", "ARX-1", "IQT-1"], color: "#16a34a", days: [1, 3], slots: [1, 2] },
+  { slug: "eng", title: "Ingliz tili 1", dept: "FF", teacher: "t.eng@ttpu.uz", groups: ["AI1-26", "AI2-26", "ME1-26", "ME2-26", "ARX-1", "IQT-1"], color: "#9333ea", days: [2, 5], slots: [1, 2] },
+  { slug: "mech", title: "Nazariy mexanika", dept: "MEXD", teacher: "t.mex@ttpu.uz", groups: ["ME1-26", "ME2-26"], color: "#dc2626", days: [1, 4], slots: [3, 3] },
+  { slug: "mat-sci", title: "Materialshunoslik", dept: "MAT", teacher: "t.mat@ttpu.uz", groups: ["ME1-26", "ME2-26"], color: "#b45309", days: [2, 5], slots: [3, 4] },
   { slug: "arch", title: "Arxitektura loyihalash", dept: "MEM", teacher: "t.arch@ttpu.uz", groups: ["ARX-1"], color: "#0891b2", days: [2, 4], slots: [1, 5] },
   { slug: "design", title: "Dizayn asoslari", dept: "DIZ", teacher: "t.diz@ttpu.uz", groups: ["ARX-1"], color: "#db2777", days: [1, 5], slots: [4, 3] },
   { slug: "econ", title: "Iqtisodiyot nazariyasi", dept: "ECON", teacher: "t.econ@ttpu.uz", groups: ["IQT-1"], color: "#65a30d", days: [1, 3], slots: [4, 1] },
   { slug: "mgmt", title: "Boshqaruv asoslari", dept: "MGMT", teacher: "t.mgmt@ttpu.uz", groups: ["IQT-1"], color: "#c026d3", days: [2, 4], slots: [4, 2] },
-  { slug: "chem", title: "Kimyo", dept: "FF", teacher: "kimyo@ttpu.uz", groups: ["AI-1", "ME-1"], color: "#0d9488", days: [3, 5], slots: [1, 4] },
-  { slug: "fizika", title: "Fizika", dept: "FF", teacher: "fizika@ttpu.uz", groups: ["AI-1"], color: "#dc2626", days: [1, 4], slots: [1, 2], existing: true },
+  { slug: "chem", title: "Kimyo", dept: "FF", teacher: "kimyo@ttpu.uz", groups: ["AI1-26", "ME1-26"], color: "#0d9488", days: [3, 5], slots: [1, 4] },
+  { slug: "fizika", title: "Fizika", dept: "FF", teacher: "fizika@ttpu.uz", groups: ["AI1-26"], color: "#dc2626", days: [1, 4], slots: [1, 2], existing: true },
 ];
 
 const ROOMS = ["101", "102", "201", "202", "301", "302", "401", "Fizika lab.", "Kompyuter sinfi"];

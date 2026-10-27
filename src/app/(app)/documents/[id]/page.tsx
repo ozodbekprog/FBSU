@@ -7,6 +7,7 @@ import { fmtDateTime } from "@/lib/utils";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getDictionary, getLocale, type Dictionary } from "@/i18n";
+import { isOfficeMeta } from "@/lib/office";
 import { PrintButton } from "@/components/documents/document-board";
 
 const PRINT_STYLES = `
@@ -94,6 +95,7 @@ export default async function DocumentDetailPage({
     },
   });
   if (!document) notFound();
+  if (isOfficeMeta(document.meta)) redirect(`/office/${document.id}`);
 
   const locale = await getLocale();
   const dict = getDictionary(locale);

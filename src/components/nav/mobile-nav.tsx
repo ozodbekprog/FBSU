@@ -153,7 +153,7 @@ export function MobileNav({ groups }: { groups: NavGroup[] }) {
                           strokeLinejoin="round"
                           aria-hidden="true"
                           className={cn(
-                            "size-5 shrink-0",
+                            "size-[22px] shrink-0",
                             active ? "text-gold-300" : "text-slate-500",
                           )}
                         >

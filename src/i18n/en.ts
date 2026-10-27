@@ -25,6 +25,8 @@ import { vid } from "./dict/en/vid";
 import { res } from "./dict/en/res";
 import { ob } from "./dict/en/ob";
 import { sec } from "./dict/en/sec";
+import { ofs } from "./dict/en/ofs";
+import { ver } from "./dict/en/ver";
 
 export const en: Dictionary = {
   commonSave: "Save",
@@ -169,4 +171,6 @@ export const en: Dictionary = {
   ...res,
   ...ob,
   ...sec,
+  ...ofs,
+  ...ver,
 };

@@ -25,6 +25,8 @@ import { vid } from "./dict/ru/vid";
 import { res } from "./dict/ru/res";
 import { ob } from "./dict/ru/ob";
 import { sec } from "./dict/ru/sec";
+import { ofs } from "./dict/ru/ofs";
+import { ver } from "./dict/ru/ver";
 
 export const ru: Dictionary = {
   commonSave: "Сохранить",
@@ -169,4 +171,6 @@ export const ru: Dictionary = {
   ...res,
   ...ob,
   ...sec,
+  ...ofs,
+  ...ver,
 };

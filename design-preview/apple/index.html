@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FBSU</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  color: #1d1d1f;
+  background: #f5f5f7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+::selection {
+  background: rgba(0, 113, 227, 0.2);
+}
+.login-section {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+}
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 28px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  padding: 48px 40px 40px;
+  text-align: center;
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+.login-card:hover {
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.07);
+  transform: translateY(-2px);
+}
+.logo-mark {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #0071e3, #0077ed);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.login-title {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+}
+.login-sub {
+  margin-top: 8px;
+  font-size: 15px;
+  color: #6e6e73;
+}
+.login-fields {
+  margin-top: 32px;
+  text-align: left;
+}
+.field {
+  margin-bottom: 14px;
+}
+.field input {
+  width: 100%;
+  padding: 13px 16px;
+  font-size: 15px;
+  font-family: inherit;
+  color: #1d1d1f;
+  background: #f5f5f7;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+}
+.field input::placeholder {
+  color: #86868b;
+}
+.field input:focus {
+  border-color: #0071e3;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
+}
+.btn-login {
+  width: 100%;
+  margin-top: 8px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: inherit;
+  color: #ffffff;
+  background: #0071e3;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+.btn-login:hover {
+  background: #0077ed;
+  box-shadow: 0 8px 20px rgba(0, 113, 227, 0.28);
+  transform: translateY(-1px);
+}
+.btn-login:active {
+  transform: translateY(0);
+}
+.forgot {
+  display: inline-block;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #0071e3;
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+.forgot:hover {
+  color: #0077ed;
+  text-decoration: underline;
+}
+.dashboard-section {
+  min-height: 100vh;
+}
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 40px;
+  background: rgba(245, 245, 247, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.brand {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #0071e3;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+.avatar:hover {
+  transform: scale(1.06);
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+}
+.dashboard-content {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 80px 40px 96px;
+}
+.greeting {
+  font-size: 52px;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  line-height: 1.08;
+}
+.greeting-sub {
+  margin-top: 12px;
+  font-size: 19px;
+  color: #6e6e73;
+}
+.stats {
+  margin-top: 48px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+.stat-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  padding: 28px;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.07);
+}
+.stat-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6e6e73;
+}
+.stat-value {
+  margin-top: 8px;
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.dashboard-grid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+.panel {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  padding: 28px;
+}
+.panel-title {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-bottom: 10px;
+}
+.lesson-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.lesson-row:last-child {
+  border-bottom: none;
+}
+.lesson-time {
+  flex-shrink: 0;
+  width: 76px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6e6e73;
+  font-variant-numeric: tabular-nums;
+}
+.lesson-name {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 500;
+}
+.lesson-room {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: #6e6e73;
+  background: #f5f5f7;
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+.announcement {
+  padding: 14px 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.announcement:last-child {
+  border-bottom: none;
+}
+.announcement-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+.announcement-text {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #6e6e73;
+}
+@media (min-width: 768px) {
+  .stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .dashboard-grid {
+    grid-template-columns: 1.4fr 1fr;
+  }
+}
+@media (max-width: 390px) {
+  .login-section {
+    padding: 24px 16px;
+  }
+  .login-card {
+    max-width: 100%;
+    padding: 36px 24px 32px;
+    border-radius: 24px;
+  }
+  .navbar {
+    padding: 12px 20px;
+  }
+  .dashboard-content {
+    padding: 48px 20px 64px;
+  }
+  .greeting {
+    font-size: 34px;
+  }
+  .greeting-sub {
+    font-size: 16px;
+  }
+  .stat-value {
+    font-size: 32px;
+  }
+  .lesson-row {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+}
+@media (min-width: 1440px) {
+  .dashboard-content {
+    max-width: 1240px;
+    padding: 96px 64px 128px;
+  }
+  .greeting {
+    font-size: 56px;
+  }
+  .login-section {
+    padding: 96px 32px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #000000;
+    color: #f5f5f7;
+  }
+  .login-card,
+  .stat-card,
+  .panel {
+    background: #1c1c1e;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  .navbar {
+    background: rgba(0, 0, 0, 0.72);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+  .field input {
+    background: #1c1c1e;
+    color: #f5f5f7;
+  }
+  .field input:focus {
+    background: #000000;
+  }
+  .lesson-room {
+    background: #2c2c2e;
+    color: #a1a1a6;
+  }
+  .avatar,
+  .forgot {
+    background: #0a84ff;
+  }
+  .forgot {
+    background: none;
+    color: #0a84ff;
+  }
+  .btn-login {
+    background: #0a84ff;
+  }
+  .btn-login:hover {
+    background: #409cff;
+  }
+  .greeting-sub,
+  .stat-label,
+  .lesson-time,
+  .announcement-text,
+  .login-sub {
+    color: #a1a1a6;
+  }
+}
+</style>
+</head>
+<body>
+<section class="login-section">
+  <div class="login-card">
+    <div class="logo-mark">FBSU</div>
+    <h1 class="login-title">Kirish</h1>
+    <p class="login-sub">TTPU o'quv tizimiga kiring</p>
+    <div class="login-fields">
+      <div class="field">
+        <input type="email" placeholder="ism@ttpu.uz" autocomplete="email" aria-label="Email">
+      </div>
+      <div class="field">
+        <input type="password" placeholder="Parol" autocomplete="current-password" aria-label="Parol">
+      </div>
+      <button type="button" class="btn-login">Kirish</button>
+    </div>
+    <a class="forgot" href="#">Parolni unutdingizmi?</a>
+  </div>
+</section>
+<section class="dashboard-section">
+  <nav class="navbar">
+    <span class="brand">FBSU</span>
+    <div class="avatar" aria-label="Ozodbek">O</div>
+  </nav>
+  <div class="dashboard-content">
+    <h2 class="greeting">Salom, Ozodbek</h2>
+    <p class="greeting-sub">Bugun 3 ta dars va 1 ta topshiriq bor</p>
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">GPA</div>
+        <div class="stat-value">3.8</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Davomat</div>
+        <div class="stat-value">94%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Topshiriqlar</div>
+        <div class="stat-value">2</div>
+      </div>
+    </div>
+    <div class="dashboard-grid">
+      <div class="panel">
+        <h3 class="panel-title">Bugungi darslar</h3>
+        <div class="lesson-row">
+          <span class="lesson-time">09:00</span>
+          <span class="lesson-name">Diskret matematika</span>
+          <span class="lesson-room">204-xona</span>
+        </div>
+        <div class="lesson-row">
+          <span class="lesson-time">11:00</span>
+          <span class="lesson-name">Algoritmlar va dasturlash</span>
+          <span class="lesson-room">310-xona</span>
+        </div>
+        <div class="lesson-row">
+          <span class="lesson-time">14:00</span>
+          <span class="lesson-name">Ingliz tili</span>
+          <span class="lesson-room">112-xona</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3 class="panel-title">E'lonlar</h3>
+        <div class="announcement">
+          <div class="announcement-title">Imtihonlar jadvali e'lonlandi</div>
+          <div class="announcement-text">Yozgi imtihonlar 18-oktyabrdan boshlab o'tkaziladi.</div>
+        </div>
+        <div class="announcement">
+          <div class="announcement-title">Talabalar kengashi</div>
+          <div class="announcement-text">Yig'ilish 17-oktyabr, soat 15:00, 101-xona.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

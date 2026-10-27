@@ -497,27 +497,20 @@ function Help() {
 /**
  * Fariza — AI yordamchi ikonkasi.
  *
- * Shakl: to'rt qirrali "uchqun" (sparkle) — sun'iy intellekt uchun
- * umum qabul qilingan belgi — plus orbita halqasi ("agent" ishlayotgani).
- * Uzun va qisqa nurlar navbatma-navbat: haqiqiy yulduz nurlanishi kabi.
+ * Shakl: "Negativ F" monogrammasi — oltin plitka ustida siyoh rangli «F».
+ * Plitka chuqur / yaqqol ko'rinadi, harf esa o'yilgan kabi o'qiladi.
  */
 function Assistant() {
   return (
     <group>
-      {/* Orbita halqasi — agent aylanib turganini bildiradi */}
-      <Ring rad={0.6} tube={0.075} m="brandLight" r={[PI / 2.5, 0, 0]} />
-      {/* Uzun nurlar (vertikal + gorizontal) */}
-      {[0, 1].map((i) => (
-        <Tile key={`long${i}`} a={[0.82, 0.15, 0.15]} m="gold" p={[0, 0, 0]} r={[0, 0, (i * PI) / 2]} />
-      ))}
-      {/* Qisqa diagonal nurlar */}
-      {[0, 1].map((i) => (
-        <Tile key={`short${i}`} a={[0.46, 0.11, 0.11]} m="goldLight" p={[0, 0, 0]} r={[0, 0, (i * PI) / 2 + PI / 4]} />
-      ))}
-      {/* Markaziy yadro */}
-      <Ball rad={0.16} m="goldLight" p={[0, 0, 0.02]} />
-      {/* Alohida kichik uchqun — "yangi fikr" belgisi */}
-      <Tile a={[0.22, 0.08, 0.08]} m="goldLight" p={[0.46, 0.46, 0]} r={[0, 0, PI / 4]} />
+      {/* Oltin plitka */}
+      <Tile a={[1.1, 1.1, 0.14]} m="gold" p={[0, 0, 0]} radius={0.14} />
+      {/* «F» — vertikal tayanch */}
+      <Tile a={[0.16, 0.6, 0.1]} m="brand" p={[-0.2, 0, 0.12]} radius={0.04} />
+      {/* «F» — yuqori chiziq */}
+      <Tile a={[0.44, 0.14, 0.1]} m="brand" p={[-0.04, 0.23, 0.12]} radius={0.04} />
+      {/* «F» — o'rta chiziq */}
+      <Tile a={[0.32, 0.14, 0.1]} m="brand" p={[-0.1, 0, 0.12]} radius={0.04} />
     </group>
   );
 }

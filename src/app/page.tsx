@@ -4,6 +4,8 @@ import { Badge, ButtonLink, Card } from "@/components/ui";
 import { Logo } from "@/components/brand/logo";
 import { AppInstallButton } from "@/components/pwa/AppInstallButton";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { VersionBadge } from "@/components/version/version-badge";
+import { APP_VERSION } from "@/lib/version";
 import { getDictionary, getLocale } from "@/i18n";
 
 const SITE_URL = "https://lms.ttpu.uz";
@@ -362,6 +364,7 @@ export default async function HomePage() {
     { href: "/login", label: dictionary.landFooterLogin },
     { href: "/register", label: dictionary.authLoginRegister },
     { href: "/help", label: dictionary.landFooterHelp },
+    { href: "/versions", label: dictionary.verTitle },
   ];
 
   const appPoints = [
@@ -470,10 +473,13 @@ export default async function HomePage() {
           <div className="pointer-events-none absolute inset-0 [background-image:linear-gradient(to_right,var(--color-brand-100)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-brand-100)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(ellipse_75%_60%_at_50%_0%,black,transparent_75%)]" />
           <div className="relative mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-20 sm:px-6 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-12 lg:py-28">
             <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
-              <Badge tone="brand" className="gap-2 px-3.5 py-1.5 text-xs">
-                <span className="size-1.5 rounded-full bg-gold-400" />
-                {dictionary.landUniversity}
-              </Badge>
+              <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+                <Badge tone="brand" className="gap-2 px-3.5 py-1.5 text-xs">
+                  <span className="size-1.5 rounded-full bg-gold-400" />
+                  {dictionary.landUniversity}
+                </Badge>
+                <VersionBadge />
+              </div>
               <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight text-brand-950 sm:text-5xl lg:text-[3.4rem]">
                 {dictionary.landHeroTitleA}{" "}
                 <span className="underline decoration-gold-400 decoration-2 underline-offset-[6px]">
@@ -1049,6 +1055,10 @@ export default async function HomePage() {
         <div className="border-t border-slate-100">
           <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-3 px-4 py-6 sm:flex-row sm:px-6">
             <p className="text-xs text-slate-600">{dictionary.landRights}</p>
+            <div className="flex items-center gap-2">
+              <VersionBadge compact />
+              <span className="font-mono text-[11px] text-slate-400">v{APP_VERSION}</span>
+            </div>
           </div>
         </div>
       </footer>
