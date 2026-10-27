@@ -944,6 +944,8 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/finance/rates": FacultyRates,
   "/payroll": Payroll,
   "/teacher-points": Curator,
+  "/bonus-points": Bounty,
+  "/credit-awards": Payroll,
 };
 
 export const NAV3D_SPINNING = new Set([

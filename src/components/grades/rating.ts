@@ -19,7 +19,8 @@ export function rankRatings(entries: RatingEntry[]) {
     const rank = entry.percent === previousPercent ? previousRank : index + 1;
     previousPercent = entry.percent;
     previousRank = rank;
-    ranked.push({ ...entry, rank });
+    // Tartib xom foiz bo'yicha aniqlanadi, ko'rsatishda esa 100% bilan cheklanadi.
+    ranked.push({ ...entry, percent: Math.min(100, entry.percent), rank });
   });
   return ranked;
 }
