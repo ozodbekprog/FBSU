@@ -9,7 +9,13 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { getDictionary, getLocale } from "@/i18n";
 
 const SITE_URL = "https://lms.ttpu.uz";
-const OG_LOCALES: Record<string, string> = { uz: "uz_UZ", ru: "ru_RU", en: "en_US" };
+const OG_LOCALES: Record<string, string> = {
+  uz: "uz_UZ",
+  "uz-new": "uz_UZ",
+  "uz-cyrl": "uz_UZ",
+  ru: "ru_RU",
+  en: "en_US",
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();

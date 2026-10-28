@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Manrope, Sora } from "next/font/google";
 import { PwaRegister } from "@/components/pwa/PwaRegister";
 import { CsrfBootstrap } from "@/components/csrf/csrf-bootstrap";
-import { getDictionary, getLocale } from "@/i18n";
+import { getDictionary, getLocale, htmlLang } from "@/i18n";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
@@ -24,7 +24,13 @@ const geistMono = Geist_Mono({
 });
 
 const FALLBACK_SITE_URL = "https://lms.ttpu.uz";
-const OG_LOCALES: Record<string, string> = { uz: "uz_UZ", ru: "ru_RU", en: "en_US" };
+const OG_LOCALES: Record<string, string> = {
+  uz: "uz_UZ",
+  "uz-new": "uz_UZ",
+  "uz-cyrl": "uz_UZ",
+  ru: "ru_RU",
+  en: "en_US",
+};
 
 function resolveSiteUrl(): URL {
   const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
@@ -93,7 +99,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const dictionary = getDictionary(locale);
   return (
     <html
-      lang={locale}
+      lang={htmlLang(locale)}
       suppressHydrationWarning
       className={`${manrope.variable} ${sora.variable} ${geistMono.variable} h-full antialiased`}
     >

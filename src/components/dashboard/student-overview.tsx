@@ -461,7 +461,8 @@ export function StudentOverview({
   lessonAttendance: Record<string, string>;
   courses: { id: string; title: string; slug: string; teacherName: string }[];
 }) {
-  const L = LABELS[locale] ?? LABELS.uz;
+  const L =
+    LABELS[locale as keyof typeof LABELS] ?? LABELS.uz;
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const hour = now.getHours();
   const greeting = hour < 12 ? L.morning : hour < 18 ? L.day : L.evening;

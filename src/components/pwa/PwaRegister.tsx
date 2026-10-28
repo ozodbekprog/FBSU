@@ -17,6 +17,18 @@ const PWA_TEXT: Record<string, { title: string; subtitle: string; install: strin
     install: "O'rnatish",
     close: "Yopish",
   },
+  "uz-cyrl": {
+    title: "Иловани ўрнатиш",
+    subtitle: "FBSU ни илова сифатида очиш",
+    install: "Ўрнатиш",
+    close: "Ёпиш",
+  },
+  "uz-new": {
+    title: "Ilovani o'rnatish",
+    subtitle: "FBSU'ni ilova sifatida ochish",
+    install: "O'rnatish",
+    close: "Yopish",
+  },
   ru: {
     title: "Установить приложение",
     subtitle: "Открыть FBSU как приложение",
@@ -34,6 +46,8 @@ const PWA_TEXT: Record<string, { title: string; subtitle: string; install: strin
 function currentLocale(): string {
   if (typeof document === "undefined") return "uz";
   const lang = document.documentElement.lang;
+  if (lang === "uz-Cyrl") return "uz-cyrl";
+  if (lang === "uz-Latn") return "uz-new";
   return lang === "ru" || lang === "en" ? lang : "uz";
 }
 

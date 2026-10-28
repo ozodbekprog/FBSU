@@ -7,6 +7,8 @@ const SITE_NAME = "FBSU";
 
 const OG_LOCALES: Record<Locale, string> = {
   uz: "uz_UZ",
+  "uz-new": "uz_UZ",
+  "uz-cyrl": "uz_UZ",
   ru: "ru_RU",
   en: "en_US",
 };

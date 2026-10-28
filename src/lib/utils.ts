@@ -2,10 +2,12 @@ export function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-export type DateLocale = "uz" | "ru" | "en";
+export type DateLocale = "uz" | "uz-new" | "uz-cyrl" | "ru" | "en";
 
 const DAYS: Record<DateLocale, string[]> = {
   uz: ["Yakshanba", "Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba"],
+  "uz-new": ["Yakşanba", "Duşanba", "Seşanba", "Çorşanba", "Payşanba", "Juma", "Şanba"],
+  "uz-cyrl": ["Якшанба", "Душанба", "Сешанба", "Чоршанба", "Пайшанба", "Жума", "Шанба"],
   ru: ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"],
   en: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
 };
@@ -14,6 +16,14 @@ const MONTHS: Record<DateLocale, string[]> = {
   uz: [
     "yanvar", "fevral", "mart", "aprel", "may", "iyun",
     "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr",
+  ],
+  "uz-new": [
+    "yanvar", "fevral", "mart", "aprel", "may", "iyun",
+    "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr",
+  ],
+  "uz-cyrl": [
+    "январ", "феврал", "март", "апрел", "май", "июн",
+    "июл", "август", "сентябр", "октябр", "ноябр", "декабр",
   ],
   ru: [
     "января", "февраля", "марта", "апреля", "мая", "июня",

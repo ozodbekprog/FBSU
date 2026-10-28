@@ -3,6 +3,8 @@ import { currentLocale } from "@/lib/utils";
 
 const NO_DATA: Record<string, string> = {
   uz: "Ma'lumot yo'q",
+  "uz-new": "Ma'lumot yo'q",
+  "uz-cyrl": "Маълумот йўқ",
   ru: "Нет данных",
   en: "No data",
 };
