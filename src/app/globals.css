@@ -1056,3 +1056,13 @@ main#main-content > .student-dash {
 
 /* "Bahor" (light) rejim: aktiv punkt v2 uslubida — oq karta, navy matn.
    Gold chiziq va fon rangi v2 sidebar qoidalarida (.fb-sidebar) beriladi. */
+
+/* Telegram Mini App: WebView ichida sahifa butun ekran bo'ylab siljimaydi. */
+html[data-telegram="1"] {
+  overscroll-behavior-y: none;
+}
+
+html[data-telegram="1"] body {
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}

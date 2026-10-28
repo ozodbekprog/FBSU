@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Manrope, Sora } from "next/font/google";
 import { PwaRegister } from "@/components/pwa/PwaRegister";
+import { TelegramMiniApp } from "@/components/telegram/TelegramMiniApp";
 import { CsrfBootstrap } from "@/components/csrf/csrf-bootstrap";
 import { getDictionary, getLocale, htmlLang } from "@/i18n";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
@@ -91,6 +92,7 @@ export const viewport: Viewport = {
   // жест блокируется.
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover",
   themeColor: "#1d3460",
 };
 
@@ -134,6 +136,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         </LocaleProvider>
         <PwaRegister />
         <CsrfBootstrap />
+        <TelegramMiniApp />
       </body>
     </html>
   );

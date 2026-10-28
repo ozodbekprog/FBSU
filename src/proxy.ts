@@ -57,12 +57,14 @@ const CSRF_SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
  *
  * - `/api/csrf` only *mints* the token (GET).
  * - `/api/health` is a stateless liveness probe.
+ * - `/api/auth/telegram` is signed by Telegram (`initData` HMAC) and gains no
+ *   authority from cookies, so a cross-site request cannot forge it.
  * Everything else under `/api/` must present a valid double-submit token:
  * the auth endpoints (login, register, forgot, reset) included — the
  * login/register forms fetch `/api/csrf` first and apiFetch
  * (src/lib/api.ts, src/lib/csrf-client.ts) auto-injects the header.
  */
-const CSRF_EXEMPT_API = ["/api/csrf", "/api/health"];
+const CSRF_EXEMPT_API = ["/api/csrf", "/api/health", "/api/auth/telegram"];
 
 function csrfSecret(): Uint8Array | null {
   const secret = process.env.CSRF_SECRET || process.env.AUTH_SECRET;

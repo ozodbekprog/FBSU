@@ -26,6 +26,12 @@ const DAY_TITLES = ["Yakshanba", "Dushanba", "Seshanba", "Chorshanba", "Payshanb
 const SEPARATOR = "━━━━━━━━━━━━━━━━━━";
 
 const CODE_RE = /^\d{6}$/;
+const APP_URL = (process.env.FBSU_APP_URL ?? "https://fbsu.vercel.app").trim().replace(/\/+$/, "");
+const APP_BUTTON = {
+  reply_markup: {
+    inline_keyboard: [[{ text: "📱 FBSU'ni ochish", web_app: { url: APP_URL } }]],
+  },
+};
 
 try {
   if (typeof process.loadEnvFile === "function") {
@@ -106,8 +112,8 @@ async function callApi(method, payload) {
   return body.result;
 }
 
-async function sendMessage(chatId, text) {
-  await callApi("sendMessage", { chat_id: chatId, text });
+async function sendMessage(chatId, text, extra = {}) {
+  await callApi("sendMessage", { chat_id: chatId, text, ...extra });
 }
 
 export function slotTime(slot) {
@@ -468,6 +474,7 @@ function startReminderLoop() {
 const HELP_TEXT = [
   "📋 Buyruqlar:",
   "• /start — boshlash va tasdiqlash kodi haqida ma'lumot",
+  "• /app — FBSU'ni Telegram ichida ochish (mini ilova)",
   "• /jadval — bugungi darslar",
   "• /ertaga — ertangi darslar",
   "• /hafta — haftalik jadval (kun-kun)",
@@ -484,6 +491,7 @@ function startText(name) {
     "📚 Guruh jadvali, haftalik darslar va o'qituvchilar uchun davomat — hammasi shu yerda.",
     "",
     "Nimalar qila olaman:",
+    "• /app — FBSU'ni Telegram ichida ochish",
     "• /jadval — bugungi darslar",
     "• /ertaga — ertangi darslar",
     "• /hafta — haftalik jadval",
@@ -678,7 +686,15 @@ async function handleMessage(message) {
   const command = parseCommand(text);
 
   if (command === "start") {
-    await sendMessage(chatId, startText(message.from?.first_name ?? ""));
+    await sendMessage(chatId, startText(message.from?.first_name ?? ""), APP_BUTTON);
+    return;
+  }
+  if (command === "app") {
+    await sendMessage(
+      chatId,
+      "📱 FBSU mini ilovasi — jadval, baholar, davomat va imtihonlar bir joyda.",
+      APP_BUTTON,
+    );
     return;
   }
   if (command === "help") {

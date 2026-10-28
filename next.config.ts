@@ -10,7 +10,7 @@ const cspDirectives = [
   // ishlaydi — bu middleware/proxy orqali amalga oshirilishi mumkin, ammo
   // hozirgi vazifa doirasidan tashqarida (keyingi ish).
   // 'unsafe-eval' productionda kerak emas (React/Next ishlatmaydi).
-  `script-src 'self' 'unsafe-inline'${isProduction ? "" : " 'unsafe-eval'"}`,
+  `script-src 'self' 'unsafe-inline' https://telegram.org${isProduction ? "" : " 'unsafe-eval'"}`,
   // Inline `on*=` event handler'larni butunlay o'chiradi (XSS'da eng ko'p
   // uchraydigan vektor). React sintetik event'lari addEventListener orqali
   // ishlaydi, shuning uchun bu interfeysni buzmaydi.
