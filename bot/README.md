@@ -23,6 +23,9 @@ TELEGRAM_MINIAPP_BOT_TOKEN="<@ttpu_uz_bot tokeni>" node bot/setup-miniapp.mjs
 TELEGRAM_MINIAPP_BOT_TOKEN="..." node bot/setup-miniapp.mjs --check
 ```
 
+Standart holatda faqat menyu tugmasi va buyruqlar yangilanadi — bot nomi va
+tavsifi tegilmaydi. Ular ham kerak bo'lsa `--profile` qo'shing.
+
 ## 1. Bot token olish
 
 1. Telegramda **@BotFather** ga yozing.

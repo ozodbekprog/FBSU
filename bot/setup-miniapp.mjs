@@ -13,6 +13,7 @@ for (const file of [".env", ".env.local"]) {
 const token = (process.env.TELEGRAM_MINIAPP_BOT_TOKEN ?? "").trim();
 const appUrl = (process.env.FBSU_APP_URL ?? "https://fbsu.vercel.app").trim().replace(/\/+$/, "");
 const checkOnly = process.argv.includes("--check");
+const withProfile = process.argv.includes("--profile");
 
 if (!token) {
   console.error("Xato: TELEGRAM_MINIAPP_BOT_TOKEN topilmadi.");
@@ -62,18 +63,20 @@ async function main() {
     menu_button: { type: "web_app", text: "FBSU", web_app: { url: appUrl } },
   });
   await callApi("setMyCommands", { commands: COMMANDS });
-  await callApi("setMyName", { name: "FBSU LMS" });
-  await callApi("setMyDescription", {
-    description:
-      "FBSU LMS — jadval, baholar, davomat va imtihonlar Telegram ichida. Pastdagi FBSU tugmasi orqali mini ilovani oching.",
-  });
-  await callApi("setMyShortDescription", {
-    short_description: "FBSU jadval, baholar va davomat — Telegram ichida.",
-  });
+  if (withProfile) {
+    await callApi("setMyName", { name: "FBSU LMS" });
+    await callApi("setMyDescription", {
+      description:
+        "FBSU LMS — jadval, baholar, davomat va imtihonlar Telegram ichida. Pastdagi FBSU tugmasi orqali mini ilovani oching.",
+    });
+    await callApi("setMyShortDescription", {
+      short_description: "FBSU jadval, baholar va davomat — Telegram ichida.",
+    });
+  }
 
   console.log(`Menyu tugmasi: FBSU → ${appUrl}`);
   console.log(`Buyruqlar: ${COMMANDS.map((item) => `/${item.command}`).join(" ")}`);
-  console.log("Nom: FBSU LMS");
+  if (withProfile) console.log("Nom va tavsif ham yangilandi (--profile)");
 }
 
 main().catch((error) => {
