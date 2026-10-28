@@ -10,12 +10,13 @@ for (const file of [".env", ".env.local"]) {
   } catch {}
 }
 
-const token = (process.env.TELEGRAM_BOT_TOKEN ?? "").trim();
+const token = (process.env.TELEGRAM_MINIAPP_BOT_TOKEN ?? "").trim();
 const appUrl = (process.env.FBSU_APP_URL ?? "https://fbsu.vercel.app").trim().replace(/\/+$/, "");
 const checkOnly = process.argv.includes("--check");
 
 if (!token) {
-  console.error("Xato: TELEGRAM_BOT_TOKEN topilmadi (.env yoki .env.local).");
+  console.error("Xato: TELEGRAM_MINIAPP_BOT_TOKEN topilmadi.");
+  console.error("Bu @ttpu_uz_bot tokeni. OWNER bot tokenini bu yerga qo'ymang.");
   process.exit(1);
 }
 

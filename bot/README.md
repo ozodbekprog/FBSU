@@ -4,21 +4,23 @@ Mustaqil Node skript: long polling, tashqi kutubxonasiz (Node `fetch` + loyihada
 
 ## Mini ilova (Telegram Web App)
 
-Sayt Telegram ichida mini ilova sifatida ochiladi:
+Sayt Telegram ichida mini ilova sifatida **@ttpu_uz_bot** orqali ochiladi
+(OWNER bot — `@fbsu_owner_bot` — faqat owner vazifalari uchun qoladi).
 
 - Bot menyusidagi **FBSU** tugmasi va `/app` buyrug'i mini ilovani ochadi.
 - Telegram ichida ilova birinchi marta email/parol bilan kiriladi. Shundan keyin
   Telegram hisobi akkauntga bog'lanadi (`User.telegramId`) va keyingi ochilishlarda
   avtomatik kiriladi.
-- `initData` serverda bot tokeni bilan HMAC orqali tekshiriladi (`src/server/telegram-init-data.ts`,
-  `POST /api/auth/telegram`), 24 soatdan eski ma'lumot qabul qilinmaydi.
+- `initData` serverda mini ilova botining tokeni bilan HMAC orqali tekshiriladi
+  (`src/server/telegram-init-data.ts`, `POST /api/auth/telegram`), 24 soatdan eski
+  ma'lumot qabul qilinmaydi.
 - Manzil `FBSU_APP_URL` bilan beriladi (standart: `https://fbsu.vercel.app`).
 
 Bir marta sozlash (menyu tugmasi, nom, tavsif va buyruqlar):
 
 ```bash
-node bot/setup-miniapp.mjs
-node bot/setup-miniapp.mjs --check   # joriy holatni ko'rish
+TELEGRAM_MINIAPP_BOT_TOKEN="<@ttpu_uz_bot tokeni>" node bot/setup-miniapp.mjs
+TELEGRAM_MINIAPP_BOT_TOKEN="..." node bot/setup-miniapp.mjs --check
 ```
 
 ## 1. Bot token olish

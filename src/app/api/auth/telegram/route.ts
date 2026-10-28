@@ -18,9 +18,9 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: "Ma'lumot yuborilmadi" }, { status: 400 });
   }
 
-  const token = (process.env.TELEGRAM_BOT_TOKEN ?? "").trim();
+  const token = (process.env.TELEGRAM_MINIAPP_BOT_TOKEN ?? "").trim();
   if (!token) {
-    return Response.json({ ok: false, error: "Telegram sozlanmagan" }, { status: 503 });
+    return Response.json({ ok: false, error: "Telegram mini ilova sozlanmagan" }, { status: 503 });
   }
 
   const rateLimit = await checkRateLimit(`telegram-auth:${getClientIpFromHeaders(request.headers) ?? "local"}`, {
