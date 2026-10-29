@@ -7,12 +7,11 @@ import { prisma } from "@/lib/prisma";
 import { GPA_CREDITS, getStudentGpa } from "@/app/api/gpa/data";
 import { isValidFaceDescriptor } from "@/modules/attendance/face";
 import { CheckInForm } from "@/components/attendance/check-in-form";
-import { StudentPerformanceChart } from "@/components/dashboard/student-performance-chart";
+import { GradeTrendChart } from "@/components/charts/GradeTrendChart";
 import { getStudentAnalytics } from "@/app/(app)/dashboard/analytics";
 import { FbMotion } from "@/components/fb/fb-motion";
 import { getDictionary, t as translate, type Dictionary, type Locale } from "@/i18n";
 import { cn, dayName, fmtDate, monthName } from "@/lib/utils";
-import { asTashkent, tashkentNow } from "@/lib/tz";
 import { matchCourseSlug, slotRange } from "@/components/attendance/lesson-utils";
 
 const DAY_MS = 86_400_000;
@@ -81,7 +80,7 @@ export async function StudentHome({
   locale: Locale;
 }) {
   const dict = getDictionary(locale);
-  const now = tashkentNow();
+  const now = new Date();
   const todayDow = now.getDay() === 0 ? 7 : now.getDay();
   const nowMin = now.getHours() * 60 + now.getMinutes();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -181,11 +180,11 @@ export async function StudentHome({
     (assignment) => assignment.submissions.length === 0 && assignment.dueAt,
   );
   const overdueCount = pending.filter(
-    (assignment) => assignment.dueAt && asTashkent(new Date(assignment.dueAt)) < now,
+    (assignment) => assignment.dueAt && new Date(assignment.dueAt) < now,
   ).length;
   const soonCount = pending.filter((assignment) => {
     if (!assignment.dueAt) return false;
-    const due = asTashkent(new Date(assignment.dueAt));
+    const due = new Date(assignment.dueAt);
     return due >= now && due.getTime() - now.getTime() <= 7 * DAY_MS;
   }).length;
   const deadlineRows = pending.slice(0, 4);
@@ -271,14 +270,14 @@ export async function StudentHome({
   });
   for (const record of attendance) {
     const day = weekDays.find(
-      (item) => item.date.toDateString() === asTashkent(new Date(record.date)).toDateString(),
+      (item) => item.date.toDateString() === new Date(record.date).toDateString(),
     );
     if (day) day.count += 1;
   }
   for (const assignment of assignments) {
     for (const submission of assignment.submissions) {
       const day = weekDays.find(
-        (item) => item.date.toDateString() === asTashkent(new Date(submission.submittedAt)).toDateString(),
+        (item) => item.date.toDateString() === new Date(submission.submittedAt).toDateString(),
       );
       if (day) day.count += 1;
     }
@@ -296,50 +295,6 @@ export async function StudentHome({
   for (const status of ["SUSPICIOUS", "LEFT_EARLY"] as AttendanceStatus[]) {
     if ((statusCounts.get(status) ?? 0) > 0) legend.push(status);
   }
-
-  const perf = studentAnalytics.performance;
-  const assignmentSamples = perf.assignments.filter((value): value is number => value != null);
-  const assignmentAvg =
-    assignmentSamples.length > 0
-      ? Math.round(assignmentSamples.reduce((sum, value) => sum + value, 0) / assignmentSamples.length)
-      : null;
-  const quizSamples = perf.quizzes.filter((value): value is number => value != null);
-  const quizAvg =
-    quizSamples.length > 0
-      ? Math.round(quizSamples.reduce((sum, value) => sum + value, 0) / quizSamples.length)
-      : null;
-  const performanceSeries = [
-    {
-      key: "assignments",
-      label: dict.fbdKpiAssignments,
-      color: "#2b4b7e",
-      values:
-        assignmentSamples.length >= 2
-          ? perf.assignments
-          : perf.weeks.map(() => assignmentAvg),
-    },
-    {
-      key: "quizzes",
-      label: dict.grdQuizzes,
-      color: "#c9a227",
-      values: perf.weeks.map(() => quizAvg),
-      dashed: true,
-    },
-    {
-      key: "gpa",
-      label: dict.fbdKpiGpa,
-      color: "#7693cd",
-      values: perf.weeks.map(() => (gpa.gpa != null ? Math.round((gpa.gpa / 4) * 100) : null)),
-      dashed: true,
-    },
-    {
-      key: "attendance",
-      label: dict.fbdKpiAttendance,
-      color: "#8da0c2",
-      values: perf.weeks.map(() => studentAnalytics.attendanceRate),
-      dashed: true,
-    },
-  ].filter((series) => series.values.some((value) => value != null));
 
   const spark = sparkPath(gpa.courses.map((course) => course.percent));
   const creditTarget = enrollments.length * GPA_CREDITS;
@@ -740,11 +695,8 @@ export async function StudentHome({
               </div>
             </div>
             <div className="fb-chart-body">
-              {performanceSeries.length > 0 ? (
-                <StudentPerformanceChart
-                  labels={studentAnalytics.performance.weeks}
-                  series={performanceSeries}
-                />
+              {gradeTrend.length > 0 ? (
+                <GradeTrendChart data={gradeTrend} height={170} />
               ) : (
                 <p className="fb-chart-empty">{translate(locale, "dashGradeTrendEmpty")}</p>
               )}
@@ -928,7 +880,7 @@ export async function StudentHome({
               </b>
             </div>
             <div className="fb-checkin" data-tour="dash-checkin">
-              <CheckInForm faceEnrolled={faceEnrolled} />
+              <CheckInForm compact faceEnrolled={faceEnrolled} />
             </div>
           </section>
 
@@ -947,7 +899,7 @@ export async function StudentHome({
             ) : (
               <div className="fb-dls">
                 {deadlineRows.map((assignment) => {
-                  const due = assignment.dueAt ? asTashkent(new Date(assignment.dueAt)) : null;
+                  const due = assignment.dueAt ? new Date(assignment.dueAt) : null;
                   if (!due) return null;
                   const diff = Math.ceil(
                     (new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime() -

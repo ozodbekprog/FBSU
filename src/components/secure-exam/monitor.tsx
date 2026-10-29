@@ -435,7 +435,7 @@ export function ExamMonitor({ examId, readOnly = false }: { examId: string; read
               const labelKey = eventLabelKey(event.type);
               return (
                 <li key={event.id} className="flex items-center gap-3 px-5 py-2.5 text-sm">
-                  <span className="w-16 shrink-0 font-mono text-xs text-slate-400">
+                  <span className="w-16 shrink-0 font-mono text-xs text-slate-500">
                     {timeOf(event.at)}
                   </span>
                   <span className="w-36 shrink-0 truncate font-medium text-slate-700">

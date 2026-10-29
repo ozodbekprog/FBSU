@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
+import { hasCapability } from "@/modules/capabilities";
 
 const createSchema = z.object({
   groupId: z.string().trim().min(1),
@@ -20,7 +21,7 @@ function forbidden() {
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") return forbidden();
+  if (!hasCapability(user.role, "academic.manage")) return forbidden();
 
   const plans = await prisma.studyPlan.findMany({
     orderBy: { createdAt: "desc" },
@@ -50,7 +51,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") return forbidden();
+  if (!hasCapability(user.role, "academic.manage")) return forbidden();
 
   const csrfValid = await verifyCsrfFromRequest(request);
   if (!csrfValid) {
@@ -123,7 +124,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") return forbidden();
+  if (!hasCapability(user.role, "academic.manage")) return forbidden();
 
   const csrfValid = await verifyCsrfFromRequest(request);
   if (!csrfValid) {

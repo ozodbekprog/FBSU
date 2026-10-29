@@ -53,7 +53,12 @@ export function BarChart({ data, height = 190 }: { data: BarChartDatum[]; height
   const yFor = (value: number) => pad.top + innerHeight - (value / top) * innerHeight;
 
   return (
-    <svg viewBox={`0 0 ${WIDTH} ${height}`} className="h-auto w-full" role="img">
+    <svg
+      viewBox={`0 0 ${WIDTH} ${height}`}
+      className="h-auto w-full"
+      role="img"
+      aria-label={data.map((item) => `${item.label}: ${item.value}`).join("; ")}
+    >
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#5373b8" />

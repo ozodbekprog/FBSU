@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canManageCourse } from "@/components/courses/course-access";
 import { finalizeExpiredAttendanceSessions } from "@/modules/attendance/auto-close";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 
 const bulkSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Sana YYYY-MM-DD ko'rinishida bo'lishi kerak"),
@@ -145,9 +145,7 @@ export async function POST(
     ),
   );
 
-  await logAudit({
-    actorId: user.id,
-    action: "attendance.bulk",
+  await recordEvent(user.id, "attendance.bulk", {
     entity: "Attendance",
     entityId: course.id,
     meta: {
@@ -204,9 +202,7 @@ export async function DELETE(
     return Response.json({ ok: false, error: "Yozuv topilmadi" }, { status: 404 });
   }
 
-  await logAudit({
-    actorId: user.id,
-    action: "attendance.delete",
+  await recordEvent(user.id, "attendance.delete", {
     entity: "Attendance",
     entityId: course.id,
     meta: {

@@ -10,6 +10,7 @@ import { SECURE_EVENT_TYPES } from "./events";
 export const answerValueSchema = z.union([
   z.number().int().min(0),
   z.array(z.number().int().min(0)).max(20),
+  z.array(z.string().max(500)).max(20),
   z.string().max(5000),
 ]);
 
@@ -36,6 +37,7 @@ export const syncSchema = z.object({
   events: z.array(secureEventSchema).max(MAX_EVENTS_PER_SYNC).optional(),
   answers: answersSchema.optional(),
   submit: z.boolean().optional(),
+  face: z.object({ descriptor: z.array(z.number().finite()).max(256) }).optional(),
 });
 
 export const secureExamCreateSchema = z.object({

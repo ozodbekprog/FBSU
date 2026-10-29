@@ -428,7 +428,7 @@ const [qr, setQr] = useState<{ code: string; url: string } | null>(null);
                 </>
               ) : (
                 <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
-                  <span className="mx-auto inline-flex size-12 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm">
+                  <span className="mx-auto inline-flex size-12 items-center justify-center rounded-2xl bg-white text-slate-500 shadow-sm">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="3" y="11" width="18" height="10" rx="2" />
                       <path d="M7 11V7a5 5 0 0 1 10 0v4" />

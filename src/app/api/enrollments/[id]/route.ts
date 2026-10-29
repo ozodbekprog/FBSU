@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canManageCourse } from "@/components/courses/course-access";
 import { notifyUser } from "@/server/notify";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 
 const actionSchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -63,9 +63,7 @@ export async function POST(
         link,
       });
     } catch {}
-    await logAudit({
-      actorId: user.id,
-      action: "enrollment.approve",
+    await recordEvent(user.id, "enrollment.approve", {
       entity: "Enrollment",
       entityId: id,
       meta: { courseId: enrollment.courseId, studentId: enrollment.userId },
@@ -83,9 +81,7 @@ export async function POST(
       link,
     });
   } catch {}
-  await logAudit({
-    actorId: user.id,
-    action: "enrollment.reject",
+  await recordEvent(user.id, "enrollment.reject", {
     entity: "Enrollment",
     entityId: id,
     meta: { courseId: enrollment.courseId, studentId: enrollment.userId },

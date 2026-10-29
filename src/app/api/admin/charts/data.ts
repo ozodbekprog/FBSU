@@ -30,6 +30,7 @@ const ROLE_META: Record<Role, { label: string; color: string }> = {
   OWNER: { label: "Egasi", color: "#d4af37" },
   XODIM: { label: "Xodimlar", color: "#64748b" },
   OTA_ONA: { label: "Ota-onalar", color: "#0d9488" },
+  OWNER: { label: "Egasi", color: "#c9a227" },
   NAZORATCHI: { label: "Nazoratchilar", color: "#64748b" },
 };
 

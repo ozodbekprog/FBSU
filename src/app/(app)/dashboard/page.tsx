@@ -5,13 +5,13 @@ import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { Avatar, Badge, ButtonLink, Card, CardBody, CardHeader, EmptyState } from "@/components/ui";
 import { BarChart, DonutChart, LineChart } from "@/components/charts";
-import { cn, dayName, fmtDate } from "@/lib/utils";
-import { tashkentNow } from "@/lib/tz";
-import { getStudentAnalytics, getAdminAnalytics, getTeacherAnalytics } from "./analytics";
-import { StudentHome } from "@/components/fb/student-home";
+import { GradeTrendChart } from "@/components/charts/GradeTrendChart";
+import { cn, dayName, fmtDate, initials } from "@/lib/utils";
+import { getAdminAnalytics, getStudentAnalytics, getTeacherAnalytics } from "./analytics";
 import { salaryTotalsForMonth } from "@/lib/payroll";
-import type { AdminAnalytics, TeacherAnalytics } from "./analytics";
+import type { AdminAnalytics, StudentAnalytics, TeacherAnalytics } from "./analytics";
 import { getDictionary, getLocale, t as translate, type Locale } from "@/i18n";
+import { StudentHome } from "@/components/fb/student-home";
 import { LessonBanner } from "@/components/dashboard/lesson-banner";
 import { buildWorkloadData } from "@/components/workload/workload-data";
 import type { WorkloadCourse, WorkloadSummary } from "@/components/workload/workload-data";
@@ -22,8 +22,10 @@ import {
   dateFromIso,
   matchCourseSlug,
   normalizeTeacherName,
+  slotRange,
   todayIso,
 } from "@/components/attendance/lesson-utils";
+import { LessonCountdown } from "@/components/schedule/lesson-countdown";
 import type { CourseOption } from "@/components/attendance/lesson-utils";
 import type { ReactNode } from "react";
 
@@ -211,11 +213,10 @@ function Hero({
   locale: Locale;
 }) {
   return (
-    <section className="app-hero relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-950 via-brand-900 to-brand-700 p-6 text-white shadow-card md:p-8">
+    <section className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-950 via-brand-900 to-brand-700 p-6 text-white shadow-card md:p-8">
       <span className="pointer-events-none absolute -right-16 -top-24 size-64 rounded-full bg-gold-400/10 blur-2xl" />
       <span className="pointer-events-none absolute -bottom-28 left-1/3 size-72 rounded-full bg-brand-400/10 blur-3xl" />
       <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-      <span className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-gold-400/90 via-gold-300/30 to-transparent" />
       <div className="relative">
         <div className="flex flex-wrap items-center gap-4">
           <Avatar name={name} className="size-14! text-base ring-4 ring-white/10" />
@@ -392,6 +393,97 @@ function AnalyticsCard({
   );
 }
 
+function GradeTrendHero({ data, locale }: { data: StudentAnalytics; locale: Locale }) {
+  const values = data.gradeTrend.map((point) => point.value);
+  const average = values.length
+    ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
+    : null;
+  const last = values.length > 0 ? values[values.length - 1] : null;
+  const previous = values.length > 1 ? values[values.length - 2] : null;
+  const delta = last != null && previous != null ? last - previous : null;
+
+  return (
+    <Reveal delay={60}>
+      <Card className="flex flex-col overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 pb-3 pt-3.5 sm:px-5">
+          <div className="min-w-0">
+            <h3 className="text-base font-semibold tracking-tight text-brand-950">
+              {translate(locale, "dashGradeTrendTitle")}
+            </h3>
+            <p className="mt-0.5 text-xs text-slate-500">
+              {translate(locale, "dashGradeTrendSubtitle")}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {average != null ? (
+              <span className="inline-flex items-center gap-1.5 rounded-xl bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">
+                {translate(locale, "grdAverage")}
+                <span className="tabular-nums">{average}%</span>
+              </span>
+            ) : null}
+            {delta != null ? (
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-semibold tabular-nums",
+                  delta >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-600",
+                )}
+              >
+                {delta >= 0 ? "▲" : "▼"} {Math.abs(delta)}%
+              </span>
+            ) : null}
+          </div>
+        </div>
+        <div className="px-4 pb-3.5 pt-2.5 sm:px-5">
+          {data.gradeTrend.length === 0 ? (
+            <EmptyState
+              title={translate(locale, "dashNoDataTitle")}
+              description={translate(locale, "dashGradeTrendEmpty")}
+            />
+          ) : (
+            <GradeTrendChart data={data.gradeTrend} height={170} />
+          )}
+        </div>
+      </Card>
+    </Reveal>
+  );
+}
+
+function StudentAnalyticsSection({ data, locale }: { data: StudentAnalytics; locale: Locale }) {
+  return (
+    <section className="mt-6">
+      <SectionHeading
+        title={translate(locale, "dashAnalyticsTitle")}
+        subtitle={translate(locale, "dashStudentAnalyticsSubtitle")}
+        action={<Badge tone="blue">{translate(locale, "dashRecordsCount", { count: data.attendanceTotal })}</Badge>}
+      />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <AnalyticsCard
+          title={translate(locale, "dashAttendanceDistTitle")}
+          subtitle={translate(locale, "dashAttendanceDistSubtitle")}
+          note={translate(locale, "dashAttendanceDistNote")}
+          delay={60}
+          empty={data.attendanceTotal === 0}
+          emptyDescription={translate(locale, "dashAttendanceDistEmpty")}
+          locale={locale}
+        >
+          <DonutChart data={data.attendance} />
+        </AnalyticsCard>
+        <AnalyticsCard
+          title={translate(locale, "dashCourseAttendanceTitle")}
+          subtitle={translate(locale, "dashCourseAttendanceSubtitle")}
+          note={translate(locale, "dashCourseAttendanceNote")}
+          delay={120}
+          empty={data.courseAttendance.length === 0}
+          emptyDescription={translate(locale, "dashCourseAttendanceEmpty")}
+          locale={locale}
+        >
+          <BarChart data={data.courseAttendance} />
+        </AnalyticsCard>
+      </div>
+    </section>
+  );
+}
+
 function TeacherAnalyticsSection({ data, locale }: { data: TeacherAnalytics; locale: Locale }) {
   return (
     <section className="mt-6">
@@ -491,7 +583,7 @@ export default async function DashboardPage() {
   if (user.role === "OTA_ONA") redirect("/parent");
   const locale = await getLocale();
   const dict = getDictionary(locale);
-  const now = tashkentNow();
+  const now = new Date();
   const firstName = user.name.split(" ")[0];
   const roleLabel =
     user.role === "ADMIN"
@@ -539,7 +631,7 @@ export default async function DashboardPage() {
   }
 
   if (user.role === "BUXGALTER") {
-    const month = new Date(now.getFullYear(), now.getMonth(), 1);
+    const month = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
     const [records, totals, pending, staffCount] = await Promise.all([
       prisma.salaryRecord.findMany({
         where: { month },
@@ -1109,6 +1201,7 @@ export default async function DashboardPage() {
       </>
     );
   }
+
 
   return (
     <StudentHome

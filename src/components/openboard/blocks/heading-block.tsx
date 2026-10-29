@@ -51,7 +51,7 @@ export function HeadingBlockEditor({
         const text = event.clipboardData.getData("text/plain");
         document.execCommand("insertText", false, text);
       }}
-      className={`${LEVEL_STYLES[block.level]} focus:outline-none empty:before:block empty:before:content-[attr(data-placeholder)] empty:before:text-slate-400`}
+      className={`${LEVEL_STYLES[block.level]} focus:outline-none empty:before:block empty:before:content-[attr(data-placeholder)] empty:before:text-slate-500`}
     />
   );
 }

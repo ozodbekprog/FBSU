@@ -235,7 +235,7 @@ export function MessageBubble({ message, own, currentUserId, onReply, onEdit, on
         ) : null}
 
         {isDeleted ? (
-          <p className={cn("text-sm italic opacity-60", own ? "text-brand-200" : "text-slate-400")}>
+          <p className={cn("text-sm italic opacity-60", own ? "text-brand-200" : "text-slate-500")}>
             🚫 {t("msgDeletedMessage")}
           </p>
         ) : isVoice ? (

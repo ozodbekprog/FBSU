@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { Avatar, Badge, Card } from "@/components/ui";
+import { brandCoverGradient } from "@/lib/brand-cover";
 import { initials } from "@/lib/utils";
-import { courseCoverStyle } from "@/components/courses/cover-tone";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 
 export type CourseCardData = {
@@ -103,7 +103,7 @@ export function CourseCard({ course, staff = false }: { course: CourseCardData; 
       <Card className="relative flex h-full flex-col overflow-hidden transition-[transform,translate,box-shadow,border-color] duration-300 group-hover:-translate-y-1.5 group-hover:border-brand-200 group-hover:shadow-lift">
         <div
           className="relative h-24 shrink-0 overflow-hidden"
-          style={courseCoverStyle(course.coverColor)}
+          style={{ background: brandCoverGradient(course.coverColor) }}
         >
           <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_-10%,rgba(255,255,255,0.28),transparent_55%)]" />
           <span
@@ -155,7 +155,7 @@ export function CourseCard({ course, staff = false }: { course: CourseCardData; 
               {course.description}
             </p>
           ) : (
-            <p className="mt-3 min-h-10 text-sm leading-relaxed text-slate-400">
+            <p className="mt-3 min-h-10 text-sm leading-relaxed text-slate-500">
               {t("crsNoDescription")}
             </p>
           )}

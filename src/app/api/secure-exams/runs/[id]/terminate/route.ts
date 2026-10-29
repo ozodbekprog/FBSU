@@ -2,7 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { publicError } from "@/components/quiz/server";
 import { finalizeRun, findRunForStaff } from "@/server/secure-exam";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 
 export async function POST(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -30,9 +30,7 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
         });
         await finalizeRun(tx, id, "TERMINATED", now);
       });
-      await logAudit({
-        actorId: user.id,
-        action: "secure-exam.terminate",
+      await recordEvent(user.id, "secure-exam.terminate", {
         entity: "SecureExamRun",
         entityId: id,
         meta: { examId: run.examId, studentId: run.studentId },

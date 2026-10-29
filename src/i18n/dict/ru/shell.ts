@@ -19,6 +19,8 @@ export const shell = {
   navExams: "Экзамены",
   navGradesStaff: "Оценивание",
   navGradesStudent: "Оценки",
+  navGradebook: "Журнал оценок",
+  navMyGrades: "Мои оценки",
   navGpa: "GPA",
   navTranscript: "Транскрипт",
   navAttendance: "Посещаемость",
@@ -42,6 +44,7 @@ export const shell = {
   navAdmin: "Админ-панель",
 
   roleAdmin: "Администратор",
+  roleOwner: "Владелец",
   roleRector: "Ректор",
   roleProRector: "Проректор",
   roleStaff: "Сотрудник",
@@ -196,7 +199,7 @@ export const shell = {
   landFooterContact: "Контакты",
   landAddress: "Ташкент, Узбекистан",
   landWorkHours: "Понедельник — Суббота, 09:00 — 18:00",
-  landRights: "© 2026 Туринский политехнический университет. Все права защищены.",
+  landRights: "© 2026 Туринский политехнический университет. Все права защищены. Платформа разработана Xoshimov Group.",
   mappMetaTitle: "Мобильное приложение",
   mappMetaDescription:
     "Мобильное приложение FBSU для Android и iOS: установите сайт как приложение на телефон. Официальные версии для Google Play и App Store — скоро.",

@@ -531,7 +531,7 @@ export function MessageThread({
             <span className="text-sm font-semibold tabular-nums text-slate-700">
               {Math.floor(voiceRecorder.audioDuration / 60)}:{String(voiceRecorder.audioDuration % 60).padStart(2, "0")}
             </span>
-            <span className="min-w-0 flex-1 truncate text-[11px] text-slate-400">
+            <span className="min-w-0 flex-1 truncate text-[11px] text-slate-500">
               {t("msgRecordingCancel")}
             </span>
             <button

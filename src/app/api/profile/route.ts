@@ -63,9 +63,20 @@ export async function PATCH(request: Request) {
     }
 
     const passwordHash = await bcrypt.hash(parsed.data.newPassword, 12);
+    const preferences =
+      user.preferences && typeof user.preferences === "object" && !Array.isArray(user.preferences)
+        ? { ...(user.preferences as Record<string, unknown>) }
+        : {};
+    delete preferences.tempPassword;
+    delete preferences.tempPasswordUsed;
+    delete preferences.tempPasswordCreatedAt;
     const updated = await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash, sessionEpoch: { increment: 1 } },
+      data: {
+        passwordHash,
+        sessionEpoch: { increment: 1 },
+        preferences: preferences as Prisma.InputJsonValue,
+      },
       include: { group: true },
     });
     await createSession(updated);

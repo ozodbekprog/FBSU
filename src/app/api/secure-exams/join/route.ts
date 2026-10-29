@@ -10,7 +10,7 @@ import {
 import { toQuestionFull } from "@/components/quiz/shared";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { isValidExamCode, normalizeExamCode } from "@/modules/secure-exam/code";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 
 const joinSchema = z.object({
   code: z.string().trim().min(3, "Kodni kiriting").max(12),
@@ -148,9 +148,7 @@ export async function POST(request: Request) {
       return Response.json({ ok: false, error: "Urinishlar soni tugagan" }, { status: 409 });
     }
 
-    await logAudit({
-      actorId: user.id,
-      action: "secure-exam.join",
+    await recordEvent(user.id, "secure-exam.join", {
       entity: "SecureExamRun",
       entityId: result.id,
       meta: { examId: exam.id },

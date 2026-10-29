@@ -95,7 +95,7 @@ const DELETE_CLASS = "text-slate-600! hover:bg-rose-50! hover:text-rose-600!";
 const EXPORT_CLASS =
   "inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-600 shadow-sm transition-[background-color,border-color,color,box-shadow] duration-150 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900";
 const FILTER_CLASS =
-  "h-9 w-full appearance-none rounded-xl border border-slate-200 bg-white pl-9 pr-8 text-xs font-medium text-slate-700 shadow-sm transition focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10 disabled:bg-slate-50 disabled:text-slate-400";
+  "h-9 w-full appearance-none rounded-xl border border-slate-200 bg-white pl-9 pr-8 text-xs font-medium text-slate-700 shadow-sm transition focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10 disabled:bg-slate-50 disabled:text-slate-500";
 const FILTER_ICON_CLASS = "pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-slate-600";
 const CHEVRON_CLASS = "pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-slate-600";
 

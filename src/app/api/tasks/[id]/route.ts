@@ -1,18 +1,8 @@
 import { z } from "zod";
-import type { Role } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
+import { hasCapability } from "@/modules/capabilities";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
-
-const MANAGER_ROLES: Role[] = [
-  "ADMIN",
-  "REKTOR",
-  "PRO_RECTOR",
-  "DEKAN",
-  "KAFEDRA_MUDIRI",
-  "REGISTRAR",
-  "TYUTOR",
-];
 
 const dueAtSchema = z
   .string()
@@ -46,7 +36,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   if (!task) return Response.json({ ok: false, error: "Topshiriq topilmadi" }, { status: 404 });
 
   const body: unknown = await request.json().catch(() => null);
-  const isManager = MANAGER_ROLES.includes(user.role);
+  const isManager = hasCapability(user.role, "tasks.manage");
 
   const include = {
     assignedTo: { select: { id: true, name: true, email: true, role: true } },

@@ -20,6 +20,7 @@ export default async function DocumentsPage() {
 
   const [documents, staff, students] = await Promise.all([
     prisma.document.findMany({
+      where: { NOT: { meta: { path: ["fbsuOffice"], equals: true } } },
       orderBy: { createdAt: "desc" },
       take: 100,
       include: {

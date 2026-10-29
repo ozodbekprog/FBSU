@@ -19,6 +19,8 @@ export const shell = {
   navExams: "Exams",
   navGradesStaff: "Grading",
   navGradesStudent: "My grades",
+  navGradebook: "Gradebook",
+  navMyGrades: "My grades",
   navGpa: "GPA",
   navTranscript: "Transcript",
   navAttendance: "Attendance",
@@ -42,6 +44,7 @@ export const shell = {
   navAdmin: "Admin panel",
 
   roleAdmin: "Administrator",
+  roleOwner: "Owner",
   roleRector: "Rector",
   roleProRector: "Vice-Rector",
   roleStaff: "Staff",
@@ -196,7 +199,7 @@ export const shell = {
   landFooterContact: "Contact",
   landAddress: "Tashkent, Uzbekistan",
   landWorkHours: "Monday — Saturday, 09:00 — 18:00",
-  landRights: "© 2026 Turin Polytechnic University. All rights reserved.",
+  landRights: "© 2026 Turin Polytechnic University. All rights reserved. Platform developed by Xoshimov Group.",
   mappMetaTitle: "Mobile app",
   mappMetaDescription:
     "FBSU mobile app for Android and iOS: install the site as an app on your phone. Official Google Play and App Store versions are coming soon.",

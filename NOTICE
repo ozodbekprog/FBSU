@@ -1,0 +1,40 @@
+# NOTICE / OGOHLANTIRISH
+
+**Sana / Date:** 2026-10-28
+
+## Egalik (qat'iy belgilangan)
+
+- **Dastur:** FBSU LMS (universitet boshqaruv tizimi)
+- **Ishlab chiqaruvchi:** **Xoshimov Group**
+- **Muallif va intellektual mulk egasi:** **OZODBEK XOSHIMOV XUSANOVICH**
+- **Huquqiy asos:** O'zbekiston Respublikasining mualliflik huquqi to'g'risidagi qonunchiligi;
+  manba kodi, arxitektura va hujjatlar muallifning shaxsiy intellektual mulki.
+
+Ushbu loyiha (kod, arxitektura, ma'lumotlar bazasi sxemasi, dizayn, hujjatlar) **Xoshimov
+Group** tomonidan ishlab chiqilgan va mualliflik huquqi **Ozodbek Xoshimov Xusanovichga**
+tegishli. Boshqa shaxs yoki tashkilotning egalik da'volari asossiz hisoblanadi.
+
+## Foydalanish
+
+- Tizim universitetga **litsenziya** asosida joriy etilgan; litsenziya kod egaligini
+  o'tkazmaydi.
+- Talaba va xodimlar ma'lumotlari, shu jumladan biometrik ma'lumotlar universitetning
+  mulki bo'lib qoladi.
+- Kodni nusxalash, tarqatish, sotish, sub-litsenziyalash yoki manba kodini oshkor qilish
+  faqat Xoshimov Groupning yozma ruxsati bilan.
+- Savdo, litsenziya va hamkorlik bo'yicha murojaatlar faqat egasiga.
+
+## Texnik eslatma
+
+Loyihadagi `OWNER` akkaunt va uni himoya qiluvchi mexanizm (PostgreSQL trigger
+`protect_owner_user_trigger`, audit jurnali) loyiha arxitekturasining ajralmas qismidir:
+ularni olib tashlash, chetlab o'tish yoki o'zgartirish taqiqlanadi.
+
+## English
+
+This project (TTPU / FBSU LMS) was developed by **Xoshimov Group** and is the exclusive
+intellectual property of **Ozodbek Xoshimov Xusanovich**. The deploying university holds
+only a license for internal use and owns its own student and staff data, including
+biometrics. Copying, redistribution, sublicensing, sale or disclosure of the source code
+requires prior written permission from the owner. For sales, licensing or any other terms
+of use, contact the owner only.

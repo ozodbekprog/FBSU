@@ -29,6 +29,7 @@ const PUBLIC_PATHS = new Set([
   "/verify",
   "/apply",
   "/app",
+  "/versions",
 ]);
 
 /** Public prefixes: framework internals, API routes, uploaded files. */

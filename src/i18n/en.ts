@@ -1,5 +1,6 @@
 import type { Dictionary } from "./uz";
 import { shell } from "./dict/en/shell";
+import { fb } from "./dict/en/fb";
 import { dash } from "./dict/en/dash";
 import { crs } from "./dict/en/crs";
 import { sch } from "./dict/en/sch";
@@ -26,6 +27,8 @@ import { res } from "./dict/en/res";
 import { ob } from "./dict/en/ob";
 import { sec } from "./dict/en/sec";
 import { fb } from "./dict/en/fb";
+import { ofs } from "./dict/en/ofs";
+import { ver } from "./dict/en/ver";
 
 export const en: Dictionary = {
   commonSave: "Save",
@@ -184,6 +187,8 @@ export const en: Dictionary = {
   ...vid,
   ...res,
   ...ob,
-  ...sec,
   ...fb,
+  ...sec,
+  ...ofs,
+  ...ver,
 };

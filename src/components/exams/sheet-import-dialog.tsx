@@ -205,7 +205,7 @@ export function SheetImportDialog({ sessionId }: { sessionId: string }) {
                           "rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors",
                           mode === m
                             ? "bg-white text-brand-900 shadow-sm dark:bg-slate-700 dark:text-slate-100"
-                            : "text-slate-600 hover:text-slate-900 dark:text-slate-400",
+                            : "text-slate-600 hover:text-slate-900 dark:text-slate-500",
                         )}
                       >
                         {m === "text" ? t("grdExImportModeText") : t("grdExImportModeAi")}
@@ -256,7 +256,7 @@ export function SheetImportDialog({ sessionId }: { sessionId: string }) {
                               <span className="shrink-0 text-xs text-slate-500">{row.seat}</span>
                             ) : null}
                             {row.alreadyAdded ? (
-                              <span className="shrink-0 text-[11px] text-slate-400">{t("grdExImportAlready")}</span>
+                              <span className="shrink-0 text-[11px] text-slate-500">{t("grdExImportAlready")}</span>
                             ) : null}
                           </li>
                         ))}

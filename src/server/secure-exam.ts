@@ -5,7 +5,11 @@ import { asAnswers, autoScore, toQuestionFull } from "@/components/quiz/shared";
 import { EXAM_CODE_MAX_RETRIES } from "@/modules/secure-exam/config";
 import { generateExamCode, isValidExamCode, normalizeExamCode } from "@/modules/secure-exam/code";
 import { isEnrolled } from "@/components/quiz/server";
+import { hasCapability } from "@/modules/capabilities";
+import { EVENT_LABEL_KEY } from "@/components/secure-exam/labels";
+import { uz } from "@/i18n/uz";
 import { effectiveDeadline, remainingSeconds } from "@/modules/secure-exam/policy";
+import type { SecureEventType } from "@/modules/secure-exam/events";
 import type { LimitAction, RunState, RunStatus } from "@/modules/secure-exam/types";
 
 export type Db = Prisma.TransactionClient | PrismaClient;
@@ -23,8 +27,8 @@ export function canManageSecureExam(
   exam: { createdById: string; courseTeacherId: string },
   user: { id: string; role: Role },
 ): boolean {
+  if (!hasCapability(user.role, "exams.manage")) return false;
   if (user.role === "ADMIN") return true;
-  if (user.role !== "TEACHER") return false;
   return exam.createdById === user.id || exam.courseTeacherId === user.id;
 }
 
@@ -68,6 +72,7 @@ export function buildRunState(input: {
   sittingEndsAt: Date;
   extraMin: number;
   now: Date;
+  face?: RunState["face"];
 }): RunState {
   const deadline = effectiveDeadline({
     startedAt: input.startedAt,
@@ -85,7 +90,15 @@ export function buildRunState(input: {
     endsAt: deadline ? deadline.toISOString() : null,
     serverNow: input.now.toISOString(),
     timeLeftSec: finished ? 0 : remainingSeconds(deadline, input.now),
+    face: input.face,
   };
+}
+
+export function secureEventLabel(type: string): string {
+  if (type in EVENT_LABEL_KEY) {
+    return uz[EVENT_LABEL_KEY[type as SecureEventType]];
+  }
+  return type;
 }
 
 export async function findRunForStaff(runId: string, user: { id: string; role: Role }) {

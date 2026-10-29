@@ -7,6 +7,7 @@ import { fmtDateTime } from "@/lib/utils";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getDictionary, getLocale, type Dictionary } from "@/i18n";
+import { isOfficeMeta } from "@/lib/office";
 import { PrintButton } from "@/components/documents/document-board";
 
 const PRINT_STYLES = `
@@ -70,7 +71,7 @@ function roleTitle(role: Role, dict: Dictionary): string {
 function MetaItem({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
       <p className="mt-1 text-sm text-slate-700">{value}</p>
     </div>
   );
@@ -94,6 +95,7 @@ export default async function DocumentDetailPage({
     },
   });
   if (!document) notFound();
+  if (isOfficeMeta(document.meta)) redirect(`/office/${document.id}`);
 
   const locale = await getLocale();
   const dict = getDictionary(locale);
@@ -181,7 +183,7 @@ export default async function DocumentDetailPage({
                     {roleTitle(signedUser.role, dict)}
                   </p>
                   {document.signedAt ? (
-                    <p className="mt-1 text-xs text-slate-400">{fmtDateTime(document.signedAt)}</p>
+                    <p className="mt-1 text-xs text-slate-500">{fmtDateTime(document.signedAt)}</p>
                   ) : null}
                 </div>
               </div>
@@ -203,7 +205,7 @@ export default async function DocumentDetailPage({
             <p className="mt-5 whitespace-pre-wrap text-sm leading-7 text-slate-800">
               {document.body}
             </p>
-            <p className="mt-10 border-t border-dashed border-slate-200 pt-4 text-xs text-slate-400">
+            <p className="mt-10 border-t border-dashed border-slate-200 pt-4 text-xs text-slate-500">
               {dict[STATUS_LABELS[document.status]]}
             </p>
           </div>

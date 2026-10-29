@@ -89,7 +89,7 @@ export default async function VerifyDiplomaPage({
                 ))}
               </dl>
 
-              <p className="mt-5 text-center font-mono text-[11px] tracking-wide text-slate-400">
+              <p className="mt-5 text-center font-mono text-[11px] tracking-wide text-slate-500">
                 {diploma.verifyCode}
               </p>
             </div>

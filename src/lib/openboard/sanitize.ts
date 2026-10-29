@@ -25,9 +25,16 @@ const ALLOWED_TAGS = [
   "a",
 ];
 
-export function sanitizeHtml(raw: string): string {
-  return sanitize(raw, {
+const UNSAFE_CSS = /(expression\s*\(|javascript:|vbscript:|@import|behavior\s*:|-moz-binding)/gi;
+
+export function sanitizeHtml(raw: string, options?: { allowStyle?: boolean }): string {
+  const allowStyle = options?.allowStyle === true;
+  const clean = sanitize(raw, {
     allowedTags: [...ALLOWED_TAGS],
-    allowedAttributes: { a: ["href"] },
+    allowedAttributes: { a: ["href"], ...(allowStyle ? { "*": ["style"] } : {}) },
+    allowedSchemes: ["http", "https", "mailto", "tel"],
+    disallowedTagsMode: "discard",
   });
+  if (!allowStyle) return clean;
+  return clean.replace(/style="([^"]*)"/gi, (_match, css: string) => `style="${css.replace(UNSAFE_CSS, "")}"`);
 }

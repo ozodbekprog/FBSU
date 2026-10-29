@@ -113,7 +113,7 @@ type Dict = {
   saveError: string; amountError: string; payCancel: string; editShort: string; payDelete: string; deleteHint: string;
   roleBuxgalter: string; roleXodim: string; roleTyutor: string;
   roleHead: string; roleDean: string; roleProRector: string; roleRector: string;
-  roleAdmin: string; roleRegistrar: string; roleTeacher: string;
+  roleAdmin: string; roleOwner: string; roleRegistrar: string; roleTeacher: string;
   roleStudent: string; roleParent: string; roleNazoratchi: string;
 };
 
@@ -175,7 +175,7 @@ export default function PayrollBoard({
       PRO_RECTOR: d.roleProRector,
       REKTOR: d.roleRector,
       ADMIN: d.roleAdmin,
-      OWNER: d.roleAdmin,
+      OWNER: d.roleOwner,
       REGISTRAR: d.roleRegistrar,
       TEACHER: d.roleTeacher,
       STUDENT: d.roleStudent,

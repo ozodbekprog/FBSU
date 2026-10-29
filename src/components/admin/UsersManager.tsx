@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Role } from "@prisma/client";
 import {
   Avatar,
   Badge,
   Button,
+  ButtonLink,
   Card,
   CardBody,
   CardHeader,
@@ -64,24 +66,20 @@ const ROLE_META: Record<
   { label: keyof Dictionary; tone: "brand" | "purple" | "slate" | "blue" | "green" | "gold"; dot: string; ring: string }
 > = {
   ADMIN: { label: "admRoleAdmin", tone: "brand", dot: "bg-brand-500", ring: "ring-brand-200/80" },
-  OWNER: { label: "admRoleAdmin", tone: "gold", dot: "bg-gold-500", ring: "ring-gold-300/60" },
+  OWNER: { label: "roleOwner", tone: "gold", dot: "bg-gold-500", ring: "ring-gold-300/60" },
   REKTOR: { label: "admRoleRector", tone: "gold", dot: "bg-gold-500", ring: "ring-gold-300/60" },
   PRO_RECTOR: { label: "admRoleProRector", tone: "gold", dot: "bg-gold-400", ring: "ring-gold-300/60" },
-  DEKAN: { label: "admRoleDean", tone: "brand", dot: "bg-brand-400", ring: "ring-brand-200/80" },
-  KAFEDRA_MUDIRI: { label: "admRoleHead", tone: "blue", dot: "bg-brand-500", ring: "ring-brand-200/80" },
-  REGISTRAR: { label: "admRoleRegistrar", tone: "brand", dot: "bg-gold-400", ring: "ring-gold-300/60" },
-  BUXGALTER: { label: "payRoleBuxgalter", tone: "gold", dot: "bg-gold-600", ring: "ring-gold-300/60" },
-  TYUTOR: { label: "admRoleTutor", tone: "blue", dot: "bg-brand-400", ring: "ring-brand-200/80" },
-  TEACHER: { label: "admRoleTeacher", tone: "blue", dot: "bg-brand-500", ring: "ring-brand-200/80" },
+  DEKAN: { label: "admRoleDean", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
+  KAFEDRA_MUDIRI: { label: "admRoleHead", tone: "blue", dot: "bg-sky-500", ring: "ring-sky-200/80" },
+  REGISTRAR: { label: "admRoleRegistrar", tone: "brand", dot: "bg-sky-500", ring: "ring-sky-200/80" },
+  BUXGALTER: { label: "payRoleBuxgalter", tone: "gold", dot: "bg-amber-600", ring: "ring-amber-200/80" },
+  TYUTOR: { label: "admRoleTutor", tone: "green", dot: "bg-emerald-500", ring: "ring-emerald-200/80" },
+  TEACHER: { label: "admRoleTeacher", tone: "purple", dot: "bg-purple-500", ring: "ring-purple-200/80" },
   STUDENT: { label: "admRoleStudent", tone: "slate", dot: "bg-slate-400", ring: "ring-slate-200" },
   XODIM: { label: "admRoleStaff", tone: "slate", dot: "bg-slate-500", ring: "ring-slate-200" },
-  OTA_ONA: { label: "admRoleParent", tone: "blue", dot: "bg-brand-400", ring: "ring-brand-200/80" },
+  OTA_ONA: { label: "admRoleParent", tone: "green", dot: "bg-teal-500", ring: "ring-teal-200/80" },
   NAZORATCHI: { label: "admRoleNazoratchi", tone: "slate", dot: "bg-slate-600", ring: "ring-slate-300/80" },
 };
-
-function roleMeta(role: Role) {
-  return ROLE_META[role] ?? ROLE_META.STUDENT;
-}
 
 export default function UsersManager({
   users,
@@ -425,18 +423,23 @@ export default function UsersManager({
                     <div className="flex items-center gap-3">
                       <Avatar name={user.name} className="size-9 text-[11px] ring-1 ring-slate-900/10" />
                       <div className="min-w-0">
-                        <span className="block truncate font-medium text-slate-900">{user.name}</span>
+                        <Link
+                          href={`/admin/users/${user.id}`}
+                          className="block truncate font-medium text-slate-900 transition-colors hover:text-brand-700"
+                        >
+                          {user.name}
+                        </Link>
                         <span className="block truncate text-xs text-slate-500">{user.email}</span>
                       </div>
                     </div>
                   </td>
                   <td className="px-5 py-3">
                     <Badge
-                      tone={roleMeta(user.role).tone}
-                      className={cn("gap-1.5 ring-1 ring-inset", roleMeta(user.role).ring)}
+                      tone={ROLE_META[user.role].tone}
+                      className={cn("gap-1.5 ring-1 ring-inset", ROLE_META[user.role].ring)}
                     >
-                      <span className={cn("size-1.5 rounded-full", roleMeta(user.role).dot)} />
-                      {t(roleMeta(user.role).label)}
+                      <span className={cn("size-1.5 rounded-full", ROLE_META[user.role].dot)} />
+                      {t(ROLE_META[user.role].label)}
                     </Badge>
                   </td>
                   <td className="px-5 py-3 text-slate-600">{user.group?.name ?? "—"}</td>
@@ -446,6 +449,9 @@ export default function UsersManager({
                   <td className="px-5 py-3 text-xs text-slate-500">{fmtDate(user.createdAt)}</td>
                   <td className="px-5 py-3">
                     <div className="flex items-center justify-end gap-1.5">
+                      <ButtonLink href={`/admin/users/${user.id}`} size="sm" variant="secondary">
+                        Ko'rish
+                      </ButtonLink>
                       <Button size="sm" variant="secondary" onClick={() => openEdit(user)}>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M12 20h9" />

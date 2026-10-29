@@ -1,4 +1,5 @@
 import { shell } from "./dict/uz/shell";
+import { fb } from "./dict/uz/fb";
 import { dash } from "./dict/uz/dash";
 import { crs } from "./dict/uz/crs";
 import { sch } from "./dict/uz/sch";
@@ -25,6 +26,8 @@ import { res } from "./dict/uz/res";
 import { ob } from "./dict/uz/ob";
 import { sec } from "./dict/uz/sec";
 import { fb } from "./dict/uz/fb";
+import { ofs } from "./dict/uz/ofs";
+import { ver } from "./dict/uz/ver";
 
 export const uz = {
   commonSave: "Saqlash",
@@ -183,8 +186,10 @@ export const uz = {
   ...vid,
   ...res,
   ...ob,
-  ...sec,
   ...fb,
+  ...sec,
+  ...ofs,
+  ...ver,
 };
 
 export type Dictionary = typeof uz;

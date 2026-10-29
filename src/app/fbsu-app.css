@@ -29,7 +29,7 @@
   min-height: 100vh;
   background: var(--fb-bg);
   color: var(--fb-ink);
-  font-family: var(--font-manrope), -apple-system, BlinkMacSystemFont, "SF Pro Display",
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "SF Pro Display",
     "Segoe UI", sans-serif;
   letter-spacing: -0.012em;
 }
@@ -461,11 +461,13 @@ body:has(.fb-shell [data-nav-shell][data-collapsed="true"]) {
   align-items: center;
   gap: 12px;
   padding: 0 28px;
-  background: var(--fb-card);
+  background: var(--fb-top);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
   border-bottom: 1px solid var(--fb-line);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .fb-topbar {
     display: flex;
   }

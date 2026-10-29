@@ -1,5 +1,9 @@
 # FBSU
 
+> **Egalik:** FBSU LMS **Xoshimov Group** tomonidan ishlab chiqilgan.
+> Mualliflik huquqi (c) 2026 **Ozodbek Xoshimov Xusanovich**ga tegishli. Barcha huquqlar himoyalangan.
+> Litsenziya va savdo shartlari — [LICENSE](LICENSE). Litsenziyasiz foydalanish taqiqlanadi.
+
 Turin Politexnika Universiteti uchun kompakt o'quv boshqaruv tizimi.
 Moodle'ga alternativa: sodda, tez, mobil-qulay.
 
@@ -219,3 +223,37 @@ deploy/              # Caddyfile + systemd unitlar (VPS deploy)
 ## Ferma test 3
 
 Bu bolim avtomatik tekshiruv uchun qoshildi.
+
+## OWNER va xavfsizlik
+
+`OWNER` — tizimning eng yuqori roli (loyiha egasi), u oddiy admin amallari bilan
+o'chirilmaydi yoki pasaytirilmaydi. Bazada `protect_owner_user_trigger` triggeri
+`User` jadvalidagi OWNER qatorini himoyalaydi: parol, rol va `isActive` faqat
+`app.allow_owner_write = 'on'` bilan ishlaydigan recovery skript orqali o'zgaradi
+(`node scripts/owner-recovery.mjs`); har bir o'zgarish audit jurnaliga yoziladi.
+
+Holatni tekshirish:
+
+```bash
+node scripts/security-check.mjs   # owner / trigger / function: OK yoki FAIL (exit 1)
+```
+
+Cron (`POST /api/cron/run`) har ishga tushishda `ownerGuard` maydonini qaytaradi.
+
+## Yaxlitlik va avto-tiklash
+
+`src`, `prisma`, `scripts` va konfiguratsiya fayllarining sha256 manifesti imzolanadi
+(HMAC-SHA256), soatlik cron esa imzo va fayl hash'larini tekshiradi. Farq topilsa Telegram
+alert ketadi va `INTEGRITY_ARTIFACT_URL` berilgan bo'lsa faqat o'zgargan/yo'qolgan fayllar
+imzolangan `tar.gz` paketdan tiklanadi, keyin `INTEGRITY_RESTART_CMD` bajariladi. `extra`
+fayllar o'chirilmaydi. Imzo buzilgan bo'lsa — fail-closed (tiklash yo'q, exit 1).
+
+```bash
+OWNER_INTEGRITY_SECRET=... node scripts/manifest-build.mjs
+node scripts/integrity-heal.mjs --dry-run
+node scripts/integrity-heal.mjs --self-test
+```
+
+Batafsil: [`docs/spec/INTEGRITY-AUTOHEAL.md`](docs/spec/INTEGRITY-AUTOHEAL.md).
+
+Litsenziya va foydalanish shartlari — [`NOTICE`](NOTICE).

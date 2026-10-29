@@ -2,7 +2,7 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 
 const createSchema = z.object({
   name: z.string().trim().min(1).max(20),
@@ -87,9 +87,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   const created = await prisma.subGroup.create({ data: { groupId: id, name } });
   const actor = await getCurrentUser();
   if (actor) {
-    await logAudit({
-      actorId: actor.id,
-      action: "admin.subgroup.create",
+    await recordEvent(actor.id, "admin.subgroup.create", {
       entity: "SubGroup",
       entityId: created.id,
       meta: { name, groupId: id },

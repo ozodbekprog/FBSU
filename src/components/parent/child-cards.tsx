@@ -44,7 +44,7 @@ export function ChildCards({
                 <span
                   className={cn(
                     "text-xs font-normal",
-                    active ? "text-white/70" : "text-slate-400",
+                    active ? "text-white/70" : "text-slate-500",
                   )}
                 >
                   {link.student.group.name}

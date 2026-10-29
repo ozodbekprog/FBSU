@@ -24,12 +24,12 @@ export function DrawingBlockEditor({
           className="h-44 w-full rounded-xl border border-slate-200 bg-white object-contain"
         />
       ) : (
-        <div className="grid h-44 place-items-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 text-center text-sm text-slate-400">
+        <div className="grid h-44 place-items-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 text-center text-sm text-slate-500">
           {t("brdDrawEmpty")}
         </div>
       )}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-slate-400">{block.scene.length}</span>
+        <span className="text-xs text-slate-500">{block.scene.length}</span>
         <button
           type="button"
           onClick={() => setOpen(true)}

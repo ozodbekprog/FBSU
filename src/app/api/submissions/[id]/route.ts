@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canManageCourse } from "@/components/courses/course-access";
 import { notifyUser } from "@/server/notify";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 import { needsApproval } from "@/modules/grades/regrade";
 
 const gradeSchema = z.object({
@@ -82,9 +82,7 @@ export async function PATCH(
       },
     });
 
-    await logAudit({
-      actorId: user.id,
-      action: "submission.regrade_request",
+    await recordEvent(user.id, "submission.regrade_request", {
       entity: "GradeChangeRequest",
       entityId: changeRequest.id,
       meta: {
@@ -119,9 +117,7 @@ export async function PATCH(
     });
   } catch {}
 
-  await logAudit({
-    actorId: user.id,
-    action: "submission.grade",
+  await recordEvent(user.id, "submission.grade", {
     entity: "Submission",
     entityId: updated.id,
     meta: {

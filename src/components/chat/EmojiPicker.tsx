@@ -132,7 +132,7 @@ export function EmojiPicker({ open, onClose, onPick, anchorRef }: Props) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("msgSearchEmoji")}
             aria-label={t("msgSearchEmoji")}
-            className="w-full rounded-xl bg-slate-100 px-3 py-2 text-sm outline-none placeholder:text-slate-400"
+            className="w-full rounded-xl bg-slate-100 px-3 py-2 text-sm outline-none placeholder:text-slate-500"
           />
         </div>
 
@@ -153,7 +153,7 @@ export function EmojiPicker({ open, onClose, onPick, anchorRef }: Props) {
                 </button>
               ))
             ) : (
-              <p className="col-span-8 px-2 py-6 text-center text-sm text-slate-400">
+              <p className="col-span-8 px-2 py-6 text-center text-sm text-slate-500">
                 {t("msgNoSearchResults")}
               </p>
             )}

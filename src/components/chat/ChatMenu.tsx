@@ -49,11 +49,11 @@ function Row({
         danger ? "text-rose-600 hover:bg-rose-50" : "text-slate-700 hover:bg-slate-50",
       )}
     >
-      <span className={cn("shrink-0", danger ? "text-rose-500" : "text-slate-400")}>{icon}</span>
+      <span className={cn("shrink-0", danger ? "text-rose-500" : "text-slate-500")}>{icon}</span>
       <span className="min-w-0 flex-1 truncate font-medium">{label}</span>
       {sub}
       {chevron ? (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-slate-400" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-slate-500" aria-hidden="true">
           <path d="m9 18 6-6-6-6" />
         </svg>
       ) : null}
@@ -201,7 +201,7 @@ export function ChatMenu({
         {confirm ? (
           <div className="p-3">
             <p className="text-sm text-slate-700">{confirmBody.text}</p>
-            <p className="mt-1 truncate text-xs text-slate-400">{partnerName}</p>
+            <p className="mt-1 truncate text-xs text-slate-500">{partnerName}</p>
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"

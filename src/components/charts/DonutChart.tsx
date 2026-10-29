@@ -47,7 +47,15 @@ export function DonutChart({ data }: { data: DonutChartDatum[] }) {
 
   return (
     <div className="flex flex-col items-center gap-5 sm:flex-row sm:justify-center">
-      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="h-auto w-36 shrink-0 sm:w-40" role="img">
+      <svg
+        viewBox={`0 0 ${SIZE} ${SIZE}`}
+        className="h-auto w-36 shrink-0 sm:w-40"
+        role="img"
+        aria-label={data
+          .filter((item) => item.value > 0)
+          .map((item) => `${item.label}: ${item.value}`)
+          .join("; ")}
+      >
         <circle
           cx={CENTER}
           cy={CENTER}

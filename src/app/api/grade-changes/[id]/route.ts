@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { hasCapability } from "@/modules/capabilities";
 import { notifyUser } from "@/server/notify";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 
 const actionSchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -16,11 +17,7 @@ export async function POST(
   if (!user) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-  if (
-    user.role !== "ADMIN" &&
-    user.role !== "REGISTRAR" &&
-    user.role !== "REKTOR"
-  ) {
+  if (!hasCapability(user.role, "gradeChanges.review")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -97,9 +94,7 @@ export async function POST(
       });
     } catch {}
 
-    await logAudit({
-      actorId: user.id,
-      action: "grade_change.approve",
+    await recordEvent(user.id, "grade_change.approve", {
       entity: "GradeChangeRequest",
       entityId: id,
       meta: {
@@ -125,9 +120,7 @@ export async function POST(
     });
   } catch {}
 
-  await logAudit({
-    actorId: user.id,
-    action: "grade_change.reject",
+  await recordEvent(user.id, "grade_change.reject", {
     entity: "GradeChangeRequest",
     entityId: id,
     meta: {

@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
+import { brandCoverGradient } from "@/lib/brand-cover";
 import { prisma } from "@/lib/prisma";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { Avatar, Badge, ButtonLink } from "@/components/ui";
 import { CourseTabs } from "@/components/forum/course-tabs";
 import { getCourseAttendance } from "@/app/api/attendance/summary/data";
-import { courseCoverStyle } from "@/components/courses/cover-tone";
 
 export default async function CourseShellLayout({
   children,
@@ -48,7 +48,7 @@ export default async function CourseShellLayout({
       <section className="relative mb-6 overflow-hidden rounded-2xl border border-slate-200/70 shadow-card">
         <div
           className="relative px-6 py-7 text-white md:px-8 md:py-9"
-          style={courseCoverStyle(course.coverColor)}
+          style={{ background: brandCoverGradient(course.coverColor) }}
         >
           <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_-20%,rgba(255,255,255,0.18),transparent_48%)]" />
           <span className="pointer-events-none absolute -right-24 -top-28 size-72 rounded-full border border-white/10" />

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canManageEntry, initialApproval } from "./_helpers";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
+import { hasCapability } from "@/modules/capabilities";
 
 const createSchema = z.object({
   groupId: z.string().trim().min(1),
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
-  const privileged = user.role === "ADMIN" || user.role === "TEACHER" || user.role === "REGISTRAR";
+  const privileged = hasCapability(user.role, "schedule.manage");
   const raw = url.searchParams.get("groupId") ?? user.groupId ?? null;
   const parsed = z.string().trim().min(1).safeParse(raw);
   if (!parsed.success) {
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
   if (!user) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-  if (user.role !== "TEACHER" && user.role !== "ADMIN" && user.role !== "REGISTRAR") {
+  if (!hasCapability(user.role, "schedule.manage")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

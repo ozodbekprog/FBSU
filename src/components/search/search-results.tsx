@@ -9,7 +9,6 @@ import type { SearchResults } from "./search-data";
 
 const ROLE_KEY: Record<Role, keyof Dictionary> = {
   ADMIN: "mscSrchRoleAdmin",
-  OWNER: "mscSrchRoleAdmin",
   REKTOR: "mscSrchRoleRector",
   PRO_RECTOR: "mscSrchRoleProRector",
   DEKAN: "mscSrchRoleDean",
@@ -21,23 +20,24 @@ const ROLE_KEY: Record<Role, keyof Dictionary> = {
   STUDENT: "mscSrchRoleStudent",
   XODIM: "mscSrchRoleStaff",
   OTA_ONA: "mscSrchRoleParent",
+  OWNER: "roleOwner",
   NAZORATCHI: "roleNazoratchi",
 };
 
 const ROLE_TONES: Record<Role, string> = {
-  ADMIN: "gold",
-  OWNER: "gold",
+  ADMIN: "rose",
   REKTOR: "gold",
   PRO_RECTOR: "gold",
-  DEKAN: "brand",
+  DEKAN: "purple",
   KAFEDRA_MUDIRI: "blue",
   REGISTRAR: "brand",
   BUXGALTER: "gold",
-  TYUTOR: "blue",
+  TYUTOR: "green",
   TEACHER: "blue",
   STUDENT: "slate",
   XODIM: "slate",
-  OTA_ONA: "blue",
+  OTA_ONA: "green",
+  OWNER: "gold",
   NAZORATCHI: "slate",
 };
 
@@ -96,11 +96,10 @@ const CHEVRON_ICON = (
 
 const SECTION_TONES: Record<string, string> = {
   brand: "bg-brand-50 text-brand-700 ring-brand-100",
-  gold: "bg-gold-300/15 text-gold-800 ring-gold-300/40",
-  amber: "bg-gold-300/15 text-gold-800 ring-gold-300/40",
-  emerald: "bg-brand-50 text-brand-700 ring-brand-100",
-  purple: "bg-brand-50 text-brand-700 ring-brand-100",
-  blue: "bg-brand-100 text-brand-800 ring-brand-200",
+  amber: "bg-amber-50 text-amber-700 ring-amber-100",
+  emerald: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+  purple: "bg-purple-50 text-purple-700 ring-purple-100",
+  blue: "bg-blue-50 text-blue-700 ring-blue-100",
 };
 
 function plainText(value: string | null | undefined) {
@@ -254,27 +253,27 @@ export async function SearchResultsView({ query, data }: { query: string; data: 
       ) : null}
 
       {data.materials.length > 0 ? (
-        <SectionCard title={dictionary.mscSrchCatMaterials} count={data.materials.length} countLabel={translate(locale, "mscSrchResultCount", { count: data.materials.length })} icon={MATERIAL_ICON} tone="gold" badgeTone="gold" delay={60}>
+        <SectionCard title={dictionary.mscSrchCatMaterials} count={data.materials.length} countLabel={translate(locale, "mscSrchResultCount", { count: data.materials.length })} icon={MATERIAL_ICON} tone="amber" badgeTone="amber" delay={60}>
           {data.materials.map((material) => (
             <ResultRow
               key={material.id}
               href={`/courses/${material.course.slug}`}
-              icon={<IconTile className="bg-gold-300/15 text-gold-800 ring-1 ring-gold-300/40">{MATERIAL_ICON}</IconTile>}
+              icon={<IconTile className="bg-amber-50 text-amber-700 ring-1 ring-amber-100">{MATERIAL_ICON}</IconTile>}
               title={material.title}
               subtitle={material.content ? `${material.course.title} · ${truncate(plainText(material.content))}` : material.course.title}
-              badge={<Badge tone="gold">{dictionary[MATERIAL_TYPE_KEY[material.type]]}</Badge>}
+              badge={<Badge tone="amber">{dictionary[MATERIAL_TYPE_KEY[material.type]]}</Badge>}
             />
           ))}
         </SectionCard>
       ) : null}
 
       {data.assignments.length > 0 ? (
-        <SectionCard title={dictionary.mscSrchCatAssignments} count={data.assignments.length} countLabel={translate(locale, "mscSrchResultCount", { count: data.assignments.length })} icon={ASSIGNMENT_ICON} tone="brand" badgeTone="blue" delay={120}>
+        <SectionCard title={dictionary.mscSrchCatAssignments} count={data.assignments.length} countLabel={translate(locale, "mscSrchResultCount", { count: data.assignments.length })} icon={ASSIGNMENT_ICON} tone="emerald" badgeTone="green" delay={120}>
           {data.assignments.map((assignment) => (
             <ResultRow
               key={assignment.id}
               href={`/courses/${assignment.course.slug}/assignments/${assignment.id}`}
-              icon={<IconTile className="bg-brand-50 text-brand-700 ring-1 ring-brand-100">{ASSIGNMENT_ICON}</IconTile>}
+              icon={<IconTile className="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">{ASSIGNMENT_ICON}</IconTile>}
               title={assignment.title}
               subtitle={assignment.course.title}
               meta={assignment.dueAt ? translate(locale, "mscSrchDue", { date: fmtDate(assignment.dueAt) }) : null}
@@ -284,12 +283,12 @@ export async function SearchResultsView({ query, data }: { query: string; data: 
       ) : null}
 
       {data.quizzes.length > 0 ? (
-        <SectionCard title={dictionary.mscSrchCatQuizzes} count={data.quizzes.length} countLabel={translate(locale, "mscSrchResultCount", { count: data.quizzes.length })} icon={QUIZ_ICON} tone="blue" badgeTone="blue" delay={180}>
+        <SectionCard title={dictionary.mscSrchCatQuizzes} count={data.quizzes.length} countLabel={translate(locale, "mscSrchResultCount", { count: data.quizzes.length })} icon={QUIZ_ICON} tone="purple" badgeTone="purple" delay={180}>
           {data.quizzes.map((quiz) => (
             <ResultRow
               key={quiz.id}
               href={`/quizzes/${quiz.id}`}
-              icon={<IconTile className="bg-brand-100 text-brand-800 ring-1 ring-brand-200">{QUIZ_ICON}</IconTile>}
+              icon={<IconTile className="bg-purple-50 text-purple-700 ring-1 ring-purple-100">{QUIZ_ICON}</IconTile>}
               title={quiz.title}
               subtitle={quiz.course.title}
               meta={quiz.dueAt ? translate(locale, "mscSrchDue", { date: fmtDate(quiz.dueAt) }) : null}

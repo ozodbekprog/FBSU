@@ -9,16 +9,13 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
 import { getClientIp as getClientIpFromHeaders } from "@/lib/client-ip";
+import { hasCapability } from "@/modules/capabilities";
 
 const ROLES = ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR", "BUXGALTER", "TYUTOR", "TEACHER", "STUDENT", "XODIM", "OTA_ONA", "NAZORATCHI"] as const;
 
 const REGISTRAR_MANAGED_ROLES: readonly Role[] = ["STUDENT", "TEACHER"];
 
 const PAGE_SIZE = 50;
-
-function canManageUsers(role: Role) {
-  return role === "ADMIN" || role === "REGISTRAR";
-}
 
 const createSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -36,7 +33,7 @@ function getClientIp(request: Request) {
 export async function GET(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (!canManageUsers(user.role)) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (!hasCapability(user.role, "academic.manage")) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim();
@@ -51,7 +48,7 @@ export async function GET(request: Request) {
     } else {
       where.role = { in: [...REGISTRAR_MANAGED_ROLES] };
     }
-  } else if (role && (ROLES as readonly Role[]).includes(role as Role)) {
+  } else if (role && ROLES.includes(role as (typeof ROLES)[number])) {
     where.role = role as Role;
   }
 
@@ -82,7 +79,7 @@ export async function POST(request: Request) {
 
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (!canManageUsers(user.role)) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  if (!hasCapability(user.role, "academic.manage")) return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
 
   const limitKey = `admin:create_user:${getClientIp(request)}`;
   const rateLimit = await checkRateLimit(limitKey, {

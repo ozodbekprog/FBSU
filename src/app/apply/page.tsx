@@ -22,7 +22,7 @@ export default async function ApplyPage() {
           <p className="mt-1 text-sm text-slate-500">{dictionary.qblApplySubtitle}</p>
         </div>
         <ApplyForm programs={programs} />
-        <p className="mt-4 text-center text-xs text-slate-400">{dictionary.qblApplyContact}</p>
+        <p className="mt-4 text-center text-xs text-slate-500">{dictionary.qblApplyContact}</p>
       </div>
     </div>
   );

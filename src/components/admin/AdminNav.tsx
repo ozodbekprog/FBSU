@@ -235,10 +235,11 @@ export default function AdminNav({ role }: { role?: string }) {
       : role === "REKTOR"
         ? LINKS.filter((link) => link.href === "/admin/settings")
         : LINKS;
+  const visibleLinks = role === "OWNER" ? links : links.filter((link) => link.href !== "/admin/audit");
 
   return (
     <nav className="mb-6 flex w-fit max-w-full flex-wrap items-center gap-1 rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_14px_30px_-22px_rgba(29,52,96,0.25)] backdrop-blur">
-      {links.map((link) => {
+      {visibleLinks.map((link) => {
         const active = link.href === "/admin" ? pathname === "/admin" : pathname.startsWith(link.href);
         return (
           <Link

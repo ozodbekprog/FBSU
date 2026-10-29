@@ -121,7 +121,7 @@ export function LessonCountdown({
         "inline-flex items-center gap-1.5 text-[11px] font-medium",
         tone === "upcoming" && "text-brand-700",
         tone === "ongoing" && "text-emerald-700",
-        tone === "ended" && "text-slate-400",
+        tone === "ended" && "text-slate-500",
       )}
     >
       <span

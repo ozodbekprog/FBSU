@@ -193,7 +193,10 @@ export function SessionPresent({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-br from-brand-950 via-brand-900 to-slate-950 text-white">
       {toast ? (
-        <div className="fixed left-1/2 top-6 z-10 -translate-x-1/2 animate-pop-in rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white shadow-xl shadow-emerald-900/40">
+        <div
+          role="status"
+          className="fixed left-1/2 top-6 z-10 -translate-x-1/2 animate-pop-in rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white shadow-xl shadow-emerald-900/40"
+        >
           {toast}
         </div>
       ) : null}

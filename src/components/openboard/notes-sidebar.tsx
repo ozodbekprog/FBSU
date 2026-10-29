@@ -118,7 +118,7 @@ export function NotesSidebar({
                           <span className="truncate text-sm font-medium text-slate-800">
                             {note.title.trim() || t("brdUntitled")}
                           </span>
-                          <span className="shrink-0 text-[10px] text-slate-400">
+                          <span className="shrink-0 text-[10px] text-slate-500">
                             {Number.isNaN(date.getTime()) ? "" : formatter.format(date)}
                           </span>
                         </span>
@@ -134,7 +134,7 @@ export function NotesSidebar({
                       onClick={() => onDuplicate(note.id)}
                       aria-label={t("brdNoteDuplicate")}
                       title={t("brdNoteDuplicate")}
-                      className="inline-flex size-6 items-center justify-center rounded-md bg-white/90 text-slate-400 shadow-sm transition-colors hover:text-blue-600"
+                      className="inline-flex size-6 items-center justify-center rounded-md bg-white/90 text-slate-500 shadow-sm transition-colors hover:text-blue-600"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="9" y="9" width="12" height="12" rx="2" />
@@ -148,7 +148,7 @@ export function NotesSidebar({
                       }}
                       aria-label={t("brdNoteDelete")}
                       title={t("brdNoteDelete")}
-                      className="inline-flex size-6 items-center justify-center rounded-md bg-white/90 text-slate-400 shadow-sm transition-colors hover:text-rose-600"
+                      className="inline-flex size-6 items-center justify-center rounded-md bg-white/90 text-slate-500 shadow-sm transition-colors hover:text-rose-600"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M18 6 6 18M6 6l12 12" />

@@ -1,13 +1,17 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
+import { isEnrolled, publicError } from "@/components/quiz/server";
 import {
-  closeExpiredAttempt,
-  expiredAttemptDeadline,
-  isEnrolled,
-  publicError,
-} from "@/components/quiz/server";
+  decideStart,
+  isAttemptExpired,
+  type AttemptSummary,
+} from "@/modules/quiz/attempt-machine";
 import { attendanceCounts } from "@/app/api/attendance/summary/data";
 import { toQuestionFull, toQuestionPublic, type QuestionFull } from "@/components/quiz/shared";
+import { assertActivityOpen } from "@/modules/course-rules/server";
+import { isIpInSubnet } from "@/modules/quiz/access-rules";
+import { getClientIp } from "@/lib/client-ip";
 
 function hashSeed(value: string): number {
   let hash = 2166136261;
@@ -68,7 +72,8 @@ function orderedQuestions(
 }
 
 function shuffledOptions(question: QuestionFull, attemptId: string): QuestionFull {
-  if (question.type === "TEXT" || question.options.length < 2) return question;
+  if (question.type !== "SINGLE" && question.type !== "MULTIPLE") return question;
+  if (question.options.length < 2) return question;
   const order = shuffleWith(
     question.options.map((_, index) => index),
     randomFromSeed(hashSeed(`${attemptId}:${question.id}`)),
@@ -78,6 +83,7 @@ function shuffledOptions(question: QuestionFull, attemptId: string): QuestionFul
     ...question,
     options: order.map((original) => question.options[original]),
     correct: question.correct
+      .filter((original): original is number => typeof original === "number")
       .map((original) => positions.get(original))
       .filter((position): position is number => position !== undefined),
   };
@@ -107,7 +113,7 @@ function attemptPayload(
   };
 }
 
-export async function POST(_request: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   if (user.role !== "STUDENT") {
@@ -115,6 +121,12 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
   }
 
   const { id } = await ctx.params;
+  const body: unknown = await request.json().catch(() => null);
+  const providedPassword =
+    body !== null && typeof body === "object" && "password" in body && typeof body.password === "string"
+      ? body.password
+      : "";
+
   try {
     const quiz = await prisma.quiz.findUnique({
       where: { id },
@@ -127,21 +139,60 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
       return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
 
-    const questions = quiz.questions.map(toQuestionFull);
+    const gate = await assertActivityOpen("QUIZ", id);
+    if (!gate.ok) return Response.json({ ok: false, error: gate.error }, { status: 403 });
+
+    if (quiz.quizPassword) {
+      const passwordValid = await bcrypt.compare(providedPassword, quiz.quizPassword);
+      if (!passwordValid) {
+        return Response.json({ ok: false, error: "Parol noto'g'ri" }, { status: 403 });
+      }
+    }
+
+    if (quiz.ipSubnet) {
+      const clientIp = getClientIp(request.headers);
+      if (!clientIp || !isIpInSubnet(clientIp, quiz.ipSubnet)) {
+        return Response.json(
+          { ok: false, error: "Bu tarmoqdan kirish mumkin emas" },
+          { status: 403 },
+        );
+      }
+    }
 
     const result = await prisma.$transaction(async (tx) => {
-      const active = await tx.quizAttempt.findFirst({
-        where: { quizId: id, studentId: user.id, finishedAt: null },
-        orderBy: { startedAt: "desc" },
+      const now = new Date();
+      const attempts = await tx.quizAttempt.findMany({
+        where: { quizId: id, studentId: user.id },
+        orderBy: { startedAt: "asc" },
       });
 
-      if (active) {
-        const deadline = expiredAttemptDeadline(active.startedAt, quiz.timeLimitMin);
-        if (!deadline) return { kind: "active" as const, attempt: active };
-        await closeExpiredAttempt(tx, active.id, active.answers, questions, deadline);
+      const settled: AttemptSummary[] = [];
+      for (const attempt of attempts) {
+        if (isAttemptExpired(attempt, quiz.timeLimitMin, now)) {
+          const finishedAt = new Date(
+            attempt.startedAt.getTime() + (quiz.timeLimitMin ?? 0) * 60_000,
+          );
+          await tx.quizAttempt.update({ where: { id: attempt.id }, data: { finishedAt } });
+          settled.push({ id: attempt.id, startedAt: attempt.startedAt, finishedAt });
+        } else {
+          settled.push({
+            id: attempt.id,
+            startedAt: attempt.startedAt,
+            finishedAt: attempt.finishedAt,
+          });
+        }
       }
 
-      if (quiz.dueAt && quiz.dueAt.getTime() < Date.now()) {
+      const decision = decideStart(settled, quiz.maxAttempts);
+      if (decision.action === "resume") {
+        const active = settled.find((attempt) => attempt.id === decision.attemptId);
+        if (active) return { kind: "active" as const, attempt: active };
+      }
+      if (decision.action === "blocked") {
+        return { kind: "limit" as const };
+      }
+
+      if (quiz.dueAt && quiz.dueAt.getTime() < now.getTime()) {
         return { kind: "due" as const };
       }
 
@@ -151,11 +202,6 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
       });
       const attendance = attendanceCounts(attendanceRecords.map((record) => record.status));
       if (!attendance.eligible) return { kind: "attendance" as const };
-
-      const finishedCount = await tx.quizAttempt.count({
-        where: { quizId: id, studentId: user.id, finishedAt: { not: null } },
-      });
-      if (finishedCount >= quiz.maxAttempts) return { kind: "limit" as const };
 
       const attempt = await tx.quizAttempt.create({
         data: { quizId: id, studentId: user.id },

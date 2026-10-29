@@ -1,6 +1,8 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
+import { nextChainFields } from "@/server/audit-chain";
 
 export type AuditInput = {
   actorId?: string | null;
@@ -12,13 +14,35 @@ export type AuditInput = {
 
 export async function logAudit(input: AuditInput): Promise<void> {
   try {
+    const id = randomUUID();
+    const createdAt = new Date();
+    const actorId = input.actorId ?? null;
+    const entity = input.entity ?? null;
+    const entityId = input.entityId ?? null;
+    const meta = input.meta ?? null;
+    let chain: { prevHash: string | null; hash: string | null } = { prevHash: null, hash: null };
+    try {
+      chain = await nextChainFields(prisma, {
+        id,
+        actorId,
+        action: input.action,
+        entity,
+        entityId,
+        meta,
+        createdAt,
+      });
+    } catch {}
     await prisma.auditLog.create({
       data: {
-        actorId: input.actorId ?? null,
+        id,
+        actorId,
         action: input.action,
-        entity: input.entity ?? null,
-        entityId: input.entityId ?? null,
-        meta: input.meta,
+        entity,
+        entityId,
+        meta: meta === null ? undefined : meta,
+        createdAt,
+        prevHash: chain.prevHash,
+        hash: chain.hash,
       },
     });
   } catch {}

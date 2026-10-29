@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { notifyGroupStudents } from "@/server/notify";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 import { canApproveSchedule } from "../../_helpers";
 
 const STATUS_TITLES = {
@@ -47,9 +47,7 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
     });
   }
 
-  await logAudit({
-    actorId: user.id,
-    action: "schedule.approve",
+  await recordEvent(user.id, "schedule.approve", {
     entity: "ScheduleEntry",
     entityId: updated.id,
     meta: { subject: updated.subject, groupId: updated.groupId, status: updated.status },

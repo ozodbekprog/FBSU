@@ -4,14 +4,15 @@ import { publicError } from "@/components/quiz/server";
 import { isRunOnline } from "@/modules/secure-exam/policy";
 import { secureExamUpdateSchema } from "@/modules/secure-exam/schemas";
 import { canManageSecureExam, finalizeRun } from "@/server/secure-exam";
+import { hasCapability } from "@/modules/capabilities";
 import { effectiveDeadline } from "@/modules/secure-exam/policy";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 
 export async function GET(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   const isProctor = user.role === "NAZORATCHI";
-  if (user.role !== "TEACHER" && user.role !== "ADMIN" && !isProctor) {
+  if (!isProctor && !hasCapability(user.role, "exams.manage")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -125,7 +126,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (!hasCapability(user.role, "exams.manage")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -180,9 +181,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       });
     }
 
-    await logAudit({
-      actorId: user.id,
-      action: "secure-exam.status",
+    await recordEvent(user.id, "secure-exam.status", {
       entity: "SecureExam",
       entityId: id,
       meta: { status: parsed.data.status },
@@ -197,7 +196,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (!hasCapability(user.role, "exams.manage")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -228,9 +227,7 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
     }
 
     await prisma.secureExam.delete({ where: { id } });
-    await logAudit({
-      actorId: user.id,
-      action: "secure-exam.delete",
+    await recordEvent(user.id, "secure-exam.delete", {
       entity: "SecureExam",
       entityId: id,
     });

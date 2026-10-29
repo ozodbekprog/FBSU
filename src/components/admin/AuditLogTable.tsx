@@ -19,7 +19,7 @@ export type AuditLogItem = {
   actor: AuditActor;
 };
 
-export type AuditQuery = { action: string; date: string };
+export type AuditQuery = { action: string; date: string; category?: string; actor?: string };
 
 function formatMetaValue(value: unknown): string {
   if (value === null || value === undefined) return "—";
@@ -70,7 +70,9 @@ export default function AuditLogTable({
   function pageHref(target: number) {
     const params = new URLSearchParams();
     if (query.action) params.set("action", query.action);
+    if (query.category) params.set("category", query.category);
     if (query.date) params.set("date", query.date);
+    if (query.actor) params.set("actor", query.actor);
     if (target > 1) params.set("page", String(target));
     const qs = params.toString();
     return qs ? `/admin/audit?${qs}` : "/admin/audit";

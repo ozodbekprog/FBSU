@@ -1,13 +1,14 @@
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { buildWorkloadData } from "@/components/workload/workload-data";
+import { hasCapability } from "@/modules/capabilities";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
   if (!user) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-  if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+  if (!hasCapability(user.role, "analysis.view")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -22,9 +23,13 @@ export async function GET(request: Request) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
+  const isTeacher = user.role === "TEACHER";
+
   const data = await buildWorkloadData({
-    teacherId: user.role === "TEACHER" ? user.id : requested,
-    includeAllTeachers: user.role === "ADMIN",
+    teacherId: isTeacher ? user.id : requested,
+    includeAllTeachers: !isTeacher,
+    departmentId: user.role === "KAFEDRA_MUDIRI" ? (user.departmentId ?? "__none__") : null,
+    facultyId: user.role === "DEKAN" ? (user.facultyId ?? "__none__") : null,
   });
 
   if (requested && !data.teachers.some((teacher) => teacher.id === requested)) {

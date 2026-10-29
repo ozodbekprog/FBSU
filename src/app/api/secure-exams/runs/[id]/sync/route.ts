@@ -7,7 +7,11 @@ import { severityOf, warningWeight } from "@/modules/secure-exam/events";
 import { remapAnswersToOriginal } from "@/modules/secure-exam/order";
 import { effectiveDeadline, shouldTerminate } from "@/modules/secure-exam/policy";
 import { syncSchema } from "@/modules/secure-exam/schemas";
-import { buildRunState, finalizeRun } from "@/server/secure-exam";
+import { FACE_MISMATCH_COOLDOWN_MS } from "@/modules/secure-exam/config";
+import type { RunState } from "@/modules/secure-exam/types";
+import { checkFace } from "@/modules/attendance/face";
+import { buildRunState, finalizeRun, secureEventLabel } from "@/server/secure-exam";
+import { notifyUser } from "@/server/notify";
 
 export async function POST(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -32,12 +36,15 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
       include: {
         exam: {
           select: {
+            title: true,
+            createdById: true,
             maxWarnings: true,
             limitAction: true,
             endsAt: true,
             durationMin: true,
           },
         },
+        student: { select: { name: true, faceDescriptor: true } },
         attempt: {
           include: {
             quiz: {
@@ -64,6 +71,8 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
       options: Array.isArray(question.options) ? question.options : [],
     }));
 
+    let faceCheck: RunState["face"] | undefined;
+    const notifiedTypes: string[] = [];
     const outcome = await prisma.$transaction(async (tx) => {
       const current = await tx.secureExamRun.findUnique({ where: { id } });
       if (!current) return null;
@@ -135,6 +144,11 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
           (sum, event) => sum + warningWeight(severityOf(event.type), run.exam.maxWarnings),
           0,
         );
+        for (const event of events) {
+          if (severityOf(event.type) !== "INFO" && !notifiedTypes.includes(event.type)) {
+            notifiedTypes.push(event.type);
+          }
+        }
       }
 
       if (
@@ -150,6 +164,42 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
             data: { runId: id, type: "MULTI_MONITOR", severity: "CRITICAL" },
           });
           addedWarnings += warningWeight("CRITICAL", run.exam.maxWarnings);
+          if (!notifiedTypes.includes("MULTI_MONITOR")) notifiedTypes.push("MULTI_MONITOR");
+        }
+      }
+
+      if (parsed.data.face?.descriptor) {
+        const check = checkFace(run.student.faceDescriptor, parsed.data.face.descriptor);
+        faceCheck = { check };
+        if (check === "ok") {
+          const existingOk = await tx.secureExamEvent.count({
+            where: { runId: id, type: "FACE_OK" },
+          });
+          if (existingOk === 0) {
+            await tx.secureExamEvent.create({
+              data: { runId: id, type: "FACE_OK", severity: "INFO" },
+            });
+          }
+        } else if (check === "mismatch") {
+          const recent = await tx.secureExamEvent.count({
+            where: {
+              runId: id,
+              type: "FACE_MISMATCH",
+              at: { gte: new Date(now.getTime() - FACE_MISMATCH_COOLDOWN_MS) },
+            },
+          });
+          if (recent === 0) {
+            await tx.secureExamEvent.create({
+              data: {
+                runId: id,
+                type: "FACE_MISMATCH",
+                severity: "WARNING",
+                meta: { source: "sync" },
+              },
+            });
+            addedWarnings += warningWeight("WARNING", run.exam.maxWarnings);
+            if (!notifiedTypes.includes("FACE_MISMATCH")) notifiedTypes.push("FACE_MISMATCH");
+          }
         }
       }
 
@@ -180,6 +230,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
             meta: { reason: "warnings" },
           },
         });
+        if (!notifiedTypes.includes("TERMINATED")) notifiedTypes.push("TERMINATED");
         await finalizeRun(tx, id, "TERMINATED", now);
         return tx.secureExamRun.findUnique({ where: { id } });
       }
@@ -189,6 +240,14 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
 
     if (!outcome) {
       return Response.json({ ok: false, error: "Urinish topilmadi" }, { status: 404 });
+    }
+
+    if (notifiedTypes.length > 0) {
+      await notifyUser(run.exam.createdById, {
+        title: "Xavfsiz imtihon: nazorat hodisasi",
+        body: `${run.student.name} — ${run.exam.title}: ${notifiedTypes.map(secureEventLabel).join(", ")}`,
+        link: `/secure-exams/${run.examId}`,
+      });
     }
 
     const state = buildRunState({
@@ -202,6 +261,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
       sittingEndsAt: run.exam.endsAt,
       extraMin: outcome.extraMin,
       now,
+      face: faceCheck,
     });
 
     return Response.json({ ok: true, data: state });

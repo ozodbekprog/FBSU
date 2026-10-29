@@ -1,5 +1,6 @@
 import type { Dictionary } from "./uz";
 import { shell } from "./dict/ru/shell";
+import { fb } from "./dict/ru/fb";
 import { dash } from "./dict/ru/dash";
 import { crs } from "./dict/ru/crs";
 import { sch } from "./dict/ru/sch";
@@ -26,6 +27,8 @@ import { res } from "./dict/ru/res";
 import { ob } from "./dict/ru/ob";
 import { sec } from "./dict/ru/sec";
 import { fb } from "./dict/ru/fb";
+import { ofs } from "./dict/ru/ofs";
+import { ver } from "./dict/ru/ver";
 
 export const ru: Dictionary = {
   commonSave: "Сохранить",
@@ -184,6 +187,8 @@ export const ru: Dictionary = {
   ...vid,
   ...res,
   ...ob,
-  ...sec,
   ...fb,
+  ...sec,
+  ...ofs,
+  ...ver,
 };

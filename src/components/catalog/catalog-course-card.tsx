@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { brandCoverGradient } from "@/lib/brand-cover";
 import { cn, initials } from "@/lib/utils";
 import { Avatar, Badge, ButtonLink, Card, CardBody } from "@/components/ui";
 import { EnrollButton } from "@/components/catalog/enroll-button";
 import { useI18n } from "@/components/i18n/LocaleProvider";
-import { courseCoverStyle } from "@/components/courses/cover-tone";
 
 export type CatalogCourse = {
   id: string;
@@ -126,7 +126,7 @@ export function CatalogCourseCard({
     >
       <div
         className="relative isolate h-20 shrink-0 overflow-hidden"
-        style={courseCoverStyle(course.coverColor)}
+        style={{ background: brandCoverGradient(course.coverColor) }}
       >
         <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_-10%,rgba(255,255,255,0.28),transparent_55%)]" />
         <span
@@ -184,7 +184,7 @@ export function CatalogCourseCard({
             {course.description}
           </p>
         ) : (
-          <p className="mt-3 min-h-10 text-sm leading-relaxed text-slate-400">{t("crsNoDescription")}</p>
+          <p className="mt-3 min-h-10 text-sm leading-relaxed text-slate-500">{t("crsNoDescription")}</p>
         )}
 
         <div className="mt-3 flex flex-wrap items-center gap-2">

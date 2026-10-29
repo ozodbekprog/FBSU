@@ -12,10 +12,15 @@ describe("SECURE_EVENT_TYPES", () => {
 describe("severityOf", () => {
   it("nazorat hodisalarini to'g'ri darajalaydi", () => {
     expect(severityOf("TAB_HIDDEN")).toBe("WARNING");
+    expect(severityOf("WINDOW_BLUR")).toBe("WARNING");
     expect(severityOf("FULLSCREEN_EXIT")).toBe("WARNING");
     expect(severityOf("COPY")).toBe("WARNING");
     expect(severityOf("MULTI_MONITOR")).toBe("CRITICAL");
     expect(severityOf("SUBMIT")).toBe("INFO");
+    expect(severityOf("FACE_ABSENT")).toBe("WARNING");
+    expect(severityOf("FACE_MULTIPLE")).toBe("CRITICAL");
+    expect(severityOf("AUTOMATION_DETECTED")).toBe("CRITICAL");
+    expect(severityOf("FACE_OK")).toBe("INFO");
     expect(severityOf("DUPLICATE_TAB")).toBe("WARNING");
     expect(severityOf("CAMERA_BLOCKED")).toBe("WARNING");
     expect(severityOf("DRAG_ATTEMPT")).toBe("WARNING");

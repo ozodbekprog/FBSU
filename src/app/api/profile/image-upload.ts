@@ -35,7 +35,13 @@ type ImageField = "avatarUrl" | "coverUrl";
 
 export async function handleProfileImageUpload(
   request: Request,
-  options: { subdir: string; maxSize: number; maxSizeLabel: string; field: ImageField },
+  options: {
+    subdir: string;
+    maxSize: number;
+    maxSizeLabel: string;
+    field: ImageField;
+    targetUserId?: string;
+  },
 ) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
@@ -97,10 +103,11 @@ export async function handleProfileImageUpload(
   await writeFile(path.join(uploadDir, fileName), processed);
 
   const url = `/api/uploads/${options.subdir}/${fileName}`;
+  const targetUserId = options.targetUserId ?? user.id;
   if (options.field === "avatarUrl") {
-    await prisma.user.update({ where: { id: user.id }, data: { avatarUrl: url } });
+    await prisma.user.update({ where: { id: targetUserId }, data: { avatarUrl: url } });
   } else {
-    await prisma.user.update({ where: { id: user.id }, data: { coverUrl: url } });
+    await prisma.user.update({ where: { id: targetUserId }, data: { coverUrl: url } });
   }
 
   return Response.json({ ok: true, data: { url } });

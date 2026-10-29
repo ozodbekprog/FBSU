@@ -16,6 +16,7 @@ import {
   shuffledQuestions,
 } from "@/modules/secure-exam/order";
 import { effectiveDeadline } from "@/modules/secure-exam/policy";
+import { isValidFaceDescriptor } from "@/modules/attendance/face";
 import { finalizeRun } from "@/server/secure-exam";
 
 export const metadata: Metadata = {
@@ -47,6 +48,7 @@ export default async function SecureRunPage({
   if (!run || run.studentId !== user.id) notFound();
   if (run.attempt.finishedAt) redirect(`/quizzes/${run.exam.quizId}/results`);
 
+
   const durationMin = run.exam.durationMin ?? run.exam.quiz.timeLimitMin;
   const deadline = effectiveDeadline({
     startedAt: run.startedAt,
@@ -74,7 +76,10 @@ export default async function SecureRunPage({
   const ordered = shuffledQuestions(fullQuestions.map(toQuestionPublic), run.attemptId);
   const questions = ordered.map((question) => ({
     ...question,
-    options: permutedOptions(question.options, optionSeed(run.attemptId, question.id)),
+    options:
+      question.type === "MATCHING" || question.type === "ORDERING"
+        ? question.options
+        : permutedOptions(question.options, optionSeed(run.attemptId, question.id)),
   }));
 
   const initialAnswers = remapAnswersToDisplay(
@@ -82,6 +87,11 @@ export default async function SecureRunPage({
     fullQuestions,
     run.attemptId,
   );
+
+  const faceRow = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { faceDescriptor: true },
+  });
 
   return (
     <RunRoom
@@ -99,6 +109,7 @@ export default async function SecureRunPage({
         webcamEnabled: run.exam.webcamEnabled,
         maxWarnings: run.exam.maxWarnings,
         limitAction: run.exam.limitAction,
+        faceEnrolled: isValidFaceDescriptor(faceRow?.faceDescriptor),
       }}
     />
   );

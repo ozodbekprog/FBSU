@@ -8,7 +8,7 @@ import {
   publicError,
 } from "@/components/quiz/server";
 import { autoScore, toQuestionFull, totalPoints } from "@/components/quiz/shared";
-import { logAudit } from "@/server/audit";
+import { recordEvent } from "@/modules/events/record";
 
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -47,7 +47,10 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
         return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
       }
       if (attempt.finishedAt) {
-        return Response.json({ ok: false, error: "Urinish allaqachon topshirilgan" }, { status: 409 });
+        return Response.json(
+          { ok: false, error: "Urinish allaqachon yakunlangan" },
+          { status: 409 },
+        );
       }
       if (expiredDeadline) {
         await closeExpiredAttempt(prisma, id, attempt.answers, questions, expiredDeadline);
@@ -92,9 +95,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       );
     }
     const updated = await prisma.quizAttempt.update({ where: { id }, data: { score } });
-    await logAudit({
-      actorId: user.id,
-      action: "attempt.score",
+    await recordEvent(user.id, "attempt.score", {
       entity: "QuizAttempt",
       entityId: updated.id,
       meta: {

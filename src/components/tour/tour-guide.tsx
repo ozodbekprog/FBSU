@@ -305,7 +305,7 @@ export function TourGuide({ role }: { role: string }) {
           <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-700">
             FBSU
           </span>
-          <span className="text-[11px] font-medium tabular-nums text-slate-400">
+          <span className="text-[11px] font-medium tabular-nums text-slate-500">
             {t("tourStepCount", { current: stepIndex + 1, total: STEPS.length })}
           </span>
         </div>

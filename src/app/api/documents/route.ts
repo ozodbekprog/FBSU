@@ -41,6 +41,7 @@ export async function GET(request: Request) {
     where: {
       status: statusParsed.success ? statusParsed.data : undefined,
       kind: kindParsed.success ? kindParsed.data : undefined,
+      NOT: { meta: { path: ["fbsuOffice"], equals: true } },
     },
     orderBy: { createdAt: "desc" },
     take: 100,

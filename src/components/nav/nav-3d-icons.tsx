@@ -905,6 +905,7 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/secure-exams": SecureExams,
   "/nazorat": Nazorat,
   "/grades": Grades,
+  "/gradebook": Grades,
   "/gpa": Gpa,
   "/transcript": Transcript,
   "/attendance": Attendance,

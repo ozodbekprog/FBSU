@@ -10,7 +10,9 @@ import { SYNC_INTERVAL_MS } from "@/modules/secure-exam/config";
 import { severityOf, type SecureEventType } from "@/modules/secure-exam/events";
 import type { RunState } from "@/modules/secure-exam/types";
 import { EVENT_LABEL_KEY } from "@/components/secure-exam/labels";
-import { ensureFaceModels } from "@/components/face/face-scan";
+import { FaceScan, ensureFaceModels } from "@/components/face/face-scan";
+import { useFaceGuard } from "@/components/secure-exam/use-face-guard";
+import { useInputGuard } from "@/components/secure-exam/use-input-guard";
 import {
   QUESTION_TYPE_KEY,
   QUESTION_TYPE_SOFT,
@@ -31,6 +33,7 @@ export type RunSettings = {
   webcamEnabled: boolean;
   maxWarnings: number;
   limitAction: "WARN" | "TERMINATE";
+  faceEnrolled: boolean;
 };
 
 function formatClock(seconds: number): string {
@@ -106,11 +109,15 @@ export function RunRoom({
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState(false);
   const [toast, setToast] = useState<{ label: string; tone: "amber" | "rose" } | null>(null);
+  const [faceStage, setFaceStage] = useState<"idle" | "scan" | "verify" | "mismatch">("idle");
+  const [faceChip, setFaceChip] = useState<"monitoring" | "absent" | "multi" | null>(null);
 
   const answersRef = useRef<QuizAnswers>(initialAnswers);
   const eventsRef = useRef<QueuedEvent[]>([]);
   const screenCountRef = useRef<number | null>(null);
   const multiRaisedRef = useRef(false);
+  const blurredRef = useRef(false);
+  const wasHiddenRef = useRef(false);
   const dupRaisedRef = useRef(false);
   const darkCountRef = useRef(0);
   const faceCooldownRef = useRef(0);
@@ -120,6 +127,10 @@ export function RunRoom({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const toastTimerRef = useRef<number | null>(null);
+  const blurTimerRef = useRef<number | null>(null);
+  const faceDescriptorRef = useRef<number[] | null>(null);
+  const lastUrgentSyncRef = useRef(0);
+  const syncRef = useRef<(() => Promise<unknown>) | null>(null);
   const clientIdRef = useRef<string>(
     typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : "web",
   );
@@ -146,10 +157,32 @@ export function RunRoom({
   const pushEvent = useCallback(
     (type: SecureEventType, meta?: Record<string, string | number | boolean>) => {
       eventsRef.current.push({ type, meta });
-      if (phaseRef.current === "running") showToast(type);
+      if (phaseRef.current !== "running") return;
+      showToast(type);
+      if (severityOf(type) !== "INFO") {
+        const now = Date.now();
+        if (now - lastUrgentSyncRef.current > 2000) {
+          lastUrgentSyncRef.current = now;
+          window.setTimeout(() => {
+            void syncRef.current?.();
+          }, 400);
+        }
+      }
     },
     [showToast],
   );
+
+  useInputGuard({ active: phase === "running", onEvent: pushEvent });
+
+  useFaceGuard({
+    videoRef,
+    active: phase === "running" && cameraReady && settings.faceEnrolled,
+    onEvent: pushEvent,
+    onDescriptor: (descriptor) => {
+      faceDescriptorRef.current = descriptor;
+    },
+    onStatus: setFaceChip,
+  });
 
   const sync = useCallback(
     async (options?: { submit?: boolean }) => {
@@ -173,6 +206,10 @@ export function RunRoom({
         events: eventsRef.current.splice(0, eventsRef.current.length),
         answers: answersRef.current,
       };
+      if (faceDescriptorRef.current) {
+        payload.face = { descriptor: faceDescriptorRef.current };
+        faceDescriptorRef.current = null;
+      }
       if (options?.submit) payload.submit = true;
       const result = await apiFetch<RunState>(
         `/api/secure-exams/runs/${runId}/sync`,
@@ -187,6 +224,9 @@ export function RunRoom({
       const state = result.data;
       setError(null);
       setWarnings(state.warnings);
+      if (state.face?.check === "mismatch" && phaseRef.current === "running") {
+        setToast({ label: t("secEventFACE_MISMATCH"), tone: "rose" });
+      }
       if (state.endsAt) {
         setLocalDeadlineMs(Date.parse(state.endsAt) + (Date.now() - Date.parse(state.serverNow)));
       }
@@ -201,6 +241,17 @@ export function RunRoom({
     },
     [runId, t],
   );
+
+  useEffect(() => {
+    syncRef.current = sync;
+  }, [sync]);
+
+  const enterRoom = useCallback(() => {
+    setPhase("running");
+    if (settings.requireFullscreen) eventsRef.current.push({ type: "FULLSCREEN_ENTER" });
+    if (settings.webcamEnabled) eventsRef.current.push({ type: "WEBCAM_ON" });
+    void sync();
+  }, [settings.requireFullscreen, settings.webcamEnabled, sync]);
 
   const finish = useCallback(
     async () => {
@@ -259,19 +310,51 @@ export function RunRoom({
   useEffect(() => {
     if (phase !== "running") return;
     const onVisibility = () => {
-      pushEvent(document.visibilityState === "hidden" ? "TAB_HIDDEN" : "TAB_VISIBLE");
+      if (document.visibilityState === "hidden") {
+        wasHiddenRef.current = true;
+        pushEvent("TAB_HIDDEN");
+      } else {
+        pushEvent("TAB_VISIBLE");
+        if (wasHiddenRef.current) {
+          wasHiddenRef.current = false;
+          showToast("TAB_HIDDEN");
+        }
+      }
     };
-    const onBlur = () => pushEvent("WINDOW_BLUR");
-    const onFocus = () => pushEvent("WINDOW_FOCUS");
+    const onBlur = () => {
+      if (blurTimerRef.current !== null) window.clearTimeout(blurTimerRef.current);
+      blurTimerRef.current = window.setTimeout(() => {
+        blurTimerRef.current = null;
+        if (document.visibilityState === "visible") {
+          pushEvent("WINDOW_BLUR");
+          blurredRef.current = true;
+        }
+      }, 150);
+    };
+    const onFocus = () => {
+      if (blurTimerRef.current !== null) {
+        window.clearTimeout(blurTimerRef.current);
+        blurTimerRef.current = null;
+      }
+      pushEvent("WINDOW_FOCUS");
+      if (blurredRef.current) {
+        blurredRef.current = false;
+        showToast("WINDOW_BLUR");
+      }
+    };
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("blur", onBlur);
     window.addEventListener("focus", onFocus);
     return () => {
+      if (blurTimerRef.current !== null) {
+        window.clearTimeout(blurTimerRef.current);
+        blurTimerRef.current = null;
+      }
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("blur", onBlur);
       window.removeEventListener("focus", onFocus);
     };
-  }, [phase, pushEvent]);
+  }, [phase, pushEvent, showToast]);
 
   useEffect(() => {
     if (phase !== "running" || !settings.blockCopy) return;
@@ -305,7 +388,14 @@ export function RunRoom({
         pushEvent("PRINT_ATTEMPT");
         return;
       }
-      if (event.key === "F12" || (combo && event.shiftKey && ["I", "J", "C"].includes(key))) {
+      if (event.key === "F12") {
+        event.preventDefault();
+        pushEvent("KEY_BLOCKED", { key: event.key });
+        return;
+      }
+      const shiftCombo = combo && event.shiftKey && ["I", "J", "C", "K", "U"].includes(key);
+      const macCombo = event.metaKey && event.altKey && ["I", "J", "C", "U"].includes(key);
+      if (shiftCombo || macCombo) {
         event.preventDefault();
         pushEvent("KEY_BLOCKED", { key: event.key });
       }
@@ -325,10 +415,12 @@ export function RunRoom({
   }, [phase]);
 
   useEffect(() => {
-    if (cameraReady && videoRef.current && streamRef.current) {
-      videoRef.current.srcObject = streamRef.current;
-    }
-  }, [cameraReady]);
+    const video = videoRef.current;
+    const stream = streamRef.current;
+    if (!cameraReady || !video || !stream) return;
+    if (video.srcObject !== stream) video.srcObject = stream;
+    void video.play().catch(() => void 0);
+  }, [cameraReady, phase]);
 
   useEffect(() => {
     const stream = streamRef.current;
@@ -550,6 +642,18 @@ export function RunRoom({
   async function start() {
     setError(null);
     setCameraError(false);
+    if (settings.webcamEnabled && settings.faceEnrolled) {
+      if (settings.requireFullscreen) {
+        try {
+          await document.documentElement.requestFullscreen();
+        } catch {
+          setError(t("secGateFullscreenText"));
+          return;
+        }
+      }
+      setFaceStage("scan");
+      return;
+    }
     if (settings.webcamEnabled) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -568,10 +672,32 @@ export function RunRoom({
         return;
       }
     }
-    setPhase("running");
-    if (settings.requireFullscreen) eventsRef.current.push({ type: "FULLSCREEN_ENTER" });
-    if (settings.webcamEnabled) eventsRef.current.push({ type: "WEBCAM_ON" });
-    void sync();
+    enterRoom();
+  }
+
+  async function onFaceDescriptor(descriptor: number[]) {
+    faceDescriptorRef.current = descriptor;
+    setFaceStage("verify");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      streamRef.current = stream;
+      setCameraReady(true);
+    } catch {
+      setCameraError(true);
+      setFaceStage("idle");
+      return;
+    }
+    const state = await sync();
+    if (!state) {
+      setFaceStage("idle");
+      return;
+    }
+    if (state.face?.check === "mismatch") {
+      setFaceStage("mismatch");
+      return;
+    }
+    setFaceStage("idle");
+    enterRoom();
   }
 
   function setValue(questionId: string, value: AnswerValue) {
@@ -580,7 +706,9 @@ export function RunRoom({
 
   function toggleMultiple(questionId: string, index: number) {
     const current = answers[questionId];
-    const selected = Array.isArray(current) ? current : [];
+    const selected = Array.isArray(current)
+      ? current.filter((item): item is number => typeof item === "number")
+      : [];
     const next = selected.includes(index)
       ? selected.filter((item) => item !== index)
       : [...selected, index].sort((a, b) => a - b);
@@ -589,7 +717,7 @@ export function RunRoom({
 
   function isChecked(questionId: string, index: number): boolean {
     const current = answers[questionId];
-    return Array.isArray(current) && current.includes(index);
+    return Array.isArray(current) && current.some((item) => item === index);
   }
 
   function textValue(questionId: string): string {
@@ -644,15 +772,45 @@ export function RunRoom({
               {t("secWarningLimit", { max: settings.maxWarnings })}
             </li>
           </ul>
+          {settings.webcamEnabled && !settings.faceEnrolled ? (
+            <p className="mt-3 text-xs text-slate-500">{t("secFaceGateNotEnrolled")}</p>
+          ) : null}
+          {settings.webcamEnabled && settings.faceEnrolled && faceStage === "scan" ? (
+            <div className="mt-5 space-y-3">
+              <p className="text-sm font-semibold text-slate-800">{t("secFaceGateTitle")}</p>
+              <p className="text-sm text-slate-600">{t("secFaceGateText")}</p>
+              <FaceScan
+                onDescriptor={(descriptor) => void onFaceDescriptor(descriptor)}
+                onCancel={() => setFaceStage("idle")}
+              />
+            </div>
+          ) : null}
+          {settings.webcamEnabled && settings.faceEnrolled && faceStage === "verify" ? (
+            <p className="mt-5 text-sm text-slate-600">{t("secFaceGateVerify")}</p>
+          ) : null}
+          {settings.webcamEnabled && settings.faceEnrolled && faceStage === "mismatch" ? (
+            <div className="mt-5 space-y-3 rounded-xl bg-rose-50 px-3.5 py-3">
+              <p className="text-sm text-rose-700">{t("secFaceGateMismatch")}</p>
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={() => setFaceStage("scan")}
+              >
+                {t("schFaceRetry")}
+              </Button>
+            </div>
+          ) : null}
           {settings.webcamEnabled && cameraError ? (
             <p className="mt-4 rounded-xl bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700">
               {t("secGateCameraError")}
             </p>
           ) : null}
           {error ? <p className="mt-4 text-sm text-rose-600">{error}</p> : null}
-          <Button size="lg" className="mt-5 w-full py-3 text-base!" onClick={() => void start()}>
-            {t("secGateStart")}
-          </Button>
+          {settings.webcamEnabled && settings.faceEnrolled && faceStage !== "idle" ? null : (
+            <Button size="lg" className="mt-5 w-full py-3 text-base!" onClick={() => void start()}>
+              {t("secGateStart")}
+            </Button>
+          )}
         </Card>
       </div>
     );
@@ -727,6 +885,7 @@ export function RunRoom({
 
       {toast ? (
         <div
+          role={toast.tone === "rose" ? "alert" : "status"}
           className={cn(
             "fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-full px-4 py-2 text-sm font-medium shadow-lg",
             toast.tone === "rose" ? "bg-rose-600 text-white" : "bg-amber-500 text-white",
@@ -908,6 +1067,20 @@ export function RunRoom({
                     ? t("secFaceMulti")
                     : t("secCamera")}
           </span>
+          {settings.faceEnrolled && faceChip ? (
+            <span
+              className={cn(
+                "absolute bottom-0 left-0 right-0 px-2 py-1 text-center text-[10px] font-medium text-white",
+                faceChip === "monitoring" ? "bg-emerald-600/90" : "bg-rose-600/90",
+              )}
+            >
+              {faceChip === "monitoring"
+                ? t("secFaceChipMonitoring")
+                : faceChip === "absent"
+                  ? t("secFaceChipAbsent")
+                  : t("secFaceChipMulti")}
+            </span>
+          ) : null}
         </div>
       ) : null}
 

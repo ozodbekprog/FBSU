@@ -74,6 +74,11 @@ enum QuestionType {
   SINGLE
   MULTIPLE
   TEXT
+  TRUE_FALSE
+  SHORT_ANSWER
+  NUMERIC
+  MATCHING
+  ORDERING
 }
 
 model User {
@@ -179,6 +184,14 @@ model User {
   curatedGroups Group[]   @relation("GroupCurator")
 
   @@index([groupId])
+  gradeItemScores    GradeItemScore[]
+  activityCompletions ActivityCompletion[]
+  assignmentExtensions AssignmentExtension[]
+  gradeItemHistory   GradeItemScoreHistory[]
+  choiceVotes        ChoiceVote[]
+  glossaryEntries    GlossaryEntry[] @relation("GlossaryAuthor")
+  apiTokens          ApiToken[]
+
   @@index([subGroupId])
   @@index([role])
   @@index([facultyId])
@@ -235,10 +248,16 @@ model Course {
   examSessions       ExamSession[]
   secureExams        SecureExam[]
   bankQuestions      BankQuestion[]
+  selfEnrollment     Boolean             @default(false)
   bonusPoints        BonusPoint[]
   teacherPoints      TeacherPoint[]
   attendancePointConfigs AttendancePointConfig[]
   studyPlans         StudyPlan[]
+  gradeCategories    GradeCategory[]
+  gradeItems         GradeItem[]
+  activityRules      ActivityRule[]
+  choicePolls        ChoicePoll[]
+  glossaryEntries    GlossaryEntry[]
 
   @@index([teacherId])
 }
@@ -296,6 +315,7 @@ model Assignment {
   course       Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
   sectionRef   Section?      @relation(fields: [sectionId], references: [id], onDelete: SetNull)
   submissions  Submission[]
+  extensions   AssignmentExtension[]
   oralDefenses OralDefense[]
   boards       Board[]
 
@@ -420,6 +440,8 @@ model Quiz {
   timeLimitMin Int?
   maxAttempts  Int       @default(1)
   isPublished  Boolean   @default(false)
+  quizPassword String?
+  ipSubnet     String?
   createdAt    DateTime  @default(now())
 
   course     Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -1221,6 +1243,8 @@ model AuditLog {
   entity    String?
   entityId  String?
   meta      Json?
+  prevHash  String?
+  hash      String?
   createdAt DateTime @default(now())
 
   actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
@@ -1665,4 +1689,189 @@ model Publication {
   @@index([userId])
   @@index([year])
   @@index([kind])
+}
+
+enum GradeItemSource {
+  MANUAL
+  ASSIGNMENT
+  QUIZ
+}
+
+model GradeCategory {
+  id       String @id @default(cuid())
+  courseId String
+  name     String
+  weight   Int
+  position Int    @default(0)
+
+  course Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  items  GradeItem[]
+
+  @@index([courseId])
+}
+
+model GradeItem {
+  id         String          @id @default(cuid())
+  courseId   String
+  categoryId String?
+  name       String
+  weight     Int             @default(0)
+  maxScore   Float           @default(100)
+  source     GradeItemSource @default(MANUAL)
+  refId      String?
+
+  course   Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  category GradeCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  scores   GradeItemScore[]
+  history  GradeItemScoreHistory[]
+
+  @@index([courseId])
+  @@index([categoryId])
+}
+
+model GradeItemScore {
+  id        String   @id @default(cuid())
+  itemId    String
+  studentId String
+  score     Float
+  updatedAt DateTime @updatedAt
+
+  item    GradeItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  student User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, studentId])
+  @@index([studentId])
+}
+
+enum ActivityTarget {
+  MATERIAL
+  ASSIGNMENT
+  QUIZ
+}
+
+model ActivityRule {
+  id            String         @id @default(cuid())
+  courseId      String
+  targetType    ActivityTarget
+  targetId      String
+  availableFrom DateTime?
+  availableTo   DateTime?
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([targetType, targetId])
+  @@index([courseId])
+}
+
+model ActivityCompletion {
+  id          String         @id @default(cuid())
+  studentId   String
+  targetType  ActivityTarget
+  targetId    String
+  completedAt DateTime       @default(now())
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, targetType, targetId])
+  @@index([targetId])
+}
+
+model OwnerAccessCode {
+  id         String    @id @default(cuid())
+  codeHash   String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([expiresAt])
+}
+
+model AssignmentExtension {
+  id            String   @id @default(cuid())
+  assignmentId  String
+  studentId     String
+  extendedDueAt DateTime
+  createdAt     DateTime @default(now())
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student    User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, studentId])
+  @@index([assignmentId])
+}
+
+
+model GradeItemScoreHistory {
+  id          String   @id @default(cuid())
+  itemId      String
+  studentId   String
+  oldScore    Float?
+  newScore    Float?
+  changedById String?
+  createdAt   DateTime @default(now())
+
+  item    GradeItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  student User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([itemId, studentId])
+  @@index([createdAt])
+}
+
+
+model ChoicePoll {
+  id         String   @id @default(cuid())
+  courseId   String
+  question   String
+  options    Json     @default("[]")
+  isMultiple Boolean  @default(false)
+  isAnonymous Boolean @default(false)
+  createdAt  DateTime @default(now())
+
+  course Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  votes  ChoiceVote[]
+
+  @@index([courseId])
+}
+
+model ChoiceVote {
+  id          String   @id @default(cuid())
+  pollId      String
+  studentId   String
+  optionIndex Int
+  createdAt   DateTime @default(now())
+
+  poll    ChoicePoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  student User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, studentId, optionIndex])
+  @@index([pollId])
+}
+
+model GlossaryEntry {
+  id          String   @id @default(cuid())
+  courseId    String
+  term        String
+  definition  String
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdBy User?  @relation("GlossaryAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([courseId])
+  @@index([term])
+}
+
+model ApiToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

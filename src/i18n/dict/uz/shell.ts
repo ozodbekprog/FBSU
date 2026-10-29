@@ -19,6 +19,8 @@ export const shell = {
   navExams: "Imtihonlar",
   navGradesStaff: "Baholash",
   navGradesStudent: "Baholarim",
+  navGradebook: "Baholar jurnali",
+  navMyGrades: "Mening baholarim",
   navGpa: "GPA",
   navTranscript: "Transkript",
   navAttendance: "Davomat",
@@ -42,6 +44,7 @@ export const shell = {
   navAdmin: "Admin panel",
 
   roleAdmin: "Administrator",
+  roleOwner: "Egasi",
   roleRector: "Rektor",
   roleProRector: "Prorektor",
   roleStaff: "Xodim",
@@ -196,7 +199,7 @@ export const shell = {
   landFooterContact: "Aloqa",
   landAddress: "Toshkent, O'zbekiston",
   landWorkHours: "Dushanba — Shanba, 09:00 — 18:00",
-  landRights: "© 2026 Turin Politexnika Universiteti. Barcha huquqlar himoyalangan.",
+  landRights: "© 2026 Turin Politexnika Universiteti. Barcha huquqlar himoyalangan. Platforma — Xoshimov Group ishlanmasi.",
   mappMetaTitle: "Mobil ilova",
   mappMetaDescription:
     "FBSU mobil ilovasi — Android va iOS uchun: saytni telefonga ilova sifatida o'rnating. Rasmiy Google Play va App Store versiyalari tez orada chiqadi.",

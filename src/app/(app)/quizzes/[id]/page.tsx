@@ -112,6 +112,10 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
                   <p className="text-sm text-slate-500">
                     {dictionary.crsQuizTextManual}
                   </p>
+                ) : question.type === "SHORT_ANSWER" || question.type === "NUMERIC" ? (
+                  <p className="text-sm font-medium text-emerald-700">
+                    {question.correct.map((value) => String(value)).join(", ")}
+                  </p>
                 ) : (
                   <ul className="grid gap-2 sm:grid-cols-2">
                     {question.options.map((option, index) => {
@@ -190,8 +194,7 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
   });
   const active = attempts.find((attempt) => attempt.finishedAt === null);
   const finished = attempts.filter((attempt) => attempt.finishedAt !== null);
-  const expired = quiz.dueAt ? quiz.dueAt.getTime() < Date.now() : false;
-  const canStart = !active && !expired && finished.length < quiz.maxAttempts;
+  const canStart = !active && finished.length < quiz.maxAttempts;
   const scoredCount = finished.filter((attempt) => attempt.score != null).length;
   const bestScore =
     scoredCount > 0
@@ -234,9 +237,7 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
                   {dictionary.grdExInProgress}
                 </ButtonLink>
               ) : canStart ? (
-                <StartAttemptButton quizId={quiz.id} />
-              ) : expired ? (
-                <Badge tone="slate">{dictionary.grdGroupPast}</Badge>
+                <StartAttemptButton quizId={quiz.id} hasPassword={Boolean(quiz.quizPassword)} />
               ) : (
                 <Badge tone="slate">{dictionary.grdCompleted}</Badge>
               )}

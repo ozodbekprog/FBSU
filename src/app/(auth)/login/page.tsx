@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, Card, Input, Label } from "@/components/ui";
 import { Logo } from "@/components/brand/logo";
-import { BetaBadge } from "@/components/brand/beta-badge";
 import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useI18n } from "@/components/i18n/LocaleProvider";
@@ -174,13 +173,15 @@ const DEMO_ACCOUNTS = [
   },
 ];
 
-const PRIMARY_DEMO_EMAILS = ["ozodbek@ttpu.uz", "t.prog@ttpu.uz", "admin@ttpu.uz"];
-const PRIMARY_DEMO_ACCOUNTS = PRIMARY_DEMO_EMAILS.map((email) =>
-  DEMO_ACCOUNTS.find((account) => account.email === email),
-).filter((account): account is (typeof DEMO_ACCOUNTS)[number] => Boolean(account));
-const OTHER_DEMO_ACCOUNTS = DEMO_ACCOUNTS.filter(
-  (account) => !PRIMARY_DEMO_EMAILS.includes(account.email),
-);
+type LoginResponse = {
+  ok?: boolean;
+  error?: string;
+  tempPasswordUsed?: boolean;
+  user?: { id: string; name: string; role: string };
+  data?: { twoFactor?: boolean; loginId?: string; verified?: boolean };
+};
+
+type OwnerChallenge = { loginId: string; email: string };
 
 const PANEL_FEATURES = [
   "authLoginFeature1",
@@ -203,7 +204,17 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [remember, setRemember] = useState(false);
+  const [challenge, setChallenge] = useState<OwnerChallenge | null>(null);
+  const [ownerCode, setOwnerCode] = useState("");
   const hydrated = useIsClient();
+
+  function nextTarget() {
+    const nextParam = new URLSearchParams(window.location.search).get("next");
+    return nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
+      ? nextParam
+      : "/dashboard";
+  }
+
   function fillDemo(demoEmail: string) {
     setEmail(demoEmail);
     setPassword("ttpu1234");
@@ -227,17 +238,18 @@ export default function LoginPage() {
           remember: rememberValue,
         }),
       });
-      const json = await res.json().catch(() => null);
+      const json = (await res.json().catch(() => null)) as LoginResponse | null;
       if (!res.ok || !json?.ok) {
         setError(json?.error ?? t("authLoginError"));
         return;
       }
-      const nextParam = new URLSearchParams(window.location.search).get("next");
-      const target =
-        nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
-          ? nextParam
-          : "/dashboard";
-      router.push(target);
+      const loginId = json.data?.loginId;
+      if (json.data?.twoFactor === true && typeof loginId === "string") {
+        setChallenge({ loginId, email: emailValue.toLowerCase().trim() });
+        setOwnerCode("");
+        return;
+      }
+      router.push(json?.tempPasswordUsed === true ? "/profile?password=1" : nextTarget());
       router.refresh();
     } catch {
       setError(t("commonNetworkError"));
@@ -246,10 +258,67 @@ export default function LoginPage() {
     }
   }
 
+  async function verifyOwnerCode(e: React.FormEvent) {
+    e.preventDefault();
+    if (!challenge) return;
+    if (!/^\d{6}$/.test(ownerCode)) {
+      setError("6 xonali kodni kiriting");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await apiFetch("/api/auth/owner-verify", {
+        method: "POST",
+        body: JSON.stringify({
+          loginId: challenge.loginId,
+          email: challenge.email,
+          code: ownerCode,
+        }),
+      });
+      const json = (await res.json().catch(() => null)) as LoginResponse | null;
+      if (!res.ok || !json?.ok) {
+        setError(json?.error ?? "Kod tasdiqlanmadi");
+        return;
+      }
+      router.push(nextTarget());
+      router.refresh();
+    } catch {
+      setError(t("commonNetworkError"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function cancelChallenge() {
+    setChallenge(null);
+    setOwnerCode("");
+    setError(null);
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     await loginWith(email, password, remember);
   }
+
+  const errorNotice = error ? (
+    <div className="flex items-start gap-2.5 rounded-xl border border-rose-100 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="mt-0.5 size-4 shrink-0"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 8v4" />
+        <path d="M12 16h.01" />
+      </svg>
+      <p>{error}</p>
+    </div>
+  ) : null;
 
   return (
     <main className="grid min-h-screen bg-surface lg:grid-cols-2">
@@ -258,12 +327,9 @@ export default function LoginPage() {
         <div className="pointer-events-none absolute -left-24 top-24 size-80 rounded-full bg-brand-500/25 blur-3xl" />
         <div className="pointer-events-none absolute -right-20 bottom-8 size-72 rounded-full bg-gold-400/15 blur-3xl" />
         <div className="relative">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex rounded-2xl bg-white p-2.5 shadow-lift">
-              <Logo size={40} />
-            </span>
-            <BetaBadge onDark />
-          </div>
+          <span className="inline-flex rounded-2xl bg-white p-2.5 shadow-lift">
+            <Logo size={40} />
+          </span>
           <h2 className="mt-10 max-w-md text-3xl font-bold leading-tight tracking-tight text-white xl:text-4xl">
             {t("authLoginPanelTitle")}
           </h2>
@@ -312,9 +378,6 @@ export default function LoginPage() {
           </div>
           <Card className="mt-6 p-7 sm:p-9">
             <div className="text-center">
-              <div className="mb-3 flex justify-center">
-                <BetaBadge />
-              </div>
               <h1 className="text-2xl font-semibold tracking-tight text-brand-950">
                 {t("authLoginTitle")}
               </h1>
@@ -322,164 +385,163 @@ export default function LoginPage() {
                 {t("authLoginSubtitle")}
               </p>
             </div>
-            <form onSubmit={onSubmit} className="mt-8 space-y-5">
-              <div>
-                <Label>{t("authEmail")}</Label>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t("authEmailPlaceholder")}
-                  autoComplete="email"
-                  required
-                />
-              </div>
-              <div>
-                <Label>{t("authPassword")}</Label>
-                <div className="relative">
+            {challenge ? (
+              <form onSubmit={verifyOwnerCode} className="mt-8 space-y-5">
+                <div className="rounded-xl border border-brand-100 bg-brand-50 px-3.5 py-2.5 text-sm text-brand-800">
+                  <p className="font-medium">Telegramga yuborilgan 6 xonali kod</p>
+                  <p className="mt-1 text-xs text-brand-700">
+                    {challenge.email} uchun kod 5 daqiqa amal qiladi.
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="login-owner-code">Tasdiqlash kodi</Label>
                   <Input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t("authPasswordPlaceholder")}
-                    autoComplete="current-password"
-                    className="pr-11"
+                    id="login-owner-code"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    value={ownerCode}
+                    onChange={(e) => setOwnerCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="123456"
+                    className="text-center tracking-[0.45em]"
                     required
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? t("authHidePassword") : t("authShowPassword")}
-                    aria-pressed={showPassword}
-                    title={showPassword ? t("authHidePassword") : t("authShowPassword")}
-                    className="absolute -inset-y-1.5 right-0 flex w-11 items-center justify-center rounded-xl text-slate-500 transition-colors duration-150 hover:text-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="size-5"
-                      aria-hidden="true"
-                    >
-                      {showPassword ? (
-                        <>
-                          <path d="M3 3l18 18" />
-                          <path d="M10.6 5.2A9.8 9.8 0 0 1 12 5c5 0 9 4.5 9 7 0 .9-.4 1.9-1.1 2.9" />
-                          <path d="M6.6 6.7C4.3 8.1 2.7 10.1 2.7 12c0 2.5 4 7 9.3 7 1.4 0 2.7-.4 3.8-1" />
-                          <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
-                        </>
-                      ) : (
-                        <>
-                          <path d="M2.5 12S6 5.5 12 5.5c1.6 0 3 .4 4.2 1.1" />
-                          <path d="M21.5 12s-1 1.8-2.8 3.3" />
-                          <path d="M12 18.5c-5 0-9.5-6.5-9.5-6.5" />
-                          <circle cx="12" cy="12" r="3" />
-                        </>
-                      )}
-                    </svg>
-                  </button>
                 </div>
-                <div className="mt-2 flex items-center justify-between gap-3">
-                  <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
-                    <input
-                      type="checkbox"
-                      checked={remember}
-                      onChange={(e) => setRemember(e.target.checked)}
-                      className="size-4 shrink-0 rounded border-slate-300 accent-brand-600 focus-visible:ring-2 focus-visible:ring-brand-500/40"
+                {errorNotice}
+                <Button
+                  type="submit"
+                  disabled={loading || !hydrated || ownerCode.length !== 6}
+                  size="lg"
+                  className="h-11 w-full"
+                >
+                  {loading ? "Tekshirilmoqda..." : "Tasdiqlash"}
+                </Button>
+                <button
+                  type="button"
+                  onClick={cancelChallenge}
+                  className="w-full text-center text-xs font-medium text-brand-700 transition-colors duration-150 hover:text-brand-900 hover:underline"
+                >
+                  Orqaga
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={onSubmit} className="mt-8 space-y-5">
+                <div>
+                  <Label htmlFor="login-email">{t("authEmail")}</Label>
+                  <Input
+                    id="login-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={t("authEmailPlaceholder")}
+                    autoComplete="email"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="login-password">{t("authPassword")}</Label>
+                  <div className="relative">
+                    <Input
+                      id="login-password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder={t("authPasswordPlaceholder")}
+                      autoComplete="current-password"
+                      className="pr-11"
+                      required
                     />
-                    <span>{t("authLoginRemember")}</span>
-                  </label>
-                  <Link
-                    href="/forgot-password"
-                    className="text-xs font-medium text-brand-700 transition-colors duration-150 hover:text-brand-900 hover:underline"
-                  >
-                    {t("authLoginForgot")}
-                  </Link>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? t("authHidePassword") : t("authShowPassword")}
+                      aria-pressed={showPassword}
+                      title={showPassword ? t("authHidePassword") : t("authShowPassword")}
+                      className="absolute -inset-y-1.5 right-0 flex w-11 items-center justify-center rounded-xl text-slate-500 transition-colors duration-150 hover:text-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="size-5"
+                        aria-hidden="true"
+                      >
+                        {showPassword ? (
+                          <>
+                            <path d="M3 3l18 18" />
+                            <path d="M10.6 5.2A9.8 9.8 0 0 1 12 5c5 0 9 4.5 9 7 0 .9-.4 1.9-1.1 2.9" />
+                            <path d="M6.6 6.7C4.3 8.1 2.7 10.1 2.7 12c0 2.5 4 7 9.3 7 1.4 0 2.7-.4 3.8-1" />
+                            <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+                          </>
+                        ) : (
+                          <>
+                            <path d="M2.5 12S6 5.5 12 5.5c1.6 0 3 .4 4.2 1.1" />
+                            <path d="M21.5 12s-1 1.8-2.8 3.3" />
+                            <path d="M12 18.5c-5 0-9.5-6.5-9.5-6.5" />
+                            <circle cx="12" cy="12" r="3" />
+                          </>
+                        )}
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-3">
+                    <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+                      <input
+                        type="checkbox"
+                        checked={remember}
+                        onChange={(e) => setRemember(e.target.checked)}
+                        className="size-4 shrink-0 rounded border-slate-300 accent-brand-600 focus-visible:ring-2 focus-visible:ring-brand-500/40"
+                      />
+                      <span>{t("authLoginRemember")}</span>
+                    </label>
+                    <Link
+                      href="/forgot-password"
+                      className="text-xs font-medium text-brand-700 transition-colors duration-150 hover:text-brand-900 hover:underline"
+                    >
+                      {t("authLoginForgot")}
+                    </Link>
+                  </div>
                 </div>
-              </div>
-              {error ? (
-                <div className="flex items-start gap-2.5 rounded-xl border border-rose-100 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="mt-0.5 size-4 shrink-0"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 8v4" />
-                    <path d="M12 16h.01" />
-                  </svg>
-                  <p>{error}</p>
+                {errorNotice}
+                <Button type="submit" disabled={loading || !hydrated} size="lg" className="h-11 w-full">
+                  {loading ? t("authLoginSubmitting") : t("authLoginSubmit")}
+                </Button>
+              </form>
+            )}
+            {challenge ? null : (
+              <div className="mt-8">
+                <div className="flex items-center gap-3">
+                  <span className="h-px flex-1 bg-slate-100" />
+                  <span className="text-xs font-medium uppercase tracking-[0.14em] text-slate-600">
+                    {t("authDemoTitle")}
+                  </span>
+                  <span className="h-px flex-1 bg-slate-100" />
                 </div>
-              ) : null}
-              <Button type="submit" disabled={loading || !hydrated} size="lg" className="h-11 w-full">
-                {loading ? t("authLoginSubmitting") : t("authLoginSubmit")}
-              </Button>
-            </form>
-            <div className="mt-8">
-              <div className="flex items-center gap-3">
-                <span className="h-px flex-1 bg-slate-100" />
-                <span className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-slate-600">
-                  {t("authDemoTitle")}
-                  <BetaBadge />
-                </span>
-                <span className="h-px flex-1 bg-slate-100" />
-              </div>
-              <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                {t("authDemoMainRoles")}
-              </p>
-              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                {PRIMARY_DEMO_ACCOUNTS.map((account) => (
-                  <button
-                    key={account.email}
-                    type="button"
-                    onClick={() => fillDemo(account.email)}
-                    className="group flex flex-col items-center gap-2 rounded-xl border border-brand-200 bg-brand-50/40 px-2 py-3 text-center transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-150 hover:-translate-y-0.5 hover:border-brand-400 hover:bg-brand-50 hover:shadow-sm"
-                  >
-                    <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-brand-700 shadow-sm ring-1 ring-brand-100 transition-colors duration-150 group-hover:bg-brand-100">
-                      {account.icon}
-                    </span>
-                    <span className="min-w-0 text-[11px] font-semibold leading-tight text-brand-900">
-                      {t(account.roleKey)}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              <details className="group mt-4 rounded-xl border border-slate-200 bg-slate-50/40">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 [&::-webkit-details-marker]:hidden">
-                  {t("authDemoOtherRoles")}
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-3.5 transition-transform duration-200 group-open:rotate-180" aria-hidden="true">
-                    <path d="m6 9 6 6 6-6" />
-                  </svg>
-                </summary>
-                <div className="grid grid-cols-2 gap-2 border-t border-slate-200/70 p-2 sm:grid-cols-3">
-                  {OTHER_DEMO_ACCOUNTS.map((account) => (
+                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {DEMO_ACCOUNTS.map((account) => (
                     <button
                       key={account.email}
                       type="button"
                       onClick={() => fillDemo(account.email)}
-                      className="group/item flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-3 transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-150 hover:border-brand-300 hover:bg-brand-50"
+                      className="group flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-3 transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-150 hover:border-brand-300 hover:bg-brand-50"
                     >
-                      <span className="inline-flex size-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700 transition-colors duration-150 group-hover/item:bg-brand-100">
+                      <span className="inline-flex size-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700 transition-colors duration-150 group-hover:bg-brand-100">
                         {account.icon}
                       </span>
-                      <span className="text-center text-xs font-medium leading-tight text-slate-700 group-hover/item:text-brand-800">
+                      <span className="text-center text-xs font-medium leading-tight text-slate-700 group-hover:text-brand-800">
                         {t(account.roleKey)}
                       </span>
                     </button>
                   ))}
                 </div>
-              </details>
-              <p className="mt-3 text-center text-[11px] text-slate-600">
-                {t("authDemoHint")}
-              </p>
-            </div>
+                <p className="mt-3 text-center text-[11px] text-slate-600">
+                  {t("authDemoHint")}
+                </p>
+              </div>
+            )}
             <p className="mt-7 text-center text-sm text-slate-500">
               {t("authLoginNoAccount")}{" "}
               <Link

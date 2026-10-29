@@ -1,11 +1,9 @@
 import { z } from "zod";
-import type { Role } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
-import { logAudit } from "@/server/audit";
-
-const VIEW_ROLES: Role[] = ["ADMIN", "REGISTRAR", "REKTOR", "PRO_RECTOR"];
+import { recordEvent } from "@/modules/events/record";
+import { hasCapability } from "@/modules/capabilities";
 
 const createSchema = z.object({
   studentId: z.string().trim().min(1),
@@ -24,7 +22,7 @@ const createSchema = z.object({
 export async function GET(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "STUDENT" && !VIEW_ROLES.includes(user.role)) {
+  if (user.role !== "STUDENT" && !hasCapability(user.role, "finance.view")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -51,7 +49,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") {
+  if (!hasCapability(user.role, "academic.manage")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -96,9 +94,7 @@ export async function POST(request: Request) {
     },
   });
 
-  await logAudit({
-    actorId: user.id,
-    action: "finance.payment.create",
+  await recordEvent(user.id, "finance.payment.create", {
     entity: "Payment",
     entityId: payment.id,
     meta: { studentId: student.id, amount: payment.amount, method: payment.method },

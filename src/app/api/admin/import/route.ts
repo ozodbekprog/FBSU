@@ -5,6 +5,7 @@ import type { Role } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
+import { hasCapability } from "@/modules/capabilities";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const IMPORT_TYPES = ["students", "groups", "subjects"] as const;
@@ -509,7 +510,7 @@ async function importSubjects(rows: string[][], userRole: Role): Promise<ImportS
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "ADMIN" && user.role !== "REGISTRAR") {
+  if (!hasCapability(user.role, "academic.manage")) {
     return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
