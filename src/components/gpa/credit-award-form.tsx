@@ -88,7 +88,7 @@ export function CreditAwardForm({ students }: { students: CreditStudent[] }) {
           </div>
         </div>
         <div className="fb-empty-box">
-          <span className="fb-ava gold">
+          <span className="fb-ava">
             <DiamondIcon />
           </span>
           <b>{t("grdNoCredits")}</b>
@@ -105,7 +105,7 @@ export function CreditAwardForm({ students }: { students: CreditStudent[] }) {
           <h3>{t("grdCreditCardTitle")}</h3>
           <span className="fb-tagline">{t("grdCreditSubtitle")}</span>
         </div>
-        <span className="fb-mini gold">
+        <span className="fb-mini">
           <DiamondIcon />
           {t("grdCreditVipBadge")}
         </span>
@@ -153,19 +153,19 @@ export function CreditAwardForm({ students }: { students: CreditStudent[] }) {
 
         {selectedStudent ? (
           <div className="fb-picked">
-            <span className="fb-ava gold">{initials(selectedStudent.name)}</span>
+            <span className="fb-ava">{initials(selectedStudent.name)}</span>
             <span className="fb-picked-txt">
               <b>{selectedStudent.name}</b>
               <span>{selectedStudent.groupName ?? t("grdStudent")}</span>
             </span>
-            <span className="fb-mini gold">{t("grdCreditVipBadge")}</span>
+            <span className="fb-mini">{t("grdCreditVipBadge")}</span>
           </div>
         ) : null}
 
         <div className="fb-amount">
           <div className="fb-amount-top">
             <span>{t("grdCreditAmount")}</span>
-            <span className="fb-mini gold">
+            <span className="fb-mini">
               <InfinityIcon />
               {t("grdCreditUnlimited")}
             </span>
@@ -244,7 +244,7 @@ export function CreditAwardForm({ students }: { students: CreditStudent[] }) {
           <p className="fb-effect-note">{t("grdCreditHint")}</p>
         </div>
 
-        <div className="fb-hint gold">
+        <div className="fb-hint plain">
           <ShieldIcon />
           <p>{t("grdCreditVipHint")}</p>
         </div>
@@ -268,7 +268,7 @@ export function CreditAwardForm({ students }: { students: CreditStudent[] }) {
 
         <button
           type="button"
-          className="fb-cta gold"
+          className="fb-cta"
           disabled={disabled}
           onClick={() => startTransition(submit)}
         >

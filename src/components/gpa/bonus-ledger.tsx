@@ -40,7 +40,7 @@ export async function BonusLedger({
           </span>
         </div>
         {rows.length > 0 ? (
-          <span className="fb-mini gold">
+          <span className="fb-mini">
             {translate(locale, "grdBonusPlus", { points: formatPoints(totalPoints) })}
           </span>
         ) : null}
@@ -69,7 +69,7 @@ export async function BonusLedger({
                       {row.courseTitle}
                     </span>
                   ) : (
-                    <span className="fb-mini gold">
+                    <span className="fb-mini">
                       <WalletIcon />
                       {row.remainingPoints > 0
                         ? translate(locale, "grdBonusWalletChip", {
@@ -114,7 +114,7 @@ export async function BonusLedger({
               </div>
 
               <div className="fb-rowl-right">
-                <p className="fb-amt gold">
+                <p className="fb-amt">
                   +{formatPoints(row.points)}
                   <small>{dictionary.grdBall}</small>
                 </p>

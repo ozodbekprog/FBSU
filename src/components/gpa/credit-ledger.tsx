@@ -28,7 +28,7 @@ export async function CreditLedger({ rows }: { rows: Row[] }) {
           </span>
         </div>
         {rows.length > 0 ? (
-          <span className="fb-mini gold">
+          <span className="fb-mini">
             <DiamondIcon />
             {translate(locale, "grdCreditsInline", { count: totalCredits.toFixed(2) })}
           </span>
@@ -37,7 +37,7 @@ export async function CreditLedger({ rows }: { rows: Row[] }) {
 
       {rows.length === 0 ? (
         <div className="fb-empty-box">
-          <span className="fb-ava gold">
+          <span className="fb-ava">
             <DiamondIcon />
           </span>
           <b>{dictionary.grdNoCredits}</b>
@@ -47,12 +47,12 @@ export async function CreditLedger({ rows }: { rows: Row[] }) {
         <div className="fb-rows">
           {rows.map((row) => (
             <div key={row.id} className="fb-rowl">
-              <span className="fb-rowl-ava gold">{initials(row.studentName)}</span>
+              <span className="fb-rowl-ava">{initials(row.studentName)}</span>
 
               <div className="fb-rowl-main">
                 <div className="fb-rowl-name">
                   <span className="fb-rowl-nametxt">{row.studentName}</span>
-                  <span className="fb-mini gold">{dictionary.grdCreditVipBadge}</span>
+                  <span className="fb-mini">{dictionary.grdCreditVipBadge}</span>
                 </div>
 
                 <div className="fb-rowl-sub">
@@ -71,7 +71,7 @@ export async function CreditLedger({ rows }: { rows: Row[] }) {
               </div>
 
               <div className="fb-rowl-right">
-                <p className="fb-amt gold">
+                <p className="fb-amt">
                   +{row.credits.toFixed(2)}
                   <small>{dictionary.grdCreditLower}</small>
                 </p>

@@ -152,7 +152,7 @@ export function BonusAllocator({
           {t("grdBonusWalletSubtitle", { points: formatPoints(walletTenths / 10) })}
         </span>
       </div>
-      <span className="fb-mini gold">
+      <span className="fb-mini">
         +{formatPoints(walletTenths / 10)} {t("grdBall")}
       </span>
     </div>
@@ -246,7 +246,7 @@ export function BonusAllocator({
               </div>
             ) : selectedGrant ? (
               <div className="fb-picked">
-                <span className="fb-ava gold">
+                <span className="fb-ava">
                   <WalletIcon />
                 </span>
                 <span className="fb-picked-txt">
@@ -255,7 +255,7 @@ export function BonusAllocator({
                     {selectedGrant.awardedByName} · {selectedGrant.createdAt}
                   </span>
                 </span>
-                <span className="fb-mini gold">
+                <span className="fb-mini">
                   +{formatPoints(selectedGrant.remainingTenths / 10)}
                 </span>
               </div>
@@ -314,7 +314,7 @@ export function BonusAllocator({
             <div className="fb-amount">
               <div className="fb-amount-top">
                 <span>{t("grdBonusAmount")}</span>
-                <span className="fb-mini gold">
+                <span className="fb-mini">
                   <WholeIcon />
                   {t("grdWholeNumber")}
                 </span>

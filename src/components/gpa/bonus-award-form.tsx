@@ -160,7 +160,6 @@ export function BonusAwardForm({
         title={cardTitle}
         subtitle={cardSubtitle}
         badge={isRectorMode ? t("grdHeroRectorBadge") : t("grdTeacherPanel")}
-        gold={isRectorMode}
       />
 
       <div className="fb-form">
@@ -222,21 +221,21 @@ export function BonusAwardForm({
 
         {selectedStudent ? (
           <div className="fb-picked">
-            <span className={cn("fb-ava", isRectorMode && "gold")}>
+            <span className="fb-ava">
               {initials(selectedStudent.name)}
             </span>
             <span className="fb-picked-txt">
               <b>{selectedStudent.name}</b>
               <span>{selectedStudent.groupName ?? t("grdStudent")}</span>
             </span>
-            <span className={cn("fb-mini", isRectorMode ? "gold" : "blue")}>
+            <span className="fb-mini blue">
               {t(isRectorMode ? "grdBonusWalletBadge" : "grdPupil")}
             </span>
           </div>
         ) : null}
 
         {isRectorMode ? (
-          <div className="fb-hint gold">
+          <div className="fb-hint plain">
             <WalletIcon />
             <p>{t("grdBonusWalletHint")}</p>
           </div>
@@ -245,7 +244,7 @@ export function BonusAwardForm({
         <div className="fb-amount">
           <div className="fb-amount-top">
             <span>{isRectorMode ? t("grdBonusAmount") : t("grdScoreLabelColon")}</span>
-            <span className="fb-mini gold">
+            <span className="fb-mini">
               <WholeIcon />
               {t("grdWholeNumber")}
             </span>
@@ -379,7 +378,7 @@ export function BonusAwardForm({
 
         <button
           type="button"
-          className={cn("fb-cta", isRectorMode && "gold")}
+          className="fb-cta"
           disabled={disabled}
           onClick={() => startTransition(submit)}
         >
@@ -397,12 +396,10 @@ function FormHeader({
   title,
   subtitle,
   badge,
-  gold,
 }: {
   title: string;
   subtitle: string;
   badge?: string;
-  gold?: boolean;
 }) {
   return (
     <div className="fb-card-head">
@@ -410,9 +407,7 @@ function FormHeader({
         <h3>{title}</h3>
         <span className="fb-tagline">{subtitle}</span>
       </div>
-      {badge ? (
-        <span className={cn("fb-mini", gold ? "gold" : "blue")}>{badge}</span>
-      ) : null}
+      {badge ? <span className="fb-mini blue">{badge}</span> : null}
     </div>
   );
 }

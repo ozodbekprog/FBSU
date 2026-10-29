@@ -28,7 +28,7 @@ export async function BonusGrantHistory({ rows }: { rows: BonusGrantRow[] }) {
     if (row.allocatedTenths > 0) {
       return { tone: "amber" as const, label: dictionary.grdBonusStatusPartial };
     }
-    return { tone: "gold" as const, label: dictionary.grdBonusStatusWallet };
+    return { tone: "" as const, label: dictionary.grdBonusStatusWallet };
   }
 
   return (
@@ -46,7 +46,7 @@ export async function BonusGrantHistory({ rows }: { rows: BonusGrantRow[] }) {
           </span>
         </div>
         {rows.length > 0 ? (
-          <span className="fb-mini gold">
+          <span className="fb-mini">
             {translate(locale, "grdBonusPlus", { points: formatPoints(totalPoints) })}
           </span>
         ) : null}
@@ -71,7 +71,7 @@ export async function BonusGrantHistory({ rows }: { rows: BonusGrantRow[] }) {
             );
             return (
               <div key={row.id} className="fb-rowl">
-                <span className={isWallet ? "fb-rowl-ava gold" : "fb-rowl-ava"}>
+                <span className="fb-rowl-ava">
                   {isWallet ? <WalletIcon /> : <BookIcon />}
                 </span>
 
@@ -106,7 +106,7 @@ export async function BonusGrantHistory({ rows }: { rows: BonusGrantRow[] }) {
                       <div className="fb-rowl-tags">
                         {row.allocations.length > 0 ? (
                           row.allocations.map((allocation) => (
-                            <span key={allocation.id} className="fb-mini gold">
+                            <span key={allocation.id} className="fb-mini">
                               <BookIcon />
                               <span className="fb-rowl-nametxt">
                                 {translate(locale, "grdBonusAllocatedTo", {
@@ -125,7 +125,7 @@ export async function BonusGrantHistory({ rows }: { rows: BonusGrantRow[] }) {
                 </div>
 
                 <div className="fb-rowl-right">
-                  <span className="fb-amt gold">
+                  <span className="fb-amt">
                     +{formatPoints(row.totalTenths / 10)}
                     <small>{dictionary.grdBall}</small>
                   </span>
