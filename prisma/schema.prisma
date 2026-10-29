@@ -127,6 +127,9 @@ model User {
   secureExamsCreated   SecureExam[]          @relation("SecureExamCreator")
   secureExamRuns       SecureExamRun[]       @relation("SecureExamStudent")
   notifications        Notification[]
+  trustedDevices       TrustedDevice[]
+  loginRecords         LoginRecord[]
+  deviceApprovals      DeviceApprovalChallenge[]
 
   announcements        Announcement[]
   forumTopics          ForumTopic[]
@@ -1245,12 +1248,17 @@ model AuditLog {
   meta      Json?
   prevHash  String?
   hash      String?
+  /// Qaysi login sessiyasida sodir bo'lgani. "Kirgandan keyin nima
+  /// o'zgargan?" ro'yxati shu maydon bo'yicha yig'iladi.
+  sessionId String?
   createdAt DateTime @default(now())
 
-  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actor   User?        @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  session LoginRecord? @relation("LoginRecordAudit", fields: [sessionId], references: [id], onDelete: SetNull)
 
   @@index([actorId, createdAt])
   @@index([action, createdAt])
+  @@index([sessionId, createdAt])
 }
 
 model PasswordResetToken {
@@ -1874,4 +1882,105 @@ model ApiToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+/// Ishonchli qurilma. Har bir hisobga bir vaqtda ko'pi bilan 2 ta faol
+/// qurilma ulanadi (src/lib/device.ts -> MAX_DEVICES). `deviceHash` —
+/// httpOnly cookie'dagi imzolangan identifikatorning SHA-256 xeshi.
+model TrustedDevice {
+  id         String    @id @default(cuid())
+  userId     String
+  deviceHash String    @unique
+  name       String
+  platform   String?
+  browser    String?
+  userAgent  String?
+  ip         String?
+  city       String?
+  country    String?
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  lastIp     String?
+  revokedAt  DateTime?
+  revokedBy  String?
+
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logins LoginRecord[]
+
+  @@index([userId, revokedAt])
+}
+
+/// Kirish urinishi: muvaffaqiyatli yoki qurilma limiti tufayli bloklangan.
+/// `LoginRecord.id` JWTdagi `sid` bilan bir xil bo'ladi — audit yozuvlari
+/// shu sessiyaga bog'lanib, "kirgandan keyin nima o'zgargan" ko'rsatiladi.
+model LoginRecord {
+  id         String      @id @default(cuid())
+  userId     String
+  deviceId   String?
+  ip         String
+  userAgent  String?
+  deviceName String
+  platform   String?
+  browser    String?
+  city       String?
+  country    String?
+  location   String?
+  method     LoginMethod @default(PASSWORD)
+  status     LoginStatus @default(SUCCESS)
+  note       String?
+  createdAt  DateTime    @default(now())
+  editedAt   DateTime?
+  editedBy   String?
+  deletedAt  DateTime?
+  deletedBy  String?
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device    TrustedDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  auditLogs AuditLog[]     @relation("LoginRecordAudit")
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+enum LoginStatus {
+  SUCCESS
+  BLOCKED
+}
+
+enum LoginMethod {
+  PASSWORD
+  PASSKEY
+  OWNER
+  REGISTER
+  TELEGRAM
+}
+
+/// Uchinchi qurilmadan kirishni Telegram kodi bilan tasdiqlash sessiyasi.
+/// Kod faqat foydalanuvchining Telegramiga yuboriladi; bazada HMAC xeshi
+/// saqlanadi. Tasdiqlangach foydalanuvchi eski qurilmalardan birini tanlab
+/// o'chiradi va shundan keyingina yangi sessiya ochiladi.
+model DeviceApprovalChallenge {
+  id         String      @id @default(cuid())
+  userId     String
+  codeHash   String
+  ip         String?
+  userAgent  String?
+  deviceName String
+  platform   String?
+  browser    String?
+  city       String?
+  country    String?
+  location   String?
+  method     LoginMethod @default(PASSWORD)
+  attempts   Int         @default(0)
+  verifiedAt DateTime?
+  usedAt     DateTime?
+  expiresAt  DateTime
+  createdAt  DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([expiresAt])
 }

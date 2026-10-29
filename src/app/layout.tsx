@@ -7,6 +7,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PwaRegister } from "@/components/pwa/PwaRegister";
 import { CsrfBootstrap } from "@/components/csrf/csrf-bootstrap";
+import { TelegramMiniApp } from "@/components/telegram/TelegramMiniApp";
 import { getDictionary, getLocale } from "@/i18n";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
@@ -79,6 +80,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
   themeColor: "#1d3460",
 };
 
@@ -105,6 +107,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         </LocaleProvider>
         <PwaRegister />
         <CsrfBootstrap />
+        <TelegramMiniApp />
       </body>
     </html>
   );

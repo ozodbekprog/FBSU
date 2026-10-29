@@ -3,7 +3,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SignJWT, jwtVerify } from "jose";
 import { prisma } from "@/lib/prisma";
-import type { Role, User } from "@prisma/client";
+import { prepareSession } from "@/lib/device";
+import type { LoginMethod, Role, User } from "@prisma/client";
 
 const COOKIE_NAME = "ttpu_session";
 const MAX_AGE = 60 * 60 * 24 * 7;
@@ -15,6 +16,10 @@ export type SessionUser = {
   name: string;
   email: string;
   epoch: number;
+  /** LoginRecord.id — shu sessiyadagi audit o'zgarishlarini bog'lash uchun. */
+  sid: string | null;
+  /** TrustedDevice.id — qurilma bekor qilinsa sessiya ham yaroqsiz bo'ladi. */
+  did: string | null;
 };
 
 function secretKey() {
@@ -23,10 +28,62 @@ function secretKey() {
   return new TextEncoder().encode(secret);
 }
 
+export type CreateSessionOptions = {
+  remember?: boolean;
+  method?: LoginMethod;
+  /**
+   * Joriy sessiyani yangilash (masalan, profil/parol o'zgarishi). Yangi
+   * login tarixi yaratilmaydi va qurilma limiti qayta tekshirilmaydi.
+   */
+  renew?: boolean;
+  /** Login tarixidagi izoh (masalan, Telegram tasdiqlash haqida). */
+  note?: string;
+};
+
+export type CreateSessionResult = {
+  sessionId: string | null;
+  deviceId: string | null;
+};
+
 export async function createSession(
   user: Pick<User, "id" | "role" | "name" | "email" | "sessionEpoch">,
-  opts?: { remember?: boolean },
-) {
+  opts?: CreateSessionOptions,
+): Promise<CreateSessionResult> {
+  let sessionId: string | null = null;
+  let deviceId: string | null = null;
+
+  if (opts?.renew) {
+    const current = await getSession();
+    if (current && current.uid === user.id) {
+      sessionId = current.sid;
+      deviceId = current.did;
+    }
+  }
+
+  if (!sessionId && !opts?.renew) {
+    const prepared = await prepareSession(user.id, opts?.method ?? "PASSWORD");
+    sessionId = prepared.loginId;
+    deviceId = prepared.device.id;
+    await prisma.loginRecord.create({
+      data: {
+        id: sessionId,
+        userId: user.id,
+        deviceId: prepared.device.id,
+        ip: prepared.ip,
+        userAgent: prepared.userAgent,
+        deviceName: prepared.device.name,
+        platform: prepared.device.platform,
+        browser: prepared.device.browser,
+        city: prepared.location.city,
+        country: prepared.location.country,
+        location: prepared.location.label,
+        method: opts?.method ?? "PASSWORD",
+        status: "SUCCESS",
+        note: opts?.note ?? null,
+      },
+    });
+  }
+
   const remember = opts?.remember === true;
   const maxAge = remember ? REMEMBER_MAX_AGE : MAX_AGE;
   const token = await new SignJWT({
@@ -35,6 +92,8 @@ export async function createSession(
     name: user.name,
     email: user.email,
     epoch: user.sessionEpoch,
+    sid: sessionId,
+    did: deviceId,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -49,6 +108,8 @@ export async function createSession(
     path: "/",
     maxAge,
   });
+
+  return { sessionId, deviceId };
 }
 
 export async function destroySession() {
@@ -68,6 +129,8 @@ export async function getSession(): Promise<SessionUser | null> {
       name: payload.name as string,
       email: payload.email as string,
       epoch: typeof payload.epoch === "number" ? payload.epoch : -1,
+      sid: typeof payload.sid === "string" ? payload.sid : null,
+      did: typeof payload.did === "string" ? payload.did : null,
     };
   } catch {
     return null;
@@ -99,10 +162,16 @@ export async function getCurrentUser() {
       subGroup: true,
       faculty: true,
       department: true,
+      trustedDevices: { where: { revokedAt: null }, select: { id: true } },
     },
   });
   if (!user || !user.isActive) return null;
   if (user.sessionEpoch !== session.epoch) return null;
+  // Qurilma bekor qilingan bo'lsa, undan ochilgan sessiya ham darhol
+  // yaroqsiz bo'ladi. Eski (qurilmasiz) sessiyalar ishlashda davom etadi.
+  if (session.did && !user.trustedDevices.some((device) => device.id === session.did)) {
+    return null;
+  }
   return user;
 }
 

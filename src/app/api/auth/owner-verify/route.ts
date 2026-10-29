@@ -2,6 +2,8 @@ import { z } from "zod";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/auth";
+import { DeviceLimitError } from "@/lib/device";
+import { createVerifiedDeviceApproval } from "@/server/device-approval";
 import { checkRateLimit, clearRateLimit } from "@/lib/rate-limit";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
 
@@ -101,7 +103,29 @@ export async function POST(request: Request) {
     data: { consumedAt: new Date() },
   });
   await clearRateLimit(limitKey, "auth");
-  await createSession(user);
+  try {
+    await createSession(user, { method: "OWNER" });
+  } catch (error) {
+    if (error instanceof DeviceLimitError) {
+      const approval = await createVerifiedDeviceApproval(user.id);
+      return Response.json(
+        {
+          ok: false,
+          code: "DEVICE_APPROVAL_REQUIRED",
+          challengeId: approval.challengeId,
+          expiresAt: approval.expiresAt.toISOString(),
+          deviceName: approval.deviceName,
+          location: approval.location,
+          telegramLinked: true,
+          verified: true,
+          devices: approval.devices,
+          error: "2FA tasdiqlandi. Endi eski qurilmalardan birini uzing.",
+        },
+        { status: 403 },
+      );
+    }
+    throw error;
+  }
   await createAuditLog({
     action: "LOGIN_SUCCESS",
     entity: "User",

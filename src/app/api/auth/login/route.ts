@@ -4,6 +4,14 @@ import { createHash, randomInt, randomUUID } from "node:crypto";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/auth";
+import {
+  DeviceLimitError,
+  MAX_DEVICES,
+  countActiveDevices,
+  getRequestContext,
+  recordBlockedLogin,
+} from "@/lib/device";
+import { DeviceApprovalDeliveryError, createDeviceApproval } from "@/server/device-approval";
 import { checkRateLimit, clearRateLimit } from "@/lib/rate-limit";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
 import { getClientIp as getClientIpFromHeaders } from "@/lib/client-ip";
@@ -186,7 +194,118 @@ export async function POST(request: Request) {
     return Response.json({ ok: true, data: { twoFactor: true, loginId } });
   }
 
-  await createSession(user, { remember: parsed.data.remember });
+  async function startApproval(account: NonNullable<typeof user>) {
+    try {
+      const approval = await createDeviceApproval(account);
+      await createAuditLog({
+        action: "DEVICE_APPROVAL_REQUEST",
+        entity: "User",
+        actorId: account.id,
+        entityId: account.id,
+        meta: {
+          email,
+          challengeId: approval.challengeId,
+          device: approval.deviceName,
+          location: approval.location,
+        },
+        ip: clientInfo.ip,
+        userAgent: clientInfo.userAgent,
+      });
+      return Response.json(
+        {
+          ok: false,
+          code: "DEVICE_APPROVAL_REQUIRED",
+          challengeId: approval.challengeId,
+          expiresAt: approval.expiresAt.toISOString(),
+          deviceName: approval.deviceName,
+          location: approval.location,
+          telegramLinked: true,
+          error: "Tasdiqlash kodi Telegramingizga yuborildi",
+        },
+        { status: 403 },
+      );
+    } catch (error) {
+      if (error instanceof DeviceApprovalDeliveryError) {
+        const context = await getRequestContext();
+        await recordBlockedLogin(account.id, "PASSWORD", context);
+        await createAuditLog({
+          action: "LOGIN_FAILED",
+          entity: "User",
+          actorId: account.id,
+          entityId: account.id,
+          meta: { email, reason: "approval_delivery_failed" },
+          ip: clientInfo.ip,
+          userAgent: clientInfo.userAgent,
+        });
+        return Response.json(
+          {
+            ok: false,
+            code: "DEVICE_APPROVAL_DELIVERY_FAILED",
+            error:
+              "Telegramga kod yuborilmadi. @ttpu_uz_bot ni ochib Start bosing yoki mavjud qurilmadan kirib eski qurilmani uzing.",
+          },
+          { status: 503 },
+        );
+      }
+      throw error;
+    }
+  }
+
+  if ((await countActiveDevices(user.id)) >= MAX_DEVICES) {
+    if (user.telegramId) return startApproval(user);
+    const context = await getRequestContext();
+    await recordBlockedLogin(user.id, "PASSWORD", context);
+    await createAuditLog({
+      action: "LOGIN_FAILED",
+      entity: "User",
+      actorId: user.id,
+      entityId: user.id,
+      meta: { email, reason: "device_limit_no_telegram" },
+      ip: clientInfo.ip,
+      userAgent: clientInfo.userAgent,
+    });
+    return Response.json(
+      {
+        ok: false,
+        code: "DEVICE_LIMIT",
+        error:
+          "Bu hisobga faqat 2 ta qurilma ulanadi. Uchinchi qurilma uchun Telegram bog'langan bo'lishi kerak. Mavjud qurilmadan Sozlamalar → Xavfsizlik orqali joy bo'shating yoki administratorga murojaat qiling.",
+      },
+      { status: 403 },
+    );
+  }
+
+  let sessionId: string | null = null;
+  try {
+    const session = await createSession(user, {
+      remember: parsed.data.remember,
+      method: "PASSWORD",
+    });
+    sessionId = session.sessionId;
+  } catch (error) {
+    if (error instanceof DeviceLimitError) {
+      if (user.telegramId) return startApproval(user);
+      await createAuditLog({
+        action: "LOGIN_FAILED",
+        entity: "User",
+        actorId: user.id,
+        entityId: user.id,
+        meta: { email, reason: "device_limit" },
+        ip: clientInfo.ip,
+        userAgent: clientInfo.userAgent,
+      });
+      return Response.json(
+        {
+          ok: false,
+          code: "DEVICE_LIMIT",
+          error:
+            "Bu hisobga faqat 2 ta qurilma ulanadi. Yangi qurilmadan kirish uchun avval ulangan qurilmalardan birini uzib, qayta urinib ko'ring.",
+        },
+        { status: 403 },
+      );
+    }
+    throw error;
+  }
   await createAuditLog({
     action: "LOGIN_SUCCESS",
     entity: "User",
@@ -194,6 +313,7 @@ export async function POST(request: Request) {
     meta: { email, role: user.role, tempPassword },
     ip: clientInfo.ip,
     userAgent: clientInfo.userAgent,
+    sessionId: sessionId ?? undefined,
   });
   return Response.json({
     ok: true,

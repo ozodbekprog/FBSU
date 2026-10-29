@@ -176,12 +176,91 @@ const DEMO_ACCOUNTS = [
 type LoginResponse = {
   ok?: boolean;
   error?: string;
+  code?: string;
+  challengeId?: string;
+  expiresAt?: string;
+  deviceName?: string;
+  location?: string;
+  telegramLinked?: boolean;
+  verified?: boolean;
+  devices?: ApprovalDevice[];
   tempPasswordUsed?: boolean;
   user?: { id: string; name: string; role: string };
-  data?: { twoFactor?: boolean; loginId?: string; verified?: boolean };
+  data?: { twoFactor?: boolean; loginId?: string; verified?: boolean; devices?: ApprovalDevice[] };
 };
 
 type OwnerChallenge = { loginId: string; email: string };
+
+type ApprovalDevice = {
+  id: string;
+  name: string;
+  platform: string | null;
+  browser: string | null;
+  lastSeenAt: string;
+  ip: string | null;
+  location: string;
+};
+
+type ApprovalState = {
+  challengeId: string;
+  expiresAt: string;
+  deviceName?: string;
+  location?: string;
+};
+
+function formatDeviceDate(value: string): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Tashkent",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(value));
+  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
+  return `${get("day")}.${get("month")}.${get("year")} ${get("hour")}:${get("minute")}`;
+}
+
+function approvalText(locale: string) {
+  if (locale === "ru") {
+    return {
+      title: "Подтверждение нового устройства",
+      codeSent: "Код подтверждения отправлен в ваш Telegram.",
+      codeLabel: "Код из Telegram",
+      verify: "Подтвердить",
+      devicesTitle: "Отключите одно из старых устройств",
+      devicesHint: "Чтобы войти с нового устройства, выберите одно из подключённых и отключите его.",
+      complete: "Отключить выбранное и войти",
+      expires: "Код действует 5 минут.",
+      selectFirst: "Сначала выберите устройство",
+    };
+  }
+  if (locale === "en") {
+    return {
+      title: "New device verification",
+      codeSent: "A verification code has been sent to your Telegram.",
+      codeLabel: "Code from Telegram",
+      verify: "Verify",
+      devicesTitle: "Disconnect one of your old devices",
+      devicesHint: "To sign in from the new device, select one of the connected devices and disconnect it.",
+      complete: "Disconnect selected and sign in",
+      expires: "The code is valid for 5 minutes.",
+      selectFirst: "Select a device first",
+    };
+  }
+  return {
+    title: "Yangi qurilmani tasdiqlash",
+    codeSent: "Tasdiqlash kodi Telegramingizga yuborildi.",
+    codeLabel: "Telegramdan kelgan kod",
+    verify: "Tasdiqlash",
+    devicesTitle: "Eski qurilmalardan birini uzing",
+    devicesHint: "Yangi qurilmadan kirish uchun ulangan qurilmalardan bittasini tanlab, uni uzish shart.",
+    complete: "Tanlangan qurilmani uzish va kirish",
+    expires: "Kod 5 daqiqa amal qiladi.",
+    selectFirst: "Avval qurilmani tanlang",
+  };
+}
 
 const PANEL_FEATURES = [
   "authLoginFeature1",
@@ -206,7 +285,15 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(false);
   const [challenge, setChallenge] = useState<OwnerChallenge | null>(null);
   const [ownerCode, setOwnerCode] = useState("");
+  const [approval, setApproval] = useState<ApprovalState | null>(null);
+  const [approvalStep, setApprovalStep] = useState<"code" | "devices">("code");
+  const [approvalCode, setApprovalCode] = useState("");
+  const [approvalDevices, setApprovalDevices] = useState<ApprovalDevice[]>([]);
+  const [selectedDevice, setSelectedDevice] = useState("");
+  const [approvalError, setApprovalError] = useState<string | null>(null);
+  const [approvalBusy, setApprovalBusy] = useState(false);
   const hydrated = useIsClient();
+  const approvalLabels = approvalText(locale);
 
   function nextTarget() {
     const nextParam = new URLSearchParams(window.location.search).get("next");
@@ -239,10 +326,26 @@ export default function LoginPage() {
         }),
       });
       const json = (await res.json().catch(() => null)) as LoginResponse | null;
+      if (json?.code === "DEVICE_APPROVAL_REQUIRED" && json.challengeId) {
+        setApproval({
+          challengeId: json.challengeId,
+          expiresAt: json.expiresAt ?? "",
+          deviceName: json.deviceName,
+          location: json.location,
+        });
+        setApprovalStep("code");
+        setApprovalCode("");
+        setApprovalDevices([]);
+        setSelectedDevice("");
+        setApprovalError(null);
+        setError(null);
+        return;
+      }
       if (!res.ok || !json?.ok) {
         setError(json?.error ?? t("authLoginError"));
         return;
       }
+      setApproval(null);
       const loginId = json.data?.loginId;
       if (json.data?.twoFactor === true && typeof loginId === "string") {
         setChallenge({ loginId, email: emailValue.toLowerCase().trim() });
@@ -277,6 +380,21 @@ export default function LoginPage() {
         }),
       });
       const json = (await res.json().catch(() => null)) as LoginResponse | null;
+      if (json?.code === "DEVICE_APPROVAL_REQUIRED" && json.challengeId) {
+        setChallenge(null);
+        setApproval({
+          challengeId: json.challengeId,
+          expiresAt: json.expiresAt ?? "",
+          deviceName: json.deviceName,
+          location: json.location,
+        });
+        setApprovalStep("devices");
+        setApprovalDevices(Array.isArray(json.devices) ? json.devices : []);
+        setSelectedDevice("");
+        setApprovalError(null);
+        setOwnerCode("");
+        return;
+      }
       if (!res.ok || !json?.ok) {
         setError(json?.error ?? "Kod tasdiqlanmadi");
         return;
@@ -293,6 +411,69 @@ export default function LoginPage() {
   function cancelChallenge() {
     setChallenge(null);
     setOwnerCode("");
+    setError(null);
+  }
+
+  async function verifyApproval() {
+    if (!approval || approvalBusy) return;
+    if (!/^\d{6}$/.test(approvalCode)) {
+      setApprovalError("Kod 6 xonali bo'lishi kerak");
+      return;
+    }
+    setApprovalBusy(true);
+    setApprovalError(null);
+    try {
+      const res = await apiFetch("/api/auth/device-approval/verify", {
+        method: "POST",
+        body: JSON.stringify({ challengeId: approval.challengeId, code: approvalCode }),
+      });
+      const json = (await res.json().catch(() => null)) as LoginResponse | null;
+      if (!res.ok || !json?.ok) {
+        setApprovalError(json?.error ?? "Kod tasdiqlanmadi");
+        return;
+      }
+      setApprovalDevices(Array.isArray(json.data?.devices) ? json.data.devices : []);
+      setSelectedDevice("");
+      setApprovalStep("devices");
+    } catch {
+      setApprovalError(t("commonNetworkError"));
+    } finally {
+      setApprovalBusy(false);
+    }
+  }
+
+  async function completeApproval() {
+    if (!approval || approvalBusy) return;
+    if (!selectedDevice) {
+      setApprovalError(approvalLabels.selectFirst);
+      return;
+    }
+    setApprovalBusy(true);
+    setApprovalError(null);
+    try {
+      const res = await apiFetch("/api/auth/device-approval/complete", {
+        method: "POST",
+        body: JSON.stringify({ challengeId: approval.challengeId, deviceId: selectedDevice }),
+      });
+      const json = (await res.json().catch(() => null)) as LoginResponse | null;
+      if (!res.ok || !json?.ok) {
+        setApprovalError(json?.error ?? "Qurilma almashtirilmadi");
+        return;
+      }
+      window.location.assign(nextTarget());
+    } catch {
+      setApprovalError(t("commonNetworkError"));
+    } finally {
+      setApprovalBusy(false);
+    }
+  }
+
+  function cancelApproval() {
+    setApproval(null);
+    setApprovalCode("");
+    setApprovalDevices([]);
+    setSelectedDevice("");
+    setApprovalError(null);
     setError(null);
   }
 
@@ -506,12 +687,156 @@ export default function LoginPage() {
                   </div>
                 </div>
                 {errorNotice}
-                <Button type="submit" disabled={loading || !hydrated} size="lg" className="h-11 w-full">
-                  {loading ? t("authLoginSubmitting") : t("authLoginSubmit")}
-                </Button>
+                {approval ? (
+                  <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-4">
+                    <p className="flex items-center gap-2 text-sm font-semibold text-brand-950">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="size-4"
+                      >
+                        <path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z" />
+                        <path d="m9 12 2 2 4-4" />
+                      </svg>
+                      {approvalLabels.title}
+                    </p>
+                    {approvalStep === "code" ? (
+                      <>
+                        <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                          {approvalLabels.codeSent}
+                        </p>
+                        {approval.deviceName ? (
+                          <p className="mt-2 rounded-lg bg-white/80 px-3 py-2 text-xs text-slate-600">
+                            {approval.deviceName}
+                            {approval.location ? ` · ${approval.location}` : ""}
+                          </p>
+                        ) : null}
+                        <Label className="mt-3" htmlFor="login-approval-code">
+                          {approvalLabels.codeLabel}
+                        </Label>
+                        <div className="flex gap-2">
+                          <Input
+                            id="login-approval-code"
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            maxLength={6}
+                            value={approvalCode}
+                            placeholder="6 xonali kod"
+                            className="font-semibold tracking-[0.35em]"
+                            onChange={(event) =>
+                              setApprovalCode(event.target.value.replace(/\D/g, "").slice(0, 6))
+                            }
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.preventDefault();
+                                void verifyApproval();
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            className="shrink-0"
+                            disabled={approvalBusy || approvalCode.length !== 6}
+                            onClick={() => void verifyApproval()}
+                          >
+                            {approvalLabels.verify}
+                          </Button>
+                        </div>
+                        <p className="mt-2 text-[11px] text-slate-500">{approvalLabels.expires}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="mt-3 text-sm font-semibold text-brand-950">
+                          {approvalLabels.devicesTitle}
+                        </p>
+                        <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                          {approvalLabels.devicesHint}
+                        </p>
+                        <div className="mt-3 space-y-2">
+                          {approvalDevices.map((device) => {
+                            const selected = selectedDevice === device.id;
+                            return (
+                              <label
+                                key={device.id}
+                                className={
+                                  selected
+                                    ? "block cursor-pointer rounded-xl border border-brand-500 bg-white p-3 ring-4 ring-brand-500/10"
+                                    : "block cursor-pointer rounded-xl border border-slate-200 bg-white/80 p-3 transition hover:border-brand-300"
+                                }
+                              >
+                                <input
+                                  type="radio"
+                                  name="approval-device"
+                                  className="sr-only"
+                                  checked={selected}
+                                  onChange={() => setSelectedDevice(device.id)}
+                                />
+                                <span className="flex items-start justify-between gap-3">
+                                  <span className="min-w-0">
+                                    <span className="block truncate text-sm font-medium text-slate-800">
+                                      {device.name}
+                                    </span>
+                                    <span className="mt-0.5 block text-xs text-slate-500">
+                                      {[device.platform, device.browser].filter(Boolean).join(" · ") || "—"}
+                                    </span>
+                                    <span className="mt-1 block text-[11px] text-slate-500">
+                                      {device.location} · {device.ip ?? "—"}
+                                    </span>
+                                    <span className="mt-0.5 block text-[11px] text-slate-400">
+                                      {formatDeviceDate(device.lastSeenAt)}
+                                    </span>
+                                  </span>
+                                  <span
+                                    className={
+                                      selected
+                                        ? "mt-1 inline-flex size-4 shrink-0 items-center justify-center rounded-full border-2 border-brand-600 bg-brand-600"
+                                        : "mt-1 inline-flex size-4 shrink-0 rounded-full border-2 border-slate-300"
+                                    }
+                                  >
+                                    {selected ? <span className="size-1.5 rounded-full bg-white" /> : null}
+                                  </span>
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                        <Button
+                          type="button"
+                          className="mt-3 w-full"
+                          disabled={!selectedDevice || approvalBusy}
+                          onClick={() => void completeApproval()}
+                        >
+                          {approvalLabels.complete}
+                        </Button>
+                        <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+                          Tanlangan qurilma darhol tizimdan chiqariladi va uning sessiyasi yopiladi.
+                        </p>
+                      </>
+                    )}
+                    {approvalError ? (
+                      <p className="mt-2 text-xs font-medium text-rose-700">{approvalError}</p>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={cancelApproval}
+                      className="mt-3 w-full text-center text-xs font-medium text-brand-700 transition-colors duration-150 hover:text-brand-900 hover:underline"
+                    >
+                      Orqaga
+                    </button>
+                  </div>
+                ) : null}
+                {approval ? null : (
+                  <Button type="submit" disabled={loading || !hydrated} size="lg" className="h-11 w-full">
+                    {loading ? t("authLoginSubmitting") : t("authLoginSubmit")}
+                  </Button>
+                )}
               </form>
             )}
-            {challenge ? null : (
+            {challenge || approval ? null : (
               <div className="mt-8">
                 <div className="flex items-center gap-3">
                   <span className="h-px flex-1 bg-slate-100" />

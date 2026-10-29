@@ -31,7 +31,6 @@ type CameraErrorKey = "schCameraUnsupported" | "schCameraPermission" | "schCamer
 
 const ROLE_LABEL_KEY: Record<Role, keyof Dictionary> = {
   ADMIN: "mscRoleAdmin",
-  OWNER: "mscRoleAdmin",
   REKTOR: "mscRoleRector",
   PRO_RECTOR: "mscRoleProRector",
   DEKAN: "mscRoleDean",

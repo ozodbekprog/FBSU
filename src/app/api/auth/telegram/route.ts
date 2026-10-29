@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { createSession, getCurrentUser } from "@/lib/auth";
+import { DeviceLimitError } from "@/lib/device";
 import { verifyInitData } from "@/server/telegram-init-data";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -42,12 +43,37 @@ export async function POST(request: Request) {
     if (!linked.isActive) {
       return Response.json({ ok: false, error: "Akkaunt faol emas" }, { status: 403 });
     }
-    await createSession(linked, { remember: true });
+    let sessionId: string | null = null;
+    try {
+      const session = await createSession(linked, { remember: true, method: "TELEGRAM" });
+      sessionId = session.sessionId;
+    } catch (error) {
+      if (error instanceof DeviceLimitError) {
+        await createAuditLog({
+          action: "LOGIN_FAILED",
+          entity: "User",
+          entityId: linked.id,
+          meta: { email: linked.email, reason: "device_limit", channel: "telegram_miniapp" },
+          ip: clientInfo.ip,
+          userAgent: clientInfo.userAgent,
+        });
+        return Response.json(
+          {
+            ok: false,
+            code: "DEVICE_LIMIT",
+            error: "Bu hisobga faqat 2 ta qurilma ulanadi. Avval eski qurilmani uzib, qayta urinib ko'ring.",
+          },
+          { status: 403 },
+        );
+      }
+      throw error;
+    }
     await createAuditLog({
       action: "LOGIN_SUCCESS",
       meta: { email: linked.email, channel: "telegram_miniapp" },
       ip: clientInfo.ip,
       userAgent: clientInfo.userAgent,
+      sessionId: sessionId ?? undefined,
     });
     return Response.json({ ok: true, mode: "login", name: linked.name });
   }

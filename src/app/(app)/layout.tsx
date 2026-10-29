@@ -178,6 +178,9 @@ export default async function AppLayout({
         ...(canViewAnalysis(user.role) ? [{ href: "/reports", label: dictionary.navReports }] : []),
         ...(canViewAnalysis(user.role) ? [{ href: "/workload", label: dictionary.navWorkload }] : []),
         ...(user.role === "ADMIN" ? [{ href: "/admin", label: dictionary.navAdmin }] : []),
+        ...(user.role === "OWNER"
+          ? [{ href: "/owner/security", label: "Xavfsizlik jurnali" }]
+          : []),
       ],
     },
   ].filter((group) => group.links.length > 0);

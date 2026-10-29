@@ -1,13 +1,17 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, getSession } from "@/lib/auth";
 import { getClientIp } from "@/lib/client-ip";
 import { nextChainFields } from "@/server/audit-chain";
 
 export type AuditAction =
   | "LOGIN_SUCCESS"
   | "LOGIN_FAILED"
+  | "DEVICE_APPROVAL_REQUEST"
+  | "DEVICE_APPROVAL_VERIFIED"
+  | "DEVICE_APPROVAL_FAILED"
+  | "DEVICE_APPROVAL_SUCCESS"
   | "LOGOUT"
   | "REGISTER"
   | "PASSWORD_CHANGE"
@@ -51,11 +55,13 @@ type JsonValue = string | number | boolean | { [key: string]: JsonValue } | Json
 
 export interface AuditLogData {
   action: AuditAction;
+  actorId?: string;
   entity?: string;
   entityId?: string;
   meta?: Record<string, JsonValue>;
   ip?: string;
   userAgent?: string;
+  sessionId?: string;
 }
 
 export async function createAuditLog(data: AuditLogData): Promise<void> {
@@ -68,9 +74,17 @@ export async function createAuditLog(data: AuditLogData): Promise<void> {
     };
     const id = randomUUID();
     const createdAt = new Date();
-    const actorId = user?.id || null;
+    const actorId = data.actorId ?? user?.id ?? null;
     const entity = data.entity || null;
     const entityId = data.entityId || null;
+    let sessionId = data.sessionId ?? null;
+    if (!sessionId) {
+      try {
+        sessionId = (await getSession())?.sid ?? null;
+      } catch {
+        sessionId = null;
+      }
+    }
     let chain: { prevHash: string | null; hash: string | null } = { prevHash: null, hash: null };
     try {
       chain = await nextChainFields(prisma, {
@@ -91,6 +105,7 @@ export async function createAuditLog(data: AuditLogData): Promise<void> {
         entity,
         entityId,
         meta,
+        sessionId,
         createdAt,
         prevHash: chain.prevHash,
         hash: chain.hash,

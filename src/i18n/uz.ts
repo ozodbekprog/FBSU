@@ -25,7 +25,6 @@ import { vid } from "./dict/uz/vid";
 import { res } from "./dict/uz/res";
 import { ob } from "./dict/uz/ob";
 import { sec } from "./dict/uz/sec";
-import { fb } from "./dict/uz/fb";
 import { ofs } from "./dict/uz/ofs";
 import { ver } from "./dict/uz/ver";
 

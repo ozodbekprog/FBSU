@@ -184,6 +184,8 @@ const ROLE_GATED: Record<string, string[]> = {
   "/approvals": ["ADMIN", "REGISTRAR", "REKTOR"],
   "/monitoring": ["ADMIN", "REKTOR", "PRO_RECTOR", "DEKAN", "KAFEDRA_MUDIRI", "REGISTRAR"],
   "/nazorat": ["ADMIN", "NAZORATCHI"],
+  "/admin/security": ["OWNER"],
+  "/owner": ["OWNER"],
 };
 
 function sessionSecret(): Uint8Array | null {

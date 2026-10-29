@@ -26,7 +26,6 @@ import { vid } from "./dict/ru/vid";
 import { res } from "./dict/ru/res";
 import { ob } from "./dict/ru/ob";
 import { sec } from "./dict/ru/sec";
-import { fb } from "./dict/ru/fb";
 import { ofs } from "./dict/ru/ofs";
 import { ver } from "./dict/ru/ver";
 

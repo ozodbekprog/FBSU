@@ -79,7 +79,7 @@ export async function PATCH(request: Request) {
       },
       include: { group: true },
     });
-    await createSession(updated);
+    await createSession(updated, { renew: true });
     return Response.json({ ok: true, data: { user: publicUser(updated) } });
   }
 

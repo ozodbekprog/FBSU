@@ -2,6 +2,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/auth";
+import { DeviceLimitError } from "@/lib/device";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
 import { getClientIp as getClientIpFromHeaders } from "@/lib/client-ip";
@@ -72,7 +73,19 @@ export async function POST(request: Request) {
     data: { name: parsed.data.name.trim(), email, passwordHash, role: "STUDENT" },
   });
 
-  await createSession(user);
+  let sessionId: string | null = null;
+  try {
+    const session = await createSession(user, { method: "REGISTER" });
+    sessionId = session.sessionId;
+  } catch (error) {
+    if (error instanceof DeviceLimitError) {
+      return Response.json(
+        { ok: false, code: "DEVICE_LIMIT", error: "Qurilma limiti tugagan" },
+        { status: 403 },
+      );
+    }
+    throw error;
+  }
   await createAuditLog({
     action: "REGISTER",
     entity: "User",
@@ -80,6 +93,7 @@ export async function POST(request: Request) {
     meta: { email, role: user.role },
     ip: clientInfo.ip,
     userAgent: clientInfo.userAgent,
+    sessionId: sessionId ?? undefined,
   });
   return Response.json({ ok: true, user: { id: user.id, name: user.name, role: user.role } }, { status: 201 });
 }
