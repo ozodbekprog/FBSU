@@ -8,6 +8,7 @@ export const MODULE_KEYS = [
   "forum",
   "qr_attendance",
   "secure_exams",
+  "library",
 ] as const;
 
 export type ModuleKey = (typeof MODULE_KEYS)[number];
@@ -45,6 +46,10 @@ export const MODULE_META: Record<ModuleKey, ModuleMeta> = {
     title: "Xavfsiz imtihon",
     description: "Kod bilan kiriladigan, nazorat ostidagi test sessiyalari.",
   },
+  library: {
+    title: "Kutubxona",
+    description: "Kitob fondi, berish-qaytarish va qarzdorlik hisobi.",
+  },
 };
 
 export const DEFAULT_MODULE_FLAGS: ModuleFlags = {
@@ -55,6 +60,7 @@ export const DEFAULT_MODULE_FLAGS: ModuleFlags = {
   forum: true,
   qr_attendance: true,
   secure_exams: true,
+  library: true,
 };
 
 const MODULES_SETTING_KEY = "modules";

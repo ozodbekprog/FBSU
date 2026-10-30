@@ -2,6 +2,8 @@ import { requireUser } from "@/lib/auth";
 import { Card, CardBody, PageHeader } from "@/components/ui";
 import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 import SettingsManager from "@/components/settings/SettingsManager";
+import PasskeyManager from "@/components/passkeys/passkey-manager";
+import { listPasskeys } from "@/server/passkeys";
 import { normalizeUserPreferences } from "@/components/settings/preferences";
 import { getLocale, t } from "@/i18n";
 import { isTelegramLinked } from "./telegram-link";
@@ -10,6 +12,7 @@ export default async function SettingsPage() {
   const user = await requireUser();
   const preferences = normalizeUserPreferences(user.preferences);
   const telegramLinked = await isTelegramLinked(user.email);
+  const passkeys = await listPasskeys(user.id);
   const locale = await getLocale();
 
   return (
@@ -32,6 +35,7 @@ export default async function SettingsPage() {
           <LanguageSwitcher locale={locale} />
         </CardBody>
       </Card>
+      <PasskeyManager initialItems={passkeys} />
       <SettingsManager
         initialPreferences={preferences}
         email={user.email}

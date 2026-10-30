@@ -1,5 +1,7 @@
 import type { Dictionary } from "./uz";
 import { shell } from "./dict/en/shell";
+import { library } from "./dict/en/library";
+import { passkey } from "./dict/en/passkey";
 import { fb } from "./dict/en/fb";
 import { dash } from "./dict/en/dash";
 import { crs } from "./dict/en/crs";
@@ -188,4 +190,6 @@ export const en: Dictionary = {
   ...sec,
   ...ofs,
   ...ver,
+  ...library,
+  ...passkey,
 };
