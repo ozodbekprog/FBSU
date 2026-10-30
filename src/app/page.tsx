@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FbMotion } from "@/components/fb/fb-motion";
+import { Badge, ButtonLink, Card } from "@/components/ui";
+import { Logo } from "@/components/brand/logo";
+import { AppInstallButton } from "@/components/pwa/AppInstallButton";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { getDictionary, getLocale } from "@/i18n";
 
 const SITE_URL = "https://lms.ttpu.uz";
 const OG_LOCALES: Record<string, string> = { uz: "uz_UZ", ru: "ru_RU", en: "en_US" };
-const INTL_LOCALES: Record<string, string> = { uz: "uz-UZ", ru: "ru-RU", en: "en-GB" };
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -29,55 +31,9 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-function ArrowIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 12h14M13 6l6 6-6 6" />
-    </svg>
-  );
-}
-
-function PhoneNav({ active }: { active: number }) {
-  return (
-    <div className="fb-ph-nav" aria-hidden="true">
-      <span className={active === 0 ? "on" : undefined}>
-        <svg viewBox="0 0 24 24">
-          <rect x="3" y="3" width="7" height="7" rx="2" />
-          <rect x="14" y="3" width="7" height="7" rx="2" />
-          <rect x="3" y="14" width="7" height="7" rx="2" />
-          <rect x="14" y="14" width="7" height="7" rx="2" />
-        </svg>
-      </span>
-      <span className={active === 1 ? "on" : undefined}>
-        <svg viewBox="0 0 24 24">
-          <rect x="3" y="5" width="18" height="16" rx="3" />
-          <path d="M8 3v4M16 3v4M3 10h18" />
-        </svg>
-      </span>
-      <span className={active === 2 ? "on" : undefined}>
-        <svg viewBox="0 0 24 24">
-          <path d="M9 11l3 3 8-8" />
-          <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9" />
-        </svg>
-      </span>
-      <span className={active === 3 ? "on" : undefined}>
-        <svg viewBox="0 0 24 24">
-          <circle cx="12" cy="8" r="4" />
-          <path d="M4 21c0-4 3.6-6 8-6s8 2 8 6" />
-        </svg>
-      </span>
-    </div>
-  );
-}
-
 export default async function HomePage() {
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
-  const todayLabel = new Intl.DateTimeFormat(INTL_LOCALES[locale], {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(new Date());
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -107,863 +63,995 @@ export default async function HomePage() {
     ],
   };
 
+  const navLinks = [
+    { href: "#imkoniyatlar", label: dictionary.landNavFeatures },
+    { href: "#boshlash", label: dictionary.landNavStart },
+    { href: "#ilova", label: dictionary.landNavApp },
+    { href: "#statistika", label: dictionary.landNavStats },
+    { href: "#aloqa", label: dictionary.landNavContact },
+  ];
+
+  const dashNav = [
+    { label: dictionary.landDashControl, active: true },
+    { label: dictionary.navCourses, active: false },
+    { label: dictionary.navSchedule, active: false },
+    { label: dictionary.navGradesStudent, active: false },
+    { label: dictionary.navTranscript, active: false },
+    { label: dictionary.landDashBooking, active: false },
+  ];
+
+  const dashStats = [
+    { label: dictionary.navGpa, value: "3.8" },
+    { label: dictionary.navAttendance, value: "94%" },
+    { label: dictionary.landDashAssignments, value: "12" },
+  ];
+
+  const dashBars = [
+    { day: dictionary.landDayMon, value: 44, highlight: false },
+    { day: dictionary.landDayTue, value: 66, highlight: false },
+    { day: dictionary.landDayWed, value: 52, highlight: false },
+    { day: dictionary.landDayThu, value: 78, highlight: false },
+    { day: dictionary.landDayFri, value: 60, highlight: true },
+    { day: dictionary.landDaySat, value: 90, highlight: true },
+    { day: dictionary.landDaySun, value: 48, highlight: false },
+  ];
+
+  const dashSchedule = [
+    {
+      time: "09:00",
+      title: dictionary.landCourseDiffEq,
+      room: "A-204",
+      tone: "bg-brand-500",
+    },
+    {
+      time: "10:30",
+      title: dictionary.landCourseProg,
+      room: "B-311",
+      tone: "bg-gold-400",
+    },
+    {
+      time: "13:00",
+      title: dictionary.landCoursePhysics,
+      room: "Lab-2",
+      tone: "bg-emerald-500",
+    },
+  ];
+
+  const trustItems = [
+    dictionary.landTrust1,
+    dictionary.landTrust2,
+    dictionary.landTrust3,
+  ];
+
+  const features = [
+    {
+      title: dictionary.landFeat1Title,
+      description: dictionary.landFeat1Desc,
+      badge: null as string | null,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landFeat2Title,
+      description: dictionary.landFeat2Desc,
+      badge: null as string | null,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <rect x="8" y="2" width="8" height="4" rx="1" />
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+          <path d="m9 14 2 2 4-4" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landFeat3Title,
+      description: dictionary.landFeat3Desc,
+      badge: null as string | null,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+          <path d="M12 17h.01" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landFeat4Title,
+      description: dictionary.landFeat4Desc,
+      badge: dictionary.landBadgeNew,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <path d="M3 3v18h18" />
+          <path d="m7 14 4-4 3 3 5-6" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landFeat5Title,
+      description: dictionary.landFeat5Desc,
+      badge: dictionary.landBadgeNew,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <path d="M14 2v6h6" />
+          <path d="M8 13h8M8 17h5" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landFeat6Title,
+      description: dictionary.landFeat6Desc,
+      badge: dictionary.landBadgeNew,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landFeat7Title,
+      description: dictionary.landFeat7Desc,
+      badge: dictionary.landBadgeNew,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <path d="M16 2v4M8 2v4M3 10h18" />
+          <path d="m9 15 2 2 4-4" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landFeat8Title,
+      description: dictionary.landFeat8Desc,
+      badge: null as string | null,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <path d="m22 2-7 20-4-9-9-4Z" />
+          <path d="M22 2 11 13" />
+        </svg>
+      ),
+    },
+  ];
+
+  const stats = [
+    { value: "20 000+", label: dictionary.landStatUsers },
+    { value: "1 800+", label: dictionary.landStatCourses },
+    { value: "120+", label: dictionary.landStatTeachers },
+    { value: "24/7", label: dictionary.landStatSupport },
+  ];
+
+  const steps = [
+    {
+      title: dictionary.landStep1Title,
+      description: dictionary.landStep1Desc,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M19 8v6M22 11h-6" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landStep2Title,
+      description: dictionary.landStep2Desc,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+        </svg>
+      ),
+    },
+    {
+      title: dictionary.landStep3Title,
+      description: dictionary.landStep3Desc,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-5"
+        >
+          <path d="m5 3 14 9-14 9V3z" />
+        </svg>
+      ),
+    },
+  ];
+
+  const footerModules = [
+    dictionary.landFeat1Title,
+    dictionary.landModAssignmentsTests,
+    dictionary.landModGpaTranscript,
+    dictionary.landFeat6Title,
+    dictionary.landFeat7Title,
+    dictionary.landFeat8Title,
+  ];
+
+  const footerPlatform = [
+    { href: "#imkoniyatlar", label: dictionary.landNavFeatures },
+    { href: "#boshlash", label: dictionary.landNavStart },
+    { href: "/app", label: dictionary.landFooterApp },
+    { href: "/login", label: dictionary.landFooterLogin },
+    { href: "/register", label: dictionary.authLoginRegister },
+    { href: "/help", label: dictionary.landFooterHelp },
+  ];
+
+  const appPoints = [
+    dictionary.landAppPoint1,
+    dictionary.landAppPoint2,
+    dictionary.landAppPoint3,
+  ];
+
+  const appScreenRows = [
+    {
+      label: dictionary.navCourses,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-4"
+        >
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+      ),
+    },
+    {
+      label: dictionary.navSchedule,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-4"
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <path d="M16 2v4M8 2v4M3 10h18" />
+        </svg>
+      ),
+    },
+    {
+      label: dictionary.navMessages,
+      icon: (
+        <svg aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="size-4"
+        >
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+      ),
+    },
+  ];
+
   return (
-    <>
+    <div className="flex min-h-screen flex-col bg-white text-slate-900">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <div className="fb-landing" data-fb-root="landing">
-        <FbMotion variant="landing" />
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-brand-800 focus:shadow-lg"
+      >
+        {dictionary.landSkipToContent}
+      </a>
+      <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/85 backdrop-blur">
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+          <Link href="/" className="transition-opacity duration-150 hover:opacity-80">
+            <Logo />
+          </Link>
+          <nav className="hidden items-center gap-7 text-sm font-medium text-slate-600 lg:flex">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="whitespace-nowrap transition-colors duration-150 hover:text-brand-800"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <ButtonLink href="/login" variant="ghost" size="sm" className="max-sm:hidden">
+              {dictionary.authLoginLink}
+            </ButtonLink>
+            <ButtonLink href="/register" size="sm" className="whitespace-nowrap">
+              {dictionary.authLoginRegister}
+            </ButtonLink>
+          </div>
+        </div>
+      </header>
 
-        <div className="fb-gnav">
-          <div className="fb-gnav-in">
-            <Link className="fb-g-brand" href="/">
-              <img src="/logo.svg" alt="FBSU" width={27} height={27} />
-              <b>FBSU</b>
-              <span>TTPU</span>
-            </Link>
-            <nav aria-label="Asosiy navigatsiya">
-              <a href="#platforma">{dictionary.fbNavPlatform}</a>
-              <a href="#modullar">{dictionary.fbNavModules}</a>
-              <a href="#kabinet">{dictionary.fbNavCabinet}</a>
-              <a href="#ilova">{dictionary.fbNavApp}</a>
-              <a href="#universitet">{dictionary.fbNavUniversity}</a>
-            </nav>
-            <div className="fb-g-right">
-              <Link className="fb-login" href="/login">
-                {dictionary.fbLogin}
-              </Link>
-              <Link className="fb-cta" href="/register">
-                {dictionary.fbRegister} <ArrowIcon />
-              </Link>
+      <main id="main" className="flex-1">
+        <section className="relative overflow-hidden border-b border-slate-200/70 bg-gradient-to-b from-brand-50 via-white to-white">
+          <div className="pointer-events-none absolute -left-24 top-12 size-72 rounded-full bg-brand-200/40 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 -top-16 size-80 rounded-full bg-gold-300/20 blur-3xl" />
+          <div className="pointer-events-none absolute inset-0 [background-image:linear-gradient(to_right,var(--color-brand-100)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-brand-100)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(ellipse_75%_60%_at_50%_0%,black,transparent_75%)]" />
+          <div className="relative mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-20 sm:px-6 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-12 lg:py-28">
+            <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
+              <Badge tone="brand" className="gap-2 px-3.5 py-1.5 text-xs">
+                <span className="size-1.5 rounded-full bg-gold-400" />
+                {dictionary.landUniversity}
+              </Badge>
+              <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight text-brand-950 sm:text-5xl lg:text-[3.4rem]">
+                {dictionary.landHeroTitleA}{" "}
+                <span className="underline decoration-gold-400 decoration-2 underline-offset-[6px]">
+                  {dictionary.landHeroTitleB}
+                </span>
+              </h1>
+              <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-slate-600 lg:mx-0">
+                {dictionary.landHeroSubtitle}
+              </p>
+              <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
+                <ButtonLink href="/login" size="lg" className="w-full min-w-44 sm:w-auto">
+                  {dictionary.authLoginLink}
+                </ButtonLink>
+                <ButtonLink
+                  href="/register"
+                  variant="secondary"
+                  size="lg"
+                  className="w-full min-w-44 sm:w-auto"
+                >
+                  {dictionary.authLoginRegister}
+                </ButtonLink>
+              </div>
+              <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5 lg:justify-start">
+                {trustItems.map((item) => (
+                  <li key={item} className="inline-flex items-center gap-2 text-sm text-slate-500">
+                    <svg aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="size-4 text-emerald-500"
+                    >
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="relative mx-auto w-full max-w-xl">
+              <div className="pointer-events-none absolute -inset-8 rounded-[2.5rem] bg-gradient-to-tr from-brand-200/60 via-white to-gold-300/30 blur-2xl" />
+              <div className="relative rounded-2xl border border-slate-200 bg-white p-2 shadow-lift">
+                <div className="flex items-center gap-2 px-2 py-1.5">
+                  <span className="size-2.5 rounded-full bg-rose-300" />
+                  <span className="size-2.5 rounded-full bg-gold-300" />
+                  <span className="size-2.5 rounded-full bg-emerald-300" />
+                  <span className="ml-2 hidden h-5 flex-1 items-center rounded-md bg-slate-100 px-2.5 text-[11px] font-medium text-slate-600 sm:flex">
+                    lms.ttpu.uz/dashboard
+                  </span>
+                  <span className="size-5 rounded-md bg-brand-50" />
+                </div>
+                <div className="flex gap-2.5 rounded-xl bg-surface p-2.5 sm:p-3">
+                  <aside aria-hidden="true" className="hidden w-36 shrink-0 flex-col gap-1 rounded-xl border border-slate-100 bg-white p-2.5 sm:flex">
+                    {dashNav.map((item) => (
+                      <span
+                        key={item.label}
+                        className={
+                          item.active
+                            ? "flex items-center gap-2 rounded-lg bg-brand-50 px-2.5 py-1.5 text-[11px] font-semibold text-brand-800"
+                            : "flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-500"
+                        }
+                      >
+                        <span
+                          className={
+                            item.active
+                              ? "size-1.5 rounded-full bg-brand-600"
+                              : "size-1.5 rounded-full bg-slate-300"
+                          }
+                        />
+                        {item.label}
+                      </span>
+                    ))}
+                  </aside>
+                  <div className="min-w-0 flex-1 space-y-2.5">
+                    <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-white px-3.5 py-2.5">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-800 to-brand-600 text-[11px] font-semibold text-white">
+                          OZ
+                        </span>
+                        <div className="min-w-0">
+                          <p className="truncate text-[11px] font-semibold text-slate-800">
+                            {dictionary.landDashGreeting}
+                          </p>
+                          <p className="truncate text-[11px] text-slate-600">
+                            {dictionary.landDashSemester}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                        {dictionary.landDashActive}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {dashStats.map((stat) => (
+                        <div
+                          key={stat.label}
+                          className="rounded-xl border border-slate-100 bg-white px-3 py-2.5"
+                        >
+                          <p className="text-[11px] font-medium text-slate-600">{stat.label}</p>
+                          <p className="mt-0.5 text-sm font-semibold tracking-tight text-brand-900">
+                            {stat.value}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="rounded-xl border border-slate-100 bg-white p-3.5">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] font-semibold text-slate-700">
+                          {dictionary.landWeeklyActivity}
+                        </p>
+                        <span className="text-[11px] font-medium text-slate-600">
+                          {dictionary.landSixOfSeven}
+                        </span>
+                      </div>
+                      <div className="mt-3 flex h-20 items-end gap-1.5">
+                        {dashBars.map((bar) => (
+                          <div
+                            key={bar.day}
+                            className="flex h-full flex-1 flex-col items-center justify-end gap-1.5"
+                          >
+                            <span
+                              className={
+                                bar.highlight
+                                  ? "w-full rounded-t-md bg-gradient-to-t from-brand-800 to-brand-500"
+                                  : "w-full rounded-t-md bg-brand-100"
+                              }
+                              style={{ height: `${bar.value}%` }}
+                            />
+                            <span className="text-[10px] font-medium text-slate-600">
+                              {bar.day}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {dashSchedule.map((item) => (
+                        <div
+                          key={item.time}
+                          className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white px-3.5 py-2.5"
+                        >
+                          <span className="w-9 shrink-0 text-[11px] font-semibold text-brand-700">
+                            {item.time}
+                          </span>
+                          <span className={`h-7 w-1 shrink-0 rounded-full ${item.tone}`} />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[11px] font-semibold text-slate-800">
+                              {item.title}
+                            </p>
+                            <p className="text-[11px] text-slate-600">{item.room}</p>
+                          </div>
+                          <span className="size-1.5 shrink-0 rounded-full bg-slate-200" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute -right-3 -top-6 hidden items-center gap-2.5 rounded-2xl border border-slate-200 bg-white/95 px-3.5 py-2.5 shadow-lift backdrop-blur sm:flex">
+                <span className="inline-flex size-8 items-center justify-center rounded-xl bg-gold-300/20 text-gold-800">
+                  <svg aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="size-4"
+                  >
+                    <path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                </span>
+                <div>
+                  <p className="text-xs font-semibold text-slate-800">{dictionary.landGpaShort}</p>
+                  <p className="text-[11px] text-slate-600">{dictionary.landSemesterRating}</p>
+                </div>
+              </div>
+
+              <div className="absolute -bottom-6 -left-3 hidden items-center gap-2.5 rounded-2xl border border-slate-200 bg-white/95 px-3.5 py-2.5 shadow-lift backdrop-blur sm:flex">
+                <span className="inline-flex size-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                  <svg aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="size-4"
+                  >
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                </span>
+                <div>
+                  <p className="text-xs font-semibold text-slate-800">
+                    {dictionary.landAssignmentGraded}
+                  </p>
+                  <p className="text-[11px] text-slate-600">{dictionary.landMathScore}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="imkoniyatlar" className="py-20 sm:py-24">
+          <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
+                {dictionary.landNavFeatures}
+              </p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-brand-950 sm:text-4xl">
+                {dictionary.landFeaturesTitle}
+              </h2>
+              <p className="mt-4 leading-relaxed text-slate-600">
+                {dictionary.landFeaturesSubtitle}
+              </p>
+            </div>
+            <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {features.map((feature) => (
+                <Card
+                  key={feature.title}
+                  className="group flex h-full flex-col p-6"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="inline-flex size-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 transition-colors duration-200 group-hover:bg-brand-100">
+                      {feature.icon}
+                    </span>
+                    {feature.badge ? <Badge tone="gold">{feature.badge}</Badge> : null}
+                  </div>
+                  <h3 className="mt-5 font-semibold tracking-tight text-brand-950">
+                    {feature.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                    {feature.description}
+                  </p>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="boshlash" className="border-y border-slate-200/70 bg-gradient-to-b from-white via-brand-50/50 to-white py-20 sm:py-24">
+          <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
+                {dictionary.landStartEyebrow}
+              </p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-brand-950 sm:text-4xl">
+                {dictionary.landStartTitle}
+              </h2>
+              <p className="mt-4 leading-relaxed text-slate-600">
+                {dictionary.landStartSubtitle}
+              </p>
+            </div>
+            <div className="mt-12 grid gap-6 md:grid-cols-3">
+              {steps.map((step, index) => (
+                <Card
+                  key={step.title}
+                  className="group relative h-full overflow-hidden p-6"
+                >
+                  <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-900 via-brand-500 to-gold-400" />
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="inline-flex size-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 transition-colors duration-200 group-hover:bg-brand-100">
+                      {step.icon}
+                    </span>
+                    <span className="text-3xl font-bold tracking-tight text-slate-100">
+                      0{index + 1}
+                    </span>
+                  </div>
+                  <h3 className="mt-5 font-semibold tracking-tight text-brand-950">
+                    {step.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                    {step.description}
+                  </p>
+                </Card>
+              ))}
+            </div>
+            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <ButtonLink href="/register" size="lg" className="w-full min-w-44 sm:w-auto">
+                {dictionary.landCreateAccount}
+              </ButtonLink>
+              <ButtonLink
+                href="/login"
+                variant="secondary"
+                size="lg"
+                className="w-full min-w-44 sm:w-auto"
+              >
+                {dictionary.landDemoLogin}
+              </ButtonLink>
+            </div>
+          </div>
+        </section>
+
+        <section id="ilova" className="py-20 sm:py-24">
+          <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+            <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16">
+              <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
+                  {dictionary.landAppEyebrow}
+                </p>
+                <h2 className="mt-3 text-3xl font-bold tracking-tight text-brand-950 sm:text-4xl">
+                  {dictionary.landAppTitle}
+                </h2>
+                <p className="mt-4 leading-relaxed text-slate-600">
+                  {dictionary.landAppSubtitle}
+                </p>
+                <ul className="mx-auto mt-7 flex max-w-md flex-col gap-3 lg:mx-0">
+                  {appPoints.map((point) => (
+                    <li
+                      key={point}
+                      className="inline-flex items-center gap-2.5 text-left text-sm text-slate-600"
+                    >
+                      <svg aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="size-4 shrink-0 text-emerald-500"
+                      >
+                        <path d="M20 6 9 17l-5-5" />
+                      </svg>
+                      {point}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
+                  <AppInstallButton size="lg" withManualHint className="w-full min-w-44 sm:w-auto" />
+                </div>
+                <div className="mt-6 flex justify-center lg:justify-start">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-gold-300/70 bg-gold-300/15 px-3.5 py-1.5 text-xs font-medium text-gold-800">
+                    <svg aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="size-3.5"
+                    >
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M12 7v5l3 2" />
+                    </svg>
+                    {dictionary.landAppSoonBadge}
+                  </span>
+                </div>
+              </div>
+
+              <div className="relative mx-auto w-full max-w-sm">
+                <div className="pointer-events-none absolute -inset-10 rounded-[3rem] bg-gradient-to-tr from-brand-200/50 via-white to-gold-300/30 blur-2xl" />
+                <div className="relative">
+                  <div className="relative mx-auto w-[248px] rounded-[2.6rem] border border-slate-200 bg-brand-950 p-2 shadow-lift sm:w-[270px]">
+                    <div className="overflow-hidden rounded-[2.15rem] bg-white">
+                      <div className="relative bg-gradient-to-b from-brand-900 to-brand-700 px-5 pb-10 pt-8 text-center">
+                        <img
+                          src="/logo.svg"
+                          alt=""
+                          width={56}
+                          height={56}
+                          className="mx-auto rounded-2xl bg-white shadow-lg"
+                        />
+                        <p className="mt-3 text-base font-semibold text-white">FBSU</p>
+                        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-brand-200">
+                          {dictionary.landAppEyebrow}
+                        </p>
+                      </div>
+                      <div className="-mt-5 space-y-2 px-3.5 pb-4">
+                        {appScreenRows.map((row) => (
+                          <div
+                            key={row.label}
+                            className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-white px-3 py-2.5 shadow-[0_8px_18px_-12px_rgba(29,52,96,0.35)]"
+                          >
+                            <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
+                              {row.icon}
+                            </span>
+                            <span className="text-xs font-medium text-slate-700">{row.label}</span>
+                            <span className="ml-auto size-1.5 rounded-full bg-gold-400" />
+                          </div>
+                        ))}
+                        <div className="flex items-center justify-center gap-2 rounded-xl bg-gold-400 px-3 py-2.5 text-xs font-semibold text-brand-950">
+                          <svg aria-hidden="true"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="size-3.5"
+                          >
+                            <path d="M12 3v12" />
+                            <path d="m7 10 5 5 5-5" />
+                            <path d="M5 21h14" />
+                          </svg>
+                          {dictionary.landAppInstall}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="absolute -left-6 top-24 hidden w-40 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-lift sm:block lg:-left-10">
+                    <p className="text-xs font-semibold text-brand-950">
+                      {dictionary.landAppAndroid}
+                    </p>
+                    <p className="mt-0.5 text-[11px] leading-snug text-slate-500">
+                      {dictionary.landAppAndroidNote}
+                    </p>
+                  </div>
+                  <div className="absolute -right-6 bottom-24 hidden w-40 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-lift sm:block lg:-right-10">
+                    <p className="text-xs font-semibold text-brand-950">{dictionary.landAppIos}</p>
+                    <p className="mt-0.5 text-[11px] leading-snug text-slate-500">
+                      {dictionary.landAppIosNote}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="statistika" className="px-4 py-20 sm:px-6 sm:py-24">
+          <h2 className="sr-only">{dictionary.landNavStats}</h2>
+          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-brand-900 px-6 py-14 sm:px-12 sm:py-16">
+            <div className="pointer-events-none absolute -right-16 -top-20 size-72 rounded-full bg-gold-400/10 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-24 -left-16 size-72 rounded-full bg-brand-600/30 blur-3xl" />
+            <div className="relative grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+              {stats.map((stat) => (
+                <div key={stat.label} className="text-center sm:text-left">
+                  <span className="mx-auto block h-0.5 w-8 rounded-full bg-gold-400 sm:mx-0" />
+                  <p className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+                    {stat.value}
+                  </p>
+                  <p className="mt-2 text-sm font-medium text-brand-200">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="relative mt-12 flex flex-col items-start justify-between gap-6 border-t border-white/10 pt-8 sm:flex-row sm:items-center">
+              <p className="max-w-xl text-sm leading-relaxed text-brand-200">
+                {dictionary.landStatsNote}
+              </p>
+              <ButtonLink href="/register" variant="gold" size="lg" className="w-full sm:w-auto">
+                {dictionary.landJoinNow}
+              </ButtonLink>
+            </div>
+          </div>
+        </section>
+
+        <section className="px-4 pb-20 sm:px-6 sm:pb-24">
+          <div className="mx-auto max-w-4xl overflow-hidden rounded-3xl border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-brand-50 px-6 py-14 text-center sm:px-12">
+            <Badge tone="gold">{dictionary.landReadyBadge}</Badge>
+            <h2 className="mt-5 text-2xl font-bold tracking-tight text-brand-950 sm:text-3xl">
+              {dictionary.landStartToday}
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl leading-relaxed text-slate-600">
+              {dictionary.landStartTodayText}
+            </p>
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <ButtonLink href="/login" size="lg" className="w-full min-w-44 sm:w-auto">
+                {dictionary.landLoginCta}
+              </ButtonLink>
+              <ButtonLink
+                href="/register"
+                variant="secondary"
+                size="lg"
+                className="w-full min-w-44 sm:w-auto"
+              >
+                {dictionary.authLoginRegister}
+              </ButtonLink>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer id="aloqa" className="border-t border-slate-200/70 bg-white">
+        <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+          <div className="grid gap-12 lg:grid-cols-[1.5fr_1fr_1fr_1.2fr]">
+            <div>
+              <Logo />
+              <p className="mt-5 max-w-sm text-sm leading-relaxed text-slate-500">
+                {dictionary.landFooterAbout}
+              </p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <Badge tone="brand">{dictionary.landBuiltWith}</Badge>
+                <Badge tone="green">{dictionary.landSecure}</Badge>
+                <Badge tone="slate">Open API</Badge>
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-brand-950">
+                {dictionary.landFooterPlatform}
+              </p>
+              <ul className="mt-4 space-y-2.5 text-sm text-slate-500">
+                {footerPlatform.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="transition-colors duration-150 hover:text-brand-800"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-brand-950">
+                {dictionary.landFooterModules}
+              </p>
+              <ul className="mt-4 space-y-2.5 text-sm text-slate-500">
+                {footerModules.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-brand-950">
+                {dictionary.landFooterContact}
+              </p>
+              <ul className="mt-4 space-y-3.5 text-sm text-slate-500">
+                <li className="flex items-center gap-2.5">
+                  <svg aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="size-4 shrink-0 text-brand-500"
+                  >
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <path d="m22 7-10 6L2 7" />
+                  </svg>
+                  info@ttpu.uz
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <svg aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="size-4 shrink-0 text-brand-500"
+                  >
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                  +998 71 289 99 00
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <svg aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="mt-0.5 size-4 shrink-0 text-brand-500"
+                  >
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                  {dictionary.landAddress}
+                </li>
+                <li className="text-xs text-slate-600">{dictionary.landWorkHours}</li>
+              </ul>
             </div>
           </div>
         </div>
-
-        <header className="fb-hero">
-          <div className="fb-hero-copy">
-            <span className="fb-eyebrow">
-              <i />
-              {dictionary.fbEyebrow}
-            </span>
-            <h1 className="fb-hero-title">
-              <span className="fb-line">{dictionary.fbHeroLine1}</span>
-              <span className="fb-line fb-grad">{dictionary.fbHeroLine2}</span>
-            </h1>
-            <p className="fb-hero-sub">{dictionary.fbHeroSubtitle}</p>
-            <div className="fb-hero-actions">
-              <Link className="fb-btn-primary" href="/dashboard">
-                {dictionary.fbHeroCta} <ArrowIcon />
-              </Link>
-              <a className="fb-link-play" href="#kabinet">
-                {dictionary.fbHeroDemo}{" "}
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="m9 6 9 6-9 6V6Z" />
-                </svg>
-              </a>
-            </div>
-            <div className="fb-hero-note">
-              <b>20 000+</b> talaba · <b>1 800+</b> kurs · <b>24/7</b> yoningizda
-            </div>
+        <div className="border-t border-slate-100">
+          <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-3 px-4 py-6 sm:flex-row sm:px-6">
+            <p className="text-xs text-slate-600">{dictionary.landRights}</p>
           </div>
-
-          <div className="fb-stage">
-            <div className="fb-glow" />
-            <div className="fb-browser">
-              <div className="fb-chrome">
-                <span className="fb-tl r" />
-                <span className="fb-tl y" />
-                <span className="fb-tl g" />
-                <div className="fb-addr">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <rect x="4" y="10" width="16" height="11" rx="2" />
-                    <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-                  </svg>
-                  {dictionary.fbPreviewAddress}
-                </div>
-                <span className="fb-spacer" />
-              </div>
-              <div className="fb-shot">
-                <img
-                  src="/fb-dashboard-preview.jpg"
-                  alt="FBSU talaba kabineti"
-                  width={1680}
-                  height={1176}
-                />
-              </div>
-            </div>
-
-            <div className="fb-float gpa">
-              <div className="fb-lbl">{dictionary.fbGpaOverall}</div>
-              <div className="fb-val">
-                <b data-fb-count="3.82" data-fb-decimals="2">
-                  3.82
-                </b>
-                <span>/ 4.00</span>
-              </div>
-              <svg className="fb-spark" viewBox="0 0 70 18" aria-hidden="true">
-                <path d="M1 15 11 12 21 13 31 7 41 9 51 3 69 5" />
-              </svg>
-            </div>
-            <div className="fb-float task">
-              <div className="fb-lbl">{dictionary.fbDeadlineSoon}</div>
-              <div className="fb-row">
-                <i />
-                <b>
-                  {dictionary.fbNotifTitle} · {dictionary.fbdDeadlineToday.toLowerCase()}
-                </b>
-              </div>
-            </div>
-          </div>
-
-          <div className="fb-hero-fade" />
-        </header>
-
-        <section className="fb-stats">
-          <div className="fb-wrap fb-in">
-            <div className="fb-intro" data-fb-reveal>
-              <div className="fb-l">{dictionary.fbStatsIntroTitle}</div>
-              <p>{dictionary.fbStatsIntroText}</p>
-            </div>
-            <div className="fb-stat" data-fb-reveal data-fb-delay="90">
-              <b>
-                <span data-fb-count="20000">20 000</span>+
-              </b>
-              <span>{dictionary.fbStatUsers}</span>
-            </div>
-            <div className="fb-stat" data-fb-reveal data-fb-delay="180">
-              <b>
-                <span data-fb-count="1800">1 800</span>+
-              </b>
-              <span>{dictionary.fbStatCourses}</span>
-            </div>
-            <div className="fb-stat" data-fb-reveal data-fb-delay="270">
-              <b>
-                <span data-fb-count="120">120</span>+
-              </b>
-              <span>{dictionary.fbStatTeachers}</span>
-            </div>
-            <div className="fb-stat" data-fb-reveal data-fb-delay="360">
-              <b>24/7</b>
-              <span>{dictionary.fbStatSupport}</span>
-            </div>
-          </div>
-        </section>
-
-        <section className="fb-bento-sec" id="platforma">
-          <div className="fb-wrap">
-            <div className="fb-sec-head" data-fb-reveal>
-              <div className="fb-sec-kicker">{dictionary.fbBentoKicker}</div>
-              <h2 className="fb-sec-title">
-                {dictionary.fbBentoTitleA}
-                <br />
-                <span className="fb-soft">{dictionary.fbBentoTitleB}</span>
-              </h2>
-              <p className="fb-sec-sub">{dictionary.fbBentoSubtitle}</p>
-            </div>
-
-            <div className="fb-bento">
-              <div
-                className="fb-tile dark fb-t1"
-                data-fb-reveal
-                data-fb-spotlight
-                data-fb-delay="80"
-              >
-                <div className="fb-t-kick">{dictionary.fbdCardTodaySchedule}</div>
-                <h3>
-                  {dictionary.fbTileScheduleTitleA}
-                  <br />
-                  {dictionary.fbTileScheduleTitleB}
-                </h3>
-                <p>{dictionary.fbTileScheduleDesc}</p>
-                <div className="fb-mini-sched">
-                  <div className="fb-ms-row">
-                    <time>08:30</time>
-                    <div className="fb-sub">
-                      <b>Differensial tenglamalar</b>
-                      <span>A-204</span>
-                    </div>
-                    <span className="fb-st">{dictionary.fbStatusDone}</span>
-                  </div>
-                  <div className="fb-ms-row now">
-                    <time>10:00</time>
-                    <div className="fb-sub">
-                      <b>Programmalash asoslari</b>
-                      <span>B-311 · D. Rahimov</span>
-                    </div>
-                    <span className="fb-st">{dictionary.fbStatusNow}</span>
-                  </div>
-                  <div className="fb-ms-row">
-                    <time>11:30</time>
-                    <div className="fb-sub">
-                      <b>Fizika (amaliy)</b>
-                      <span>Lab-2</span>
-                    </div>
-                    <span className="fb-st">{dictionary.fbStatusNext}</span>
-                  </div>
-                  <div className="fb-ms-row">
-                    <time>14:00</time>
-                    <div className="fb-sub">
-                      <b>{dictionary.fbCourseEnglish}</b>
-                      <span>C-105</span>
-                    </div>
-                    <span className="fb-st">{dictionary.fbStatusNext}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="fb-tile fb-t2" data-fb-reveal data-fb-spotlight data-fb-delay="160">
-                <div className="fb-t-kick">GPA</div>
-                <h3>{dictionary.fbTileGpaTitle}</h3>
-                <p>{dictionary.fbTileGpaDesc}</p>
-                <div className="fb-gpa-vis">
-                  <div className="fb-num">
-                    <span data-fb-count="3.82" data-fb-decimals="2">
-                      3.82
-                    </span>
-                    <small>/4</small>
-                  </div>
-                  <div className="fb-up">+0.34</div>
-                </div>
-                <div className="fb-gpa-ring">
-                  <b>
-                    <span data-fb-count="95.5" data-fb-decimals="1">
-                      95.5
-                    </span>
-                    %
-                  </b>
-                </div>
-              </div>
-
-              <div className="fb-tile fb-t3" data-fb-reveal data-fb-spotlight data-fb-delay="240">
-                <div className="fb-t-kick">{dictionary.fbdKpiAssignments}</div>
-                <h3>
-                  {dictionary.fbTileAssignmentsTitleA}
-                  <br />
-                  {dictionary.fbTileAssignmentsTitleB}
-                </h3>
-                <p>{dictionary.fbTileAssignmentsDesc}</p>
-                <div className="fb-checklist">
-                  <div className="fb-ck done">
-                    <i />
-                    <span>{dictionary.fbNotifTitle}</span>
-                    <b>{dictionary.fbdDeadlineToday}</b>
-                  </div>
-                  <div className="fb-ck">
-                    <i />
-                    <span>{dictionary.fbSampleTask2}</span>
-                    <b>2 kun</b>
-                  </div>
-                  <div className="fb-ck">
-                    <i />
-                    <span>{dictionary.fbSampleTask3}</span>
-                    <b>6 kun</b>
-                  </div>
-                </div>
-              </div>
-
-              <div className="fb-tile fb-t4" data-fb-reveal data-fb-spotlight data-fb-delay="80">
-                <div className="fb-t-kick">Telegram</div>
-                <h3>
-                  {dictionary.fbTileTelegramTitleA}
-                  <br />
-                  {dictionary.fbTileTelegramTitleB}
-                </h3>
-                <p>{dictionary.fbTileTelegramDesc}</p>
-                <div className="fb-chat">
-                  <div className="fb-bub bot">{dictionary.fbChatBot}</div>
-                  <div className="fb-bub me">{dictionary.fbChatMe}</div>
-                  <div className="fb-inp">{dictionary.fbChatPlaceholder}</div>
-                </div>
-              </div>
-
-              <div className="fb-tile fb-t5" data-fb-reveal data-fb-spotlight data-fb-delay="160">
-                <div className="fb-t-kick">{dictionary.fbdAttendanceTitle}</div>
-                <h3>
-                  {dictionary.fbTileAttendanceTitleA}
-                  <br />
-                  {dictionary.fbTileAttendanceTitleB}
-                </h3>
-                <p>{dictionary.fbTileAttendanceDesc}</p>
-                <div className="fb-att-vis">
-                  <div className="fb-att-ring">
-                    <b>
-                      <span data-fb-count="95.8" data-fb-decimals="1">
-                        95.8
-                      </span>
-                      %
-                    </b>
-                  </div>
-                  <div className="fb-txt">
-                    <b>23 / 24 dars</b>
-                    <span>
-                      Har kuni
-                      <br />
-                      avtomatik yangilanadi
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="fb-tile fb-t6" data-fb-reveal data-fb-spotlight data-fb-delay="240">
-                <div className="fb-t-kick">{dictionary.fbFootGpa}</div>
-                <h3>{dictionary.fbTileTranscriptTitle}</h3>
-                <p>{dictionary.fbTileTranscriptDesc}</p>
-                <div className="fb-doc">
-                  <div className="fb-d-top">
-                    <b>{dictionary.fbTranscriptDoc}</b>
-                    <span>2026 / 2027</span>
-                  </div>
-                  <div className="fb-d-row">
-                    <span>Differensial tenglamalar</span>
-                    <b>92 · A</b>
-                  </div>
-                  <div className="fb-d-row">
-                    <span>Programmalash asoslari</span>
-                    <b>88 · B+</b>
-                  </div>
-                  <div className="fb-d-row">
-                    <span>Fizika</span>
-                    <b>85 · B+</b>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="fb-features" id="modullar">
-          <div className="fb-wrap">
-            <div className="fb-feature">
-              <div className="fb-copy" data-fb-reveal>
-                <div className="fb-k">{dictionary.fbGpaKicker}</div>
-                <h2>
-                  {dictionary.fbGpaTitleA}
-                  <br />
-                  {dictionary.fbGpaTitleB}
-                </h2>
-                <p>{dictionary.fbGpaDesc}</p>
-                <div className="fb-list">
-                  <div className="fb-li">
-                    <i />
-                    {dictionary.fbGpaBullet1}
-                  </div>
-                  <div className="fb-li">
-                    <i />
-                    {dictionary.fbGpaBullet2}
-                  </div>
-                </div>
-                <Link className="fb-more" href="/gpa">
-                  {dictionary.fbGpaMore} <ArrowIcon />
-                </Link>
-              </div>
-              <div className="fb-panel darkish" data-fb-reveal data-fb-delay="80">
-                <div className="fb-big-gpa">
-                  <div className="fb-n" data-fb-count="3.82" data-fb-decimals="2">
-                    3.82
-                  </div>
-                  <div className="fb-meta">
-                    <b>{dictionary.fbGpaOverall}</b>
-                    <span>{dictionary.fbGpaOutOf}</span>
-                    <span className="fb-up">{dictionary.fbGpaGrowth}</span>
-                  </div>
-                </div>
-                <div className="fb-gpa-rows">
-                  <div className="fb-gr">
-                    <span>Differensial tenglamalar</span>
-                    <div className="fb-bar">
-                      <i style={{ width: "96%" }} />
-                    </div>
-                    <b>92</b>
-                  </div>
-                  <div className="fb-gr">
-                    <span>Programmalash asoslari</span>
-                    <div className="fb-bar">
-                      <i style={{ width: "88%" }} />
-                    </div>
-                    <b>88</b>
-                  </div>
-                  <div className="fb-gr">
-                    <span>Fizika</span>
-                    <div className="fb-bar">
-                      <i style={{ width: "85%" }} />
-                    </div>
-                    <b>85</b>
-                  </div>
-                  <div className="fb-gr">
-                    <span>{dictionary.fbCourseEnglish}</span>
-                    <div className="fb-bar">
-                      <i style={{ width: "94%" }} />
-                    </div>
-                    <b>94</b>
-                  </div>
-                </div>
-                <div className="fb-float-stat">
-                  <span>{dictionary.fbWeeklyGrowth}</span>
-                  <b>+0.08</b>
-                  <svg className="fb-spark" viewBox="0 0 58 16" aria-hidden="true">
-                    <path d="M1 13 9 11 17 12 25 7 33 8 41 4 57 5" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className="fb-feature">
-              <div className="fb-panel fb-sched-panel" data-fb-reveal>
-                <div className="fb-sp-head">
-                  <b>{dictionary.fbSchedPanelTitle}</b>
-                  <span>{todayLabel}</span>
-                </div>
-                <div className="fb-sp-row">
-                  <time>
-                    08:30<span>09:50</span>
-                  </time>
-                  <div className="fb-s">
-                    <b>Differensial tenglamalar</b>
-                    <span>A-204 · N. Yusupova</span>
-                  </div>
-                  <span className="fb-tag">{dictionary.fbStatusDone}</span>
-                </div>
-                <div className="fb-sp-row now">
-                  <time>
-                    10:00<span>11:20</span>
-                  </time>
-                  <div className="fb-s">
-                    <b>Programmalash asoslari</b>
-                    <span>B-311 · D. Rahimov</span>
-                  </div>
-                  <span className="fb-tag">{dictionary.fbStatusNow}</span>
-                </div>
-                <div className="fb-sp-row">
-                  <time>
-                    11:30<span>12:50</span>
-                  </time>
-                  <div className="fb-s">
-                    <b>Fizika (amaliy)</b>
-                    <span>Lab-2 · S. Ismoilova</span>
-                  </div>
-                  <span className="fb-tag">{dictionary.fbStatusNext}</span>
-                </div>
-                <div className="fb-sp-row">
-                  <time>
-                    14:00<span>15:20</span>
-                  </time>
-                  <div className="fb-s">
-                    <b>{dictionary.fbCourseEnglish}</b>
-                    <span>C-105 · M. Tursunova</span>
-                  </div>
-                  <span className="fb-tag">{dictionary.fbStatusNext}</span>
-                </div>
-                <div className="fb-notif">
-                  <div className="fb-n-top">
-                    <i>!</i> {dictionary.fbNotifReminder}
-                  </div>
-                  <b>{dictionary.fbNotifTitle}</b>
-                  <span>{dictionary.fbNotifDue}</span>
-                  <div className="fb-n-foot">
-                    <span>Lab-2 · S. Ismoilova</span>
-                    <em>{dictionary.fbNotifOpen}</em>
-                  </div>
-                </div>
-              </div>
-              <div className="fb-copy" data-fb-reveal data-fb-delay="80">
-                <div className="fb-k">{dictionary.fbSchedKicker}</div>
-                <h2>
-                  {dictionary.fbSchedTitleA}
-                  <br />
-                  {dictionary.fbSchedTitleB}
-                </h2>
-                <p>{dictionary.fbSchedDesc}</p>
-                <div className="fb-list">
-                  <div className="fb-li">
-                    <i />
-                    {dictionary.fbSchedBullet1}
-                  </div>
-                  <div className="fb-li">
-                    <i />
-                    {dictionary.fbSchedBullet2}
-                  </div>
-                </div>
-                <Link className="fb-more" href="/schedule">
-                  {dictionary.fbSchedMore} <ArrowIcon />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="fb-day" id="kabinet">
-          <div className="fb-wrap fb-in">
-            <div className="fb-sec-head" data-fb-reveal>
-              <div className="fb-sec-kicker">{dictionary.fbDayKicker}</div>
-              <h2 className="fb-sec-title">
-                {dictionary.fbDayTitleA}
-                <br />
-                <span className="fb-soft">{dictionary.fbDayTitleB}</span>
-              </h2>
-              <p className="fb-sec-sub">{dictionary.fbDaySubtitle}</p>
-            </div>
-            <div className="fb-day-grid" data-fb-daygrid>
-              <div className="fb-dcard done" data-fb-reveal>
-                <span className="fb-dot" />
-                <time>08:30 — 09:50</time>
-                <h4>Differensial tenglamalar</h4>
-                <div className="fb-m">
-                  <b>A-204</b> · N. Yusupova
-                </div>
-                <span className="fb-st">{dictionary.fbStatusDone}</span>
-              </div>
-              <div className="fb-dcard live" data-fb-reveal data-fb-delay="90">
-                <span className="fb-dot" />
-                <time>10:00 — 11:20</time>
-                <h4>Programmalash asoslari</h4>
-                <div className="fb-m">
-                  <b>B-311</b> · D. Rahimov
-                </div>
-                <span className="fb-st">{dictionary.fbStatusNow}</span>
-              </div>
-              <div className="fb-dcard next" data-fb-reveal data-fb-delay="180">
-                <span className="fb-dot" />
-                <time>11:30 — 12:50</time>
-                <h4>Fizika (amaliy)</h4>
-                <div className="fb-m">
-                  <b>Lab-2</b> · S. Ismoilova
-                </div>
-                <span className="fb-st">{dictionary.fbStatusNext}</span>
-              </div>
-              <div className="fb-dcard next" data-fb-reveal data-fb-delay="270">
-                <span className="fb-dot" />
-                <time>14:00 — 15:20</time>
-                <h4>{dictionary.fbCourseEnglish}</h4>
-                <div className="fb-m">
-                  <b>C-105</b> · M. Tursunova
-                </div>
-                <span className="fb-st">{dictionary.fbStatusNext}</span>
-              </div>
-            </div>
-            <div className="fb-day-foot" data-fb-reveal>
-              <span>{dictionary.fbDayFooterLeft}</span>
-              <b>{dictionary.fbDayFooterRight}</b>
-            </div>
-          </div>
-        </section>
-
-        <section className="fb-quote">
-          <div className="fb-wrap">
-            <div className="fb-mark" aria-hidden="true">
-              “
-            </div>
-            <blockquote data-fb-reveal>
-              {dictionary.fbQuoteA} <span>{dictionary.fbQuoteB}</span>
-            </blockquote>
-            <div className="fb-who" data-fb-reveal data-fb-delay="120">
-              <div className="fb-ava">AK</div>
-              <div style={{ textAlign: "left" }}>
-                <b>{dictionary.fbQuoteWho}</b>
-                <br />
-                <span>{dictionary.fbQuoteRole}</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="fb-app" id="ilova">
-          <div className="fb-wrap fb-in">
-            <div className="fb-copy" data-fb-reveal>
-              <div className="fb-sec-kicker">{dictionary.fbNavApp}</div>
-              <h2>
-                {dictionary.fbAppTitleA}
-                <br />
-                <span>{dictionary.fbAppTitleB}</span>
-              </h2>
-              <p>
-                Jadval, baholar va eslatmalar cho&apos;ntagingizda. Ilovani hoziroq bosh ekranga
-                qo&apos;shing — bir bosishda ochiladi.
-              </p>
-              <div className="fb-badges">
-                <div className="fb-badge">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M16.6 12.9c0-2.1 1.7-3.1 1.8-3.2-1-1.4-2.5-1.6-3-1.6-1.3-.1-2.5.8-3.1.8-.7 0-1.7-.8-2.8-.7-1.4 0-2.7.8-3.5 2.1-1.5 2.6-.4 6.5 1.1 8.6.7 1 1.6 2.2 2.7 2.1 1.1 0 1.5-.7 2.9-.7 1.3 0 1.7.7 2.8.7 1.2 0 1.9-1 2.6-2.1.8-1.2 1.2-2.4 1.2-2.4s-2.7-1-2.7-3.6Z" />
-                    <path d="M14.6 6.5c.6-.7 1-1.7.9-2.7-.9 0-1.9.6-2.5 1.3-.6.6-1 1.6-.9 2.6 1 .1 1.9-.5 2.5-1.2Z" />
-                  </svg>
-                  <div>
-                    <small>{dictionary.fbBadgeDownload}</small>
-                    <b>App Store</b>
-                  </div>
-                </div>
-                <div className="fb-badge">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M4 3.5v17c0 .5.6.8 1 .5l9-8.5-9-8.5c-.4-.3-1 0-1 .5Z" />
-                    <path d="m14 12 3.5-3.3 2.5 1.4c.7.4.7 1.4 0 1.8l-2.5 1.4L14 12Z" />
-                    <path d="m14 12-9 8.5c-.4.3-1 0-1-.5" />
-                  </svg>
-                  <div>
-                    <small>Google Play</small>
-                    <b>{dictionary.fbBadgeGet}</b>
-                  </div>
-                </div>
-                <div className="fb-badge pwa">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <rect x="4" y="3" width="16" height="18" rx="3" />
-                    <path d="M9 18h6M12 7v7M9 11l3 3 3-3" />
-                  </svg>
-                  <div>
-                    <small>{dictionary.fbBadgeNow}</small>
-                    <b>{dictionary.fbBadgePwa}</b>
-                  </div>
-                </div>
-              </div>
-              <div className="fb-app-note">{dictionary.fbAppNote}</div>
-            </div>
-
-            <div className="fb-phones" aria-hidden="true" data-fb-reveal data-fb-delay="120">
-              <div className="fb-phone p1">
-                <div className="fb-ph-status">
-                  <span>9:41</span>
-                  <span className="fb-batt">
-                    <span>5G</span>
-                    <i />
-                  </span>
-                </div>
-                <div className="fb-ph-screen">
-                  <div className="fb-ph-head">
-                    <div className="fb-hi">
-                      {dictionary.fbdGreetingDay} Aziza.
-                      <span>{todayLabel}</span>
-                    </div>
-                    <div className="fb-ph-ava">AK</div>
-                  </div>
-                  <div className="fb-ph-gpa">
-                    <div className="fb-l">{dictionary.fbGpaOverall}</div>
-                    <div className="fb-v">
-                      <b data-fb-count="3.82" data-fb-decimals="2">
-                        3.82
-                      </b>
-                      <span>/ 4.00</span>
-                    </div>
-                    <div className="fb-t">+0.34</div>
-                  </div>
-                  <div className="fb-ph-sec">
-                    <b>{dictionary.fbdCardTodaySchedule}</b>
-                    <span>Barchasi ›</span>
-                  </div>
-                  <div className="fb-ph-row">
-                    <span className="fb-tm">08:30</span>
-                    <span className="fb-bar o" />
-                    <div className="fb-s">
-                      <b>Differensial tenglamalar</b>
-                      <span>A-204 · N. Yusupova</span>
-                    </div>
-                  </div>
-                  <div className="fb-ph-row">
-                    <span className="fb-tm">10:00</span>
-                    <span className="fb-bar" />
-                    <div className="fb-s">
-                      <b>Programmalash asoslari</b>
-                      <span>B-311 · D. Rahimov</span>
-                    </div>
-                  </div>
-                  <div className="fb-ph-row">
-                    <span className="fb-tm">11:30</span>
-                    <span className="fb-bar o" />
-                    <div className="fb-s">
-                      <b>Fizika (amaliy)</b>
-                      <span>Lab-2 · S. Ismoilova</span>
-                    </div>
-                  </div>
-                  <div className="fb-ph-sec">
-                    <b>{dictionary.fbdActivityTitle}</b>
-                    <span>6 / 7 kun ›</span>
-                  </div>
-                  <div className="fb-ph-bars">
-                    <span style={{ height: "34%" }} />
-                    <span className="on" style={{ height: "58%" }} />
-                    <span className="on" style={{ height: "44%" }} />
-                    <span className="on" style={{ height: "72%" }} />
-                    <span className="today" style={{ height: "90%" }} />
-                    <span style={{ height: "24%" }} />
-                    <span style={{ height: "16%" }} />
-                  </div>
-                  <PhoneNav active={0} />
-                </div>
-              </div>
-
-              <div className="fb-phone p2">
-                <div className="fb-ph-status">
-                  <span>9:41</span>
-                  <span className="fb-batt">
-                    <span>5G</span>
-                    <i />
-                  </span>
-                </div>
-                <div className="fb-ph-screen">
-                  <div className="fb-ph-head">
-                    <div className="fb-hi">
-                      {dictionary.fbdKpiAssignments}
-                      <span>
-                        {dictionary.fbdDeadlineCount.replace("{count}", "3")} · 1{" "}
-                        {dictionary.fbdDeadlineToday.toLowerCase()}
-                      </span>
-                    </div>
-                    <div className="fb-ph-ava">AK</div>
-                  </div>
-                  <div className="fb-ph-sec" style={{ marginTop: 16 }}>
-                    <b>{dictionary.fbdDeadlinesTitle}</b>
-                    <span>Barchasi ›</span>
-                  </div>
-                  <div className="fb-ph-row">
-                    <span className="fb-tm">
-                      22
-                      <br />
-                      Okt
-                    </span>
-                    <span className="fb-bar" style={{ background: "#1D1D1F" }} />
-                    <div className="fb-s">
-                      <b>Fizika laboratoriya hisoboti</b>
-                      <span>{dictionary.fbdDeadlineToday} · 18:00</span>
-                    </div>
-                  </div>
-                  <div className="fb-ph-row">
-                    <span className="fb-tm">
-                      24
-                      <br />
-                      Okt
-                    </span>
-                    <span className="fb-bar o" />
-                    <div className="fb-s">
-                      <b>{dictionary.fbSampleTask2}</b>
-                      <span>2 kun · 20 ball</span>
-                    </div>
-                  </div>
-                  <div className="fb-ph-row">
-                    <span className="fb-tm">
-                      28
-                      <br />
-                      Okt
-                    </span>
-                    <span className="fb-bar" />
-                    <div className="fb-s">
-                      <b>{dictionary.fbSampleTask3}</b>
-                      <span>6 kun · jamoa</span>
-                    </div>
-                  </div>
-                  <div className="fb-ph-sec" style={{ marginTop: 14 }}>
-                    <b>{dictionary.fbdActivityTitle}</b>
-                    <span>12 kun ›</span>
-                  </div>
-                  <div className="fb-ph-bars">
-                    <span style={{ height: "32%" }} />
-                    <span className="on" style={{ height: "55%" }} />
-                    <span className="on" style={{ height: "42%" }} />
-                    <span className="on" style={{ height: "70%" }} />
-                    <span className="today" style={{ height: "88%" }} />
-                    <span style={{ height: "22%" }} />
-                    <span style={{ height: "15%" }} />
-                  </div>
-                  <div className="fb-ph-streak">
-                    <div className="fb-ic">
-                      <svg viewBox="0 0 24 24">
-                        <path d="M12 22c4 0 7-2.7 7-6.5 0-3-1.8-5.3-3.5-7.5C14 6 13 4 13 2c-3 1.5-5 4-5 7 0 1.2.3 2 .3 2S7 10 6 9c-.7 1.4-1 2.8-1 4.3C5 18.6 8 22 12 22Z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <b>12 kun ketma-ket</b>
-                      <span>{dictionary.fbStreakGoal}</span>
-                    </div>
-                    <em>+2</em>
-                  </div>
-                  <PhoneNav active={2} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="fb-cta-sec">
-          <div className="fb-wrap fb-in">
-            <div className="fb-k" data-fb-reveal>
-              {dictionary.fbCtaKicker}
-            </div>
-            <h2 data-fb-reveal data-fb-delay="80">
-              {dictionary.fbCtaTitleA}
-              <br />
-              <span>{dictionary.fbCtaTitleB}</span>
-            </h2>
-            <p data-fb-reveal data-fb-delay="140">
-              {dictionary.fbCtaDesc}
-            </p>
-            <div className="fb-btns" data-fb-reveal data-fb-delay="200">
-              <Link className="fb-btn-primary" href="/login">
-                {dictionary.fbLogin} <ArrowIcon />
-              </Link>
-              <Link className="fb-link-play" href="/register">
-                {dictionary.fbRegister} <ArrowIcon />
-              </Link>
-            </div>
-            <div className="fb-fine" data-fb-reveal data-fb-delay="260">
-              {dictionary.fbCtaFine}
-            </div>
-          </div>
-        </section>
-
-        <footer className="fb-footer" id="universitet">
-          <div className="fb-wrap">
-            <div className="fb-f-top">
-              <div data-fb-reveal>
-                <div className="fb-f-brand">
-                  <img src="/logo.svg" alt="FBSU" width={38} height={38} />
-                  <div>
-                    <div className="fb-n">FBSU</div>
-                    <div className="fb-t">
-                      Turin Polytechnic
-                      <br />
-                      University in Tashkent
-                    </div>
-                  </div>
-                </div>
-                <p>{dictionary.fbFootBrandText}</p>
-              </div>
-              <div className="fb-f-col" data-fb-reveal data-fb-delay="70">
-                <b>{dictionary.fbFootPlatform}</b>
-                <a href="#modullar">{dictionary.fbFootFeatures}</a>
-                <a href="#platforma">{dictionary.fbFootHow}</a>
-                <Link href="/dashboard">{dictionary.fbFootCabinet}</Link>
-                <a href="#ilova">{dictionary.fbFootMobile}</a>
-              </div>
-              <div className="fb-f-col" data-fb-reveal data-fb-delay="140">
-                <b>{dictionary.fbFootModules}</b>
-                <Link href="/courses">{dictionary.fbFootCourses}</Link>
-                <Link href="/tasks">{dictionary.fbFootAssignments}</Link>
-                <Link href="/gpa">{dictionary.fbFootGpa}</Link>
-                <Link href="/bookings">{dictionary.fbFootBooking}</Link>
-              </div>
-              <div className="fb-f-col" data-fb-reveal data-fb-delay="210">
-                <b>{dictionary.fbFooterUniversity}</b>
-                <a href="#universitet">{dictionary.fbFootAbout}</a>
-                <a href="#universitet">{dictionary.fbFootNews}</a>
-                <a href="#universitet">{dictionary.fbFootCareer}</a>
-                <a href="mailto:info@ttpu.uz">{dictionary.fbFootContact}</a>
-              </div>
-              <div className="fb-f-col" data-fb-reveal data-fb-delay="280">
-                <b>{dictionary.fbFootContact}</b>
-                <a href="mailto:info@ttpu.uz">info@ttpu.uz</a>
-                <a href="tel:+998712899900">+998 71 289 99 00</a>
-                <a href="#universitet">{dictionary.fbFootAddress}</a>
-                <a href="#universitet">{dictionary.fbFootHours}</a>
-              </div>
-            </div>
-            <div className="fb-f-bot" data-fb-reveal>
-              <span>{dictionary.fbFootRights}</span>
-              <div className="fb-links">
-                <Link href="/help">{dictionary.fbFooterPrivacy}</Link>
-                <Link href="/help">{dictionary.fbFooterTerms}</Link>
-                <Link href="/help">{dictionary.fbFootHelp}</Link>
-              </div>
-            </div>
-          </div>
-        </footer>
-      </div>
-    </>
+        </div>
+      </footer>
+    </div>
   );
 }
