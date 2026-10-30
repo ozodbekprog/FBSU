@@ -1,4 +1,6 @@
 import { shell } from "./dict/uz/shell";
+import { library } from "./dict/uz/library";
+import { passkey } from "./dict/uz/passkey";
 import { fb } from "./dict/uz/fb";
 import { dash } from "./dict/uz/dash";
 import { crs } from "./dict/uz/crs";
@@ -189,6 +191,8 @@ export const uz = {
   ...sec,
   ...ofs,
   ...ver,
+  ...library,
+  ...passkey,
 };
 
 export type Dictionary = typeof uz;

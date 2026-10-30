@@ -111,6 +111,9 @@ model User {
   attendance           Attendance[]
   staffAttendance      StaffAttendance[]
   accessLogs           AccessLog[]
+  libraryLoans         LibraryLoan[]       @relation("LibraryBorrower")
+  libraryIssued        LibraryLoan[]       @relation("LibraryIssuer")
+  passkeys             PasskeyCredential[]
   documentsCreated     Document[]            @relation("DocumentCreator")
   documentsToSign      Document[]            @relation("DocumentSigner")
   documentsSigned      Document[]            @relation("DocumentSignedBy")
@@ -1983,4 +1986,90 @@ model DeviceApprovalChallenge {
 
   @@index([userId, createdAt])
   @@index([expiresAt])
+}
+
+enum LibraryCopyStatus {
+  AVAILABLE
+  ON_LOAN
+  LOST
+  WRITTEN_OFF
+}
+
+enum LibraryLoanStatus {
+  ACTIVE
+  RETURNED
+  LOST
+}
+
+model LibraryBook {
+  id          String   @id @default(cuid())
+  title       String
+  author      String
+  isbn        String?
+  category    String?
+  publisher   String?
+  year        Int?
+  language    String   @default("uz")
+  description String?
+  coverUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  copies LibraryCopy[]
+
+  @@index([title])
+  @@index([category])
+}
+
+model LibraryCopy {
+  id          String            @id @default(cuid())
+  bookId      String
+  inventoryNo String            @unique
+  shelf       String?
+  status      LibraryCopyStatus @default(AVAILABLE)
+  createdAt   DateTime          @default(now())
+
+  book  LibraryBook  @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  loans LibraryLoan[]
+
+  @@index([bookId, status])
+}
+
+model LibraryLoan {
+  id         String            @id @default(cuid())
+  copyId     String
+  userId     String
+  issuedById String
+  issuedAt   DateTime          @default(now())
+  dueAt      DateTime
+  returnedAt DateTime?
+  status     LibraryLoanStatus @default(ACTIVE)
+  fineAmount Int               @default(0)
+  note       String?
+
+  copy     LibraryCopy @relation(fields: [copyId], references: [id])
+  user     User        @relation("LibraryBorrower", fields: [userId], references: [id], onDelete: Cascade)
+  issuedBy User        @relation("LibraryIssuer", fields: [issuedById], references: [id])
+
+  @@index([userId, status])
+  @@index([copyId, status])
+  @@index([dueAt, status])
+}
+
+model PasskeyCredential {
+  id           String    @id @default(cuid())
+  userId       String
+  credentialId String    @unique
+  publicKey    Bytes
+  counter      BigInt    @default(0)
+  transports   String?
+  deviceType   String?
+  backedUp     Boolean   @default(false)
+  name         String    @default("Passkey")
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

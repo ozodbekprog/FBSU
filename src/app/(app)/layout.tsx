@@ -137,6 +137,7 @@ export default async function AppLayout({
           ? [{ href: "/teacher-points", label: dictionary.tchNavPoints }]
           : []),
         { href: "/my-qr", label: dictionary.accMyQr },
+        ...(modules.library ? [{ href: "/library", label: dictionary.libTitle }] : []),
         ...(["ADMIN", "REGISTRAR", "XODIM", "REKTOR", "PRO_RECTOR"].includes(user.role)
           ? [{ href: "/access", label: dictionary.accTitle }]
           : []),

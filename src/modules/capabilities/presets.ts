@@ -47,6 +47,7 @@ export const ROLE_CAPABILITIES: Record<RoleName, readonly Capability[]> = {
     "finance.view",
     "diplomas.view",
     "documents.view",
+    "library.read",
     "audit.viewScoped",
   ],
   PRO_RECTOR: [
@@ -73,6 +74,8 @@ export const ROLE_CAPABILITIES: Record<RoleName, readonly Capability[]> = {
     "diplomas.view",
     "documents.view",
     "schedule.manage",
+    "library.read",
+    "library.circulate",
   ],
   BUXGALTER: ["finance.manage", "finance.view", "access.viewLogs"],
   TYUTOR: ["curator.manage", "tasks.manage"],
@@ -88,9 +91,10 @@ export const ROLE_CAPABILITIES: Record<RoleName, readonly Capability[]> = {
     "transcript.view",
     "schedule.manage",
     "exams.manage",
+    "library.read",
   ],
   STUDENT: [],
-  XODIM: ["access.scan", "access.viewLogs"],
+  XODIM: ["access.scan", "access.viewLogs", "library.read", "library.circulate"],
   OTA_ONA: ["parent.viewChild"],
   NAZORATCHI: ["exam.proctor", "exams.manage", "monitoring.view", "analysis.view"],
 };

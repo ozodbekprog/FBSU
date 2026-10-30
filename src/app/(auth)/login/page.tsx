@@ -10,6 +10,8 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useI18n } from "@/components/i18n/LocaleProvider";
 import { apiFetch } from "@/lib/api";
 import { useIsClient } from "@/lib/use-is-client";
+import { browserSupportsWebAuthn, startAuthentication } from "@simplewebauthn/browser";
+import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/browser";
 
 const DEMO_ACCOUNTS = [
   {
@@ -262,6 +264,12 @@ function approvalText(locale: string) {
   };
 }
 
+type PasskeyOptionsResponse = {
+  ok?: boolean;
+  error?: string;
+  data?: PublicKeyCredentialRequestOptionsJSON;
+};
+
 const PANEL_FEATURES = [
   "authLoginFeature1",
   "authLoginFeature2",
@@ -292,6 +300,7 @@ export default function LoginPage() {
   const [selectedDevice, setSelectedDevice] = useState("");
   const [approvalError, setApprovalError] = useState<string | null>(null);
   const [approvalBusy, setApprovalBusy] = useState(false);
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
   const hydrated = useIsClient();
   const approvalLabels = approvalText(locale);
 
@@ -475,6 +484,51 @@ export default function LoginPage() {
     setSelectedDevice("");
     setApprovalError(null);
     setError(null);
+  }
+
+  async function loginWithPasskey() {
+    if (!browserSupportsWebAuthn()) {
+      setError(t("pkLoginUnsupported"));
+      return;
+    }
+    const target = email.toLowerCase().trim();
+    if (!target) {
+      setError(t("pkLoginNeedEmail"));
+      return;
+    }
+
+    setPasskeyBusy(true);
+    setError(null);
+    try {
+      const optionsRes = await apiFetch("/api/auth/passkeys/authentication/options", {
+        method: "POST",
+        body: JSON.stringify({ email: target }),
+      });
+      const optionsJson = (await optionsRes.json().catch(() => null)) as PasskeyOptionsResponse | null;
+      if (!optionsRes.ok || !optionsJson?.ok || !optionsJson.data) {
+        setError(optionsJson?.error ?? t("pkLoginFailed"));
+        return;
+      }
+
+      const response = await startAuthentication({ optionsJSON: optionsJson.data });
+
+      const verifyRes = await apiFetch("/api/auth/passkeys/authentication/verify", {
+        method: "POST",
+        body: JSON.stringify({ response, remember }),
+      });
+      const verifyJson = (await verifyRes.json().catch(() => null)) as LoginResponse | null;
+      if (!verifyRes.ok || !verifyJson?.ok) {
+        setError(verifyJson?.error ?? t("pkLoginFailed"));
+        return;
+      }
+
+      router.push(nextTarget());
+      router.refresh();
+    } catch {
+      setError(t("pkLoginFailed"));
+    } finally {
+      setPasskeyBusy(false);
+    }
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -830,9 +884,41 @@ export default function LoginPage() {
                   </div>
                 ) : null}
                 {approval ? null : (
-                  <Button type="submit" disabled={loading || !hydrated} size="lg" className="h-11 w-full">
-                    {loading ? t("authLoginSubmitting") : t("authLoginSubmit")}
-                  </Button>
+                  <>
+                    <Button type="submit" disabled={loading || !hydrated} size="lg" className="h-11 w-full">
+                      {loading ? t("authLoginSubmitting") : t("authLoginSubmit")}
+                    </Button>
+                    <div className="flex items-center gap-3">
+                      <span className="h-px flex-1 bg-slate-100" />
+                      <span className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+                        {t("pkLoginOr")}
+                      </span>
+                      <span className="h-px flex-1 bg-slate-100" />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="lg"
+                      disabled={loading || passkeyBusy || !hydrated}
+                      onClick={() => void loginWithPasskey()}
+                      className="h-11 w-full"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="size-4"
+                      >
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        <path d="M12 11v3" />
+                        <circle cx="12" cy="8.5" r="1" />
+                      </svg>
+                      {passkeyBusy ? t("pkLoginBusy") : t("pkLoginButton")}
+                    </Button>
+                  </>
                 )}
               </form>
             )}
