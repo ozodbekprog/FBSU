@@ -46,7 +46,9 @@ export type CreateSessionResult = {
 };
 
 export async function createSession(
-  user: Pick<User, "id" | "role" | "name" | "email" | "sessionEpoch">,
+  user: Pick<User, "id" | "role" | "name" | "email" | "sessionEpoch"> & {
+    telegramId?: string | null;
+  },
   opts?: CreateSessionOptions,
 ): Promise<CreateSessionResult> {
   let sessionId: string | null = null;
@@ -61,7 +63,9 @@ export async function createSession(
   }
 
   if (!sessionId && !opts?.renew) {
-    const prepared = await prepareSession(user.id, opts?.method ?? "PASSWORD");
+    const prepared = await prepareSession(user.id, opts?.method ?? "PASSWORD", {
+      enforceDeviceLimit: Boolean(user.telegramId),
+    });
     sessionId = prepared.loginId;
     deviceId = prepared.device.id;
     await prisma.loginRecord.create({

@@ -160,6 +160,7 @@ export async function recordBlockedLogin(
 export async function prepareSession(
   userId: string,
   method: LoginMethod,
+  opts?: { enforceDeviceLimit?: boolean },
 ): Promise<PreparedSession> {
   const info = await getRequestContext();
   const cookieStore = await cookies();
@@ -185,10 +186,13 @@ export async function prepareSession(
     }
   }
 
-  const active = await prisma.trustedDevice.count({ where: { userId, revokedAt: null } });
-  if (active >= MAX_DEVICES) {
-    await recordBlockedLogin(userId, method, info);
-    throw new DeviceLimitError();
+  const enforceLimit = opts?.enforceDeviceLimit === true;
+  if (enforceLimit) {
+    const active = await prisma.trustedDevice.count({ where: { userId, revokedAt: null } });
+    if (active >= MAX_DEVICES) {
+      await recordBlockedLogin(userId, method, info);
+      throw new DeviceLimitError();
+    }
   }
 
   const newDeviceId = randomUUID();
@@ -208,15 +212,17 @@ export async function prepareSession(
 
   // Parallel kirishlar 2 tadan oshib ketmasligi uchun qayta sanaymiz:
   // ortiqcha bo'lsa, aynan shu qurilma bekor qilinadi.
-  const activeAfter = await prisma.trustedDevice.count({ where: { userId, revokedAt: null } });
-  if (activeAfter > MAX_DEVICES) {
-    await prisma.trustedDevice.update({
-      where: { id: device.id },
-      data: { revokedAt: new Date() },
-    });
-    cookieStore.delete(DEVICE_COOKIE);
-    await recordBlockedLogin(userId, method, info);
-    throw new DeviceLimitError();
+  if (enforceLimit) {
+    const activeAfter = await prisma.trustedDevice.count({ where: { userId, revokedAt: null } });
+    if (activeAfter > MAX_DEVICES) {
+      await prisma.trustedDevice.update({
+        where: { id: device.id },
+        data: { revokedAt: new Date() },
+      });
+      cookieStore.delete(DEVICE_COOKIE);
+      await recordBlockedLogin(userId, method, info);
+      throw new DeviceLimitError();
+    }
   }
 
   cookieStore.set(DEVICE_COOKIE, await issueDeviceToken(newDeviceId), {

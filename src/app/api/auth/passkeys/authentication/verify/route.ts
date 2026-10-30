@@ -1,6 +1,7 @@
 import { verifyAuthenticationResponse, type AuthenticationResponseJSON } from "@simplewebauthn/server";
 import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/auth";
+import { DeviceLimitError } from "@/lib/device";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/client-ip";
@@ -126,7 +127,22 @@ export async function POST(request: Request) {
     data: { counter: BigInt(newCounter), lastUsedAt: new Date() },
   });
 
-  await createSession(user, { remember: body.remember === true });
+  try {
+    await createSession(user, { remember: body.remember === true });
+  } catch (error) {
+    if (error instanceof DeviceLimitError) {
+      return Response.json(
+        {
+          ok: false,
+          code: "DEVICE_LIMIT",
+          error:
+            "Bu hisobga faqat 2 ta qurilma ulanadi. Eski qurilmalardan birini uzib, qayta urinib ko'ring.",
+        },
+        { status: 403 },
+      );
+    }
+    throw error;
+  }
   await createAuditLog({
     action: "LOGIN_SUCCESS",
     entity: "User",

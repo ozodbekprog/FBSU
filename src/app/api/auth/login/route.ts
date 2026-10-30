@@ -6,8 +6,6 @@ import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/auth";
 import {
   DeviceLimitError,
-  MAX_DEVICES,
-  countActiveDevices,
   getRequestContext,
   recordBlockedLogin,
 } from "@/lib/device";
@@ -251,30 +249,6 @@ export async function POST(request: Request) {
     }
   }
 
-  if ((await countActiveDevices(user.id)) >= MAX_DEVICES) {
-    if (user.telegramId) return startApproval(user);
-    const context = await getRequestContext();
-    await recordBlockedLogin(user.id, "PASSWORD", context);
-    await createAuditLog({
-      action: "LOGIN_FAILED",
-      entity: "User",
-      actorId: user.id,
-      entityId: user.id,
-      meta: { email, reason: "device_limit_no_telegram" },
-      ip: clientInfo.ip,
-      userAgent: clientInfo.userAgent,
-    });
-    return Response.json(
-      {
-        ok: false,
-        code: "DEVICE_LIMIT",
-        error:
-          "Bu hisobga faqat 2 ta qurilma ulanadi. Uchinchi qurilma uchun Telegram bog'langan bo'lishi kerak. Mavjud qurilmadan Sozlamalar → Xavfsizlik orqali joy bo'shating yoki administratorga murojaat qiling.",
-      },
-      { status: 403 },
-    );
-  }
-
   let sessionId: string | null = null;
   try {
     const session = await createSession(user, {
@@ -284,25 +258,10 @@ export async function POST(request: Request) {
     sessionId = session.sessionId;
   } catch (error) {
     if (error instanceof DeviceLimitError) {
+      // Limit faqat Telegram bog'langan hisoblarda qo'llanadi — yangi qurilma
+      // tasdiqlash oqimini boshlaymiz. Telegram yo'q bo'lsa, limit umuman
+      // ishlamaydi va bu holat yuzaga kelmaydi.
       if (user.telegramId) return startApproval(user);
-      await createAuditLog({
-        action: "LOGIN_FAILED",
-        entity: "User",
-        actorId: user.id,
-        entityId: user.id,
-        meta: { email, reason: "device_limit" },
-        ip: clientInfo.ip,
-        userAgent: clientInfo.userAgent,
-      });
-      return Response.json(
-        {
-          ok: false,
-          code: "DEVICE_LIMIT",
-          error:
-            "Bu hisobga faqat 2 ta qurilma ulanadi. Yangi qurilmadan kirish uchun avval ulangan qurilmalardan birini uzib, qayta urinib ko'ring.",
-        },
-        { status: 403 },
-      );
     }
     throw error;
   }
