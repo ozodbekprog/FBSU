@@ -114,6 +114,7 @@ model User {
   libraryLoans         LibraryLoan[]       @relation("LibraryBorrower")
   libraryIssued        LibraryLoan[]       @relation("LibraryIssuer")
   passkeys             PasskeyCredential[]
+  telegramLinkCodes    TelegramLinkCode[]
   documentsCreated     Document[]            @relation("DocumentCreator")
   documentsToSign      Document[]            @relation("DocumentSigner")
   documentsSigned      Document[]            @relation("DocumentSignedBy")
@@ -2072,4 +2073,19 @@ model PasskeyCredential {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+/// Bot orqali Telegram hisobini saytdagi akkauntga bog'lash uchun bir martalik kod.
+model TelegramLinkCode {
+  id         String    @id @default(cuid())
+  code       String    @unique
+  userId     String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }

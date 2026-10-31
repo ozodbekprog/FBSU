@@ -166,6 +166,7 @@ export async function getCurrentUser() {
       subGroup: true,
       faculty: true,
       department: true,
+      telegramId: true,
       trustedDevices: { where: { revokedAt: null }, select: { id: true } },
     },
   });

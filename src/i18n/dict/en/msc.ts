@@ -134,6 +134,11 @@ export const msc = {
   mscSettingsGetCode: "Get verification code",
   mscSettingsCodeHint: "Send /start to the Telegram bot, then send this code.",
   mscSettingsCodeExpiry: "The code is valid until {time}.",
+  mscSettingsUnlink: "Disconnect Telegram",
+  mscSettingsUnlinkBusy: "Disconnecting...",
+  mscSettingsUnlinkConfirm: "Disconnect the Telegram link?",
+  mscSettingsUnlinked: "Telegram disconnected",
+  mscSettingsUnlinkError: "Could not disconnect",
 
   mscOrdersEyebrow: "Services",
   mscOrdersTitle: "Requests",

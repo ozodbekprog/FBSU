@@ -1060,9 +1060,18 @@ main#main-content > .student-dash {
 /* Telegram Mini App: WebView ichida sahifa butun ekran bo'ylab siljimaydi. */
 html[data-telegram="1"] {
   overscroll-behavior-y: none;
+  height: 100%;
 }
 
 html[data-telegram="1"] body {
   overscroll-behavior-y: none;
   -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* Telegram ichida PWA o'rnatish taklifi keraksiz. */
+html[data-telegram="1"] [data-pwa-install] {
+  display: none !important;
 }

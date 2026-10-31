@@ -134,6 +134,11 @@ export const msc = {
   mscSettingsGetCode: "Получить код подтверждения",
   mscSettingsCodeHint: "Отправьте боту в Telegram /start и затем этот код.",
   mscSettingsCodeExpiry: "Код действует до {time}.",
+  mscSettingsUnlink: "Отключить Telegram",
+  mscSettingsUnlinkBusy: "Отключение...",
+  mscSettingsUnlinkConfirm: "Отключить привязку Telegram?",
+  mscSettingsUnlinked: "Telegram отключён",
+  mscSettingsUnlinkError: "Не удалось отключить",
 
   mscOrdersEyebrow: "Сервисы",
   mscOrdersTitle: "Заявки",

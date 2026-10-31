@@ -6,12 +6,11 @@ import PasskeyManager from "@/components/passkeys/passkey-manager";
 import { listPasskeys } from "@/server/passkeys";
 import { normalizeUserPreferences } from "@/components/settings/preferences";
 import { getLocale, t } from "@/i18n";
-import { isTelegramLinked } from "./telegram-link";
 
 export default async function SettingsPage() {
   const user = await requireUser();
   const preferences = normalizeUserPreferences(user.preferences);
-  const telegramLinked = await isTelegramLinked(user.email);
+  const telegramLinked = Boolean(user.telegramId);
   const passkeys = await listPasskeys(user.id);
   const locale = await getLocale();
 

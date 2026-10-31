@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 type TelegramBackButton = {
   show(): void;
@@ -40,7 +40,10 @@ function linkedText(): string {
 
 export function TelegramMiniApp() {
   const router = useRouter();
+  const pathname = usePathname();
   const [notice, setNotice] = useState<string | null>(null);
+  const linkedRef = useRef(false);
+  const lastAuthRef = useRef(0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -56,8 +59,9 @@ export function TelegramMiniApp() {
       app.ready();
       app.expand();
       try {
-        app.setHeaderColor?.("#1d3460");
-        app.setBackgroundColor?.("#f6f7fa");
+        const dark = document.documentElement.dataset.theme === "dark";
+        app.setHeaderColor?.(dark ? "#0b1220" : "#1d3460");
+        app.setBackgroundColor?.(dark ? "#0b1220" : "#f6f7fa");
       } catch {}
 
       const back = app.BackButton;
@@ -87,7 +91,10 @@ export function TelegramMiniApp() {
             }
             return;
           }
-          if (result.mode === "link") setNotice(linkedText());
+          if (result.mode === "link") {
+            linkedRef.current = true;
+            setNotice(linkedText());
+          }
         })
         .catch(() => {});
     };
@@ -112,6 +119,48 @@ export function TelegramMiniApp() {
       script.removeEventListener("load", boot);
     };
   }, [router]);
+
+  // Mini ilova ichida parol bilan kirilgandan keyin akkauntni Telegram'ga
+  // avtomatik bog'lash: sahifa almashganda initData bilan qayta urinamiz.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!/Telegram/i.test(navigator.userAgent)) return;
+    const app = window.Telegram?.WebApp;
+    if (!app?.initData || linkedRef.current) return;
+    const now = Date.now();
+    if (now - lastAuthRef.current < 8000) return;
+    lastAuthRef.current = now;
+
+    let cancelled = false;
+    fetch("/api/auth/telegram", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ initData: app.initData }),
+    })
+      .then((response) => response.json().catch(() => null))
+      .then((result: { ok?: boolean; mode?: string } | null) => {
+        if (cancelled || !result?.ok) return;
+        if (result.mode === "login") {
+          const path = window.location.pathname;
+          if (path === "/" || path.startsWith("/login")) {
+            router.replace("/dashboard");
+          } else {
+            router.refresh();
+          }
+          return;
+        }
+        if (result.mode === "link") {
+          linkedRef.current = true;
+          setNotice(linkedText());
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, router]);
 
   useEffect(() => {
     if (!notice) return;

@@ -133,6 +133,11 @@ export const msc = {
   mscSettingsGetCode: "Tasdiqlash kodi olish",
   mscSettingsCodeHint: "Telegram botga /start yuborib, shu kodni yuboring.",
   mscSettingsCodeExpiry: "Kod {time} gacha amal qiladi.",
+  mscSettingsUnlink: "Telegramni uzish",
+  mscSettingsUnlinkBusy: "Uzilmoqda...",
+  mscSettingsUnlinkConfirm: "Telegram bog'lanishini uzasizmi?",
+  mscSettingsUnlinked: "Telegram uzildi",
+  mscSettingsUnlinkError: "Uzib bo'lmadi",
 
   mscOrdersEyebrow: "Xizmatlar",
   mscOrdersTitle: "Arizalar",

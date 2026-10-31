@@ -65,7 +65,12 @@ const CSRF_SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
  * login/register forms fetch `/api/csrf` first and apiFetch
  * (src/lib/api.ts, src/lib/csrf-client.ts) auto-injects the header.
  */
-const CSRF_EXEMPT_API = ["/api/csrf", "/api/health", "/api/auth/telegram"];
+const CSRF_EXEMPT_API = [
+  "/api/csrf",
+  "/api/health",
+  "/api/auth/telegram",
+  "/api/telegram/webhook",
+];
 
 function csrfSecret(): Uint8Array | null {
   const secret = process.env.CSRF_SECRET || process.env.AUTH_SECRET;

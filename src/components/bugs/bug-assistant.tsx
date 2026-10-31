@@ -13,7 +13,12 @@ export function BugAssistant() {
   const mounted = useIsClient();
   const pathname = usePathname();
   const [hasPending, setHasPending] = useState(false);
+  const [isTelegram, setIsTelegram] = useState(false);
   const lastAutoAt = useRef(0);
+
+  useEffect(() => {
+    setIsTelegram(/Telegram/i.test(navigator.userAgent));
+  }, []);
 
   // Global xato ushlash: chat sahifasi ochiq bo'lmagan holda ham
   // xatolarni sessionStorage'ga joylashtirib qo'yamiz —
@@ -53,14 +58,15 @@ export function BugAssistant() {
 
   if (!mounted) return null;
   // Fariza sahifasida chiqmaydi — foydalanuvchi allaqachon suhbat ichida.
-  // Dashboardda ham yashiriladi — yangi student panelda AI tugmasi kontentni yopmaydi.
-  if (pathname.startsWith("/assistant") || pathname === "/dashboard") return null;
+  // Dashboardda oddiy brauzerda yashiriladi; Telegram mini ilovasida esa
+  // AI'ga tez kirish uchun ko'rinadi.
+  if (pathname.startsWith("/assistant") || (pathname === "/dashboard" && !isTelegram)) return null;
 
   return (
     <Link
       href="/assistant"
       data-tour="ai-assistant"
-      className="fixed bottom-24 right-3 z-40 flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-2 text-sm font-medium text-slate-700 shadow-lift transition-transform duration-150 hover:scale-105 active:scale-95 sm:px-3 md:bottom-28 md:right-6"
+      className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-3 z-40 flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-2 text-sm font-medium text-slate-700 shadow-lift transition-transform duration-150 hover:scale-105 active:scale-95 sm:px-3 md:bottom-[calc(7rem+env(safe-area-inset-bottom))] md:right-6"
       aria-label={t("mscBugOpen")}
     >
       <span className="flex size-6 items-center justify-center rounded-full bg-brand-900 text-[11px] text-white">

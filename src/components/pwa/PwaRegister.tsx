@@ -125,7 +125,10 @@ export function PwaRegister() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-brand-100 bg-white p-3 shadow-xl">
+    <div
+      data-pwa-install
+      className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-brand-100 bg-white p-3 shadow-xl"
+    >
       <img src="/logo.svg" alt="" width={40} height={40} className="shrink-0 rounded-full" />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-slate-800">{text.title}</p>

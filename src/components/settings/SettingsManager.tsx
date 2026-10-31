@@ -121,6 +121,7 @@ export default function SettingsManager({
   const [code, setCode] = useState<string | null>(null);
   const [codeExpires, setCodeExpires] = useState<string | null>(null);
   const [codeBusy, setCodeBusy] = useState(false);
+  const [unlinkBusy, setUnlinkBusy] = useState(false);
 
   const REMINDER_ITEMS: ToggleItem[] = [
     {
@@ -242,6 +243,27 @@ export default function SettingsManager({
       setError(t("mscSettingsNetworkError"));
     } finally {
       setCodeBusy(false);
+    }
+  }
+
+  async function unlinkTelegram() {
+    if (!window.confirm(t("mscSettingsUnlinkConfirm"))) return;
+    setUnlinkBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await apiFetch("/api/settings/telegram-link", { method: "DELETE" });
+      const json = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
+      if (!res.ok || !json?.ok) {
+        setError(json?.error ?? t("mscSettingsUnlinkError"));
+        return;
+      }
+      setNotice(t("mscSettingsUnlinked"));
+      router.refresh();
+    } catch {
+      setError(t("mscSettingsNetworkError"));
+    } finally {
+      setUnlinkBusy(false);
     }
   }
 
@@ -500,7 +522,19 @@ export default function SettingsManager({
                     </span>
                   ) : null}
                 </div>
-              ) : null}
+              ) : (
+                <div className="mt-3">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={unlinkBusy}
+                    onClick={() => void unlinkTelegram()}
+                  >
+                    {unlinkBusy ? t("mscSettingsUnlinkBusy") : t("mscSettingsUnlink")}
+                  </Button>
+                </div>
+              )}
               {!telegramLinked && code ? (
                 <p className="mt-2 text-xs leading-relaxed text-slate-500">
                   {t("mscSettingsCodeHint")}
