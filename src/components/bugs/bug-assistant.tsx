@@ -17,7 +17,14 @@ export function BugAssistant() {
   const lastAutoAt = useRef(0);
 
   useEffect(() => {
-    setIsTelegram(/Telegram/i.test(navigator.userAgent));
+    const check = () => setIsTelegram(document.documentElement.dataset.telegram === "1");
+    check();
+    window.addEventListener("fbsu:telegram", check);
+    const timer = window.setTimeout(check, 1200);
+    return () => {
+      window.removeEventListener("fbsu:telegram", check);
+      window.clearTimeout(timer);
+    };
   }, []);
 
   // Global xato ushlash: chat sahifasi ochiq bo'lmagan holda ham

@@ -38,6 +38,19 @@ function linkedText(): string {
   return LINKED_TEXT[lang] ?? LINKED_TEXT.uz;
 }
 
+/** Telegram ba'zi klientlarda initData'ni faqat URL hash'ida beradi. */
+function readInitData(app: TelegramWebApp | undefined): string {
+  if (app?.initData) return app.initData;
+  if (typeof window === "undefined") return "";
+  try {
+    const hash = window.location.hash.replace(/^#/, "");
+    if (!hash) return "";
+    return new URLSearchParams(hash).get("tgWebAppData") ?? "";
+  } catch {
+    return "";
+  }
+}
+
 export function TelegramMiniApp() {
   const router = useRouter();
   const pathname = usePathname();
@@ -47,7 +60,6 @@ export function TelegramMiniApp() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!/Telegram/i.test(navigator.userAgent)) return;
 
     let cancelled = false;
 
@@ -55,7 +67,16 @@ export function TelegramMiniApp() {
       const app = window.Telegram?.WebApp;
       if (!app || cancelled) return;
 
+      // Telegram Desktop WebView'da UA ichida "Telegram" bo'lmaydi —
+      // shuning uchun initData (yoki URL hash) va webview ko'prigi orqali aniqlaymiz.
+      const initData = readInitData(app);
+      const proxy = (window as unknown as { TelegramWebviewProxy?: unknown }).TelegramWebviewProxy;
+      const inTelegram =
+        Boolean(initData) || Boolean(proxy) || /Telegram/i.test(navigator.userAgent);
+      if (!inTelegram) return;
+
       document.documentElement.dataset.telegram = "1";
+      window.dispatchEvent(new Event("fbsu:telegram"));
       app.ready();
       app.expand();
       try {
@@ -71,13 +92,13 @@ export function TelegramMiniApp() {
         back.onClick(goBack);
       }
 
-      if (!app.initData) return;
+      if (!initData) return;
 
       fetch("/api/auth/telegram", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify({ initData: app.initData }),
+        body: JSON.stringify({ initData }),
       })
         .then((response) => response.json().catch(() => null))
         .then((result: { ok?: boolean; mode?: string } | null) => {
@@ -124,9 +145,9 @@ export function TelegramMiniApp() {
   // avtomatik bog'lash: sahifa almashganda initData bilan qayta urinamiz.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!/Telegram/i.test(navigator.userAgent)) return;
     const app = window.Telegram?.WebApp;
-    if (!app?.initData || linkedRef.current) return;
+    const initData = readInitData(app);
+    if (!initData || linkedRef.current) return;
     const now = Date.now();
     if (now - lastAuthRef.current < 8000) return;
     lastAuthRef.current = now;
@@ -136,7 +157,7 @@ export function TelegramMiniApp() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
-      body: JSON.stringify({ initData: app.initData }),
+      body: JSON.stringify({ initData }),
     })
       .then((response) => response.json().catch(() => null))
       .then((result: { ok?: boolean; mode?: string } | null) => {
