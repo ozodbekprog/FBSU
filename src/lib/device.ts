@@ -236,6 +236,25 @@ export async function prepareSession(
   return { loginId: randomUUID(), device, ...info };
 }
 
+/**
+ * Eng eski faol qurilmani uzedi. Telegram mini ilovasi orqali avtomatik
+ * kirishda limit to'lgan bo'lsa ishlatiladi — foydalanuvchi tanlovisiz
+ * eski sessiya almashtiriladi.
+ */
+export async function revokeOldestDevice(userId: string): Promise<string | null> {
+  const oldest = await prisma.trustedDevice.findFirst({
+    where: { userId, revokedAt: null },
+    orderBy: [{ lastSeenAt: "asc" }, { createdAt: "asc" }],
+    select: { id: true, name: true },
+  });
+  if (!oldest) return null;
+  await prisma.trustedDevice.update({
+    where: { id: oldest.id },
+    data: { revokedAt: new Date() },
+  });
+  return oldest.name;
+}
+
 export async function currentDeviceId(userId: string): Promise<string | null> {
   const cookieStore = await cookies();
   const deviceId = await readDeviceToken(cookieStore.get(DEVICE_COOKIE)?.value);

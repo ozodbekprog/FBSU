@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { createSession, getCurrentUser } from "@/lib/auth";
-import { DeviceLimitError } from "@/lib/device";
+import { DeviceLimitError, revokeOldestDevice } from "@/lib/device";
 import { verifyInitData } from "@/server/telegram-init-data";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -49,24 +49,46 @@ export async function POST(request: Request) {
       sessionId = session.sessionId;
     } catch (error) {
       if (error instanceof DeviceLimitError) {
+        // Mini ilova kanalida foydalanuvchi tanlovisiz eng eski qurilma
+        // almashtiriladi — initData Telegram hisobini tasdiqlagan.
+        const removed = await revokeOldestDevice(linked.id);
+        if (!removed) {
+          return Response.json(
+            {
+              ok: false,
+              code: "DEVICE_LIMIT",
+              error: "Qurilma limiti to'lgan. Eski qurilmani uzib, qayta urinib ko'ring.",
+            },
+            { status: 403 },
+          );
+        }
         await createAuditLog({
-          action: "LOGIN_FAILED",
-          entity: "User",
+          action: "SESSION_REVOKED",
+          entity: "TrustedDevice",
           entityId: linked.id,
-          meta: { email: linked.email, reason: "device_limit", channel: "telegram_miniapp" },
+          meta: { name: removed, reason: "telegram_miniapp" },
           ip: clientInfo.ip,
           userAgent: clientInfo.userAgent,
         });
-        return Response.json(
-          {
-            ok: false,
-            code: "DEVICE_LIMIT",
-            error: "Bu hisobga faqat 2 ta qurilma ulanadi. Avval eski qurilmani uzib, qayta urinib ko'ring.",
-          },
-          { status: 403 },
-        );
+        try {
+          const retry = await createSession(linked, { remember: true, method: "TELEGRAM" });
+          sessionId = retry.sessionId;
+        } catch (retryError) {
+          if (retryError instanceof DeviceLimitError) {
+            return Response.json(
+              {
+                ok: false,
+                code: "DEVICE_LIMIT",
+                error: "Qurilma limiti qayta to'ldi. Qaytadan urinib ko'ring.",
+              },
+              { status: 403 },
+            );
+          }
+          throw retryError;
+        }
+      } else {
+        throw error;
       }
-      throw error;
     }
     await createAuditLog({
       action: "LOGIN_SUCCESS",
