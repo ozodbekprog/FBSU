@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import type { AttendanceStatus, ScheduleEntry } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { GPA_CREDITS, getStudentGpa } from "@/app/api/gpa/data";
+import { GPA_CREDITS, getStudentBonusOverview, getStudentGpa } from "@/app/api/gpa/data";
 import { isValidFaceDescriptor } from "@/modules/attendance/face";
 import { CheckInForm } from "@/components/attendance/check-in-form";
 import { GradeTrendChart } from "@/components/charts/GradeTrendChart";
@@ -12,6 +12,7 @@ import { getStudentAnalytics } from "@/app/(app)/dashboard/analytics";
 import { FbMotion } from "@/components/fb/fb-motion";
 import { getDictionary, t as translate, type Dictionary, type Locale } from "@/i18n";
 import { cn, dayName, fmtDate, monthName } from "@/lib/utils";
+import { formatPoints } from "@/lib/points";
 import { matchCourseSlug, slotRange } from "@/components/attendance/lesson-utils";
 
 const DAY_MS = 86_400_000;
@@ -98,7 +99,7 @@ export async function StudentHome({
     title: enrollment.course.title,
   }));
 
-  const [schedule, assignments, gpa, attendance, faceRow, announcements, studentAnalytics] =
+  const [schedule, assignments, gpa, attendance, faceRow, announcements, studentAnalytics, bonus] =
     await Promise.all([
     groupId
       ? prisma.scheduleEntry.findMany({
@@ -144,6 +145,7 @@ export async function StudentHome({
       select: { id: true, title: true, body: true },
     }),
     getStudentAnalytics(userId, locale),
+    getStudentBonusOverview(userId),
   ]);
 
   const gradeTrend = studentAnalytics.gradeTrend;
@@ -301,6 +303,20 @@ export async function StudentHome({
   const creditPct = creditTarget > 0 ? Math.round((gpa.totalCredits / creditTarget) * 100) : 0;
   const assignmentPct =
     assignments.length > 0 ? Math.round((submittedCount / assignments.length) * 100) : 0;
+
+  const bonusWalletPoints = bonus.walletTenths / 10;
+  const bonusAppliedPoints = bonus.appliedTenths / 10;
+  const bonusHasWallet = bonus.walletTenths >= 10;
+  const bonusSubjects = bonus.targets
+    .filter((target) => target.headroomTenths >= 10)
+    .sort((a, b) => (a.percent ?? 101) - (b.percent ?? 101))
+    .slice(0, 3)
+    .map((target) => ({
+      courseId: target.courseId,
+      title: target.title,
+      percent: target.percent,
+      points: Math.floor(target.headroomTenths / 10),
+    }));
   const greeting =
     now.getHours() < 12
       ? dict.fbdGreetingMorning
@@ -842,6 +858,94 @@ export async function StudentHome({
         </div>
 
         <div className="fb-col">
+          <section className="fb-card fb-points" data-fb-reveal data-fb-delay="200">
+            <div className="fb-card-head">
+              <div>
+                <h3>{dict.fbdPointsTitle}</h3>
+                <span className="fb-tagline">{dict.fbdPointsTag}</span>
+              </div>
+              <Link className="fb-more" href="/bonus-points">
+                {dict.fbdPointsMore}
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </Link>
+            </div>
+            <div className="fb-points-body">
+              <div className="fb-points-bal">
+                <span className="fb-points-ico" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M4 9v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9" />
+                    <path d="M3 6h18v3H3zM12 6v14" />
+                  </svg>
+                </span>
+                <span className="fb-points-num">
+                  <b data-fb-count={bonusWalletPoints}>{formatPoints(bonusWalletPoints)}</b>
+                  <span>
+                    {dict.grdBall} · {dict.fbdPointsWallet}
+                  </span>
+                </span>
+                <span className="fb-points-used">
+                  {translate(locale, "fbdPointsApplied", {
+                    points: formatPoints(bonusAppliedPoints),
+                  })}
+                </span>
+              </div>
+
+              <ol className="fb-points-steps">
+                <li>
+                  <i>1</i>
+                  {dict.fbdPointsStep1}
+                </li>
+                <li>
+                  <i>2</i>
+                  {dict.fbdPointsStep2}
+                </li>
+                <li>
+                  <i>3</i>
+                  {dict.fbdPointsStep3}
+                </li>
+              </ol>
+
+              {bonusHasWallet && bonusSubjects.length > 0 ? (
+                <div className="fb-points-targets">
+                  <span className="fb-points-label">{dict.fbdPointsSubjects}</span>
+                  {bonusSubjects.map((subject) => (
+                    <Link
+                      key={subject.courseId}
+                      className="fb-point-target"
+                      href="/bonus-points#allocate"
+                    >
+                      <span className="fb-point-target-name">
+                        <b>{subject.title}</b>
+                        <span>
+                          {subject.percent !== null ? `${subject.percent}%` : dict.fbdKpiEmpty}
+                        </span>
+                      </span>
+                      <span className="fb-point-target-plus">
+                        {translate(locale, "fbdPointsHeadroom", { points: subject.points })}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+
+              {bonusHasWallet ? (
+                <Link className="fb-join-btn fb-points-cta" href="/bonus-points#allocate">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m12 3 1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3Z" />
+                  </svg>
+                  {dict.fbdPointsUse}
+                </Link>
+              ) : (
+                <div className="fb-points-empty">
+                  <b>{dict.fbdPointsEmptyTitle}</b>
+                  <p>{dict.fbdPointsEmptyDesc}</p>
+                </div>
+              )}
+            </div>
+          </section>
+
           <section className="fb-card" data-fb-reveal data-fb-delay="200">
             <div className="fb-card-head">
               <h3>{dict.fbdAttendanceTitle}</h3>

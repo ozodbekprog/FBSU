@@ -85,6 +85,17 @@ export default async function AppLayout({
           : []),
         { href: "/grades", label: isStaff(user.role) ? dictionary.navGradesStaff : dictionary.navGradesStudent },
         { href: "/gpa", label: dictionary.navGpa },
+        ...(user.role === "TEACHER" || user.role === "REKTOR"
+          ? [
+              {
+                href: "/bonus-points",
+                label: user.role === "REKTOR" ? dictionary.grdGiveBonus : dictionary.grdBonusPoints,
+              },
+            ]
+          : []),
+        ...(user.role === "REKTOR" || user.role === "PRO_RECTOR"
+          ? [{ href: "/credit-awards", label: dictionary.grdGiveCredit }]
+          : []),
         { href: "/transcript", label: dictionary.navTranscript },
         { href: "/attendance", label: dictionary.navAttendance },
         { href: "/board", label: dictionary.brdTitle },
@@ -189,14 +200,14 @@ export default async function AppLayout({
     REKTOR: [
       "/dashboard", "/assistant", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
       "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar", "/research",
-      "/messages", "/search", "/help", "/bounty", "/settings", "/access",
+      "/messages", "/search", "/help", "/bounty", "/settings", "/access", "/bonus-points", "/credit-awards",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
     PRO_RECTOR: [
       "/dashboard", "/assistant", "/monitoring", "/admissions", "/reports", "/workload", "/documents", "/diplomas", "/finance",
       "/staff", "/tasks", "/my-qr", "/schedule", "/calendar", "/academic-calendar", "/research",
-      "/messages", "/search", "/help", "/bounty", "/settings", "/access",
+      "/messages", "/search", "/help", "/bounty", "/settings", "/access", "/credit-awards",
       // Ko'rinishi `salaryVisible` ga bog'liq — ruxsat bo'lmasa yo'qoladi.
       "/payroll",
     ],
@@ -224,7 +235,7 @@ export default async function AppLayout({
       "/dashboard", "/assistant", "/courses", "/board", "/journal", "/journals",
       "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/secure-exams", "/attendance",
       "/reports", "/workload", "/staff", "/tasks", "/my-qr", "/messages", "/bookings", "/rooms",
-      "/research", "/teacher-points", "/search", "/help", "/bounty", "/settings",
+      "/research", "/teacher-points", "/bonus-points", "/search", "/help", "/bounty", "/settings",
     ],
     STUDENT: [
       "/dashboard", "/assistant", "/courses", "/board", "/schedule", "/calendar",

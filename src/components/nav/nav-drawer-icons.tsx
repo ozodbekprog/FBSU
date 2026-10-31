@@ -382,6 +382,18 @@ const S: Record<string, ReactNode> = {
       <path d="M12 8v4l3 2" />
     </>
   ),
+"/bonus-points": (
+    <>
+      <path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />
+    </>
+  ),
+"/credit-awards": (
+    <>
+      <ellipse cx="12" cy="6" rx="7" ry="3" />
+      <path d="M5 6v5c0 1.7 3.1 3 7 3s7-1.3 7-3V6" />
+      <path d="M5 11v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5" />
+    </>
+  ),
 };
 
 /** Berilgan href uchun drawer ikonkasi (yo'q bo'lsa `null`). */

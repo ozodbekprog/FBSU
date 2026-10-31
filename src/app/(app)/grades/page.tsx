@@ -17,7 +17,8 @@ import {
   Stat,
   Table,
 } from "@/components/ui";
-import { cn, fmtDate, fmtDateTime, gradeColor, scorePercent } from "@/lib/utils";
+import { clampPercent, cn, fmtDate, fmtDateTime, gradeColor, scorePercent } from "@/lib/utils";
+import { formatPoints } from "@/lib/points";
 import { SubmissionBadge } from "@/components/courses/assignments-status";
 import { getStudentAttendance } from "@/app/api/attendance/summary/data";
 import { GradeBadge } from "@/components/grades/grade-badge";
@@ -44,30 +45,53 @@ export default async function GradesPage({
           })
         : Promise.resolve([]);
 
-    const [submissions, attempts, attendance, enrollments, groupMembers] = await Promise.all([
-      prisma.submission.findMany({
-        where: { studentId: user.id },
-        include: {
-          assignment: { include: { course: { select: { title: true, slug: true } } } },
-        },
-        orderBy: { submittedAt: "desc" },
-      }),
-      prisma.quizAttempt.findMany({
-        where: { studentId: user.id },
-        include: {
-          quiz: {
-            include: {
-              course: { select: { title: true } },
-              questions: { select: { points: true } },
+    const [submissions, attempts, attendance, enrollments, groupMembers, bonuses] =
+      await Promise.all([
+        prisma.submission.findMany({
+          where: { studentId: user.id },
+          include: {
+            assignment: { include: { course: { select: { id: true, title: true, slug: true } } } },
+          },
+          orderBy: { submittedAt: "desc" },
+        }),
+        prisma.quizAttempt.findMany({
+          where: { studentId: user.id },
+          include: {
+            quiz: {
+              include: {
+                course: { select: { id: true, title: true } },
+                questions: { select: { points: true } },
+              },
             },
           },
-        },
-        orderBy: { startedAt: "desc" },
-      }),
-      getStudentAttendance(user.id),
-      prisma.enrollment.findMany({ where: { userId: user.id, status: "ACTIVE" }, select: { courseId: true } }),
-      memberQuery,
-    ]);
+          orderBy: { startedAt: "desc" },
+        }),
+        getStudentAttendance(user.id),
+        prisma.enrollment.findMany({ where: { userId: user.id, status: "ACTIVE" }, select: { courseId: true } }),
+        memberQuery,
+        prisma.bonusPoint.findMany({
+          where: { studentId: user.id },
+          select: {
+            courseId: true,
+            tenths: true,
+            allocations: { select: { courseId: true, tenths: true } },
+          },
+        }),
+      ]);
+
+    // Bonus ball fan foiziga emas, fanning umumiy balliga qo'shiladi.
+    const bonusByCourse = new Map<string, number>();
+    let totalBonusTenths = 0;
+    const addBonus = (courseId: string, tenths: number) => {
+      bonusByCourse.set(courseId, (bonusByCourse.get(courseId) ?? 0) + tenths);
+      totalBonusTenths += tenths;
+    };
+    for (const bonus of bonuses) {
+      if (bonus.courseId) addBonus(bonus.courseId, bonus.tenths);
+      for (const allocation of bonus.allocations) {
+        addBonus(allocation.courseId, allocation.tenths);
+      }
+    }
 
     const graded = submissions.filter((submission) => submission.score != null);
     let scoreSum = graded.reduce((sum, submission) => sum + (submission.score ?? 0), 0);
@@ -79,11 +103,15 @@ export default async function GradesPage({
       scoreSum += attempt.score;
       maxSum += quizMax;
     }
-    const average = maxSum > 0 ? Math.round((scoreSum / maxSum) * 100) : null;
+    const average =
+      maxSum > 0
+        ? clampPercent(((scoreSum + totalBonusTenths / 10) / maxSum) * 100)
+        : null;
 
     const groupMap = new Map<
       string,
       {
+        courseId: string;
         title: string;
         slug: string | null;
         submissions: typeof submissions;
@@ -98,6 +126,7 @@ export default async function GradesPage({
         existing.submissions.push(submission);
       } else {
         groupMap.set(key, {
+          courseId: submission.assignment.course.id,
           title: key,
           slug: submission.assignment.course.slug,
           submissions: [submission],
@@ -112,7 +141,13 @@ export default async function GradesPage({
       if (existing) {
         existing.attempts.push(attempt);
       } else {
-        groupMap.set(key, { title: key, slug: null, submissions: [], attempts: [attempt] });
+        groupMap.set(key, {
+          courseId: attempt.quiz.course.id,
+          title: key,
+          slug: null,
+          submissions: [],
+          attempts: [attempt],
+        });
       }
     }
 
@@ -200,7 +235,9 @@ export default async function GradesPage({
         score += attempt.score;
         max += quizMax;
       }
-      return max > 0 ? Math.round((score / max) * 100) : null;
+      const bonusTenths = bonusByCourse.get(group.courseId) ?? 0;
+      if (max <= 0) return null;
+      return clampPercent(((score + bonusTenths / 10) / max) * 100);
     }
 
     return (
@@ -268,6 +305,13 @@ export default async function GradesPage({
                 {me ? (
                   <Badge tone="gold">
                     {translate(locale, "grdInRating", { rank: me.rank })}
+                  </Badge>
+                ) : null}
+                {totalBonusTenths > 0 ? (
+                  <Badge tone="blue">
+                    {translate(locale, "grdBonusPointsBadge", {
+                      points: formatPoints(totalBonusTenths / 10),
+                    })}
                   </Badge>
                 ) : null}
               </div>
@@ -339,6 +383,13 @@ export default async function GradesPage({
                 action={
                   groupAverage(group) != null ? (
                     <span className="flex items-center gap-2">
+                      {(bonusByCourse.get(group.courseId) ?? 0) > 0 ? (
+                        <Badge tone="blue">
+                          {translate(locale, "grdBonusPointsBadge", {
+                            points: formatPoints((bonusByCourse.get(group.courseId) ?? 0) / 10),
+                          })}
+                        </Badge>
+                      ) : null}
                       <span className="hidden text-[11px] font-medium uppercase tracking-wide text-slate-600 sm:block">
                         {dictionary.grdCourseAverage}
                       </span>
@@ -488,7 +539,7 @@ export default async function GradesPage({
     );
   }
 
-  const [assignments, enrollments, submissions] = await Promise.all([
+  const [assignments, enrollments, submissions, bonuses] = await Promise.all([
     prisma.assignment.findMany({
       where: { courseId: selected.id },
       orderBy: { createdAt: "asc" },
@@ -501,7 +552,34 @@ export default async function GradesPage({
     prisma.submission.findMany({
       where: { assignment: { courseId: selected.id } },
     }),
+    prisma.bonusPoint.findMany({
+      where: {
+        OR: [
+          { courseId: selected.id },
+          { allocations: { some: { courseId: selected.id } } },
+        ],
+      },
+      select: {
+        studentId: true,
+        courseId: true,
+        tenths: true,
+        allocations: {
+          where: { courseId: selected.id },
+          select: { tenths: true },
+        },
+      },
+    }),
   ]);
+
+  const bonusByStudent = new Map<string, number>();
+  for (const bonus of bonuses) {
+    const bound = bonus.courseId === selected.id ? bonus.tenths : 0;
+    const allocated = bonus.allocations.reduce((sum, row) => sum + row.tenths, 0);
+    bonusByStudent.set(
+      bonus.studentId,
+      (bonusByStudent.get(bonus.studentId) ?? 0) + bound + allocated,
+    );
+  }
 
   const byStudentAssignment = new Map(
     submissions.map((submission) => [
@@ -509,6 +587,10 @@ export default async function GradesPage({
       submission,
     ]),
   );
+
+  function studentBonus(studentId: string) {
+    return bonusByStudent.get(studentId) ?? 0;
+  }
 
   function studentAverage(studentId: string) {
     let score = 0;
@@ -520,7 +602,10 @@ export default async function GradesPage({
         max += assignment.maxScore;
       }
     }
-    return max > 0 ? Math.round((score / max) * 100) : null;
+    const bonusTenths = studentBonus(studentId);
+    if (max <= 0) return null;
+    // Bonus ball umumiy ballga qo'shiladi va 100% bilan cheklanadi.
+    return clampPercent(((score + bonusTenths / 10) / max) * 100);
   }
 
   function assignmentAverage(assignmentId: string, maxScore: number) {
@@ -529,7 +614,7 @@ export default async function GradesPage({
       .map((submission) => submission.score ?? 0);
     if (scores.length === 0) return null;
     const sum = scores.reduce((total, score) => total + score, 0);
-    return Math.round((sum / (scores.length * maxScore)) * 100);
+    return clampPercent((sum / (scores.length * maxScore)) * 100);
   }
 
   const gradedSubmissions = submissions.filter((submission) => submission.score != null);
@@ -733,7 +818,16 @@ export default async function GradesPage({
                         })}
                         <td className="border-l border-brand-100/70 bg-brand-50/40 px-3 py-3 text-center text-sm font-semibold transition-colors duration-150 group-hover:bg-brand-50/70">
                           {average != null ? (
-                            <span className={gradeColor(average)}>{average}%</span>
+                            <span className="inline-flex flex-col items-center gap-0.5">
+                              <span className={gradeColor(average)}>{average}%</span>
+                              {studentBonus(enrollment.user.id) > 0 ? (
+                                <span className="text-[10px] font-medium text-gold-700 dark:text-gold-300">
+                                  {translate(locale, "grdBonusPointsBadge", {
+                                    points: formatPoints(studentBonus(enrollment.user.id) / 10),
+                                  })}
+                                </span>
+                              ) : null}
+                            </span>
                           ) : (
                             <span className="text-slate-500">—</span>
                           )}

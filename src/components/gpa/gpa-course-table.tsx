@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, CardHeader, Progress, Table } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { formatPoints } from "@/lib/points";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
 import { GradeBadge } from "@/components/grades/grade-badge";
 import { GPA_CREDITS } from "@/app/api/gpa/data";
@@ -59,7 +60,7 @@ export async function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; de
                           })}
                           {course.bonusPoints > 0 ? (
                             <span className="ml-1.5 font-medium text-emerald-700">
-                              {translate(locale, "grdBonusPlus", { points: course.bonusPoints.toFixed(1) })}
+                              {translate(locale, "grdBonusPlus", { points: formatPoints(course.bonusPoints) })}
                             </span>
                           ) : null}
                         </span>
@@ -133,7 +134,7 @@ export async function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; de
                     })}
                     {course.bonusPoints > 0 ? (
                       <span className="ml-1.5 font-medium text-emerald-700">
-                        {translate(locale, "grdBonusPlus", { points: course.bonusPoints.toFixed(1) })}
+                        {translate(locale, "grdBonusPlus", { points: formatPoints(course.bonusPoints) })}
                       </span>
                     ) : null}
                   </span>

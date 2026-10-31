@@ -82,6 +82,14 @@ export async function GpaHero({ data, delay = 0 }: { data: StudentGpa; delay?: n
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-brand-200">
               {dictionary.grdGpaHeroDesc}
             </p>
+            {data.creditBoost > 0 ? (
+              <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-gold-400/40 bg-gold-400/10 px-3 py-1 text-xs font-semibold text-gold-200">
+                <span className="size-1.5 rounded-full bg-gold-400" />
+                {translate(locale, "grdCreditBoostLine", {
+                  credits: data.creditBoost.toFixed(2),
+                })}
+              </p>
+            ) : null}
             <div className="mt-5">
               <div className="flex items-center justify-between text-[11px] font-medium uppercase tracking-[0.14em] text-brand-300">
                 <span>0.0</span>
