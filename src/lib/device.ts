@@ -237,22 +237,26 @@ export async function prepareSession(
 }
 
 /**
- * Eng eski faol qurilmani uzedi. Telegram mini ilovasi orqali avtomatik
- * kirishda limit to'lgan bo'lsa ishlatiladi — foydalanuvchi tanlovisiz
- * eski sessiya almashtiriladi.
+ * Eng eski faol qurilmalarni `keep` tagacha uzedi. Telegram mini ilovasi
+ * orqali avtomatik kirishda limit to'lgan bo'lsa ishlatiladi — foydalanuvchi
+ * tanlovisiz eski sessiyalar almashtiriladi.
  */
-export async function revokeOldestDevice(userId: string): Promise<string | null> {
-  const oldest = await prisma.trustedDevice.findFirst({
+export async function revokeOldestDevices(
+  userId: string,
+  keep = MAX_DEVICES - 1,
+): Promise<string[]> {
+  const active = await prisma.trustedDevice.findMany({
     where: { userId, revokedAt: null },
     orderBy: [{ lastSeenAt: "asc" }, { createdAt: "asc" }],
     select: { id: true, name: true },
   });
-  if (!oldest) return null;
-  await prisma.trustedDevice.update({
-    where: { id: oldest.id },
+  const remove = active.slice(0, Math.max(0, active.length - keep));
+  if (remove.length === 0) return [];
+  await prisma.trustedDevice.updateMany({
+    where: { id: { in: remove.map((device) => device.id) } },
     data: { revokedAt: new Date() },
   });
-  return oldest.name;
+  return remove.map((device) => device.name);
 }
 
 export async function currentDeviceId(userId: string): Promise<string | null> {
