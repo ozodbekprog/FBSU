@@ -18,6 +18,7 @@ import {
   Table,
 } from "@/components/ui";
 import { clampPercent, cn, fmtDate, fmtDateTime, gradeColor, scorePercent } from "@/lib/utils";
+import { coursePoints30, points30Percent } from "@/app/api/gpa/data";
 import { formatPoints } from "@/lib/points";
 import { SubmissionBadge } from "@/components/courses/assignments-status";
 import { getStudentAttendance } from "@/app/api/attendance/summary/data";
@@ -70,16 +71,12 @@ export default async function GradesPage({
         prisma.enrollment.findMany({ where: { userId: user.id, status: "ACTIVE" }, select: { courseId: true } }),
         memberQuery,
         prisma.bonusPoint.findMany({
-          where: { studentId: user.id },
-          select: {
-            courseId: true,
-            tenths: true,
-            allocations: { select: { courseId: true, tenths: true } },
-          },
+          where: { studentId: user.id, courseId: { not: null } },
+          select: { courseId: true, tenths: true },
         }),
       ]);
 
-    // Bonus ball fan foiziga emas, fanning umumiy balliga qo'shiladi.
+    // Bonus ball fanning 30 ballik shkalasiga qo'shiladi.
     const bonusByCourse = new Map<string, number>();
     let totalBonusTenths = 0;
     const addBonus = (courseId: string, tenths: number) => {
@@ -88,25 +85,12 @@ export default async function GradesPage({
     };
     for (const bonus of bonuses) {
       if (bonus.courseId) addBonus(bonus.courseId, bonus.tenths);
-      for (const allocation of bonus.allocations) {
-        addBonus(allocation.courseId, allocation.tenths);
-      }
     }
 
-    const graded = submissions.filter((submission) => submission.score != null);
-    let scoreSum = graded.reduce((sum, submission) => sum + (submission.score ?? 0), 0);
-    let maxSum = graded.reduce((sum, submission) => sum + submission.assignment.maxScore, 0);
-    for (const attempt of attempts) {
-      if (attempt.score == null) continue;
-      const quizMax = attempt.quiz.questions.reduce((sum, question) => sum + question.points, 0);
-      if (quizMax <= 0) continue;
-      scoreSum += attempt.score;
-      maxSum += quizMax;
+    function coursePercentOf(score: number, max: number, bonusTenths: number) {
+      const points30 = coursePoints30(score, max, bonusTenths / 10);
+      return points30 === null ? null : points30Percent(points30);
     }
-    const average =
-      maxSum > 0
-        ? clampPercent(((scoreSum + totalBonusTenths / 10) / maxSum) * 100)
-        : null;
 
     const groupMap = new Map<
       string,
@@ -158,7 +142,7 @@ export default async function GradesPage({
     let ratingRows: ReturnType<typeof rankRatings> = [];
 
     if (memberIds.length > 0 && commonCourseIds.length > 0) {
-      const [ratingSubmissions, ratingAttempts] = await Promise.all([
+      const [ratingSubmissions, ratingAttempts, ratingBonuses] = await Promise.all([
         prisma.submission.findMany({
           where: {
             studentId: { in: memberIds },
@@ -168,7 +152,7 @@ export default async function GradesPage({
           select: {
             studentId: true,
             score: true,
-            assignment: { select: { maxScore: true } },
+            assignment: { select: { maxScore: true, courseId: true } },
           },
         }),
         prisma.quizAttempt.findMany({
@@ -181,37 +165,73 @@ export default async function GradesPage({
           select: {
             studentId: true,
             score: true,
-            quiz: { select: { questions: { select: { points: true } } } },
+            quiz: {
+              select: {
+                courseId: true,
+                questions: { select: { points: true } },
+              },
+            },
           },
+        }),
+        prisma.bonusPoint.findMany({
+          where: {
+            studentId: { in: memberIds },
+            courseId: { in: commonCourseIds },
+          },
+          select: { studentId: true, courseId: true, tenths: true },
         }),
       ]);
 
-      const ratingTotals = new Map<string, { score: number; max: number }>();
-      const addTotal = (studentId: string, score: number, max: number) => {
+      // Reyting ham fan bo'yicha 30 ballik shkalada hisoblanadi.
+      const ratingBonusTenths = new Map<string, number>();
+      for (const bonus of ratingBonuses) {
+        const key = `${bonus.studentId}:${bonus.courseId}`;
+        ratingBonusTenths.set(key, (ratingBonusTenths.get(key) ?? 0) + bonus.tenths);
+      }
+
+      const ratingTotals = new Map<string, Map<string, { score: number; max: number }>>();
+      const addTotal = (studentId: string, courseId: string, score: number, max: number) => {
         if (max <= 0) return;
-        const current = ratingTotals.get(studentId) ?? { score: 0, max: 0 };
+        const byCourse = ratingTotals.get(studentId) ?? new Map<string, { score: number; max: number }>();
+        const current = byCourse.get(courseId) ?? { score: 0, max: 0 };
         current.score += score;
         current.max += max;
-        ratingTotals.set(studentId, current);
+        byCourse.set(courseId, current);
+        ratingTotals.set(studentId, byCourse);
       };
 
       for (const submission of ratingSubmissions) {
-        addTotal(submission.studentId, submission.score ?? 0, submission.assignment.maxScore);
+        addTotal(
+          submission.studentId,
+          submission.assignment.courseId,
+          submission.score ?? 0,
+          submission.assignment.maxScore,
+        );
       }
       for (const attempt of ratingAttempts) {
         const quizMax = attempt.quiz.questions.reduce((sum, question) => sum + question.points, 0);
-        addTotal(attempt.studentId, attempt.score ?? 0, quizMax);
+        addTotal(attempt.studentId, attempt.quiz.courseId, attempt.score ?? 0, quizMax);
       }
 
       const entries: RatingEntry[] = [];
       for (const member of groupMembers) {
-        const total = ratingTotals.get(member.id);
-        if (!total || total.max <= 0) continue;
+        const byCourse = ratingTotals.get(member.id);
+        if (!byCourse || byCourse.size === 0) continue;
+        const coursePercents: number[] = [];
+        for (const [courseId, total] of byCourse) {
+          const bonusTenths = ratingBonusTenths.get(`${member.id}:${courseId}`) ?? 0;
+          const points30 = coursePoints30(total.score, total.max, bonusTenths / 10);
+          if (points30 === null) continue;
+          coursePercents.push(points30Percent(points30));
+        }
+        if (coursePercents.length === 0) continue;
         entries.push({
           studentId: member.id,
           name: member.name,
           avatarUrl: member.avatarUrl,
-          percent: Math.round((total.score / total.max) * 100),
+          percent: Math.round(
+            coursePercents.reduce((sum, value) => sum + value, 0) / coursePercents.length,
+          ),
           isMe: member.id === user.id,
         });
       }
@@ -236,9 +256,19 @@ export default async function GradesPage({
         max += quizMax;
       }
       const bonusTenths = bonusByCourse.get(group.courseId) ?? 0;
-      if (max <= 0) return null;
-      return clampPercent(((score + bonusTenths / 10) / max) * 100);
+      return coursePercentOf(score, max, bonusTenths);
     }
+
+    const graded = submissions.filter((submission) => submission.score != null);
+    const gradedAverages = groups
+      .map((group) => groupAverage(group))
+      .filter((value): value is number => value !== null);
+    const average =
+      gradedAverages.length > 0
+        ? Math.round(
+            gradedAverages.reduce((sum, value) => sum + value, 0) / gradedAverages.length,
+          )
+        : null;
 
     return (
       <>
@@ -316,7 +346,7 @@ export default async function GradesPage({
                 ) : null}
               </div>
               <p className="mt-1 text-xs text-slate-600">
-                {maxSum > 0 ? dictionary.grdBasedOnGraded : dictionary.grdNoGradesYet}
+                {average !== null ? dictionary.grdBasedOnGraded : dictionary.grdNoGradesYet}
               </p>
               <div className="mt-5">
                 <div className="mb-1.5 flex items-center justify-between text-xs font-medium text-slate-500">
@@ -553,31 +583,16 @@ export default async function GradesPage({
       where: { assignment: { courseId: selected.id } },
     }),
     prisma.bonusPoint.findMany({
-      where: {
-        OR: [
-          { courseId: selected.id },
-          { allocations: { some: { courseId: selected.id } } },
-        ],
-      },
-      select: {
-        studentId: true,
-        courseId: true,
-        tenths: true,
-        allocations: {
-          where: { courseId: selected.id },
-          select: { tenths: true },
-        },
-      },
+      where: { courseId: selected.id },
+      select: { studentId: true, tenths: true },
     }),
   ]);
 
   const bonusByStudent = new Map<string, number>();
   for (const bonus of bonuses) {
-    const bound = bonus.courseId === selected.id ? bonus.tenths : 0;
-    const allocated = bonus.allocations.reduce((sum, row) => sum + row.tenths, 0);
     bonusByStudent.set(
       bonus.studentId,
-      (bonusByStudent.get(bonus.studentId) ?? 0) + bound + allocated,
+      (bonusByStudent.get(bonus.studentId) ?? 0) + bonus.tenths,
     );
   }
 
@@ -603,9 +618,8 @@ export default async function GradesPage({
       }
     }
     const bonusTenths = studentBonus(studentId);
-    if (max <= 0) return null;
-    // Bonus ball umumiy ballga qo'shiladi va 100% bilan cheklanadi.
-    return clampPercent(((score + bonusTenths / 10) / max) * 100);
+    const points30 = coursePoints30(score, max, bonusTenths / 10);
+    return points30 === null ? null : points30Percent(points30);
   }
 
   function assignmentAverage(assignmentId: string, maxScore: number) {
@@ -618,14 +632,17 @@ export default async function GradesPage({
   }
 
   const gradedSubmissions = submissions.filter((submission) => submission.score != null);
-  const totalScore = gradedSubmissions.reduce(
-    (sum, submission) => sum + (submission.score ?? 0),
-    0,
-  );
-  const totalMax = gradedSubmissions.reduce((sum, submission) => {
-    const assignment = assignments.find((item) => item.id === submission.assignmentId);
-    return sum + (assignment?.maxScore ?? 0);
-  }, 0);
+
+  // Jurnal "O'rtacha" ustuni ham 30 ballik shkala bo'yicha hisoblanadi.
+  const studentAverages = enrollments
+    .map((enrollment) => studentAverage(enrollment.user.id))
+    .filter((value): value is number => value !== null);
+  const journalAverage =
+    studentAverages.length > 0
+      ? Math.round(
+          studentAverages.reduce((sum, value) => sum + value, 0) / studentAverages.length,
+        )
+      : null;
 
   const pendingSubmissions = submissions.filter((submission) => submission.score == null);
   const studentNames = new Map(
@@ -853,7 +870,7 @@ export default async function GradesPage({
                       );
                     })}
                     <td className="sticky bottom-0 z-20 border-l border-brand-100/70 bg-brand-50 px-3 py-2.5 text-center font-semibold text-brand-800 shadow-[inset_0_1px_0_#dbe4f4]">
-                      {totalMax > 0 ? `${Math.round((totalScore / totalMax) * 100)}%` : "—"}
+                      {journalAverage != null ? `${journalAverage}%` : "—"}
                     </td>
                   </tr>
                 </tfoot>

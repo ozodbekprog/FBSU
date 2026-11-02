@@ -199,6 +199,12 @@ const S: Record<string, ReactNode> = {
       <path d="M12 2v3M12 19v3M22 12h-3M5 12H2M18.4 5.6 16.2 7.8M7.8 16.2l-2.2 2.2M18.4 18.4l-2.2-2.2M7.8 7.8 5.6 5.6" />
     </>
   ),
+"/owner/security": (
+    <>
+      <path d="M12 3 5 6v5c0 4.4 2.9 8.4 7 10 4.1-1.6 7-5.6 7-10V6z" />
+      <path d="m9.5 12 1.8 1.8L15 10" />
+    </>
+  ),
 "/curator": (
     <>
       <circle cx="9" cy="8" r="3" />
@@ -385,13 +391,6 @@ const S: Record<string, ReactNode> = {
 "/bonus-points": (
     <>
       <path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />
-    </>
-  ),
-"/credit-awards": (
-    <>
-      <ellipse cx="12" cy="6" rx="7" ry="3" />
-      <path d="M5 6v5c0 1.7 3.1 3 7 3s7-1.3 7-3V6" />
-      <path d="M5 11v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5" />
     </>
   ),
 };

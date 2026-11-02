@@ -13,23 +13,16 @@ type Props = {
   students: BonusStudent[];
   minTenths?: number;
   maxTenths?: number;
-  /** Rektor rejimi: ball fanga bog'lanmaydi, talaba uni o'zi ishlatadi. */
-  rectorMode?: boolean;
 };
 
-/** O'qituvchi 1..4 butun ball, rektor chegarasiz — API ga ×10 yuboriladi. */
-const TENTHS_MIN = 10;
-const TENTHS_MAX = 40;
-
-const RECTOR_QUICK_POINTS = [1, 3, 5, 10, 20, 50];
 const TEACHER_POINTS = [1, 2, 3, 4];
 
+/** O'qituvchi 1..4 butun ball beradi — API ga ×10 yuboriladi. */
 export function BonusAwardForm({
   courses,
   students,
-  minTenths = TENTHS_MIN,
-  maxTenths = TENTHS_MAX,
-  rectorMode,
+  minTenths = 10,
+  maxTenths = 40,
 }: Props) {
   const { t } = useI18n();
   const router = useRouter();
@@ -37,20 +30,11 @@ export function BonusAwardForm({
   const [studentId, setStudentId] = useState(students[0]?.id ?? "");
   const [studentQuery, setStudentQuery] = useState("");
   const [teacherPoints, setTeacherPoints] = useState(Math.max(1, Math.round(minTenths / 10)));
-  const [rectorAmount, setRectorAmount] = useState(String(Math.max(1, Math.round(minTenths / 10))));
   const [reason, setReason] = useState("");
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const isRectorMode = Boolean(rectorMode);
-
-  const rectorPoints = useMemo(() => {
-    const parsed = Number.parseInt(rectorAmount, 10);
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
-  }, [rectorAmount]);
-
-  const effectivePoints = isRectorMode ? rectorPoints : teacherPoints;
-  const effectiveTenths = effectivePoints * 10;
+  const effectiveTenths = teacherPoints * 10;
 
   const filteredStudents = useMemo(() => {
     const query = studentQuery.trim().toLowerCase();
@@ -72,9 +56,9 @@ export function BonusAwardForm({
 
   const disabled =
     !effectiveStudentId ||
-    (!isRectorMode && !effectiveCourseId) ||
+    !effectiveCourseId ||
     effectiveTenths < minTenths ||
-    (maxTenths != null && !isRectorMode && effectiveTenths > maxTenths) ||
+    effectiveTenths > maxTenths ||
     reason.trim().length < 3 ||
     pending;
 
@@ -83,16 +67,10 @@ export function BonusAwardForm({
     [students, effectiveStudentId],
   );
 
-  const teacherScaleMax = Math.max(1, Math.round((maxTenths ?? TENTHS_MAX) / 10));
-  const quickPoints = isRectorMode
-    ? RECTOR_QUICK_POINTS
-    : TEACHER_POINTS.filter((value) => value * 10 >= minTenths && value <= teacherScaleMax);
-
-  function stepRector(direction: number) {
-    const next = Math.max(1, (rectorPoints || 1) + direction);
-    setRectorAmount(String(next));
-    setMessage(null);
-  }
+  const teacherScaleMax = Math.max(1, Math.round(maxTenths / 10));
+  const quickPoints = TEACHER_POINTS.filter(
+    (value) => value * 10 >= minTenths && value <= teacherScaleMax,
+  );
 
   async function submit() {
     if (disabled) return;
@@ -102,7 +80,7 @@ export function BonusAwardForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...(isRectorMode ? {} : { courseId: effectiveCourseId }),
+          courseId: effectiveCourseId,
           studentId: effectiveStudentId,
           tenths: effectiveTenths,
           reason: reason.trim(),
@@ -117,29 +95,23 @@ export function BonusAwardForm({
 
       setMessage({
         tone: "ok",
-        text: t(isRectorMode ? "grdRectorBonusAwarded" : "grdBonusAwarded", {
+        text: t("grdBonusAwarded", {
           name: selectedStudent?.name ?? t("grdPupil"),
-          points: effectivePoints,
+          points: teacherPoints,
         }),
       });
       setReason("");
-      if (isRectorMode) {
-        setRectorAmount("1");
-      } else {
-        setTeacherPoints(Math.max(1, Math.round(minTenths / 10)));
-      }
+      setTeacherPoints(Math.max(1, Math.round(minTenths / 10)));
       router.refresh();
     } catch {
       setMessage({ tone: "error", text: t("grdServerError") });
     }
   }
 
-  const cardTitle = isRectorMode ? t("grdRectorBonusTitle") : t("grdGiveBonus");
-  const cardSubtitle = isRectorMode
-    ? t("grdRectorBonusSubtitle", { points: effectivePoints })
-    : t("grdBonusSubtitle", { points: effectivePoints });
+  const cardTitle = t("grdGiveBonus");
+  const cardSubtitle = t("grdBonusSubtitle", { points: teacherPoints });
 
-  if (!isRectorMode && courses.length === 0) {
+  if (courses.length === 0) {
     return (
       <section className="fb-card">
         <FormHeader title={cardTitle} subtitle={cardSubtitle} />
@@ -159,26 +131,24 @@ export function BonusAwardForm({
       <FormHeader
         title={cardTitle}
         subtitle={cardSubtitle}
-        badge={isRectorMode ? t("grdHeroRectorBadge") : t("grdTeacherPanel")}
+        badge={t("grdTeacherPanel")}
       />
 
       <div className="fb-form">
-        {!isRectorMode ? (
-          <label className="fb-field">
-            <span className="fb-lab">{t("grdSubject")}</span>
-            <select
-              className="fb-select"
-              value={effectiveCourseId}
-              onChange={(event) => setCourseId(event.target.value)}
-            >
-              {courses.map((course) => (
-                <option key={course.id} value={course.id}>
-                  {course.title}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
+        <label className="fb-field">
+          <span className="fb-lab">{t("grdSubject")}</span>
+          <select
+            className="fb-select"
+            value={effectiveCourseId}
+            onChange={(event) => setCourseId(event.target.value)}
+          >
+            {courses.map((course) => (
+              <option key={course.id} value={course.id}>
+                {course.title}
+              </option>
+            ))}
+          </select>
+        </label>
 
         <div className="fb-field">
           <div className="fb-lab">
@@ -221,150 +191,69 @@ export function BonusAwardForm({
 
         {selectedStudent ? (
           <div className="fb-picked">
-            <span className="fb-ava">
-              {initials(selectedStudent.name)}
-            </span>
+            <span className="fb-ava">{initials(selectedStudent.name)}</span>
             <span className="fb-picked-txt">
               <b>{selectedStudent.name}</b>
               <span>{selectedStudent.groupName ?? t("grdStudent")}</span>
             </span>
-            <span className="fb-mini blue">
-              {t(isRectorMode ? "grdBonusWalletBadge" : "grdPupil")}
-            </span>
-          </div>
-        ) : null}
-
-        {isRectorMode ? (
-          <div className="fb-hint plain">
-            <WalletIcon />
-            <p>{t("grdBonusWalletHint")}</p>
+            <span className="fb-mini blue">{t("grdPupil")}</span>
           </div>
         ) : null}
 
         <div className="fb-amount">
           <div className="fb-amount-top">
-            <span>{isRectorMode ? t("grdBonusAmount") : t("grdScoreLabelColon")}</span>
+            <span>{t("grdScoreLabelColon")}</span>
             <span className="fb-mini">
               <WholeIcon />
               {t("grdWholeNumber")}
             </span>
           </div>
 
-          {isRectorMode ? (
-            <>
-              <div className="fb-amount-row">
+          <div className="fb-picks quad" role="group" aria-label={t("grdBonusQuick")}>
+            {quickPoints.map((value) => {
+              const active = teacherPoints === value;
+              return (
                 <button
+                  key={value}
                   type="button"
-                  className="fb-step"
-                  onClick={() => stepRector(-1)}
-                  disabled={rectorPoints <= 1}
-                  aria-label="-1"
+                  className={cn("fb-pick", active && "on")}
+                  onClick={() => {
+                    setTeacherPoints(value);
+                    setMessage(null);
+                  }}
+                  aria-pressed={active}
                 >
-                  <MinusIcon />
+                  <b>{value}</b>
+                  <small>{t("grdBall")}</small>
                 </button>
-                <div className="fb-amount-field">
-                  <span className="plus">+</span>
-                  <input
-                    value={rectorAmount}
-                    onChange={(event) =>
-                      setRectorAmount(event.target.value.replace(/[^0-9]/g, "").slice(0, 7))
-                    }
-                    onBlur={() => {
-                      if (!rectorPoints) setRectorAmount("1");
-                    }}
-                    inputMode="numeric"
-                    aria-label={t("grdBonusAmount")}
-                  />
-                  <span className="unit">{t("grdBall")}</span>
-                </div>
-                <button
-                  type="button"
-                  className="fb-step"
-                  onClick={() => stepRector(1)}
-                  aria-label="+1"
-                >
-                  <PlusIcon />
-                </button>
-              </div>
+              );
+            })}
+          </div>
 
-              <div className="fb-picks" role="group" aria-label={t("grdBonusQuick")}>
-                {quickPoints.map((value) => {
-                  const active = rectorPoints === value;
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      className={cn("fb-pick", active && "on")}
-                      onClick={() => setRectorAmount(String(value))}
-                      aria-pressed={active}
-                    >
-                      +{value}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <p className="fb-effect-note">{t("grdRectorBonusRange")}</p>
-            </>
-          ) : (
-            <>
-              <div
-                className="fb-picks quad"
-                role="group"
-                aria-label={t("grdBonusQuick")}
-              >
-                {TEACHER_POINTS.filter((value) => value <= teacherScaleMax).map((value) => {
-                  const active = teacherPoints === value;
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      className={cn("fb-pick", active && "on")}
-                      onClick={() => {
-                        setTeacherPoints(value);
-                        setMessage(null);
-                      }}
-                      aria-pressed={active}
-                    >
-                      <b>{value}</b>
-                      <small>{t("grdBall")}</small>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <p className="fb-effect-note">{t("grdBonusRange")}</p>
-            </>
-          )}
+          <p className="fb-effect-note">{t("grdBonusRange")}</p>
         </div>
 
         <div className="fb-effect">
           <div className="fb-effect-top">
             <div>
-              <span>{t(isRectorMode ? "grdBonusPotentialEffect" : "grdBonusEffect")}</span>
-              <p>{t(isRectorMode ? "grdBonusWalletBadge" : "grdBonusToScoreChip")}</p>
+              <span>{t("grdBonusEffect")}</span>
+              <p>{t("grdBonusToScoreChip")}</p>
             </div>
             <b>
-              +{effectivePoints}
+              +{teacherPoints}
               <small>{t("grdBall")}</small>
             </b>
           </div>
-          {isRectorMode ? null : (
-            <div className="fb-meter">
-              <i style={{ width: `${(teacherPoints / teacherScaleMax) * 100}%` }} />
-            </div>
-          )}
-          <p className="fb-effect-note">
-            {t(isRectorMode ? "grdBonusPotentialHint" : "grdBonusPageSubtitle")}
-          </p>
+          <div className="fb-meter">
+            <i style={{ width: `${(teacherPoints / teacherScaleMax) * 100}%` }} />
+          </div>
+          <p className="fb-effect-note">{t("grdBonusPageSubtitle")}</p>
         </div>
 
         <label className="fb-field">
           <span className="fb-lab">
             {t("grdReason")}
-            <em>
-              {reason.length}/300
-            </em>
+            <em>{reason.length}/300</em>
           </span>
           <textarea
             className="fb-textarea"
@@ -383,7 +272,7 @@ export function BonusAwardForm({
           onClick={() => startTransition(submit)}
         >
           <SparkIcon />
-          {isRectorMode ? t("grdGiveBonusAsRector") : t("grdGiveBonusAction")}
+          {t("grdGiveBonusAction")}
         </button>
 
         {message ? <Message tone={message.tone} text={message.text} /> : null}
@@ -439,36 +328,10 @@ function SearchIcon() {
   );
 }
 
-function MinusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 12h14" />
-    </svg>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-  );
-}
-
 function SparkIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="m12 3 2.5 5.1 5.6.8-4 4 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4-4 5.6-.8L12 3Z" />
-    </svg>
-  );
-}
-
-function WalletIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H18a2 2 0 0 1 2 2v1.5" />
-      <path d="M3 7.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2.5" />
-      <path d="M21 8.5h-4.5a3 3 0 0 0 0 6H21v-6Z" />
     </svg>
   );
 }

@@ -4,7 +4,6 @@ import { getCurrentUser } from "@/lib/auth";
 import {
   BONUS_MAX_TENTHS,
   BONUS_MIN_TENTHS,
-  BONUS_RECTOR_MIN_TENTHS,
   BONUS_TENTHS_LIMIT,
 } from "@/app/api/gpa/data";
 
@@ -13,8 +12,7 @@ const MAX_POINTS = String(BONUS_MAX_TENTHS / 10);
 
 const awardSchema = z.object({
   studentId: z.string().min(1, "O'quvchi tanlanmagan"),
-  // O'qituvchi uchun majburiy; rektor bonusi fanga bog'lanmaydi.
-  courseId: z.string().min(1, "Fan tanlanmagan").optional(),
+  courseId: z.string().min(1, "Fan tanlanmagan"),
   // Faqat butun ball: 1 ball = 10 o'nlik birlik.
   tenths: z.coerce
     .number()
@@ -28,8 +26,8 @@ const awardSchema = z.object({
 });
 
 /**
- * O'qituvchi o'z fani doirasida, rektor esa istalgan talabaga chegarasiz
- * fanga bog'lanmagan bonus ball beradi. Boshqa rollar — 403.
+ * O'qituvchi o'z fanining 30 ballik shkalasi doirasida talabaga bonus beradi.
+ * Bonus fan umumiy balliga qo'shiladi; boshqa rollar — 403.
  */
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -37,13 +35,9 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const isTeacher = user.role === "TEACHER";
-  const isRector = user.role === "REKTOR";
-
-  // ADMIN faqat ko'rishga huquqli, bonus bermaydi.
-  if (!isTeacher && !isRector) {
+  if (user.role !== "TEACHER") {
     return Response.json(
-      { ok: false, error: "Faqat o'qituvchi yoki rektor bonus ball bera oladi" },
+      { ok: false, error: "Faqat o'qituvchi o'z fanidan bonus ball bera oladi" },
       { status: 403 },
     );
   }
@@ -60,41 +54,28 @@ export async function POST(request: Request) {
   if (tenths > BONUS_TENTHS_LIMIT) {
     return Response.json({ ok: false, error: "Miqdor juda katta" }, { status: 400 });
   }
-
-  if (isRector) {
-    if (tenths < BONUS_RECTOR_MIN_TENTHS) {
-      return Response.json(
-        { ok: false, error: "Rektor kamida 1 ball bera oladi" },
-        { status: 400 },
-      );
-    }
-  } else if (tenths < BONUS_MIN_TENTHS || tenths > BONUS_MAX_TENTHS) {
+  if (tenths < BONUS_MIN_TENTHS || tenths > BONUS_MAX_TENTHS) {
     return Response.json(
-      { ok: false, error: `Ball kamida ${MIN_POINTS}, ko'pi bilan ${MAX_POINTS} butun ball bo'lishi kerak` },
+      {
+        ok: false,
+        error: `Ball kamida ${MIN_POINTS}, ko'pi bilan ${MAX_POINTS} butun ball bo'lishi kerak`,
+      },
       { status: 400 },
     );
   }
 
-  let course: { id: string; title: string; teacherId: string } | null = null;
-  if (isTeacher) {
-    if (!courseId) {
-      return Response.json({ ok: false, error: "Fan tanlanmagan" }, { status: 400 });
-    }
-    const record = await prisma.course.findUnique({
-      where: { id: courseId },
-      select: { id: true, title: true, teacherId: true },
-    });
-    if (!record) {
-      return Response.json({ ok: false, error: "Fan topilmadi" }, { status: 404 });
-    }
-    // O'qituvchi faqat o'z fanidan.
-    if (record.teacherId !== user.id) {
-      return Response.json(
-        { ok: false, error: "Faqat o'z faningizdan bonus ball bera olasiz" },
-        { status: 403 },
-      );
-    }
-    course = record;
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    select: { id: true, title: true, teacherId: true },
+  });
+  if (!course) {
+    return Response.json({ ok: false, error: "Fan topilmadi" }, { status: 404 });
+  }
+  if (course.teacherId !== user.id) {
+    return Response.json(
+      { ok: false, error: "Faqat o'z faningizdan bonus ball bera olasiz" },
+      { status: 403 },
+    );
   }
 
   const student = await prisma.user.findUnique({
@@ -111,35 +92,18 @@ export async function POST(request: Request) {
     );
   }
   if (!student.isActive) {
-    return Response.json(
-      { ok: false, error: "O'quvchi bloklangan" },
-      { status: 400 },
-    );
+    return Response.json({ ok: false, error: "O'quvchi bloklangan" }, { status: 400 });
   }
 
-  // O'qituvchi kursiga yozilganini, rektor talabasining kamida bitta faol fani borligini tekshiramiz.
-  if (course) {
-    const enrollment = await prisma.enrollment.findFirst({
-      where: { courseId: course.id, userId: studentId, status: "ACTIVE" },
-      select: { id: true },
-    });
-    if (!enrollment) {
-      return Response.json(
-        { ok: false, error: "O'quvchi bu fanga yozilgan emas" },
-        { status: 400 },
-      );
-    }
-  } else {
-    const enrollment = await prisma.enrollment.findFirst({
-      where: { userId: studentId, status: "ACTIVE" },
-      select: { id: true },
-    });
-    if (!enrollment) {
-      return Response.json(
-        { ok: false, error: "O'quvchi hech qanday faol fanga yozilmagan" },
-        { status: 400 },
-      );
-    }
+  const enrollment = await prisma.enrollment.findFirst({
+    where: { courseId: course.id, userId: studentId, status: "ACTIVE" },
+    select: { id: true },
+  });
+  if (!enrollment) {
+    return Response.json(
+      { ok: false, error: "O'quvchi bu fanga yozilgan emas" },
+      { status: 400 },
+    );
   }
 
   const points = tenths / 10;
@@ -148,7 +112,7 @@ export async function POST(request: Request) {
   try {
     const record = await prisma.bonusPoint.create({
       data: {
-        courseId: course?.id ?? null,
+        courseId: course.id,
         studentId,
         awardedById: user.id,
         tenths,
@@ -164,10 +128,8 @@ export async function POST(request: Request) {
       .create({
         data: {
           userId: studentId,
-          title: course ? "Bonus ball qo'shildi" : "Bonus hamyoningiz to'ldi",
-          body: course
-            ? `${user.name} sizga "${course.title}" fanidan +${pointsText} ball berdi. Sabab: ${reason}`
-            : `${user.name} sizga +${pointsText} bonus ball berdi. Uni o'zingiz tanlagan fanning umumiy balliga ishlatishingiz mumkin. Sabab: ${reason}`,
+          title: "Bonus ball qo'shildi",
+          body: `${user.name} sizga "${course.title}" fanidan +${pointsText} ball berdi. Sabab: ${reason}`,
           link: "/bonus-points",
         },
       })
@@ -203,7 +165,7 @@ export async function POST(request: Request) {
 
     if (isConflict) {
       return Response.json(
-        { ok: false, error: "Bu o'quvchiga ushbu fandan bonus allaqach berilgan" },
+        { ok: false, error: "Bu o'quvchiga ushbu fandan bonus allaqachon berilgan" },
         { status: 409 },
       );
     }

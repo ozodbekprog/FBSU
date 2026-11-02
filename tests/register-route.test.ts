@@ -5,6 +5,20 @@ const prismaMock = {
     findUnique: vi.fn(),
     create: vi.fn(),
   },
+  trustedDevice: {
+    count: vi.fn(async () => 0),
+    findFirst: vi.fn(async () => null),
+    create: vi.fn(async () => ({
+      id: "dev-1",
+      name: "Vitest",
+      platform: null,
+      browser: null,
+    })),
+    update: vi.fn(async () => ({ id: "dev-1" })),
+  },
+  loginRecord: {
+    create: vi.fn(async () => ({})),
+  },
   auditLog: {
     create: vi.fn(),
   },
@@ -23,6 +37,7 @@ vi.mock("next/headers", async () => {
       set: (name: string, value: string) => void store.set(name, value),
       delete: (name: string) => void store.delete(name),
     }),
+    headers: async () => new Headers({ "user-agent": "vitest" }),
   };
 });
 

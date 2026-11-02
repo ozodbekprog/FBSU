@@ -232,6 +232,9 @@ model Course {
   isPublished Boolean  @default(false)
   isElective  Boolean  @default(false)
   subjectId   String?
+  /// Fanning kredit qiymati (ECTS/ lokal kredit). Semestrda jami 30 kreditdan
+  /// oshmasligi kerak; bakalavrda 240 kredit.
+  credits     Int      @default(6)
   createdAt   DateTime @default(now())
 
   subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)

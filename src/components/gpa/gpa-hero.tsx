@@ -43,6 +43,39 @@ function HeroStat({
   );
 }
 
+function CreditProgress({
+  label,
+  value,
+  percent,
+  tone,
+}: {
+  label: string;
+  value: string;
+  percent: number;
+  tone: "gold" | "brand" | "rose";
+}) {
+  const bar =
+    tone === "gold"
+      ? "from-gold-500 via-gold-400 to-gold-300"
+      : tone === "rose"
+        ? "from-rose-500 via-rose-400 to-rose-300"
+        : "from-brand-500 via-brand-400 to-gold-300";
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-3">
+      <div className="flex items-center justify-between gap-3 text-[11px] font-medium uppercase tracking-[0.12em] text-brand-300">
+        <span>{label}</span>
+        <b className="tabular-nums text-white">{value}</b>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+        <div
+          className={cn("h-full rounded-full bg-gradient-to-r", bar)}
+          style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export async function GpaHero({ data, delay = 0 }: { data: StudentGpa; delay?: number }) {
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
@@ -54,6 +87,7 @@ export async function GpaHero({ data, delay = 0 }: { data: StudentGpa; delay?: n
     unsatisfactory: dictionary.grdGpaStatusUnsatisfactory,
   });
   const scalePercent = Math.round((data.gpa / 4) * 100);
+  const semesterOverLimit = data.semesterPlannedCredits > data.semesterCreditLimit;
 
   return (
     <div className="animate-fade-up" style={{ animationDelay: `${delay}ms` }}>
@@ -82,14 +116,6 @@ export async function GpaHero({ data, delay = 0 }: { data: StudentGpa; delay?: n
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-brand-200">
               {dictionary.grdGpaHeroDesc}
             </p>
-            {data.creditBoost > 0 ? (
-              <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-gold-400/40 bg-gold-400/10 px-3 py-1 text-xs font-semibold text-gold-200">
-                <span className="size-1.5 rounded-full bg-gold-400" />
-                {translate(locale, "grdCreditBoostLine", {
-                  credits: data.creditBoost.toFixed(2),
-                })}
-              </p>
-            ) : null}
             <div className="mt-5">
               <div className="flex items-center justify-between text-[11px] font-medium uppercase tracking-[0.14em] text-brand-300">
                 <span>0.0</span>
@@ -105,18 +131,49 @@ export async function GpaHero({ data, delay = 0 }: { data: StudentGpa; delay?: n
             </div>
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <HeroStat label={dictionary.grdCourses} value={data.courses.length} accent="bg-brand-400" />
-              <HeroStat label={dictionary.grdCredits} value={data.totalCredits} accent="bg-gold-400" />
+              <HeroStat
+                label={dictionary.grdEarnedCredits}
+                value={`${data.earnedCredits} / ${data.degreeCreditsRequired}`}
+                accent="bg-gold-400"
+              />
+              <HeroStat
+                label={dictionary.grdSemesterCredits}
+                value={`${data.semesterPlannedCredits} / ${data.semesterCreditLimit}`}
+                accent={semesterOverLimit ? "bg-rose-400" : "bg-emerald-400"}
+              />
               <HeroStat
                 label={dictionary.grdAverage}
                 value={data.overallPercent != null ? `${data.overallPercent}%` : "—"}
                 accent={percentAccent(data.overallPercent)}
               />
-              <HeroStat
-                label={dictionary.grdGraded}
-                value={data.gradedCount}
-                accent="bg-emerald-400"
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <CreditProgress
+                label={dictionary.grdDegreeProgress}
+                value={translate(locale, "grdDegreeCreditsLine", {
+                  earned: data.earnedCredits,
+                  total: data.degreeCreditsRequired,
+                })}
+                percent={data.degreePercent}
+                tone="gold"
+              />
+              <CreditProgress
+                label={dictionary.grdSemesterCredits}
+                value={translate(locale, "grdSemesterCreditsLine", {
+                  planned: data.semesterPlannedCredits,
+                  limit: data.semesterCreditLimit,
+                })}
+                percent={
+                  (data.semesterPlannedCredits / Math.max(1, data.semesterCreditLimit)) * 100
+                }
+                tone={semesterOverLimit ? "rose" : "brand"}
               />
             </div>
+            {semesterOverLimit ? (
+              <p className="mt-2 text-xs font-medium text-rose-200">
+                {dictionary.grdSemesterOverLimit}
+              </p>
+            ) : null}
           </div>
         </CardBody>
       </Card>

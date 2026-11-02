@@ -8,22 +8,12 @@ type Row = {
   groupName: string | null;
   courseTitle: string | null;
   points: number;
-  remainingPoints: number;
-  allocations: { id: string; courseTitle: string; points: number }[];
   reason: string;
   awardedByName: string;
   createdAt: string;
 };
 
-export async function BonusLedger({
-  rows,
-  showAwardedBy = false,
-  title,
-}: {
-  rows: Row[];
-  showAwardedBy?: boolean;
-  title?: string;
-}) {
+export async function BonusLedger({ rows }: { rows: Row[] }) {
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
   const totalPoints = rows.reduce((sum, row) => sum + row.points, 0);
@@ -32,7 +22,7 @@ export async function BonusLedger({
     <section className="fb-card">
       <div className="fb-card-head">
         <div className="fb-head-txt">
-          <h3>{title ?? dictionary.grdGivenBonusPoints}</h3>
+          <h3>{dictionary.grdGivenBonusPoints}</h3>
           <span className="fb-tagline">
             {rows.length > 0
               ? translate(locale, "grdRecordsCount", { count: rows.length })
@@ -68,16 +58,7 @@ export async function BonusLedger({
                       <SubjectIcon />
                       {row.courseTitle}
                     </span>
-                  ) : (
-                    <span className="fb-mini">
-                      <WalletIcon />
-                      {row.remainingPoints > 0
-                        ? translate(locale, "grdBonusWalletChip", {
-                            points: formatPoints(row.remainingPoints),
-                          })
-                        : dictionary.grdBonusStatusUsed}
-                    </span>
-                  )}
+                  ) : null}
                 </div>
 
                 <div className="fb-rowl-sub">
@@ -87,30 +68,12 @@ export async function BonusLedger({
                       <i className="fb-dot" />
                     </>
                   ) : null}
-                  {showAwardedBy ? (
-                    <>
-                      <span>{row.awardedByName}</span>
-                      <i className="fb-dot" />
-                    </>
-                  ) : null}
+                  <span>{row.awardedByName}</span>
+                  <i className="fb-dot" />
                   <span>{row.createdAt}</span>
                 </div>
 
                 <p className="fb-rowl-reason">{row.reason}</p>
-
-                {row.allocations.length > 0 ? (
-                  <div className="fb-rowl-tags">
-                    {row.allocations.map((allocation) => (
-                      <span key={allocation.id} className="fb-mini">
-                        <SubjectIcon />
-                        {translate(locale, "grdBonusAllocatedTo", {
-                          course: allocation.courseTitle,
-                          points: formatPoints(allocation.points),
-                        })}
-                      </span>
-                    ))}
-                  </div>
-                ) : null}
               </div>
 
               <div className="fb-rowl-right">
@@ -140,16 +103,6 @@ function SubjectIcon() {
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M4 19.5V6a2 2 0 0 1 2-2h13v16H6a2 2 0 0 1-2-2Z" />
       <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H19" />
-    </svg>
-  );
-}
-
-function WalletIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H18a2 2 0 0 1 2 2v1.5" />
-      <path d="M3 7.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2.5" />
-      <path d="M21 8.5h-4.5a3 3 0 0 0 0 6H21v-6Z" />
     </svg>
   );
 }

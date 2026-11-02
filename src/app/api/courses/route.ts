@@ -12,6 +12,7 @@ const createSchema = z.object({
     .regex(/^#[0-9a-fA-F]{6}$/)
     .default("#2563eb"),
   isPublished: z.boolean().default(false),
+  credits: z.number().int().min(1).max(30).default(6),
 });
 
 function slugify(title: string) {
@@ -108,6 +109,7 @@ export async function POST(request: Request) {
       description: parsed.data.description || null,
       coverColor: parsed.data.coverColor,
       isPublished: parsed.data.isPublished,
+      credits: parsed.data.credits,
       teacherId: user.id,
     },
   });

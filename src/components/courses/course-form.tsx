@@ -15,6 +15,7 @@ export type CourseFormData = {
   description: string | null;
   coverColor: string;
   isPublished: boolean;
+  credits: number;
 };
 
 const COLORS = [...COURSE_COVER_COLORS];
@@ -28,6 +29,7 @@ export function CourseForm({ course }: { course?: CourseFormData }) {
   const [description, setDescription] = useState(course?.description ?? "");
   const [coverColor, setCoverColor] = useState(course?.coverColor ?? COLORS[0]);
   const [isPublished, setIsPublished] = useState(course?.isPublished ?? false);
+  const [credits, setCredits] = useState(String(course?.credits ?? 6));
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -38,7 +40,13 @@ export function CourseForm({ course }: { course?: CourseFormData }) {
     try {
       const res = await apiFetch(course ? `/api/courses/${course.id}` : "/api/courses", {
         method: course ? "PATCH" : "POST",
-        body: JSON.stringify({ title, description, coverColor, isPublished }),
+        body: JSON.stringify({
+          title,
+          description,
+          coverColor,
+          isPublished,
+          credits: Number(credits),
+        }),
       });
       const json = (await res.json().catch(() => null)) as ApiResult;
       if (!res.ok || !json?.ok) {
@@ -182,6 +190,42 @@ export function CourseForm({ course }: { course?: CourseFormData }) {
                 />
               </div>
             </div>
+          </section>
+
+          <div className="border-t border-slate-100" />
+
+          <section className="space-y-4">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex size-7 items-center justify-center rounded-lg bg-gradient-to-br from-brand-800 to-brand-950 text-white shadow-sm">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="5" width="18" height="14" rx="3" />
+                  <path d="M3 10h18M7 15h3" />
+                </svg>
+              </span>
+              <h3 className="text-sm font-semibold text-brand-950">{t("crsCredits")}</h3>
+            </div>
+            <div className="max-w-48">
+              <Label>{t("crsCredits")}</Label>
+              <Input
+                type="number"
+                min={1}
+                max={30}
+                step={1}
+                value={credits}
+                onChange={(e) => setCredits(e.target.value)}
+                required
+              />
+            </div>
+            <p className="text-xs leading-relaxed text-slate-500">{t("crsCreditsHint")}</p>
           </section>
 
           <div className="border-t border-slate-100" />
