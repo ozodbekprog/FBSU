@@ -64,6 +64,7 @@ export function TelegramMiniApp() {
   const lastAuthRef = useRef(0);
   const inflightRef = useRef(false);
   const bootedRef = useRef(false);
+  const initialPathRef = useRef(pathname);
 
   const authenticate = useCallback(
     (initData: string) => {
@@ -94,7 +95,9 @@ export function TelegramMiniApp() {
           if (result.mode === "login") {
             const path = window.location.pathname;
             if (path === "/" || path.startsWith("/login")) {
-              router.replace("/dashboard");
+              // To'liq sahifa o'tish: dashboard serverda tayyor HTML bilan darhol
+              // chiziladi, oraliq SPA yuklash ekrani ko'rinmaydi.
+              window.location.replace(`/dashboard${window.location.hash}`);
             } else {
               clearBooting();
               router.refresh();
@@ -160,7 +163,12 @@ export function TelegramMiniApp() {
         return;
       }
 
-      authenticate(initData);
+      const gated = window.location.pathname === "/" || window.location.pathname.startsWith("/login");
+      if (gated) {
+        authenticate(initData);
+      } else {
+        clearBooting();
+      }
     };
 
     // Erta yuklash skripti (layout <head>) script'ni allaqachon qo'shgan bo'lishi mumkin.
@@ -214,6 +222,7 @@ export function TelegramMiniApp() {
       if (gated) clearBooting();
       return;
     }
+    if (!gated && pathname === initialPathRef.current) return;
     authenticate(initData);
   }, [pathname, authenticate]);
 
