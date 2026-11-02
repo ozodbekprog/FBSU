@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 type TelegramBackButton = {
@@ -51,12 +51,70 @@ function readInitData(app: TelegramWebApp | undefined): string {
   }
 }
 
+function clearBooting(): void {
+  if (typeof document === "undefined") return;
+  delete document.documentElement.dataset.tgBooting;
+}
+
 export function TelegramMiniApp() {
   const router = useRouter();
   const pathname = usePathname();
   const [notice, setNotice] = useState<string | null>(null);
   const linkedRef = useRef(false);
   const lastAuthRef = useRef(0);
+  const inflightRef = useRef(false);
+  const bootedRef = useRef(false);
+
+  const authenticate = useCallback(
+    (initData: string) => {
+      if (!initData || linkedRef.current) {
+        clearBooting();
+        return;
+      }
+      if (inflightRef.current) return;
+      const now = Date.now();
+      if (now - lastAuthRef.current < 8000) return;
+      lastAuthRef.current = now;
+      inflightRef.current = true;
+
+      const safety = window.setTimeout(clearBooting, 10000);
+
+      fetch("/api/auth/telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ initData }),
+      })
+        .then((response) => response.json().catch(() => null))
+        .then((result: { ok?: boolean; mode?: string } | null) => {
+          if (!result?.ok) {
+            clearBooting();
+            return;
+          }
+          if (result.mode === "login") {
+            const path = window.location.pathname;
+            if (path === "/" || path.startsWith("/login")) {
+              router.replace("/dashboard");
+            } else {
+              clearBooting();
+              router.refresh();
+            }
+            return;
+          }
+          if (result.mode === "link") {
+            linkedRef.current = true;
+            setNotice(linkedText());
+          }
+          clearBooting();
+        })
+        .catch(() => clearBooting())
+        .finally(() => {
+          inflightRef.current = false;
+          window.clearTimeout(safety);
+        });
+    },
+    [router],
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -64,8 +122,10 @@ export function TelegramMiniApp() {
     let cancelled = false;
 
     const boot = () => {
+      if (cancelled || bootedRef.current) return;
       const app = window.Telegram?.WebApp;
-      if (!app || cancelled) return;
+      if (!app) return;
+      bootedRef.current = true;
 
       // Telegram Desktop WebView'da UA ichida "Telegram" bo'lmaydi —
       // shuning uchun initData (yoki URL hash) va webview ko'prigi orqali aniqlaymiz.
@@ -73,7 +133,10 @@ export function TelegramMiniApp() {
       const proxy = (window as unknown as { TelegramWebviewProxy?: unknown }).TelegramWebviewProxy;
       const inTelegram =
         Boolean(initData) || Boolean(proxy) || /Telegram/i.test(navigator.userAgent);
-      if (!inTelegram) return;
+      if (!inTelegram) {
+        clearBooting();
+        return;
+      }
 
       document.documentElement.dataset.telegram = "1";
       window.dispatchEvent(new Event("fbsu:telegram"));
@@ -92,39 +155,36 @@ export function TelegramMiniApp() {
         back.onClick(goBack);
       }
 
-      if (!initData) return;
+      if (!initData) {
+        clearBooting();
+        return;
+      }
 
-      fetch("/api/auth/telegram", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ initData }),
-      })
-        .then((response) => response.json().catch(() => null))
-        .then((result: { ok?: boolean; mode?: string } | null) => {
-          if (cancelled || !result?.ok) return;
-          if (result.mode === "login") {
-            const path = window.location.pathname;
-            if (path === "/" || path.startsWith("/login")) {
-              router.replace("/dashboard");
-            } else {
-              router.refresh();
-            }
-            return;
-          }
-          if (result.mode === "link") {
-            linkedRef.current = true;
-            setNotice(linkedText());
-          }
-        })
-        .catch(() => {});
+      authenticate(initData);
     };
 
+    // Erta yuklash skripti (layout <head>) script'ni allaqachon qo'shgan bo'lishi mumkin.
+    // U hali yuklanmagan bo'lsa, Telegram.WebApp paydo bo'lguncha kutamiz.
     const existing = document.querySelector<HTMLScriptElement>("script[data-telegram-web-app]");
     if (existing) {
       boot();
+      if (bootedRef.current) {
+        return () => {
+          cancelled = true;
+        };
+      }
+      let tries = 0;
+      const timer = window.setInterval(() => {
+        if (cancelled || bootedRef.current) {
+          window.clearInterval(timer);
+          return;
+        }
+        boot();
+        if (++tries > 120) window.clearInterval(timer);
+      }, 100);
       return () => {
         cancelled = true;
+        window.clearInterval(timer);
       };
     }
 
@@ -139,49 +199,23 @@ export function TelegramMiniApp() {
       cancelled = true;
       script.removeEventListener("load", boot);
     };
-  }, [router]);
+  }, [authenticate]);
 
   // Mini ilova ichida parol bilan kirilgandan keyin akkauntni Telegram'ga
   // avtomatik bog'lash: sahifa almashganda initData bilan qayta urinamiz.
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const gated = pathname === "/" || pathname.startsWith("/login");
+    if (!gated) clearBooting();
     const app = window.Telegram?.WebApp;
+    if (!app) return;
     const initData = readInitData(app);
-    if (!initData || linkedRef.current) return;
-    const now = Date.now();
-    if (now - lastAuthRef.current < 8000) return;
-    lastAuthRef.current = now;
-
-    let cancelled = false;
-    fetch("/api/auth/telegram", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "same-origin",
-      body: JSON.stringify({ initData }),
-    })
-      .then((response) => response.json().catch(() => null))
-      .then((result: { ok?: boolean; mode?: string } | null) => {
-        if (cancelled || !result?.ok) return;
-        if (result.mode === "login") {
-          const path = window.location.pathname;
-          if (path === "/" || path.startsWith("/login")) {
-            router.replace("/dashboard");
-          } else {
-            router.refresh();
-          }
-          return;
-        }
-        if (result.mode === "link") {
-          linkedRef.current = true;
-          setNotice(linkedText());
-        }
-      })
-      .catch(() => {});
-
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname, router]);
+    if (!initData || linkedRef.current) {
+      if (gated) clearBooting();
+      return;
+    }
+    authenticate(initData);
+  }, [pathname, authenticate]);
 
   useEffect(() => {
     if (!notice) return;

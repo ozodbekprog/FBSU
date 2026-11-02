@@ -1075,3 +1075,34 @@ html[data-telegram="1"] body {
 html[data-telegram="1"] [data-pwa-install] {
   display: none !important;
 }
+
+/* Mini app birinchi ochilganda landing emas, to'liq ekranli kirish qatlami ko'rinadi. */
+.tg-splash {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  place-items: center;
+  background: #07101f;
+}
+
+html[data-telegram="1"][data-tg-booting="1"] .tg-splash {
+  display: grid;
+}
+
+.tg-splash-bar {
+  transform-origin: left center;
+  animation: tg-splash-sweep 1.15s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@keyframes tg-splash-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tg-splash-bar {
+    animation: none;
+    opacity: 0.7;
+  }
+}
