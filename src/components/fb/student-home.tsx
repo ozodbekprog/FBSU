@@ -12,6 +12,7 @@ import { getStudentAnalytics } from "@/app/(app)/dashboard/analytics";
 import { FbMotion } from "@/components/fb/fb-motion";
 import { getDictionary, t as translate, type Dictionary, type Locale } from "@/i18n";
 import { cn, dayName, fmtDate, monthName } from "@/lib/utils";
+import { asTashkent, tashkentNow } from "@/lib/tz";
 import { matchCourseSlug, slotRange } from "@/components/attendance/lesson-utils";
 
 const DAY_MS = 86_400_000;
@@ -80,7 +81,8 @@ export async function StudentHome({
   locale: Locale;
 }) {
   const dict = getDictionary(locale);
-  const now = new Date();
+  const nowInstant = new Date();
+  const now = tashkentNow();
   const todayDow = now.getDay() === 0 ? 7 : now.getDay();
   const nowMin = now.getHours() * 60 + now.getMinutes();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -180,12 +182,12 @@ export async function StudentHome({
     (assignment) => assignment.submissions.length === 0 && assignment.dueAt,
   );
   const overdueCount = pending.filter(
-    (assignment) => assignment.dueAt && new Date(assignment.dueAt) < now,
+    (assignment) => assignment.dueAt && new Date(assignment.dueAt) < nowInstant,
   ).length;
   const soonCount = pending.filter((assignment) => {
     if (!assignment.dueAt) return false;
     const due = new Date(assignment.dueAt);
-    return due >= now && due.getTime() - now.getTime() <= 7 * DAY_MS;
+    return due >= nowInstant && due.getTime() - nowInstant.getTime() <= 7 * DAY_MS;
   }).length;
   const deadlineRows = pending.slice(0, 4);
 
@@ -899,8 +901,9 @@ export async function StudentHome({
             ) : (
               <div className="fb-dls">
                 {deadlineRows.map((assignment) => {
-                  const due = assignment.dueAt ? new Date(assignment.dueAt) : null;
-                  if (!due) return null;
+                  const dueAt = assignment.dueAt ? new Date(assignment.dueAt) : null;
+                  if (!dueAt) return null;
+                  const due = asTashkent(dueAt);
                   const diff = Math.ceil(
                     (new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime() -
                       todayStart.getTime()) /
