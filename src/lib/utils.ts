@@ -107,7 +107,11 @@ export function gradeColor(score: number | null | undefined, max = 100) {
   return "text-rose-600";
 }
 
+export function clampPercent(value: number) {
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
+
 export function scorePercent(score: number | null | undefined, max = 100) {
   if (score == null) return null;
-  return Math.round((score / max) * 100);
+  return clampPercent((score / max) * 100);
 }

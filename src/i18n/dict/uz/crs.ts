@@ -448,4 +448,7 @@ export const crs = {
   crsSubmitHint: "Matn yozing va/yoki fayl biriktiring — ikkalasi ham qabul qilinadi.",
   crsCurrentFile: "Hozir yuklangan fayl",
   crsImagePreview: "Yuklangan rasm",
+  crsCredits: "Fan krediti",
+  crsCreditsHint:
+    "1–30 kredit. Semestrda jami 30 kreditdan oshmasligi kerak; bakalavr diplomi uchun 240 kredit talab qilinadi.",
 };

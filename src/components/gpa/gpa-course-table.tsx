@@ -1,25 +1,25 @@
 import Link from "next/link";
-import { Card, CardHeader, Progress, Table } from "@/components/ui";
+import { Badge, Card, CardHeader, Progress, Table } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { formatPoints } from "@/lib/points";
 import { getDictionary, getLocale, t as translate } from "@/i18n";
-import { GradeBadge } from "@/components/grades/grade-badge";
-import { GPA_CREDITS } from "@/app/api/gpa/data";
 import type { StudentGpa } from "@/app/api/gpa/data";
 import { GpaPointsBadge, LetterBadge, LETTER_META } from "./gpa-badge";
 
 export async function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; delay?: number }) {
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
-  const { courses, gpa, totalCredits } = data;
+  const { courses, gpa } = data;
 
   return (
     <div className="animate-fade-up" style={{ animationDelay: `${delay}ms` }}>
       <Card className="h-full overflow-hidden">
         <CardHeader
           title={dictionary.grdByCourses}
-          subtitle={translate(locale, "grdCoursesCreditsSubtitle", {
+          subtitle={translate(locale, "grdCoursePointsSubtitle", {
             count: courses.length,
-            credits: GPA_CREDITS,
+            max: 30,
+            pass: 18,
           })}
         />
         <div className="hidden px-6 pb-5 pt-2 md:block">
@@ -27,7 +27,7 @@ export async function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; de
             <thead>
               <tr className="border-b border-slate-100 text-[11px] uppercase tracking-[0.12em] text-slate-600">
                 <th className="py-3 pr-4 text-left font-medium">{dictionary.grdCourse}</th>
-                <th className="px-3 py-3 text-center font-medium">{dictionary.grdAverage}</th>
+                <th className="px-3 py-3 text-center font-medium">{dictionary.grdPoints30}</th>
                 <th className="px-3 py-3 text-center font-medium">{dictionary.grdGrade}</th>
                 <th className="px-3 py-3 text-center font-medium">{dictionary.grdGpaScore}</th>
                 <th className="px-3 py-3 text-right font-medium">{dictionary.grdCredit}</th>
@@ -59,7 +59,9 @@ export async function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; de
                           })}
                           {course.bonusPoints > 0 ? (
                             <span className="ml-1.5 font-medium text-emerald-700">
-                              {translate(locale, "grdBonusPlus", { points: course.bonusPoints.toFixed(1) })}
+                              {translate(locale, "grdBonusPlus", {
+                                points: formatPoints(course.bonusPoints),
+                              })}
                             </span>
                           ) : null}
                         </span>
@@ -68,7 +70,18 @@ export async function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; de
                     <Progress value={course.percent} className="mt-2.5 h-1.5 max-w-64" />
                   </td>
                   <td className="px-3 py-3.5 text-center">
-                    <GradeBadge percent={course.percent} size="sm" />
+                    <span className="text-sm font-semibold tabular-nums text-slate-800">
+                      {formatPoints(course.points30)}
+                    </span>
+                    <span className="text-xs text-slate-500"> / 30</span>
+                    <span
+                      className={cn(
+                        "mt-1 block text-[10px] font-semibold uppercase tracking-[0.08em]",
+                        course.passed ? "text-emerald-700" : "text-rose-600",
+                      )}
+                    >
+                      {course.passed ? dictionary.grdPassed : dictionary.grdNotPassed}
+                    </span>
                   </td>
                   <td className="px-3 py-3.5 text-center">
                     <LetterBadge letter={course.letter} />
@@ -77,11 +90,18 @@ export async function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; de
                     <GpaPointsBadge points={course.points} />
                   </td>
                   <td className="px-3 py-3.5 text-right">
-                    <span className="text-sm font-semibold tabular-nums text-slate-700">
-                      {course.credits}
+                    <span
+                      className={cn(
+                        "text-sm font-semibold tabular-nums",
+                        course.passed ? "text-slate-700" : "text-slate-400",
+                      )}
+                    >
+                      {course.passed ? course.credits : "—"}
                     </span>
                     <span className="ml-1 text-xs text-slate-600">
-                      {dictionary.grdCreditLower}
+                      {course.passed
+                        ? dictionary.grdCreditLower
+                        : dictionary.grdCreditNotEarned}
                     </span>
                   </td>
                 </tr>
@@ -98,10 +118,10 @@ export async function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; de
                       <span className="flex items-center gap-3">
                         <GpaPointsBadge points={gpa} size="lg" digits={2} />
                         <span className="text-sm font-semibold tabular-nums text-slate-700">
-                          {totalCredits}
-                          <span className="ml-1 text-xs font-normal text-slate-600">
-                            {dictionary.grdCreditLower}
-                          </span>
+                          {translate(locale, "grdDegreeCreditsLine", {
+                            earned: data.earnedCredits,
+                            total: data.degreeCreditsRequired,
+                          })}
                         </span>
                       </span>
                     </div>
@@ -133,25 +153,35 @@ export async function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; de
                     })}
                     {course.bonusPoints > 0 ? (
                       <span className="ml-1.5 font-medium text-emerald-700">
-                        {translate(locale, "grdBonusPlus", { points: course.bonusPoints.toFixed(1) })}
+                        {translate(locale, "grdBonusPlus", {
+                          points: formatPoints(course.bonusPoints),
+                        })}
                       </span>
                     ) : null}
                   </span>
                 </span>
-                <LetterBadge letter={course.letter} />
+                <Badge tone={course.passed ? "green" : "rose"}>
+                  {course.passed ? dictionary.grdPassed : dictionary.grdNotPassed}
+                </Badge>
               </Link>
               <div className="mt-3 flex items-center gap-3">
                 <Progress value={course.percent} className="h-1.5 flex-1" />
-                <GradeBadge percent={course.percent} size="sm" />
+                <span className="text-xs font-semibold tabular-nums text-slate-700">
+                  {formatPoints(course.points30)} / 30
+                </span>
               </div>
               <div className="mt-3 flex items-center justify-between text-xs text-slate-600">
-                <span>{dictionary.grdGpaScore}</span>
                 <span className="flex items-center gap-2">
+                  <LetterBadge letter={course.letter} />
                   <GpaPointsBadge points={course.points} size="sm" />
-                  <span className="text-sm font-semibold tabular-nums text-slate-700">
-                    {course.credits}
+                </span>
+                <span className="text-sm font-semibold tabular-nums text-slate-700">
+                  {course.passed ? course.credits : "—"}
+                  <span className="ml-1 text-xs font-normal text-slate-600">
+                    {course.passed
+                      ? dictionary.grdCreditLower
+                      : dictionary.grdCreditNotEarned}
                   </span>
-                  <span>{dictionary.grdCreditLower}</span>
                 </span>
               </div>
             </li>
@@ -166,7 +196,10 @@ export async function GpaCourseTable({ data, delay = 0 }: { data: StudentGpa; de
               <span className="flex items-center gap-2">
                 <GpaPointsBadge points={gpa} digits={2} />
                 <span className="text-xs font-medium text-slate-500">
-                  {translate(locale, "grdCreditsInline", { count: totalCredits })}
+                  {translate(locale, "grdDegreeCreditsLine", {
+                    earned: data.earnedCredits,
+                    total: data.degreeCreditsRequired,
+                  })}
                 </span>
               </span>
             </div>
