@@ -142,6 +142,8 @@ model User {
   certificatesReceived Certificate[]  @relation("CertificateStudent")
   bonusPointsReceived  BonusPoint[]   @relation("BonusPointStudent")
   bonusPointsAwarded   BonusPoint[]   @relation("BonusPointAwardedBy")
+  creditAwardsReceived CreditAward[]  @relation("CreditAwardStudent")
+  creditAwardsGiven    CreditAward[]  @relation("CreditAwardAwardedBy")
   teacherPointsReceived TeacherPoint[]   @relation("TeacherPointStudent")
   teacherPointsAwarded   TeacherPoint[]   @relation("TeacherPointAwardedBy")
   attendancePointConfigs AttendancePointConfig[]
@@ -234,6 +236,9 @@ model Course {
   isPublished Boolean  @default(false)
   isElective  Boolean  @default(false)
   subjectId   String?
+  /// Fanning kredit qiymati (ECTS/ lokal kredit). Semestrda jami 30 kreditdan
+  /// oshmasligi kerak; bakalavrda 240 kredit.
+  credits     Int      @default(6)
   createdAt   DateTime @default(now())
 
   subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
@@ -257,6 +262,7 @@ model Course {
   bankQuestions      BankQuestion[]
   selfEnrollment     Boolean             @default(false)
   bonusPoints        BonusPoint[]
+  bonusAllocations   BonusAllocation[]
   teacherPoints      TeacherPoint[]
   attendancePointConfigs AttendancePointConfig[]
   studyPlans         StudyPlan[]
@@ -623,26 +629,63 @@ model Certificate {
   @@index([studentId])
 }
 
-/// O'qituvchining o'z fani doirasida talabaga qo'shimcha GPA balli.
+/// Talabaga berilgan bonus ball.
 ///
 /// `tenths` — ball ×10 butun ko'rinishi (0.6 → 6, 4.0 → 40). Kasr sonlarni
-/// saqlashda yuvish xatosi bo'lmasligi uchun. Chegara: 6..40.
+/// saqlashda yuvish xatosi bo'lmasligi uchun. O'qituvchi balli faniga bog'lanadi
+/// (`courseId` to'la). Rektor balli esa fanga bog'lanmaydi (`courseId = null`)
+/// va talaba uni `BonusAllocation` orqali o'zi tanlagan fanlarga taqsimlaydi.
 model BonusPoint {
   id          String   @id @default(cuid())
-  courseId    String
+  courseId    String?
   studentId   String
   awardedById String
   tenths      Int
   reason      String
   createdAt   DateTime @default(now())
 
-  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  student   User   @relation("BonusPointStudent", fields: [studentId], references: [id], onDelete: Cascade)
-  awardedBy User   @relation("BonusPointAwardedBy", fields: [awardedById], references: [id], onDelete: Cascade)
+  course      Course?           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student     User              @relation("BonusPointStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  awardedBy   User              @relation("BonusPointAwardedBy", fields: [awardedById], references: [id], onDelete: Cascade)
+  allocations BonusAllocation[]
 
   @@unique([courseId, studentId, awardedById])
   @@index([studentId])
   @@index([courseId])
+}
+
+/// Rektor bergan fanga bog'lanmagan bonusning bir qismini tanlangan fanga ulash.
+model BonusAllocation {
+  id           String   @id @default(cuid())
+  bonusPointId String
+  courseId     String
+  tenths       Int
+  createdAt    DateTime @default(now())
+
+  bonusPoint BonusPoint @relation(fields: [bonusPointId], references: [id], onDelete: Cascade)
+  course     Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([bonusPointId, courseId])
+  @@index([courseId])
+}
+
+/// VIP kredit — rektor/prorektor talabaning GPA balliga bevosita qo'shadigan qiymat.
+///
+/// Fanga bog'lanmaydi va foizga ta'sir qilmaydi: `getStudentGpa` yakuniy GPA
+/// hisobiga qo'shadi (4.0 gacha cheklanadi).
+model CreditAward {
+  id          String   @id @default(cuid())
+  studentId   String
+  awardedById String
+  credits     Float
+  reason      String
+  createdAt   DateTime @default(now())
+
+  student   User @relation("CreditAwardStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  awardedBy User @relation("CreditAwardAwardedBy", fields: [awardedById], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([awardedById])
 }
 
 /// O'qituvchi ballari — o'qituvchi oquvchilarga beriladigan max 15 balllik chegirma.

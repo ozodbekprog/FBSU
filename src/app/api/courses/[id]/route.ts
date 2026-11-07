@@ -12,6 +12,7 @@ const updateSchema = z.object({
     .optional(),
   isPublished: z.boolean().optional(),
   selfEnrollment: z.boolean().optional(),
+  credits: z.number().int().min(1).max(30).optional(),
 });
 
 async function findCourse(id: string, userId: string) {
@@ -112,6 +113,7 @@ export async function PATCH(
       ...(parsed.data.selfEnrollment !== undefined
         ? { selfEnrollment: parsed.data.selfEnrollment }
         : {}),
+      ...(parsed.data.credits !== undefined ? { credits: parsed.data.credits } : {}),
     },
   });
 

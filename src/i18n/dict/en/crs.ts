@@ -448,4 +448,7 @@ export const crs = {
   crsSubmitHint: "Write text and/or attach a file — both are accepted.",
   crsCurrentFile: "Current uploaded file",
   crsImagePreview: "Uploaded image",
+  crsCredits: "Course credits",
+  crsCreditsHint:
+    "1–30 credits. Total semester credits must not exceed 30; a bachelor's degree requires 240 credits.",
 };

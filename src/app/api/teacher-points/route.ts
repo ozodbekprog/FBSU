@@ -95,7 +95,7 @@ export async function POST(request: Request) {
 
   // Validate student is enrolled in the course
   const enrollment = await prisma.enrollment.findFirst({
-    where: { courseId, userId: studentId, user: { role: "STUDENT" } },
+    where: { courseId, userId: studentId, status: "ACTIVE", user: { role: "STUDENT" } },
   });
   if (!enrollment) {
     return Response.json({ ok: false, error: "Talaba bu kursga ro'yxatdan o'tmagan" }, { status: 400 });

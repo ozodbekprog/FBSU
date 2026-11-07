@@ -85,6 +85,9 @@ export default async function AppLayout({
           : []),
         { href: "/grades", label: isStaff(user.role) ? dictionary.navGradesStaff : dictionary.navGradesStudent },
         { href: "/gpa", label: dictionary.navGpa },
+        ...(user.role === "TEACHER"
+          ? [{ href: "/bonus-points", label: dictionary.grdBonusPoints }]
+          : []),
         { href: "/transcript", label: dictionary.navTranscript },
         { href: "/attendance", label: dictionary.navAttendance },
         { href: "/board", label: dictionary.brdTitle },
@@ -225,7 +228,7 @@ export default async function AppLayout({
       "/dashboard", "/assistant", "/courses", "/board", "/journal", "/journals",
       "/question-bank", "/schedule", "/calendar", "/academic-calendar", "/exams", "/secure-exams", "/attendance",
       "/reports", "/workload", "/staff", "/tasks", "/my-qr", "/messages", "/bookings", "/rooms",
-      "/research", "/teacher-points", "/search", "/help", "/bounty", "/settings",
+      "/research", "/teacher-points", "/bonus-points", "/search", "/help", "/bounty", "/settings",
     ],
     STUDENT: [
       "/dashboard", "/assistant", "/courses", "/board", "/schedule", "/calendar",

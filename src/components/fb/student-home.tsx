@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import type { AttendanceStatus, ScheduleEntry } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { GPA_CREDITS, getStudentGpa } from "@/app/api/gpa/data";
+import { getStudentBonusOverview, getStudentGpa } from "@/app/api/gpa/data";
 import { isValidFaceDescriptor } from "@/modules/attendance/face";
 import { CheckInForm } from "@/components/attendance/check-in-form";
 import { GradeTrendChart } from "@/components/charts/GradeTrendChart";
@@ -13,6 +13,7 @@ import { FbMotion } from "@/components/fb/fb-motion";
 import { getDictionary, t as translate, type Dictionary, type Locale } from "@/i18n";
 import { cn, dayName, fmtDate, monthName } from "@/lib/utils";
 import { asTashkent, tashkentNow } from "@/lib/tz";
+import { formatPoints } from "@/lib/points";
 import { matchCourseSlug, slotRange } from "@/components/attendance/lesson-utils";
 
 const DAY_MS = 86_400_000;
@@ -100,7 +101,7 @@ export async function StudentHome({
     title: enrollment.course.title,
   }));
 
-  const [schedule, assignments, gpa, attendance, faceRow, announcements, studentAnalytics] =
+  const [schedule, assignments, gpa, attendance, faceRow, announcements, studentAnalytics, bonus] =
     await Promise.all([
     groupId
       ? prisma.scheduleEntry.findMany({
@@ -146,6 +147,7 @@ export async function StudentHome({
       select: { id: true, title: true, body: true },
     }),
     getStudentAnalytics(userId, locale),
+    getStudentBonusOverview(userId),
   ]);
 
   const gradeTrend = studentAnalytics.gradeTrend;
@@ -299,10 +301,13 @@ export async function StudentHome({
   }
 
   const spark = sparkPath(gpa.courses.map((course) => course.percent));
-  const creditTarget = enrollments.length * GPA_CREDITS;
-  const creditPct = creditTarget > 0 ? Math.round((gpa.totalCredits / creditTarget) * 100) : 0;
+  const degreeTarget = gpa.degreeCreditsRequired;
+  const degreePct = gpa.degreePercent;
   const assignmentPct =
     assignments.length > 0 ? Math.round((submittedCount / assignments.length) * 100) : 0;
+
+  const bonusTotalPoints = bonus.totalPoints;
+  const bonusGrants = bonus.grants;
   const greeting =
     now.getHours() < 12
       ? dict.fbdGreetingMorning
@@ -486,7 +491,7 @@ export async function StudentHome({
           <div className="fb-kpi-foot">
             {gpa.gpa !== null
               ? translate(locale, "fbdKpiGpaFoot", {
-                  credits: gpa.totalCredits,
+                  credits: gpa.earnedCredits,
                   graded: gpa.gradedCount,
                 })
               : dict.fbdKpiEmpty}
@@ -576,21 +581,18 @@ export async function StudentHome({
             </span>
           </div>
           <div className="fb-kpi-val">
-            <b data-fb-count={creditTarget > 0 ? gpa.totalCredits : undefined}>
-              {creditTarget > 0 ? gpa.totalCredits : "—"}
-            </b>
-            {creditTarget > 0 ? <span>/ {creditTarget}</span> : null}
+            <b data-fb-count={gpa.earnedCredits}>{gpa.earnedCredits}</b>
+            <span>/ {degreeTarget}</span>
           </div>
           <div className="fb-kpi-foot">
-            {creditTarget > 0
-              ? translate(locale, "fbdKpiCreditsFoot", {
-                  credits: gpa.totalCredits,
-                  count: enrollments.length,
-                })
-              : dict.fbdKpiEmpty}
+            {translate(locale, "fbdKpiCreditsFoot", {
+              credits: gpa.earnedCredits,
+              total: degreeTarget,
+              count: enrollments.length,
+            })}
           </div>
           <div className="fb-kbar" aria-hidden="true">
-            <i style={{ width: `${creditPct}%` }} />
+            <i style={{ width: `${degreePct}%` }} />
           </div>
         </div>
       </section>
@@ -844,6 +846,69 @@ export async function StudentHome({
         </div>
 
         <div className="fb-col">
+          <section className="fb-card fb-points" data-fb-reveal data-fb-delay="200">
+            <div className="fb-card-head">
+              <div>
+                <h3>{dict.fbdPointsTitle}</h3>
+                <span className="fb-tagline">{dict.fbdPointsTag}</span>
+              </div>
+              <Link className="fb-more" href="/bonus-points">
+                {dict.fbdPointsMore}
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </Link>
+            </div>
+            <div className="fb-points-body">
+              <div className="fb-points-bal">
+                <span className="fb-points-ico" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M4 9v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9" />
+                    <path d="M3 6h18v3H3zM12 6v14" />
+                  </svg>
+                </span>
+                <span className="fb-points-num">
+                  <b data-fb-count={bonusTotalPoints}>{formatPoints(bonusTotalPoints)}</b>
+                  <span>
+                    {dict.grdBall} · {dict.fbdPointsWallet}
+                  </span>
+                </span>
+                <span className="fb-points-used">
+                  {translate(locale, "grdRecordsCount", { count: bonusGrants.length })}
+                </span>
+              </div>
+
+              <ol className="fb-points-steps">
+                <li>
+                  <i>1</i>
+                  {dict.fbdPointsStep1}
+                </li>
+                <li>
+                  <i>2</i>
+                  {dict.fbdPointsStep2}
+                </li>
+                <li>
+                  <i>3</i>
+                  {dict.fbdPointsStep3}
+                </li>
+              </ol>
+
+              {bonusGrants.length === 0 ? (
+                <div className="fb-points-empty">
+                  <b>{dict.fbdPointsEmptyTitle}</b>
+                  <p>{dict.fbdPointsEmptyDesc}</p>
+                </div>
+              ) : null}
+
+              <Link className="fb-join-btn fb-points-cta" href="/bonus-points">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m12 3 1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3Z" />
+                </svg>
+                {dict.fbdPointsMore}
+              </Link>
+            </div>
+          </section>
+
           <section className="fb-card" data-fb-reveal data-fb-delay="200">
             <div className="fb-card-head">
               <h3>{dict.fbdAttendanceTitle}</h3>

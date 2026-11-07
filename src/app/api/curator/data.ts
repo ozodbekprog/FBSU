@@ -6,7 +6,7 @@ import {
   EXAM_MIN_PERCENT,
   type AttendanceCounts,
 } from "@/app/api/attendance/summary/data";
-import { GPA_CREDITS, gpaPoints } from "@/app/api/gpa/data";
+import { coursePoints30, gpaPoints, points30Percent } from "@/app/api/gpa/data";
 
 export type CuratorStudent = {
   id: string;
@@ -81,16 +81,27 @@ function percentOf(totals: ScoreTotals) {
   return Math.round((totals.score / totals.max) * 100);
 }
 
-function gpaOf(courses: Map<string, ScoreTotals>) {
+function percentWithBonus(totals: ScoreTotals, bonusTenths: number) {
+  const points30 = coursePoints30(totals.score, totals.max, bonusTenths / 10);
+  return points30 === null ? null : points30Percent(points30);
+}
+
+function gpaOf(
+  courses: Map<string, ScoreTotals>,
+  credits: Map<string, number>,
+  bonuses: Map<string, number>,
+) {
   let qualityPoints = 0;
-  let credits = 0;
-  for (const totals of courses.values()) {
-    if (totals.max <= 0) continue;
-    qualityPoints += gpaPoints(Math.round((totals.score / totals.max) * 100)) * GPA_CREDITS;
-    credits += GPA_CREDITS;
+  let totalCredits = 0;
+  for (const [courseId, totals] of courses) {
+    const percent = percentWithBonus(totals, bonuses.get(courseId) ?? 0);
+    if (percent === null) continue;
+    const courseCredits = credits.get(courseId) ?? 1;
+    qualityPoints += gpaPoints(percent) * courseCredits;
+    totalCredits += courseCredits;
   }
-  if (credits <= 0) return null;
-  return roundTwo(qualityPoints / credits);
+  if (totalCredits <= 0) return null;
+  return roundTwo(qualityPoints / totalCredits);
 }
 
 function emptyMetrics(): StudentMetrics {
@@ -108,7 +119,7 @@ async function loadStudentMetrics(studentIds: string[]): Promise<Map<string, Stu
   for (const id of studentIds) metrics.set(id, emptyMetrics());
   if (studentIds.length === 0) return metrics;
 
-  const [attendance, submissions, attempts] = await Promise.all([
+  const [attendance, submissions, attempts, bonuses] = await Promise.all([
     prisma.attendance.findMany({
       where: { studentId: { in: studentIds } },
       select: { studentId: true, status: true },
@@ -129,6 +140,10 @@ async function loadStudentMetrics(studentIds: string[]): Promise<Map<string, Stu
         quiz: { select: { courseId: true, questions: { select: { points: true } } } },
       },
     }),
+    prisma.bonusPoint.findMany({
+      where: { studentId: { in: studentIds }, courseId: { not: null } },
+      select: { studentId: true, courseId: true, tenths: true },
+    }),
   ]);
 
   const statuses = new Map<string, AttendanceStatus[]>();
@@ -144,6 +159,7 @@ async function loadStudentMetrics(studentIds: string[]): Promise<Map<string, Stu
   const courses = new Map<string, Map<string, ScoreTotals>>();
   const assignments = new Map<string, ScoreTotals>();
   const quizzes = new Map<string, ScoreTotals>();
+  const bonusTenths = new Map<string, Map<string, number>>();
 
   for (const submission of submissions) {
     const maxScore = submission.assignment.maxScore;
@@ -174,9 +190,35 @@ async function loadStudentMetrics(studentIds: string[]): Promise<Map<string, Stu
     quizzes.set(attempt.studentId, totals);
   }
 
+  for (const bonus of bonuses) {
+    if (!bonus.courseId) continue;
+    const byCourse = bonusTenths.get(bonus.studentId) ?? new Map<string, number>();
+    byCourse.set(bonus.courseId, (byCourse.get(bonus.courseId) ?? 0) + bonus.tenths);
+    bonusTenths.set(bonus.studentId, byCourse);
+  }
+
+  const courseIds = new Set<string>();
+  for (const byCourse of courses.values()) {
+    for (const courseId of byCourse.keys()) courseIds.add(courseId);
+  }
+  const courseCredits = new Map<string, number>();
+  if (courseIds.size > 0) {
+    const records = await prisma.course.findMany({
+      where: { id: { in: [...courseIds] } },
+      select: { id: true, credits: true },
+    });
+    for (const record of records) {
+      courseCredits.set(record.id, Math.max(1, record.credits));
+    }
+  }
+
   for (const id of studentIds) {
     const summary = attendanceCounts(statuses.get(id) ?? []);
-    const gpa = gpaOf(courses.get(id) ?? new Map<string, ScoreTotals>());
+    const gpa = gpaOf(
+      courses.get(id) ?? new Map<string, ScoreTotals>(),
+      courseCredits,
+      bonusTenths.get(id) ?? new Map<string, number>(),
+    );
     const assignmentAverage = percentOf(assignments.get(id) ?? { score: 0, max: 0 });
     const quizAverage = percentOf(quizzes.get(id) ?? { score: 0, max: 0 });
     metrics.set(id, {

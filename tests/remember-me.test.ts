@@ -12,12 +12,27 @@ vi.mock("next/headers", () => ({
     delete: vi.fn(),
     get: vi.fn(),
   }),
+  headers: async () => new Headers({ "user-agent": "vitest" }),
 }));
 
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 
 vi.mock("@/lib/prisma", () => ({
-  prisma: { user: { findUnique: userFindUnique } },
+  prisma: {
+    user: { findUnique: userFindUnique },
+    trustedDevice: {
+      count: vi.fn(async () => 0),
+      findFirst: vi.fn(async () => null),
+      create: vi.fn(async () => ({
+        id: "dev-1",
+        name: "Vitest",
+        platform: null,
+        browser: null,
+      })),
+      update: vi.fn(async () => ({ id: "dev-1" })),
+    },
+    loginRecord: { create: vi.fn(async () => ({})) },
+  },
 }));
 
 vi.mock("@/lib/rate-limit", () => ({

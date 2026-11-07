@@ -8,11 +8,24 @@ export type Release = {
   changes: string[];
 };
 
-export const APP_VERSION = "1.0.0-beta.1";
+export const APP_VERSION = "1.0.0-beta.2";
 export const APP_CHANNEL: ReleaseChannel = "beta";
-export const APP_RELEASED_AT = "2026-10-17";
+export const APP_RELEASED_AT = "2026-11-07";
 
 export const RELEASES: Release[] = [
+  {
+    version: "1.0.0-beta.2",
+    channel: "beta",
+    date: "2026-11-07",
+    title: "Point/kredit tizimi va hisob xavfsizligi",
+    changes: [
+      "Point/kredit: rektor hamyoni, VIP kredit, butun sonli bonus ballar va fanlarga taqsimlash",
+      "30 ballik fan shkalasi va 240 kreditlik diplom modeli",
+      "Talaba dashboardida \"Mening ballarim\" kartasi, bonus/kredit sahifalari FBSU palitrasida",
+      "Hisob xavfsizligi: 2 qurilma limiti, Telegram tasdiqlash va login jurnali",
+      "Telegram mini app: webhook, avtomatik kirish va qurilma limitini boshqarish",
+    ],
+  },
   {
     version: "1.0.0-beta.1",
     channel: "beta",

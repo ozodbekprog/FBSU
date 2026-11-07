@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { recordEvent } from "@/modules/events/record";
+import { SEMESTER_CREDIT_LIMIT } from "@/app/api/gpa/data";
 
 export async function POST(
   request: Request,
@@ -23,7 +24,7 @@ export async function POST(
   const { id } = await params;
   const course = await prisma.course.findUnique({
     where: { id },
-    select: { id: true, selfEnrollment: true },
+    select: { id: true, selfEnrollment: true, credits: true },
   });
   if (!course) {
     return Response.json({ ok: false, error: "Kurs topilmadi" }, { status: 404 });
@@ -32,6 +33,24 @@ export async function POST(
     return Response.json(
       { ok: false, error: "Bu kursga o'z-o'zidan yozilish yopiq" },
       { status: 403 },
+    );
+  }
+
+  const activeEnrollments = await prisma.enrollment.findMany({
+    where: { userId: user.id, status: "ACTIVE" },
+    select: { course: { select: { credits: true } } },
+  });
+  const plannedCredits = activeEnrollments.reduce(
+    (sum, enrollment) => sum + enrollment.course.credits,
+    0,
+  );
+  if (plannedCredits + course.credits > SEMESTER_CREDIT_LIMIT) {
+    return Response.json(
+      {
+        ok: false,
+        error: `Semestrda ${SEMESTER_CREDIT_LIMIT} kreditdan oshib ketadi — bu fan ${course.credits} kredit`,
+      },
+      { status: 400 },
     );
   }
 

@@ -25,11 +25,21 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { courseId, groupId, points } = body;
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return Response.json({ ok: false, error: "Ma'lumotlar noto'g'ri" }, { status: 400 });
+  }
+  const { courseId, groupId, points } = body as {
+    courseId?: unknown;
+    groupId?: unknown;
+    points?: unknown;
+  };
 
   if (!courseId || points === undefined) {
     return Response.json({ ok: false, error: "courseId va points shart" }, { status: 400 });
+  }
+  if (typeof courseId !== "string") {
+    return Response.json({ ok: false, error: "courseId noto'g'ri" }, { status: 400 });
   }
 
   const value = Number(points);
@@ -51,7 +61,8 @@ export async function POST(request: Request) {
   // groupId nullable compound unique: Prisma shuni `string` kutadi, ammo
   // bazada `groupId = NULL` bo'lgan qator ham bor. Shuning uchun `""`
   // emas, to'g'ridan-to'g'ri `null` bilan izlaymiz.
-  const normalizedGroupId: string | null = groupId ?? null;
+  const normalizedGroupId: string | null =
+    typeof groupId === "string" && groupId.length > 0 ? groupId : null;
 
   const existing = await prisma.attendancePointConfig.findFirst({
     where: { courseId, groupId: normalizedGroupId },

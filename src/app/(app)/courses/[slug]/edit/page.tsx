@@ -38,6 +38,7 @@ export default async function EditCoursePage({
           description: course.description,
           coverColor: course.coverColor,
           isPublished: course.isPublished,
+          credits: course.credits,
         }}
       />
     </>
