@@ -3,6 +3,21 @@
 Saytda ko'rinadigan relizlar ro'yxati: `/versions`.
 Versiya manbasi: `src/lib/version.ts`.
 
+## [1.0.0-beta.2] — 2026-11-07
+
+### Qo'shildi
+
+- Point/kredit tizimi: rektor hamyoni, VIP kredit, butun sonli bonus ballar va ularni fanlarga taqsimlash.
+- 30 ballik fan shkalasi va 240 kreditlik diplom modeli.
+- Talaba dashboardida "Mening ballarim" kartasi; bonus/kredit sahifalari FBSU navy+gold palitrasida.
+- Hisob xavfsizligi: 2 qurilma limiti, Telegram orqali tasdiqlash va login jurnali.
+- Telegram mini app: webhook, avtomatik kirish va qurilma limitini boshqarish.
+
+### O'zgartirildi
+
+- Dars jadvali Toshkent vaqti bo'yicha hisoblanadi.
+- `/api/version` va `/versions` sahifasi `1.0.0-beta.2` ni ko'rsatadi.
+
 ## [1.0.0-beta.1] — 2026-10-17
 
 ### Qo'shildi
