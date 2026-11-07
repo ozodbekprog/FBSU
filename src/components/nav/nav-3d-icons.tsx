@@ -826,6 +826,18 @@ function Documents() {
   );
 }
 
+/** Kutubxona — uchta kitob dastasi. */
+function Library() {
+  return (
+    <group>
+      <Cube a={[1.7, 0.34, 1.1]} m="brand" p={[0, -0.5, 0]} />
+      <Cube a={[1.55, 0.32, 1.0]} m="paper" p={[0.05, -0.14, 0]} r={[0, 0, 0.03]} />
+      <Cube a={[1.6, 0.34, 1.05]} m="gold" p={[-0.04, 0.22, 0]} r={[0, 0, -0.02]} />
+      <Cube a={[0.14, 0.9, 0.9]} m="brandDeep" p={[0.8, 0.2, 0]} r={[0, 0, -0.12]} />
+    </group>
+  );
+}
+
 /** Diplom — o'ralgan dasta va oltin bog'lam. */
 function Diplomas() {
   return (
@@ -941,6 +953,7 @@ export const NAV3D_ICONS: Record<string, ComponentType> = {
   "/parent": Parent,
   "/admissions": Admissions,
   "/documents": Documents,
+  "/library": Library,
   "/diplomas": Diplomas,
   "/finance": Finance,
   "/finance/rates": FacultyRates,
