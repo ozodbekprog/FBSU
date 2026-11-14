@@ -43,15 +43,17 @@ export function CheckInForm({
   initialPayload,
   faceEnrolled = false,
   compact = false,
+  autoScan = false,
 }: {
   initialPayload?: QrScanPayload;
   faceEnrolled?: boolean;
   compact?: boolean;
+  autoScan?: boolean;
 }) {
   const { t } = useI18n();
-  const [status, setStatus] = useState<"idle" | "scanning" | "loading" | "face" | "success" | "suspicious" | "error">(
-    "idle",
-  );
+  const [status, setStatus] = useState<
+    "idle" | "scanning" | "loading" | "face" | "success" | "suspicious" | "error"
+  >(autoScan ? "scanning" : "idle");
   const [message, setMessage] = useState<string | null>(null);
   const [result, setResult] = useState<CheckInResult | null>(null);
   const [reasons, setReasons] = useState<string[]>([]);

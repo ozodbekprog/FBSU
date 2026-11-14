@@ -37,6 +37,7 @@ export const shell = {
   navBounty: "Bug bounty",
   navSettings: "Sozlamalar",
   navMonitoring: "Monitoring",
+  navTraffic: "Trafik",
   navApprovals: "Tasdiqlashlar",
   navCurator: "Kurator paneli",
   navReports: "Hisobotlar",

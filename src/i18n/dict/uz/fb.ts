@@ -154,6 +154,8 @@ export const fb = {
   fbdFocusStartsIn: "Boshlanishiga {min} daqiqa qoldi",
   fbdFocusStarted: "Dars yakunlandi",
   fbdFocusJoin: "Darsga qo'shilish",
+  fbdFocusScan: "QR skanerlash",
+  fbdFocusLesson: "Dars",
   fbdFocusOnline: "Onlayn",
   fbdKpiGpa: "Umumiy GPA",
   fbdKpiGpaFoot: "{credits} kredit · {graded} baholangan",

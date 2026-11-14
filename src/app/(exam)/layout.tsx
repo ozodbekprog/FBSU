@@ -1,5 +1,6 @@
 import { Logo } from "@/components/brand/logo";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
+import { Watermark } from "@/components/security/watermark";
 import { requireUser } from "@/lib/auth";
 import { getDictionary, getLocale } from "@/i18n";
 
@@ -26,6 +27,7 @@ export default async function ExamLayout({ children }: { children: React.ReactNo
           </div>
         </header>
         <main className="mx-auto w-full max-w-5xl px-4 py-6">{children}</main>
+        <Watermark name={user.name} email={user.email} uid={user.id} />
       </div>
     </LocaleProvider>
   );

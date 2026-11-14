@@ -7,6 +7,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PwaRegister } from "@/components/pwa/PwaRegister";
 import { CsrfBootstrap } from "@/components/csrf/csrf-bootstrap";
+import { TrafficBeacon } from "@/components/traffic/TrafficBeacon";
 import { TelegramMiniApp } from "@/components/telegram/TelegramMiniApp";
 import { Logo } from "@/components/brand/logo";
 import { BetaBadge } from "@/components/brand/beta-badge";
@@ -51,6 +52,14 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: resolveSiteUrl(),
+    // LMS yopiq tizim: qidiruv va AI indeksatsiyasi kerak emas.
+    robots: {
+      index: false,
+      follow: false,
+      noarchive: true,
+      nosnippet: true,
+      noimageindex: true,
+    },
     authors: [{ name: "Ozodbek Xoshimov Xusanovich" }],
     creator: "Xoshimov Group",
     publisher: "Xoshimov Group",
@@ -109,6 +118,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="min-h-full flex flex-col">
+        {/* Honeypot: oddiy foydalanuvchi ko'rmaydi, skreper yo'l topib urinadi. */}
+        <a href="/wp-admin" aria-hidden="true" tabIndex={-1} rel="nofollow" className="hidden">
+          .
+        </a>
         <div id="tg-splash" className="tg-splash" role="status" aria-label="FBSU yuklanmoqda">
           <div className="flex flex-col items-center">
             <div className="flex items-center gap-3">
@@ -130,6 +143,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         </LocaleProvider>
         <PwaRegister />
         <CsrfBootstrap />
+        <TrafficBeacon />
         <TelegramMiniApp />
       </body>
     </html>

@@ -2,9 +2,24 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
+import { securityEventCount } from "./ai-core.mjs";
+import {
+  buildDeanReport,
+  buildSecurityAlert,
+  buildStudentAlert,
+  buildTeacherReport,
+  collectSecurityEvents,
+} from "./insights.mjs";
 
 const BOT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.join(BOT_DIR, "..");
+
+try {
+  if (typeof process.loadEnvFile === "function") {
+    process.loadEnvFile(path.join(ROOT_DIR, ".env"));
+  }
+} catch {}
+
 const DATA_FILE = path.join(BOT_DIR, "data.json");
 const PENDING_FILE = path.join(BOT_DIR, "pending.json");
 const POLL_TIMEOUT = 30;
@@ -32,17 +47,24 @@ const APP_BUTTON = {
     inline_keyboard: [[{ text: "📱 FBSU'ni ochish", web_app: { url: APP_URL } }]],
   },
 };
-
-try {
-  if (typeof process.loadEnvFile === "function") {
-    process.loadEnvFile(path.join(ROOT_DIR, ".env"));
-  }
-} catch {}
+const REMINDER_BUTTONS = {
+  reply_markup: {
+    inline_keyboard: [
+      [{ text: "📱 FBSU'ni ochish", web_app: { url: APP_URL } }],
+      [{ text: "📅 Haftalik jadval", web_app: { url: `${APP_URL}/schedule` } }],
+    ],
+  },
+};
+const MESSAGE_EFFECTS = {
+  confetti: "5046509860389126442",
+  fire: "5104841245755180586",
+};
 
 let token = "";
 let prisma = null;
 let links = {};
 let lastReminderDate = "";
+let lastSecurityAt = "";
 
 function loadData() {
   if (!existsSync(DATA_FILE)) return;
@@ -52,6 +74,7 @@ function loadData() {
     if (parsed.links && typeof parsed.links === "object" && !Array.isArray(parsed.links)) {
       links = parsed.links;
       lastReminderDate = typeof parsed.lastReminderDate === "string" ? parsed.lastReminderDate : "";
+      lastSecurityAt = typeof parsed.lastSecurityAt === "string" ? parsed.lastSecurityAt : "";
       return;
     }
     links = parsed;
@@ -59,7 +82,7 @@ function loadData() {
 }
 
 function saveData() {
-  const payload = { links, lastReminderDate };
+  const payload = { links, lastReminderDate, lastSecurityAt };
   writeFileSync(DATA_FILE, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 }
 
@@ -116,6 +139,56 @@ async function sendMessage(chatId, text, extra = {}) {
   await callApi("sendMessage", { chat_id: chatId, text, ...extra });
 }
 
+export function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+export function splitText(text, limit = 3800) {
+  if (text.length <= limit) return [text];
+  const chunks = [];
+  let buffer = "";
+  let quote = "";
+  for (const line of text.split("\n")) {
+    const open = /^<blockquote[^>]*>$/i.test(line) ? line : "";
+    const close = /^<\/blockquote>$/i.test(line);
+    if (buffer && buffer.length + line.length + 1 + (quote ? 14 : 0) > limit) {
+      chunks.push(quote ? `${buffer}\n</blockquote>` : buffer);
+      buffer = quote ? `${quote}\n${line}` : line;
+    } else {
+      buffer = buffer ? `${buffer}\n${line}` : line;
+    }
+    if (open) quote = open;
+    if (close) quote = "";
+  }
+  if (buffer) chunks.push(quote ? `${buffer}\n</blockquote>` : buffer);
+  return chunks;
+}
+
+async function sendRichMessage(chatId, text, extra = {}) {
+  const chunks = splitText(text);
+  for (let index = 0; index < chunks.length; index += 1) {
+    const payload = { parse_mode: "HTML", disable_web_page_preview: true };
+    if (index === 0 && extra.message_effect_id) payload.message_effect_id = extra.message_effect_id;
+    if (index === chunks.length - 1 && extra.reply_markup) payload.reply_markup = extra.reply_markup;
+    try {
+      await sendMessage(chatId, chunks[index], payload);
+    } catch (error) {
+      if (!payload.message_effect_id) throw error;
+      delete payload.message_effect_id;
+      await sendMessage(chatId, chunks[index], payload);
+    }
+  }
+}
+
+async function sendTyping(chatId) {
+  try {
+    await callApi("sendChatAction", { chat_id: chatId, action: "typing" });
+  } catch {}
+}
+
 export function slotTime(slot) {
   return SLOT_TIMES[slot] ?? "";
 }
@@ -147,6 +220,36 @@ const STATUS_LABELS = {
   CANCELLED: "❌ Bekor qilindi",
 };
 
+export function richLesson(entry, options = {}) {
+  const showTeacher = options.showTeacher !== false;
+  const time = SLOT_TIMES[entry.slot];
+  const lines = [`🕘 <b>${entry.slot}-par</b>${time ? ` · ${time}` : ""}`];
+  lines.push(`📚 <b>${escapeHtml(entry.subject)}</b>`);
+  const meta = [];
+  if (entry.lessonType) meta.push(`🏷 ${escapeHtml(entry.lessonType)}`);
+  if (entry.room) meta.push(`🚪 ${escapeHtml(entry.room)}`);
+  if (showTeacher && entry.teacher) meta.push(`👨‍🏫 ${escapeHtml(entry.teacher)}`);
+  if (meta.length > 0) lines.push(meta.join(" · "));
+  if (entry.note) lines.push(`📝 <i>${escapeHtml(entry.note)}</i>`);
+  const status = STATUS_LABELS[entry.status] ?? "";
+  if (status) lines.push(`<i>${status}</i>`);
+  return lines.join("\n");
+}
+
+export function richEntries(entries) {
+  return entries.map((entry) => richLesson(entry)).join("\n\n");
+}
+
+function richTeacherLesson(item, date) {
+  const lines = [richLesson(item.entry, { showTeacher: false })];
+  if (item.groupName) lines.push(`👥 <b>${escapeHtml(item.groupName)}</b>`);
+  if (item.slug) {
+    const url = attendanceUrl(item.slug, date, item.entry.slot);
+    lines.push(`<a href="${escapeHtml(url)}">🔗 Davomatni ochish</a>`);
+  }
+  return lines.join("\n");
+}
+
 export function formatWeekLesson(entry) {
   const lines = [`• ${formatLesson(entry)}`];
   const label = STATUS_LABELS[entry.status] ?? "";
@@ -172,23 +275,41 @@ function weekRange(date) {
   return `${shortDate(monday)} – ${shortDate(saturday)}.${saturday.getFullYear()}`;
 }
 
+export function richWeekLesson(entry) {
+  const time = SLOT_TIMES[entry.slot];
+  const parts = [
+    `🕘 <b>${entry.slot}-par</b>${time ? ` ${time}` : ""}`,
+    `📚 <b>${escapeHtml(entry.subject)}</b>`,
+  ];
+  if (entry.lessonType) parts.push(`🏷 ${escapeHtml(entry.lessonType)}`);
+  if (entry.room) parts.push(`🚪 ${escapeHtml(entry.room)}`);
+  if (entry.teacher) parts.push(`👨‍🏫 ${escapeHtml(entry.teacher)}`);
+  const lines = [`• ${parts.join(" · ")}`];
+  const status = STATUS_LABELS[entry.status] ?? "";
+  if (status) lines.push(`   <i>${status}</i>`);
+  return lines.join("\n");
+}
+
 export function weekText(groupName, entries, today) {
-  const lines = [`📅 Haftalik jadval — ${groupName}`, `🗓 ${weekRange(new Date())}`, SEPARATOR, ""];
+  const lines = [
+    `📅 <b>Haftalik jadval</b> — <b>${escapeHtml(groupName)}</b>`,
+    `🗓 ${weekRange(new Date())}`,
+    SEPARATOR,
+    "",
+  ];
   if (entries.length === 0) {
-    lines.push("📭 Bu hafta darslar yo'q.");
+    lines.push("📭 <i>Bu hafta darslar yo'q.</i>");
     return lines.join("\n");
   }
   for (let day = 1; day <= 6; day += 1) {
     const dayEntries = entries.filter((entry) => entry.dayOfWeek === day);
     if (dayEntries.length === 0) continue;
-    lines.push(`📌 ${DAY_TITLES[day]}${day === today ? " (bugun)" : ""}`);
-    for (const entry of dayEntries) lines.push(formatWeekLesson(entry));
+    lines.push(`📌 <b>${DAY_TITLES[day]}</b>${day === today ? " (bugun)" : ""}`);
+    for (const entry of dayEntries) lines.push(richWeekLesson(entry));
     lines.push("");
   }
   return lines.join("\n").trimEnd();
 }
-
-const APP_BASE_URL = "http://localhost:3000";
 
 export function normalizeTeacher(name) {
   return name.replace(/\./g, " ").replace(/\s+/g, " ").trim().toLowerCase();
@@ -219,10 +340,10 @@ export function matchCourseSlug(subject, courses) {
 }
 
 function attendanceUrl(slug, date, slot) {
-  return `${APP_BASE_URL}/courses/${slug}/attendance/lesson?date=${date}&slot=${slot}`;
+  return `${APP_URL}/courses/${slug}/attendance/lesson?date=${date}&slot=${slot}`;
 }
 
-const REMINDER_HOUR = 8;
+const REMINDER_HOUR = 7;
 const REMINDER_CHECK_MS = 60 * 60 * 1000;
 const EXAM_WINDOW_DAYS = 30;
 
@@ -244,6 +365,22 @@ function timeText(date) {
   return `${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
 }
 
+function isoWeekNumber(date) {
+  const copy = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const weekday = copy.getUTCDay() || 7;
+  copy.setUTCDate(copy.getUTCDate() + 4 - weekday);
+  const yearStart = new Date(Date.UTC(copy.getUTCFullYear(), 0, 1));
+  return Math.ceil(((copy.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
+
+export function weekParity(date) {
+  return isoWeekNumber(date) % 2 === 1 ? "odd" : "even";
+}
+
+function parityFilter(date) {
+  return { OR: [{ parity: null }, { parity: weekParity(date) }] };
+}
+
 async function collectReminder(user, dayStart) {
   const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
   const db = getPrisma();
@@ -261,7 +398,7 @@ async function collectReminder(user, dayStart) {
 
   const lessons = user.groupId
     ? await db.scheduleEntry.findMany({
-        where: { groupId: user.groupId, dayOfWeek: dayStart.getDay() },
+        where: { groupId: user.groupId, dayOfWeek: dayStart.getDay(), ...parityFilter(dayStart) },
         orderBy: { slot: "asc" },
       })
     : [];
@@ -309,10 +446,10 @@ async function collectReminder(user, dayStart) {
   return { lessons, deadlines, exams };
 }
 
-async function collectTeacherLessons(user, dayOfWeek) {
+async function collectTeacherLessons(user, dayOfWeek, date = new Date()) {
   const db = getPrisma();
   const entries = await db.scheduleEntry.findMany({
-    where: { dayOfWeek },
+    where: { dayOfWeek, ...parityFilter(date) },
     include: { group: { select: { name: true } } },
     orderBy: { slot: "asc" },
   });
@@ -329,17 +466,6 @@ async function collectTeacherLessons(user, dayOfWeek) {
     groupName: entry.group?.name ?? "",
     slug: matchCourseSlug(entry.subject, courses),
   }));
-}
-
-function teacherLessonText(item, date) {
-  const time = SLOT_TIMES[item.entry.slot];
-  const head = `🕘 ${item.entry.slot}-par${time ? ` ${time}` : ""}`;
-  const parts = [head, `📚 ${item.entry.subject}`];
-  if (item.entry.room) parts.push(`🚪 ${item.entry.room}`);
-  if (item.groupName) parts.push(`👥 ${item.groupName}`);
-  const lines = [`• ${parts.join(" | ")}`];
-  if (item.slug) lines.push(`  🔗 ${attendanceUrl(item.slug, date, item.entry.slot)}`);
-  return lines.join("\n");
 }
 
 export function examTime(session) {
@@ -396,41 +522,112 @@ export function teacherExamText(session) {
   return lines.join("\n");
 }
 
+function richExamReminder(session) {
+  const meta = [session.room, examTime(session)].filter(Boolean).join(", ");
+  return `📝 <b>${escapeHtml(session.course.title)}</b> — ${escapeHtml(session.title)}${
+    meta ? ` <i>(${escapeHtml(meta)})</i>` : ""
+  }`;
+}
+
+function richTeacherExam(session) {
+  const lines = [
+    `• 📝 <b>${escapeHtml(session.course.title)}</b> — ${escapeHtml(session.title)}`,
+  ];
+  const meta = [];
+  if (session.room) meta.push(`🚪 ${escapeHtml(session.room)}`);
+  const time = examTime(session);
+  if (time) meta.push(`🕘 ${time}`);
+  if (meta.length > 0) lines.push(`   ${meta.join(" · ")}`);
+  lines.push(`   🗂 ${session.sheets.length} varaq, ${gradedSheetCount(session.sheets)} natija kiritilgan`);
+  return lines.join("\n");
+}
+
 export function reminderText(user, day, lessons, deadlines, teacherLessons = [], exams = []) {
-  const lines = [`🌟 Eslatma — bugun, ${DAY_NAMES[day.getDay()]}, ${dateKey(day)}`];
-  if (user.group) lines.push(`👥 Guruh: ${user.group.name}`);
+  const lines = [
+    "🎓 <b>Bugungi darslar</b>",
+    `📅 <b>${DAY_TITLES[day.getDay()]}</b>, ${dateKey(day)}`,
+  ];
+  if (user.group) lines.push(`👥 Guruh: <b>${escapeHtml(user.group.name)}</b>`);
   lines.push(SEPARATOR, "");
-  lines.push("📌 Darslar:");
+  lines.push("📌 <b>Darslar</b>");
   if (user.role === "TEACHER" && teacherLessons.length > 0) {
     for (const item of teacherLessons) {
-      lines.push(teacherLessonText(item, dateKey(day)));
+      lines.push(richTeacherLesson(item, dateKey(day)));
       lines.push("");
     }
-    lines.push("⏰ Davomatni belgilashni unutmang.");
+    lines.push("⏰ <b>Davomatni belgilashni unutmang.</b>");
     const first = teacherLessons.find((item) => item.slug);
     if (first) {
-      lines.push(`🔗 Birinchi dars havolasi: ${attendanceUrl(first.slug, dateKey(day), first.entry.slot)}`);
+      const url = attendanceUrl(first.slug, dateKey(day), first.entry.slot);
+      lines.push(`<a href="${escapeHtml(url)}">🔗 Birinchi dars davomati</a>`);
     }
+  } else if (lessons.length > 0) {
+    lines.push(richEntries(lessons));
   } else {
-    lines.push(lessons.length > 0 ? formatEntries(lessons) : "📭 Bugun darslar yo'q.");
+    lines.push(
+      day.getDay() === 0
+        ? "🎉 <i>Dam kuni — darslar yo'q.</i>"
+        : "📭 <i>Bugun darslar yo'q.</i>",
+    );
   }
   if (exams.length > 0) {
     lines.push("");
+    lines.push("📝 <b>Bugungi imtihonlar</b>");
     if (user.role === "TEACHER") {
-      lines.push("📝 Bugungi imtihonlar:");
-      for (const exam of exams) lines.push(teacherExamText(exam));
+      for (const exam of exams) lines.push(richTeacherExam(exam));
     } else {
-      for (const exam of exams) lines.push(examReminderText(exam));
+      for (const exam of exams) lines.push(richExamReminder(exam));
     }
   }
   lines.push("");
-  lines.push("⏰ Bugungi muddatlar:");
+  lines.push("⏰ <b>Bugungi muddatlar</b>");
   if (deadlines.length === 0) {
-    lines.push("📌 Bugun deadline yo'q.");
+    lines.push("📌 <i>Bugun deadline yo'q.</i>");
   } else {
-    for (const item of deadlines) lines.push(`• 📌 ${item.text} (${timeText(item.dueAt)})`);
+    lines.push("<blockquote expandable>");
+    for (const item of deadlines) {
+      lines.push(`📌 ${escapeHtml(item.text)} <i>(${timeText(item.dueAt)})</i>`);
+    }
+    lines.push("</blockquote>");
   }
   return lines.join("\n");
+}
+
+const SECURITY_CHECK_MS = 15 * 60 * 1000;
+const SECURITY_WINDOW_CAP_MS = 24 * 60 * 60 * 1000;
+const AI_CONCURRENCY = 3;
+
+async function mapLimit(items, limit, fn) {
+  const queue = [...items];
+  const workers = Array.from({ length: Math.min(limit, queue.length) }, async () => {
+    while (queue.length > 0) {
+      const item = queue.shift();
+      await fn(item);
+    }
+  });
+  await Promise.all(workers);
+}
+
+async function sendAiAlerts(targets, now) {
+  const list = targets.filter((target) =>
+    ["STUDENT", "TEACHER", "DEKAN"].includes(target.user.role),
+  );
+  await mapLimit(list, AI_CONCURRENCY, async ({ chatId, user }) => {
+    try {
+      let text = null;
+      if (user.role === "STUDENT") {
+        text = await buildStudentAlert(getPrisma(), user, now);
+      } else if (user.role === "DEKAN") {
+        text = await buildDeanReport(getPrisma(), user, now);
+      } else {
+        text = await buildTeacherReport(getPrisma(), user, now);
+      }
+      if (!text) return;
+      await sendMessage(chatId, `🧠 AI ogohlantirish\n\n${text}`);
+    } catch (error) {
+      console.error(`AI xabar yuborilmadi (${chatId}):`, errorText(error));
+    }
+  });
 }
 
 async function sendDailyReminders() {
@@ -440,6 +637,7 @@ async function sendDailyReminders() {
   if (lastReminderDate === today) return;
 
   const dayStart = startOfDay(now);
+  const targets = [];
   for (const [chatId, email] of Object.entries(links)) {
     if (typeof email !== "string") continue;
     try {
@@ -450,8 +648,23 @@ async function sendDailyReminders() {
       if (!user) continue;
       const { lessons, deadlines, exams } = await collectReminder(user, dayStart);
       const teacherLessons =
-        user.role === "TEACHER" ? await collectTeacherLessons(user, now.getDay()) : [];
-      await sendMessage(chatId, reminderText(user, now, lessons, deadlines, teacherLessons, exams));
+        user.role === "TEACHER" ? await collectTeacherLessons(user, now.getDay(), now) : [];
+      const hasContent =
+        lessons.length > 0 ||
+        teacherLessons.length > 0 ||
+        deadlines.length > 0 ||
+        exams.length > 0;
+      const effect = exams.length > 0
+        ? MESSAGE_EFFECTS.fire
+        : hasContent
+          ? MESSAGE_EFFECTS.confetti
+          : null;
+      await sendTyping(chatId);
+      await sendRichMessage(chatId, reminderText(user, now, lessons, deadlines, teacherLessons, exams), {
+        ...REMINDER_BUTTONS,
+        ...(effect ? { message_effect_id: effect } : {}),
+      });
+      targets.push({ chatId, user });
     } catch (error) {
       console.error(`Eslatma yuborilmadi (${chatId}):`, errorText(error));
     }
@@ -459,6 +672,36 @@ async function sendDailyReminders() {
 
   lastReminderDate = today;
   saveData();
+  await sendAiAlerts(targets, now);
+}
+
+async function sendSecurityAlerts() {
+  const ownerChatId = (process.env.OWNER_TELEGRAM_ID ?? "").trim();
+  if (!token || !ownerChatId) return;
+  const now = new Date();
+  const capped = new Date(now.getTime() - SECURITY_WINDOW_CAP_MS);
+  const previous = lastSecurityAt ? new Date(lastSecurityAt) : null;
+  const since = previous && previous.getTime() > capped.getTime() ? previous : capped;
+  const events = await collectSecurityEvents(getPrisma(), since, now);
+  if (securityEventCount(events) === 0) {
+    lastSecurityAt = now.toISOString();
+    saveData();
+    return;
+  }
+  const text = await buildSecurityAlert(events, since, now);
+  if (text) await sendMessage(ownerChatId, `🔐 AI xavfsizlik xulosasi\n\n${text}`);
+  lastSecurityAt = now.toISOString();
+  saveData();
+}
+
+function startSecurityLoop() {
+  const run = () => {
+    void sendSecurityAlerts().catch((error) =>
+      console.error("Xavfsizlik tekshiruvi xatosi:", errorText(error)),
+    );
+  };
+  run();
+  setInterval(run, SECURITY_CHECK_MS);
 }
 
 function startReminderLoop() {
@@ -471,6 +714,66 @@ function startReminderLoop() {
   setInterval(run, REMINDER_CHECK_MS);
 }
 
+async function sendAiInsight(chatId) {
+  const email = links[String(chatId)];
+  if (!email) {
+    await sendMessage(
+      chatId,
+      "Avval saytdagi Sozlamalar → Aloqa bo'limidan 6 xonali kod olib, shu yerga yuboring.",
+    );
+    return;
+  }
+  const user = await getPrisma().user.findUnique({ where: { email }, include: { group: true } });
+  if (!user) {
+    delete links[String(chatId)];
+    saveData();
+    await sendMessage(chatId, "Bog'langan foydalanuvchi bazadan topilmadi. Saytdan yangi kod oling.");
+    return;
+  }
+  if (user.role === "OWNER") {
+    await sendOwnerSecurity(chatId);
+    return;
+  }
+  let text = null;
+  if (user.role === "STUDENT") text = await buildStudentAlert(getPrisma(), user);
+  else if (user.role === "TEACHER") text = await buildTeacherReport(getPrisma(), user);
+  else if (user.role === "DEKAN") text = await buildDeanReport(getPrisma(), user);
+  else {
+    await sendMessage(chatId, "ℹ️ AI tahlil talabalar, o'qituvchilar va dekanlar uchun mavjud.");
+    return;
+  }
+  if (!text) {
+    await sendMessage(
+      chatId,
+      "🧠 Hozircha jiddiy xavf topilmadi — davomat, baholar, muddatlar va imtihonlar joyida.",
+    );
+    return;
+  }
+  await sendMessage(chatId, `🧠 AI tahlil\n\n${text}`);
+}
+
+async function sendOwnerSecurity(chatId) {
+  const ownerChatId = (process.env.OWNER_TELEGRAM_ID ?? "").trim();
+  if (!ownerChatId || String(chatId) !== ownerChatId) {
+    await sendMessage(chatId, "⛔ Bu buyruq faqat OWNER uchun.");
+    return;
+  }
+  const now = new Date();
+  const since = new Date(now.getTime() - SECURITY_WINDOW_CAP_MS);
+  const events = await collectSecurityEvents(getPrisma(), since, now);
+  if (securityEventCount(events) === 0) {
+    await sendMessage(chatId, "🔐 Oxirgi 24 soatda xavfli hodisa yo'q.");
+    return;
+  }
+  const text = await buildSecurityAlert(events, since, now);
+  await sendMessage(
+    chatId,
+    text
+      ? `🔐 AI xavfsizlik xulosasi\n\n${text}`
+      : "🔐 Oxirgi 24 soatda jiddiy xavf aniqlanmadi.",
+  );
+}
+
 const HELP_TEXT = [
   "📋 Buyruqlar:",
   "• /start — boshlash va tasdiqlash kodi haqida ma'lumot",
@@ -480,6 +783,8 @@ const HELP_TEXT = [
   "• /hafta — haftalik jadval (kun-kun)",
   "• /davomat — o'qituvchilar uchun bugungi darslar va davomat havolalari",
   "• /imtihon — kelayotgan imtihonlar (30 kun)",
+  "• /ai — shaxsiy AI tahlil (davomat, baholar, muddatlar)",
+  "• /xavfsizlik — oxirgi 24 soat xavfsizlik xulosasi (faqat OWNER)",
   "• /help — shu yordam",
   "",
   "🔐 Bog'lanish uchun saytga kirib, Sozlamalar → Aloqa bo'limidan 6 xonali kod oling va shu yerga yuboring.",
@@ -496,6 +801,7 @@ function startText(name) {
     "• /ertaga — ertangi darslar",
     "• /hafta — haftalik jadval",
     "• /davomat — o'qituvchilar uchun davomat havolalari",
+    "• /ai — shaxsiy AI tahlil",
     "• /help — yordam",
     "",
     "🔐 Boshlash uchun saytga kirib, Sozlamalar → Aloqa bo'limidan 6 xonali kod oling va shu yerga yuboring.",
@@ -566,22 +872,23 @@ async function sendSchedule(chatId, dayOffset) {
   target.setDate(target.getDate() + dayOffset);
   const dayOfWeek = target.getDay();
   const label = dayOffset === 0 ? "Bugun" : "Ertaga";
-  const header = `📅 ${label} — ${DAY_TITLES[dayOfWeek]}, ${dateKey(target)}\n👥 Guruh: ${user.group.name}`;
+  const header = `📅 <b>${label}</b> — <b>${DAY_TITLES[dayOfWeek]}</b>, ${dateKey(target)}\n👥 Guruh: <b>${escapeHtml(user.group.name)}</b>`;
 
+  await sendTyping(chatId);
   if (dayOfWeek === 0) {
-    await sendMessage(chatId, `${header}\n\n🎉 Dam kuni — darslar yo'q.`);
+    await sendRichMessage(chatId, `${header}\n\n🎉 <i>Dam kuni — darslar yo'q.</i>`, APP_BUTTON);
     return;
   }
 
   const entries = await getPrisma().scheduleEntry.findMany({
-    where: { groupId: user.groupId, dayOfWeek },
+    where: { groupId: user.groupId, dayOfWeek, ...parityFilter(target) },
     orderBy: { slot: "asc" },
   });
   if (entries.length === 0) {
-    await sendMessage(chatId, `${header}\n\n📭 Darslar yo'q.`);
+    await sendRichMessage(chatId, `${header}\n\n📭 <i>Darslar yo'q.</i>`, APP_BUTTON);
     return;
   }
-  await sendMessage(chatId, `${header}\n${SEPARATOR}\n\n${formatEntries(entries)}`);
+  await sendRichMessage(chatId, `${header}\n${SEPARATOR}\n\n${richEntries(entries)}`, APP_BUTTON);
 }
 
 async function sendWeek(chatId) {
@@ -603,10 +910,11 @@ async function sendWeek(chatId) {
   }
 
   const entries = await getPrisma().scheduleEntry.findMany({
-    where: { groupId: user.groupId, dayOfWeek: { gte: 1, lte: 6 } },
+    where: { groupId: user.groupId, dayOfWeek: { gte: 1, lte: 6 }, ...parityFilter(new Date()) },
     orderBy: [{ dayOfWeek: "asc" }, { slot: "asc" }],
   });
-  await sendMessage(chatId, weekText(user.group.name, entries, new Date().getDay()));
+  await sendTyping(chatId);
+  await sendRichMessage(chatId, weekText(user.group.name, entries, new Date().getDay()), APP_BUTTON);
 }
 
 async function sendAttendance(chatId) {
@@ -631,19 +939,20 @@ async function sendAttendance(chatId) {
   const today = new Date();
   const dayOfWeek = today.getDay();
   const date = dateKey(today);
-  const header = `🔔 Davomat — bugun, ${DAY_NAMES[dayOfWeek]}, ${date}`;
-  const items = await collectTeacherLessons(user, dayOfWeek);
+  const header = `🔔 <b>Davomat</b> — bugun, ${DAY_NAMES[dayOfWeek]}, ${date}`;
+  const items = await collectTeacherLessons(user, dayOfWeek, today);
   if (items.length === 0) {
     await sendMessage(chatId, `${header}\n\n📭 Bugun darslaringiz yo'q.`);
     return;
   }
   const lines = [header, SEPARATOR, ""];
   for (const item of items) {
-    lines.push(teacherLessonText(item, date));
+    lines.push(richTeacherLesson(item, date));
     lines.push("");
   }
-  lines.push("⏰ Davomatni belgilashni unutmang!");
-  await sendMessage(chatId, lines.join("\n"));
+  lines.push("⏰ <b>Davomatni belgilashni unutmang!</b>");
+  await sendTyping(chatId);
+  await sendRichMessage(chatId, lines.join("\n"), APP_BUTTON);
 }
 
 async function sendExams(chatId) {
@@ -721,6 +1030,14 @@ async function handleMessage(message) {
     await sendExams(chatId);
     return;
   }
+  if (command === "ai") {
+    await sendAiInsight(chatId);
+    return;
+  }
+  if (command === "xavfsizlik") {
+    await sendOwnerSecurity(chatId);
+    return;
+  }
   if (command) {
     await sendMessage(chatId, `Noma'lum buyruq: /${command}.\n\n${HELP_TEXT}`);
     return;
@@ -776,11 +1093,16 @@ async function main() {
     process.exit(1);
   }
   loadData();
+  if (!lastSecurityAt) {
+    lastSecurityAt = new Date().toISOString();
+    saveData();
+  }
 
   prisma = new PrismaClient();
   await prisma.$connect();
   console.log("Telegram bot ishga tushdi. To'xtatish: Ctrl+C");
   startReminderLoop();
+  startSecurityLoop();
   await poll();
 }
 

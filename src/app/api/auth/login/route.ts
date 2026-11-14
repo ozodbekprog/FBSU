@@ -13,15 +13,43 @@ import { DeviceApprovalDeliveryError, createDeviceApproval } from "@/server/devi
 import { checkRateLimit, clearRateLimit } from "@/lib/rate-limit";
 import { createAuditLog, getClientInfo } from "@/lib/audit";
 import { getClientIp as getClientIpFromHeaders } from "@/lib/client-ip";
+import { createCaptchaChallenge, verifyCaptcha } from "@/lib/captcha";
 
 const schema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
   remember: z.boolean().optional(),
+  captchaToken: z.string().max(4096).optional(),
+  captchaAnswer: z.string().max(16).optional(),
 });
 
 const LOGIN_WINDOW_MS = 10 * 60 * 1000;
 const LOGIN_MAX_ATTEMPTS = 10;
+const LOGIN_IP_MAX_ATTEMPTS = 120;
+const CAPTCHA_AFTER_ATTEMPTS = 3;
+
+/**
+ * Seed skriptlari yaratadigan demo akkauntlar. Ular `ttpu1234` kabi ochiq
+ * parol bilan keladi, shuning uchun demo rejim o'chirilganda faqat shu
+ * aniq parol bilan kirishga ruxsat berilmaydi — real foydalanuvchi o'z
+ * parolini o'zgartirgan bo'lsa, hech qanday cheklov unga tegmaydi.
+ */
+const DEMO_EMAILS = new Set([
+  "admin@ttpu.uz",
+  "rektor@ttpu.uz",
+  "prorektor@ttpu.uz",
+  "dekan@ttpu.uz",
+  "kafedra@ttpu.uz",
+  "registrar@ttpu.uz",
+  "buxgalter@ttpu.uz",
+  "tyutor@ttpu.uz",
+  "xodim@ttpu.uz",
+  "t.prog@ttpu.uz",
+  "ozodbek@ttpu.uz",
+  "ota-ona@ttpu.uz",
+]);
+const DEMO_LOGIN_ENABLED = process.env.DEMO_LOGIN_ENABLED === "1";
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD || "ttpu1234";
 const DUMMY_HASH = "$2b$10$vabGzMWs78G4gDK4w4uNiO.wWPeTboNzwBwuVLU5Ht1xJQBWXtiZS";
 const OWNER_CODE_TTL_MS = 5 * 60 * 1000;
 
@@ -81,6 +109,65 @@ export async function POST(request: Request) {
     return Response.json(
       { ok: false, error: "Juda ko'p urinish. Keyinroq qayta urinib ko'ring" },
       { status: 429, headers: { "Retry-After": String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
+  // Bitta IP'dan turli akkauntlarga urinish (credential stuffing) alohida
+  // cheklanadi. Universitet NAT'i ortida ko'p talaba bo'lishi mumkin, shuning
+  // uchun limit email-IP limitidan ancha yuqori.
+  const ipLimit = await checkRateLimit(`login-ip:${getClientIp(request)}`, {
+    windowMs: LOGIN_WINDOW_MS,
+    maxAttempts: LOGIN_IP_MAX_ATTEMPTS,
+    keyPrefix: "auth",
+  });
+  if (!ipLimit.allowed) {
+    await createAuditLog({
+      action: "LOGIN_FAILED",
+      meta: { email, reason: "ip_rate_limited" },
+      ip: clientInfo.ip,
+      userAgent: clientInfo.userAgent,
+    });
+    return Response.json(
+      { ok: false, error: "Juda ko'p urinish. Keyinroq qayta urinib ko'ring" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((ipLimit.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
+  // Bir necha marta xato qilgandan keyin captcha talab qilinadi. Bu parol
+  // terish botlarini sekinlashtiradi; limit esa urinishlar sonini cheklaydi.
+  if (rateLimit.totalAttempts > CAPTCHA_AFTER_ATTEMPTS) {
+    const captchaOk = await verifyCaptcha(parsed.data.captchaToken, parsed.data.captchaAnswer);
+    if (!captchaOk) {
+      const captcha = await createCaptchaChallenge();
+      await createAuditLog({
+        action: "LOGIN_FAILED",
+        meta: { email, reason: "captcha_failed" },
+        ip: clientInfo.ip,
+        userAgent: clientInfo.userAgent,
+      });
+      return Response.json(
+        {
+          ok: false,
+          code: "CAPTCHA_REQUIRED",
+          error: "Xavfsizlik tekshiruvini bajaring",
+          data: { captcha },
+        },
+        { status: 400 },
+      );
+    }
+  }
+
+  // Demo rejim o'chirilganda seed paroli bilan kirish yopiladi.
+  if (!DEMO_LOGIN_ENABLED && DEMO_EMAILS.has(email) && parsed.data.password === DEMO_PASSWORD) {
+    await createAuditLog({
+      action: "LOGIN_FAILED",
+      meta: { email, reason: "demo_login_disabled" },
+      ip: clientInfo.ip,
+      userAgent: clientInfo.userAgent,
+    });
+    return Response.json(
+      { ok: false, error: "Demo kirish o'chirilgan. Administrator bilan bog'laning." },
+      { status: 403 },
     );
   }
 

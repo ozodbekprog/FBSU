@@ -1,39 +1,42 @@
 import "server-only";
 import type { Group, User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import {
+  SEPARATOR,
+  escapeHtml,
+  matchCourseSlug,
+  normalizeTeacher,
+  parityFilter,
+  richEntries,
+  richExamReminder,
+  richTeacherExam,
+  richTeacherLesson,
+  tashkentNow,
+  tashkentStartOfDay,
+  weekText,
+  type DailyExam,
+  type RichEntry,
+  type TeacherLesson,
+} from "./rich";
+import {
+  appKeyboard,
+  appUrl,
+  reminderKeyboard,
+  sendBotMessage,
+  sendRichBotMessage,
+  sendTyping,
+  telegramConfigured,
+} from "./send";
 
-const APP_URL = (process.env.FBSU_APP_URL ?? "https://fbsu.vercel.app")
-  .trim()
-  .replace(/\/+$/, "");
-const SEPARATOR = "━━━━━━━━━━━━━━━━━━";
+export { telegramConfigured };
+
 const CODE_RE = /^\d{6}$/;
-const TZ_OFFSET_MS = 5 * 60 * 60 * 1000;
 const EXAM_WINDOW_DAYS = 30;
-
-const SLOT_TIMES: Record<number, string> = {
-  1: "09:00-10:20",
-  2: "10:30-11:50",
-  3: "12:00-13:20",
-  4: "14:20-15:40",
-  5: "15:50-17:10",
-  6: "17:20-18:40",
-  7: "18:50-20:10",
-  8: "20:20-21:40",
-};
-
-const DAY_TITLES = [
-  "Yakshanba",
-  "Dushanba",
-  "Seshanba",
-  "Chorshanba",
-  "Payshanba",
-  "Juma",
-  "Shanba",
-];
 
 const HELP_TEXT = [
   "📋 Buyruqlar:",
   "• /app — FBSU mini ilovasini ochish",
+  "• Har kuni ertalab — darslar, imtihonlar va muddatlar avtomatik",
   "• /ai — Fariza AI yordamchisini ochish",
   "• /jadval — bugungi darslar",
   "• /ertaga — ertangi darslar",
@@ -54,6 +57,8 @@ type EntryRow = {
   room: string | null;
   teacher: string | null;
   lessonType: string | null;
+  note: string | null;
+  status: string;
   group?: { name: string } | null;
 };
 
@@ -67,130 +72,100 @@ export type TelegramUpdate = {
   };
 };
 
-function botToken(): string {
-  return (process.env.TELEGRAM_MINIAPP_BOT_TOKEN ?? "").trim();
+function dayHeader(user: LinkedUser, now: ReturnType<typeof tashkentNow>, label: string): string {
+  const lines = [
+    `🎓 <b>${label}</b>`,
+    `📅 <b>${now.title}</b>, ${now.dateLabel}`,
+  ];
+  if (user.group) lines.push(`👥 Guruh: <b>${escapeHtml(user.group.name)}</b>`);
+  lines.push(SEPARATOR, "");
+  return lines.join("\n");
 }
 
-export function telegramConfigured(): boolean {
-  return Boolean(botToken());
-}
-
-async function callApi(method: string, payload: Record<string, unknown>): Promise<unknown> {
-  const token = botToken();
-  if (!token) throw new Error("TELEGRAM_MINIAPP_BOT_TOKEN yo'q");
-  const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(10000),
-  });
-  const json = (await response.json().catch(() => null)) as
-    | { ok?: boolean; result?: unknown; description?: string }
-    | null;
-  if (!json?.ok) throw new Error(`${method}: ${json?.description ?? response.status}`);
-  return json.result;
-}
-
-export async function sendBotMessage(
-  chatId: number | string,
-  text: string,
-  extra?: Record<string, unknown>,
-): Promise<void> {
-  try {
-    await callApi("sendMessage", {
-      chat_id: chatId,
-      text,
-      disable_web_page_preview: true,
-      ...(extra ?? {}),
-    });
-  } catch {
-    // Telegram yetkazib bera olmasa ham webhook muvaffaqiyatli yakunlanadi.
-  }
-}
-
-function appKeyboard(path = "", label = "📱 FBSU'ni ochish") {
+function toRichEntry(entry: EntryRow): RichEntry {
   return {
-    reply_markup: {
-      inline_keyboard: [[{ text: label, web_app: { url: `${APP_URL}${path}` } }]],
-    },
+    dayOfWeek: entry.dayOfWeek,
+    slot: entry.slot,
+    subject: entry.subject,
+    room: entry.room,
+    teacher: entry.teacher,
+    lessonType: entry.lessonType,
+    note: entry.note,
+    status: entry.status,
+    groupName: entry.group?.name ?? null,
   };
-}
-
-function tashkentNow(offsetDays = 0) {
-  const base = new Date(Date.now() + TZ_OFFSET_MS + offsetDays * 86_400_000);
-  const jsDay = base.getUTCDay();
-  const day = String(base.getUTCDate()).padStart(2, "0");
-  const month = String(base.getUTCMonth() + 1).padStart(2, "0");
-  const year = base.getUTCFullYear();
-  return {
-    jsDay,
-    dow: jsDay === 0 ? 7 : jsDay,
-    title: DAY_TITLES[jsDay],
-    dateLabel: `${day}.${month}.${year}`,
-    iso: `${year}-${month}-${day}`,
-  };
-}
-
-function tashkentStartOfDay(offsetDays = 0): Date {
-  const now = tashkentNow(offsetDays);
-  return new Date(Date.parse(`${now.iso}T00:00:00+05:00`));
-}
-
-function entryLine(entry: EntryRow, forTeacher: boolean): string {
-  let line = `${entry.slot}-par ${entry.subject}`;
-  if (forTeacher && entry.group?.name) line += ` — ${entry.group.name}`;
-  if (entry.room) line += `, ${entry.room}`;
-  const time = SLOT_TIMES[entry.slot];
-  if (time) line += ` (${time})`;
-  return line;
 }
 
 async function findLinkedUser(telegramId: string): Promise<LinkedUser | null> {
   return prisma.user.findUnique({ where: { telegramId }, include: { group: true } });
 }
 
+const ENTRY_SELECT = {
+  dayOfWeek: true,
+  slot: true,
+  subject: true,
+  room: true,
+  teacher: true,
+  lessonType: true,
+  note: true,
+  status: true,
+  group: { select: { name: true } },
+} as const;
+
+async function teacherLessonItems(user: LinkedUser, entries: EntryRow[]): Promise<TeacherLesson[]> {
+  const courses = await prisma.course.findMany({
+    where: { teacherId: user.id },
+    select: { title: true, slug: true },
+  });
+  return entries.map((entry) => ({
+    entry: toRichEntry(entry),
+    groupName: entry.group?.name ?? "",
+    slug: matchCourseSlug(entry.subject, courses),
+  }));
+}
+
 async function scheduleMessage(user: LinkedUser, offsetDays: number): Promise<string> {
   const now = tashkentNow(offsetDays);
-  const label = offsetDays === 0 ? "Bugun" : offsetDays === 1 ? "Ertaga" : "Sana";
-  const header = `📅 ${label} — ${now.title}, ${now.dateLabel}`;
-  if (now.dow === 7) return `${header}\n\n🎉 Dam kuni — darslar yo'q.`;
+  const dayDate = tashkentStartOfDay(offsetDays);
+  const label = offsetDays === 0 ? "Bugungi darslar" : "Ertangi darslar";
+  const header = dayHeader(user, now, label);
+  if (now.dow === 7) return `${header}🎉 <i>Dam kuni — darslar yo'q.</i>`;
 
   const forTeacher = user.role === "TEACHER";
   if (!forTeacher && !user.groupId) {
-    return `${header}\n\nSizga guruh biriktirilmagan — jadval mavjud emas.`;
+    return `${header}Sizga guruh biriktirilmagan — jadval mavjud emas.`;
   }
 
-  const entries = forTeacher
-    ? await prisma.scheduleEntry.findMany({
-        where: { teacherId: user.id, dayOfWeek: now.dow, status: { not: "CANCELLED" } },
-        orderBy: { slot: "asc" },
-        select: {
-          dayOfWeek: true,
-          slot: true,
-          subject: true,
-          room: true,
-          teacher: true,
-          lessonType: true,
-          group: { select: { name: true } },
-        },
-      })
-    : await prisma.scheduleEntry.findMany({
-        where: { groupId: user.groupId ?? "", dayOfWeek: now.dow, status: { not: "CANCELLED" } },
-        orderBy: { slot: "asc" },
-        select: {
-          dayOfWeek: true,
-          slot: true,
-          subject: true,
-          room: true,
-          teacher: true,
-          lessonType: true,
-        },
-      });
+  if (forTeacher) {
+    const dayRows = await prisma.scheduleEntry.findMany({
+      where: { dayOfWeek: now.dow, ...parityFilter(dayDate) },
+      orderBy: { slot: "asc" },
+      select: ENTRY_SELECT,
+    });
+    const own = dayRows.filter(
+      (entry) =>
+        entry.teacher &&
+        normalizeTeacher(entry.teacher) === normalizeTeacher(user.name) &&
+        entry.status !== "CANCELLED",
+    );
+    if (own.length === 0) return `${header}📭 <i>Bugun darslaringiz yo'q.</i>`;
+    const items = await teacherLessonItems(user, own as EntryRow[]);
+    const body = items.map((item) => richTeacherLesson(item, now.iso, appUrl())).join("\n\n");
+    return `${header}📌 <b>Darslar</b>\n${body}`;
+  }
 
-  if (entries.length === 0) return `${header}\n\n📭 Darslar yo'q.`;
-  const groupLine = !forTeacher && user.group ? `\n👥 Guruh: ${user.group.name}` : "";
-  const lines = (entries as EntryRow[]).map((entry) => `• ${entryLine(entry, forTeacher)}`);
-  return `${header}${groupLine}\n${SEPARATOR}\n${lines.join("\n")}`;
+  const entries = (await prisma.scheduleEntry.findMany({
+    where: {
+      groupId: user.groupId ?? "",
+      dayOfWeek: now.dow,
+      status: { not: "CANCELLED" },
+      ...parityFilter(dayDate),
+    },
+    orderBy: { slot: "asc" },
+    select: ENTRY_SELECT,
+  })) as EntryRow[];
+  if (entries.length === 0) return `${header}📭 <i>Bugun darslar yo'q.</i>`;
+  return `${header}📌 <b>Darslar</b>\n${richEntries(entries.map(toRichEntry))}`;
 }
 
 async function weekMessage(user: LinkedUser): Promise<string> {
@@ -198,55 +173,29 @@ async function weekMessage(user: LinkedUser): Promise<string> {
   if (!forTeacher && !user.groupId) {
     return "Sizga guruh biriktirilmagan — jadval mavjud emas.";
   }
-  const entries = (forTeacher
-    ? await prisma.scheduleEntry.findMany({
-        where: { teacherId: user.id, dayOfWeek: { gte: 1, lte: 6 }, status: { not: "CANCELLED" } },
-        orderBy: [{ dayOfWeek: "asc" }, { slot: "asc" }],
-        select: {
-          dayOfWeek: true,
-          slot: true,
-          subject: true,
-          room: true,
-          teacher: true,
-          lessonType: true,
-          group: { select: { name: true } },
-        },
-      })
-    : await prisma.scheduleEntry.findMany({
-        where: {
-          groupId: user.groupId ?? "",
-          dayOfWeek: { gte: 1, lte: 6 },
-          status: { not: "CANCELLED" },
-        },
-        orderBy: [{ dayOfWeek: "asc" }, { slot: "asc" }],
-        select: {
-          dayOfWeek: true,
-          slot: true,
-          subject: true,
-          room: true,
-          teacher: true,
-          lessonType: true,
-        },
-      })) as EntryRow[];
-
-  if (entries.length === 0) return "📭 Jadvalda darslar topilmadi.";
-  const today = tashkentNow().dow;
-  const byDay = new Map<number, EntryRow[]>();
-  for (const entry of entries) {
-    const list = byDay.get(entry.dayOfWeek);
-    if (list) list.push(entry);
-    else byDay.set(entry.dayOfWeek, [entry]);
-  }
-  const lines: string[] = [];
-  const groupLine = !forTeacher && user.group ? `👥 Guruh: ${user.group.name}` : "";
-  lines.push(`🗓 Haftalik jadval${groupLine ? ` — ${groupLine.replace("👥 Guruh: ", "")}` : ""}`);
-  for (const [day, dayEntries] of byDay) {
-    const marker = day === today ? " (bugun)" : "";
-    lines.push("");
-    lines.push(`${DAY_TITLES[day]}${marker}`);
-    for (const entry of dayEntries) lines.push(`• ${entryLine(entry, forTeacher)}`);
-  }
-  return lines.join("\n");
+  const today = new Date();
+  const rows = (await prisma.scheduleEntry.findMany({
+    where: {
+      ...(forTeacher ? {} : { groupId: user.groupId ?? "" }),
+      dayOfWeek: { gte: 1, lte: 6 },
+      status: { not: "CANCELLED" },
+      ...parityFilter(today),
+    },
+    orderBy: [{ dayOfWeek: "asc" }, { slot: "asc" }],
+    select: ENTRY_SELECT,
+  })) as EntryRow[];
+  const entries = forTeacher
+    ? rows.filter(
+        (entry) =>
+          entry.teacher && normalizeTeacher(entry.teacher) === normalizeTeacher(user.name),
+      )
+    : rows;
+  const title = forTeacher ? user.name : (user.group?.name ?? "");
+  const rich = entries.map((entry) => {
+    const item = toRichEntry(entry);
+    return forTeacher ? item : { ...item, groupName: null };
+  });
+  return weekText(title, rich, tashkentNow().dow);
 }
 
 async function attendanceMessage(user: LinkedUser): Promise<string> {
@@ -254,24 +203,20 @@ async function attendanceMessage(user: LinkedUser): Promise<string> {
     return `ℹ️ Bu buyruq o'qituvchilar uchun.\n\n${await scheduleMessage(user, 0)}`;
   }
   const now = tashkentNow();
-  const header = `🔔 Davomat — bugun, ${now.title}, ${now.dateLabel}`;
-  if (now.dow === 7) return `${header}\n\n🎉 Dam kuni — darslar yo'q.`;
-  const entries = (await prisma.scheduleEntry.findMany({
-    where: { teacherId: user.id, dayOfWeek: now.dow, status: { not: "CANCELLED" } },
+  const header = dayHeader(user, now, "🔔 Bugungi davomat");
+  if (now.dow === 7) return `${header}🎉 <i>Dam kuni — darslar yo'q.</i>`;
+  const dayRows = (await prisma.scheduleEntry.findMany({
+    where: { dayOfWeek: now.dow, status: { not: "CANCELLED" }, ...parityFilter(tashkentStartOfDay(0)) },
     orderBy: { slot: "asc" },
-    select: {
-      dayOfWeek: true,
-      slot: true,
-      subject: true,
-      room: true,
-      teacher: true,
-      lessonType: true,
-      group: { select: { name: true } },
-    },
+    select: ENTRY_SELECT,
   })) as EntryRow[];
-  if (entries.length === 0) return `${header}\n\n📭 Bugun darslaringiz yo'q.`;
-  const lines = entries.map((entry) => `• ${entryLine(entry, true)}`);
-  return `${header}\n${SEPARATOR}\n${lines.join("\n")}\n\n📲 Davomatni mini ilovada belgilang: ${APP_URL}/attendance`;
+  const own = dayRows.filter(
+    (entry) => entry.teacher && normalizeTeacher(entry.teacher) === normalizeTeacher(user.name),
+  );
+  if (own.length === 0) return `${header}📭 <i>Bugun darslaringiz yo'q.</i>`;
+  const items = await teacherLessonItems(user, own);
+  const body = items.map((item) => richTeacherLesson(item, now.iso, appUrl())).join("\n\n");
+  return `${header}📌 <b>Darslar</b>\n${body}\n\n<a href="${escapeHtml(`${appUrl()}/attendance`)}">📲 Davomat sahifasi</a>`;
 }
 
 async function examsMessage(user: LinkedUser): Promise<string> {
@@ -294,26 +239,32 @@ async function examsMessage(user: LinkedUser): Promise<string> {
       room: true,
       title: true,
       course: { select: { title: true } },
+      sheets: { select: { studentId: true, status: true, seat: true } },
     },
   });
   if (sessions.length === 0) return "📭 Keyingi 30 kunda imtihonlar topilmadi.";
-  const lines = sessions.map((session) => {
-    const day = session.date.toLocaleDateString("uz-UZ", {
-      timeZone: "Asia/Tashkent",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-    const time =
-      session.startTime && session.endTime
-        ? ` (${session.startTime}-${session.endTime})`
-        : session.startTime
-          ? ` (${session.startTime})`
-          : "";
-    const room = session.room ? `, ${session.room}` : "";
-    return `• ${day} — ${session.course.title}: ${session.title}${room}${time}`;
+  const forTeacher = user.role === "TEACHER";
+  const exams: DailyExam[] = sessions.map((session) => {
+    const sheet = forTeacher ? null : session.sheets.find((row) => row.studentId === user.id);
+    return {
+      course: session.course.title,
+      title: session.title,
+      date: session.date,
+      room: session.room,
+      time:
+        session.startTime && session.endTime
+          ? `${session.startTime}–${session.endTime}`
+          : (session.startTime ?? ""),
+      seat: sheet?.seat ?? null,
+      permitted: Boolean(sheet && sheet.status !== "FAILED" && sheet.status !== "ABSENT"),
+      sheets: session.sheets.length,
+      graded: session.sheets.filter((row) => row.status !== "PENDING").length,
+    };
   });
-  return `📝 Kelayotgan imtihonlar (30 kun):\n${SEPARATOR}\n${lines.join("\n")}`;
+  const body = exams
+    .map((exam) => (forTeacher ? richTeacherExam(exam) : richExamReminder(exam)))
+    .join("\n\n");
+  return `📝 <b>Kelayotgan imtihonlar</b> (30 kun)\n${SEPARATOR}\n\n${body}`;
 }
 
 async function linkCodeMessage(chatId: number | string, telegramId: string, code: string) {
@@ -396,8 +347,9 @@ export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void
       `👋 Salom${name ? `, ${name}` : ""}! Men FBSU botiman.`,
       "",
       user
-        ? "Akkaunt bog'langan. /jadval — bugungi darslar, /ai — Fariza yordamchisi."
+        ? "Akkaunt bog'langan. Har kuni ertalab dars jadvali, imtihonlar va muddatlar avtomatik keladi."
         : "🔐 Akkauntni bog'lash: saytda Sozlamalar → Aloqa → kod oling va shu yerga yuboring.",
+      "/jadval — bugungi darslar, /ai — Fariza yordamchisi.",
     ];
     await sendBotMessage(chatId, lines.join("\n"), appKeyboard());
     return;
@@ -435,11 +387,20 @@ export async function handleTelegramUpdate(update: TelegramUpdate): Promise<void
   ) {
     const user = await requireLinkedUser(chatId, telegramId);
     if (!user) return;
-    if (command === "jadval") return void (await sendBotMessage(chatId, await scheduleMessage(user, 0)));
-    if (command === "ertaga") return void (await sendBotMessage(chatId, await scheduleMessage(user, 1)));
-    if (command === "hafta") return void (await sendBotMessage(chatId, await weekMessage(user)));
-    if (command === "davomat") return void (await sendBotMessage(chatId, await attendanceMessage(user)));
-    return void (await sendBotMessage(chatId, await examsMessage(user)));
+    await sendTyping(chatId);
+    if (command === "jadval") {
+      return void (await sendRichBotMessage(chatId, await scheduleMessage(user, 0), reminderKeyboard()));
+    }
+    if (command === "ertaga") {
+      return void (await sendRichBotMessage(chatId, await scheduleMessage(user, 1), reminderKeyboard()));
+    }
+    if (command === "hafta") {
+      return void (await sendRichBotMessage(chatId, await weekMessage(user), reminderKeyboard()));
+    }
+    if (command === "davomat") {
+      return void (await sendRichBotMessage(chatId, await attendanceMessage(user), reminderKeyboard()));
+    }
+    return void (await sendRichBotMessage(chatId, await examsMessage(user), reminderKeyboard()));
   }
 
   if (command) {

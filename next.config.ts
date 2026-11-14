@@ -28,6 +28,13 @@ const cspDirectives = [
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
+  // Qidiruv indeksatsiyasi va AI o'qitish/yig'ish uchun yopiq. `noai` va
+  // `noimageai` — deklarativ belgi: ularga rioya qilish botning o'ziga bog'liq,
+  // shuning uchun proxy.ts'dagi UA blokirovkasi bilan birga ishlatiladi.
+  {
+    key: "X-Robots-Tag",
+    value: "noindex, nofollow, noarchive, nosnippet, noimageindex, noai, noimageai",
+  },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",

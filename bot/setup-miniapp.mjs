@@ -39,6 +39,7 @@ async function callApi(method, payload) {
 
 const COMMANDS = [
   { command: "app", description: "FBSU mini ilovasini ochish" },
+  { command: "ai", description: "Fariza AI yordamchisi" },
   { command: "jadval", description: "Bugungi darslar" },
   { command: "ertaga", description: "Ertangi darslar" },
   { command: "hafta", description: "Haftalik jadval" },

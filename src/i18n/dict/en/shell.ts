@@ -37,6 +37,7 @@ export const shell = {
   navBounty: "Bug bounty",
   navSettings: "Settings",
   navMonitoring: "Monitoring",
+  navTraffic: "Traffic",
   navApprovals: "Approvals",
   navCurator: "Curator panel",
   navReports: "Reports",

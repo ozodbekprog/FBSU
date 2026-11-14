@@ -104,48 +104,48 @@ model User {
   groupId String?
   group   Group?  @relation(fields: [groupId], references: [id])
 
-  taughtCourses        Course[]              @relation("CourseTeacher")
+  taughtCourses        Course[]                  @relation("CourseTeacher")
   enrollments          Enrollment[]
-  studyPlans      StudyPlan[]
+  studyPlans           StudyPlan[]
   submissions          Submission[]
   attendance           Attendance[]
   staffAttendance      StaffAttendance[]
   accessLogs           AccessLog[]
-  libraryLoans         LibraryLoan[]       @relation("LibraryBorrower")
-  libraryIssued        LibraryLoan[]       @relation("LibraryIssuer")
+  libraryLoans         LibraryLoan[]             @relation("LibraryBorrower")
+  libraryIssued        LibraryLoan[]             @relation("LibraryIssuer")
   passkeys             PasskeyCredential[]
   telegramLinkCodes    TelegramLinkCode[]
-  documentsCreated     Document[]            @relation("DocumentCreator")
-  documentsToSign      Document[]            @relation("DocumentSigner")
-  documentsSigned      Document[]            @relation("DocumentSignedBy")
+  documentsCreated     Document[]                @relation("DocumentCreator")
+  documentsToSign      Document[]                @relation("DocumentSigner")
+  documentsSigned      Document[]                @relation("DocumentSignedBy")
   admissionApplication AdmissionApplication?
-  parentLinksAsParent  ParentLink[]          @relation("ParentLinkParent")
-  parentLinksAsStudent ParentLink[]          @relation("ParentLinkStudent")
+  parentLinksAsParent  ParentLink[]              @relation("ParentLinkParent")
+  parentLinksAsStudent ParentLink[]              @relation("ParentLinkStudent")
   contracts            Contract[]
   payments             Payment[]
-  paymentsCreated      Payment[]             @relation("PaymentCreatedBy")
+  paymentsCreated      Payment[]                 @relation("PaymentCreatedBy")
   diplomas             Diploma[]
-  tasksAssigned        WorkTask[]            @relation("WorkTaskAssignee")
-  tasksCreated         WorkTask[]            @relation("WorkTaskCreator")
+  tasksAssigned        WorkTask[]                @relation("WorkTaskAssignee")
+  tasksCreated         WorkTask[]                @relation("WorkTaskCreator")
   quizAttempts         QuizAttempt[]
-  secureExamsCreated   SecureExam[]          @relation("SecureExamCreator")
-  secureExamRuns       SecureExamRun[]       @relation("SecureExamStudent")
+  secureExamsCreated   SecureExam[]              @relation("SecureExamCreator")
+  secureExamRuns       SecureExamRun[]           @relation("SecureExamStudent")
   notifications        Notification[]
   trustedDevices       TrustedDevice[]
   loginRecords         LoginRecord[]
   deviceApprovals      DeviceApprovalChallenge[]
 
-  announcements        Announcement[]
-  forumTopics          ForumTopic[]
-  forumReplies         ForumReply[]
-  certificatesIssued   Certificate[]  @relation("CertificateIssuedBy")
-  certificatesReceived Certificate[]  @relation("CertificateStudent")
-  bonusPointsReceived  BonusPoint[]   @relation("BonusPointStudent")
-  bonusPointsAwarded   BonusPoint[]   @relation("BonusPointAwardedBy")
-  creditAwardsReceived CreditAward[]  @relation("CreditAwardStudent")
-  creditAwardsGiven    CreditAward[]  @relation("CreditAwardAwardedBy")
-  teacherPointsReceived TeacherPoint[]   @relation("TeacherPointStudent")
-  teacherPointsAwarded   TeacherPoint[]   @relation("TeacherPointAwardedBy")
+  announcements          Announcement[]
+  forumTopics            ForumTopic[]
+  forumReplies           ForumReply[]
+  certificatesIssued     Certificate[]           @relation("CertificateIssuedBy")
+  certificatesReceived   Certificate[]           @relation("CertificateStudent")
+  bonusPointsReceived    BonusPoint[]            @relation("BonusPointStudent")
+  bonusPointsAwarded     BonusPoint[]            @relation("BonusPointAwardedBy")
+  creditAwardsReceived   CreditAward[]           @relation("CreditAwardStudent")
+  creditAwardsGiven      CreditAward[]           @relation("CreditAwardAwardedBy")
+  teacherPointsReceived  TeacherPoint[]          @relation("TeacherPointStudent")
+  teacherPointsAwarded   TeacherPoint[]          @relation("TeacherPointAwardedBy")
   attendancePointConfigs AttendancePointConfig[]
 
   // Oylik moduli: lavozim, haftalik navbar va oylik yozuvlari
@@ -180,27 +180,28 @@ model User {
   subjectsTaught        TeacherSubject[]
   scheduleEntriesTaught ScheduleEntry[]        @relation("ScheduleTeacher")
   examSheets            ExamSheet[]
-  verifiedSessions ExamSession[] @relation("SheetVerifier")
+  verifiedSessions      ExamSession[]          @relation("SheetVerifier")
   auditLogs             AuditLog[]
   passwordResets        PasswordResetToken[]
   bugReports            BugReport[]
   publications          Publication[]
 
-  subGroupId    String?
-  subGroup      SubGroup? @relation(fields: [subGroupId], references: [id], onDelete: SetNull)
-  facultyId     String?
-  faculty       Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
-  curatedGroups Group[]   @relation("GroupCurator")
+  subGroupId           String?
+  subGroup             SubGroup?               @relation(fields: [subGroupId], references: [id], onDelete: SetNull)
+  facultyId            String?
+  faculty              Faculty?                @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  curatedGroups        Group[]                 @relation("GroupCurator")
+  gradeItemScores      GradeItemScore[]
+  activityCompletions  ActivityCompletion[]
+  assignmentExtensions AssignmentExtension[]
+  gradeItemHistory     GradeItemScoreHistory[]
+  choiceVotes          ChoiceVote[]
+  glossaryEntries      GlossaryEntry[]         @relation("GlossaryAuthor")
+  apiTokens            ApiToken[]
+  trafficSessions      TrafficSession[]
+  trafficPageViews     TrafficPageView[]
 
   @@index([groupId])
-  gradeItemScores    GradeItemScore[]
-  activityCompletions ActivityCompletion[]
-  assignmentExtensions AssignmentExtension[]
-  gradeItemHistory   GradeItemScoreHistory[]
-  choiceVotes        ChoiceVote[]
-  glossaryEntries    GlossaryEntry[] @relation("GlossaryAuthor")
-  apiTokens          ApiToken[]
-
   @@index([subGroupId])
   @@index([role])
   @@index([facultyId])
@@ -208,20 +209,20 @@ model User {
 }
 
 model Group {
-  id        String          @id @default(cuid())
-  name      String          @unique
+  id                     String                  @id @default(cuid())
+  name                   String                  @unique
   /// EduPage (ttp u.edupage.org) sinf nomi — avto jadval sinxronizatsiyasi uchun.
   /// Bo'sh bo'lsa `name` bilan solishtiriladi.
-  edupageName String?
-  year      Int?
-  facultyId String?
-  faculty   Faculty?        @relation(fields: [facultyId], references: [id], onDelete: SetNull)
-  curatorId String?
-  curator   User?           @relation("GroupCurator", fields: [curatorId], references: [id], onDelete: SetNull)
-  users     User[]
-  schedule  ScheduleEntry[]
-  subGroups SubGroup[]
-  studyPlans StudyPlan[]
+  edupageName            String?
+  year                   Int?
+  facultyId              String?
+  faculty                Faculty?                @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  curatorId              String?
+  curator                User?                   @relation("GroupCurator", fields: [curatorId], references: [id], onDelete: SetNull)
+  users                  User[]
+  schedule               ScheduleEntry[]
+  subGroups              SubGroup[]
+  studyPlans             StudyPlan[]
   attendancePointConfigs AttendancePointConfig[]
 
   @@index([curatorId])
@@ -252,25 +253,25 @@ model Course {
   enrollments Enrollment[]
   attendance  Attendance[]
 
-  announcements      Announcement[]
-  forumTopics        ForumTopic[]
-  certificates       Certificate[]
-  attendanceSessions AttendanceSession[]
-  reviews            CourseReview[]
-  examSessions       ExamSession[]
-  secureExams        SecureExam[]
-  bankQuestions      BankQuestion[]
-  selfEnrollment     Boolean             @default(false)
-  bonusPoints        BonusPoint[]
-  bonusAllocations   BonusAllocation[]
-  teacherPoints      TeacherPoint[]
+  announcements          Announcement[]
+  forumTopics            ForumTopic[]
+  certificates           Certificate[]
+  attendanceSessions     AttendanceSession[]
+  reviews                CourseReview[]
+  examSessions           ExamSession[]
+  secureExams            SecureExam[]
+  bankQuestions          BankQuestion[]
+  selfEnrollment         Boolean                 @default(false)
+  bonusPoints            BonusPoint[]
+  bonusAllocations       BonusAllocation[]
+  teacherPoints          TeacherPoint[]
   attendancePointConfigs AttendancePointConfig[]
-  studyPlans         StudyPlan[]
-  gradeCategories    GradeCategory[]
-  gradeItems         GradeItem[]
-  activityRules      ActivityRule[]
-  choicePolls        ChoicePoll[]
-  glossaryEntries    GlossaryEntry[]
+  studyPlans             StudyPlan[]
+  gradeCategories        GradeCategory[]
+  gradeItems             GradeItem[]
+  activityRules          ActivityRule[]
+  choicePolls            ChoicePoll[]
+  glossaryEntries        GlossaryEntry[]
 
   @@index([teacherId])
 }
@@ -325,8 +326,8 @@ model Assignment {
   maxScore    Int       @default(100)
   createdAt   DateTime  @default(now())
 
-  course       Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  sectionRef   Section?      @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  course       Course                @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  sectionRef   Section?              @relation(fields: [sectionId], references: [id], onDelete: SetNull)
   submissions  Submission[]
   extensions   AssignmentExtension[]
   oralDefenses OralDefense[]
@@ -457,9 +458,9 @@ model Quiz {
   ipSubnet     String?
   createdAt    DateTime  @default(now())
 
-  course     Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  questions  Question[]
-  attempts   QuizAttempt[]
+  course      Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions   Question[]
+  attempts    QuizAttempt[]
   secureExams SecureExam[]
 }
 
@@ -570,16 +571,16 @@ model Notification {
 }
 
 model Announcement {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   courseId  String?
   authorId  String
   title     String
   body      String
   audience  Json?
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   course Course? @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  author User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([courseId, createdAt])
 }
@@ -694,14 +695,14 @@ model TeacherPoint {
   courseId    String
   studentId   String
   awardedById String
-  points      Float    // 0.1..15 ball
-  category    String   // masalan: davomat, faollik, aloqadirilish va h.k.
+  points      Float // 0.1..15 ball
+  category    String // masalan: davomat, faollik, aloqadirilish va h.k.
   reason      String?
   createdAt   DateTime @default(now())
 
-  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  student User   @relation("TeacherPointStudent", fields: [studentId], references: [id], onDelete: Cascade)
-  awardedBy User @relation("TeacherPointAwardedBy", fields: [awardedById], references: [id], onDelete: Cascade)
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student   User   @relation("TeacherPointStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  awardedBy User   @relation("TeacherPointAwardedBy", fields: [awardedById], references: [id], onDelete: Cascade)
 
   @@unique([courseId, studentId, awardedById, category])
   @@index([studentId])
@@ -710,13 +711,13 @@ model TeacherPoint {
 
 /// Davomat balli — o'qituvchi har bir kurs/sinf uchun davomat ballini belgilaydi.
 model AttendancePointConfig {
-  id         String  @id @default(cuid())
-  courseId   String
-  groupId    String?
-  points     Float   @default(1) // 0.1..15
-  teacherId  String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid())
+  courseId  String
+  groupId   String?
+  points    Float    @default(1) // 0.1..15
+  teacherId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   group   Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
@@ -1054,20 +1055,20 @@ model TeacherSubject {
 }
 
 model ExamSession {
-  id            String   @id @default(cuid())
-  courseId      String
-  termId        String?
-  title         String
-  type          String   @default("FINAL")
-  date          DateTime
-  startTime     String?
-  endTime       String?
-  room          String?
-  admissionOpen Boolean  @default(false)
+  id                String    @id @default(cuid())
+  courseId          String
+  termId            String?
+  title             String
+  type              String    @default("FINAL")
+  date              DateTime
+  startTime         String?
+  endTime           String?
+  room              String?
+  admissionOpen     Boolean   @default(false)
   sheetVerifiedAt   DateTime?
   sheetVerifiedById String?
-  sheetVerifiedBy User?   @relation("SheetVerifier", fields: [sheetVerifiedById], references: [id])
-  createdAt     DateTime @default(now())
+  sheetVerifiedBy   User?     @relation("SheetVerifier", fields: [sheetVerifiedById], references: [id])
+  createdAt         DateTime  @default(now())
 
   course Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
   term   Term?       @relation(fields: [termId], references: [id], onDelete: SetNull)
@@ -1128,9 +1129,9 @@ model SecureExam {
   status            SecureExamStatus      @default(SCHEDULED)
   createdAt         DateTime              @default(now())
 
-  quiz      Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  createdBy User   @relation("SecureExamCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  quiz      Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  course    Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdBy User            @relation("SecureExamCreator", fields: [createdById], references: [id], onDelete: Cascade)
   runs      SecureExamRun[]
 
   @@index([courseId, startsAt])
@@ -1154,9 +1155,9 @@ model SecureExamRun {
   startedAt     DateTime            @default(now())
   finishedAt    DateTime?
 
-  exam    SecureExam      @relation(fields: [examId], references: [id], onDelete: Cascade)
-  student User            @relation("SecureExamStudent", fields: [studentId], references: [id], onDelete: Cascade)
-  attempt   QuizAttempt         @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  exam      SecureExam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student   User                 @relation("SecureExamStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  attempt   QuizAttempt          @relation(fields: [attemptId], references: [id], onDelete: Cascade)
   events    SecureExamEvent[]
   snapshots SecureExamSnapshot[]
 
@@ -1218,8 +1219,8 @@ model SubGroup {
 }
 
 model Faculty {
-  id            String       @id @default(cuid())
-  name          String       @unique
+  id            String                @id @default(cuid())
+  name          String                @unique
   code          String?
   groups        Group[]
   users         User[]
@@ -1265,23 +1266,22 @@ model Term {
   isActive  Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  sessions ExamSession[]
+  sessions   ExamSession[]
   studyPlans StudyPlan[]
 }
 
-
 model StudyPlan {
-  id         String   @id @default(cuid())
-  groupId    String
-  courseId   String
-  termId     String?
+  id          String   @id @default(cuid())
+  groupId     String
+  courseId    String
+  termId      String?
   createdById String?
-  createdAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
 
-  group    Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  course   Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  term     Term?     @relation(fields: [termId], references: [id], onDelete: SetNull)
-  createdBy User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  group     Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  term      Term?  @relation(fields: [termId], references: [id], onDelete: SetNull)
+  createdBy User?  @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   @@unique([groupId, courseId])
 }
@@ -1403,17 +1403,17 @@ model CourseReview {
 }
 
 model Conversation {
-  id             String   @id @default(cuid())
-  participantAId String
-  participantBId String
-  lastMessageAt  DateTime @default(now())
-  createdAt      DateTime @default(now())
+  id                   String    @id @default(cuid())
+  participantAId       String
+  participantBId       String
+  lastMessageAt        DateTime  @default(now())
+  createdAt            DateTime  @default(now())
   /// "Ikkalasida o'chirish" — yozuvlar bazadan o'chmaydi, balki yashiriladi
   /// (audit izi va shikoyat tekshiruvi saqlanib qoladi).
   clearedForEveryoneAt DateTime?
 
-  participantA User          @relation("ConversationA", fields: [participantAId], references: [id], onDelete: Cascade)
-  participantB User          @relation("ConversationB", fields: [participantBId], references: [id], onDelete: Cascade)
+  participantA User                  @relation("ConversationA", fields: [participantAId], references: [id], onDelete: Cascade)
+  participantB User                  @relation("ConversationB", fields: [participantBId], references: [id], onDelete: Cascade)
   messages     Message[]
   calls        CallSession[]
   settings     ConversationSetting[]
@@ -1423,13 +1423,13 @@ model Conversation {
 }
 
 model Message {
-  id             String   @id @default(cuid())
+  id             String      @id @default(cuid())
   conversationId String
   senderId       String
   body           String
   type           MessageType @default(TEXT)
-  isRead         Boolean  @default(false)
-  createdAt      DateTime @default(now())
+  isRead         Boolean     @default(false)
+  createdAt      DateTime    @default(now())
 
   /// Forward qilingan asl xabar. `null` bo'lsa — xabar o'z xabari.
   forwardedFromId String?
@@ -1437,18 +1437,18 @@ model Message {
 
   /// Javob berilgan asl xabar (reply). `null` — oddiy xabar.
   replyToId String?
-  replyTo   Message? @relation("MessageReply", fields: [replyToId], references: [id], onDelete: SetNull)
+  replyTo   Message?  @relation("MessageReply", fields: [replyToId], references: [id], onDelete: SetNull)
   replies   Message[] @relation("MessageReply")
   /// Tahrirlangan vaqt (null — tahrirlanmagan).
-  editedAt   DateTime?
+  editedAt  DateTime?
   /// "O'chirilgan" — yozuv bazada qoladi (audit), lekin ko'rinmaydi.
-  deletedAt  DateTime?
+  deletedAt DateTime?
 
-  conversation  Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender        User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  conversation  Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender        User                @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
   attachments   MessageAttachment[]
-  forwardedFrom Message?     @relation("MessageForward", fields: [forwardedFromId], references: [id], onDelete: SetNull)
-  forwardedTo   Message[]   @relation("MessageForward")
+  forwardedFrom Message?            @relation("MessageForward", fields: [forwardedFromId], references: [id], onDelete: SetNull)
+  forwardedTo   Message[]           @relation("MessageForward")
 
   @@index([conversationId, createdAt])
   @@index([senderId])
@@ -1476,18 +1476,18 @@ enum AttachmentKind {
 /// fayl bilan bir xarakterda saqlanadi. Baza 12 MB dan boshlanadi;
 /// 1 daqiqalik Opus ovoz ≈ 180 KB, limit 5 MB (≈ 28 daqiqa).
 model MessageAttachment {
-  id        String         @id @default(cuid())
-  messageId String
-  kind      AttachmentKind
-  mimeType  String
+  id          String         @id @default(cuid())
+  messageId   String
+  kind        AttachmentKind
+  mimeType    String
   /// Mazmun — `bytea`
-  bytes     Bytes
-  size      Int
+  bytes       Bytes
+  size        Int
   /// Ovoz uchun davomiylik (soniya)
   durationSec Int?
   /// Asl fayl nomi
-  fileName  String?
-  createdAt DateTime       @default(now())
+  fileName    String?
+  createdAt   DateTime       @default(now())
 
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
@@ -1516,7 +1516,7 @@ model ConversationSetting {
   /// tomon yozsa, suhbat o'z-o'zidan ro'yxatga qaytadi (Telegram'dagi
   /// kabi) — buning uchun alohida kod kerak emas.
   deletedAt      DateTime?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime  @default(now())
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1775,8 +1775,8 @@ model GradeItem {
   source     GradeItemSource @default(MANUAL)
   refId      String?
 
-  course   Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  category GradeCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  course   Course                  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  category GradeCategory?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   scores   GradeItemScore[]
   history  GradeItemScoreHistory[]
 
@@ -1855,7 +1855,6 @@ model AssignmentExtension {
   @@index([assignmentId])
 }
 
-
 model GradeItemScoreHistory {
   id          String   @id @default(cuid())
   itemId      String
@@ -1872,15 +1871,14 @@ model GradeItemScoreHistory {
   @@index([createdAt])
 }
 
-
 model ChoicePoll {
-  id         String   @id @default(cuid())
-  courseId   String
-  question   String
-  options    Json     @default("[]")
-  isMultiple Boolean  @default(false)
-  isAnonymous Boolean @default(false)
-  createdAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  courseId    String
+  question    String
+  options     Json     @default("[]")
+  isMultiple  Boolean  @default(false)
+  isAnonymous Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
   course Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
   votes  ChoiceVote[]
@@ -1951,8 +1949,9 @@ model TrustedDevice {
   revokedAt  DateTime?
   revokedBy  String?
 
-  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  logins LoginRecord[]
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logins          LoginRecord[]
+  trafficSessions TrafficSession[]
 
   @@index([userId, revokedAt])
 }
@@ -1981,9 +1980,10 @@ model LoginRecord {
   deletedAt  DateTime?
   deletedBy  String?
 
-  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  device    TrustedDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
-  auditLogs AuditLog[]     @relation("LoginRecordAudit")
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device          TrustedDevice?   @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  auditLogs       AuditLog[]       @relation("LoginRecordAudit")
+  trafficSessions TrafficSession[] @relation("TrafficLogin")
 
   @@index([userId, createdAt])
   @@index([createdAt])
@@ -2073,7 +2073,7 @@ model LibraryCopy {
   status      LibraryCopyStatus @default(AVAILABLE)
   createdAt   DateTime          @default(now())
 
-  book  LibraryBook  @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  book  LibraryBook   @relation(fields: [bookId], references: [id], onDelete: Cascade)
   loans LibraryLoan[]
 
   @@index([bookId, status])
@@ -2131,4 +2131,74 @@ model TelegramLinkCode {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+/// Saytdagi tashrif sessiyasi: bir visitor uchun 30 daqiqalik uzilishgacha
+/// davom etadi. Botlar ham shu jadvalga tushadi (`isBot`).
+model TrafficSession {
+  id          String    @id @default(cuid())
+  visitorId   String
+  userId      String?
+  loginId     String?
+  deviceId    String?
+  ip          String
+  userAgent   String?
+  browser     String?
+  platform    String?
+  deviceType  String?
+  isBot       Boolean   @default(false)
+  botName     String?
+  country     String?
+  region      String?
+  city        String?
+  referrer    String?
+  landingPath String
+  lastPath    String
+  pageCount   Int       @default(0)
+  startedAt   DateTime  @default(now())
+  lastSeenAt  DateTime  @default(now())
+  endedAt     DateTime?
+
+  user   User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  login  LoginRecord?      @relation("TrafficLogin", fields: [loginId], references: [id], onDelete: SetNull)
+  device TrustedDevice?    @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  views  TrafficPageView[]
+
+  @@index([startedAt])
+  @@index([lastSeenAt])
+  @@index([visitorId, lastSeenAt])
+  @@index([userId, startedAt])
+  @@index([isBot, startedAt])
+}
+
+/// Bitta sahifa ko'rish. RSC navigatsiyalar ham alohida yozuv bo'ladi.
+model TrafficPageView {
+  id         String   @id @default(cuid())
+  sessionId  String
+  visitorId  String
+  userId     String?
+  path       String
+  query      String?
+  referrer   String?
+  isBot      Boolean  @default(false)
+  botName    String?
+  country    String?
+  city       String?
+  ip         String
+  browser    String?
+  platform   String?
+  deviceType String?
+  isRsc      Boolean  @default(false)
+  durationMs Int?
+  createdAt  DateTime @default(now())
+
+  session TrafficSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([path, createdAt])
+  @@index([userId, createdAt])
+  @@index([visitorId, createdAt])
+  @@index([sessionId, createdAt])
+  @@index([isBot, createdAt])
 }

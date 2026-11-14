@@ -1,5 +1,11 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
+import { createHash, randomUUID } from "node:crypto";
+import { getClientIp } from "@/lib/client-ip";
+import { classifyUserAgent } from "@/modules/traffic/ua";
+import { signTrafficHit } from "@/modules/traffic/signature";
+import { TRAFFIC_VISITOR_COOKIE } from "@/modules/traffic/types";
+import { inspectRequest } from "@/modules/security/bot-guard";
 
 /**
  * Fast auth pre-check for protected app routes.
@@ -18,6 +24,38 @@ import { jwtVerify } from "jose";
  */
 
 const SESSION_COOKIE = "ttpu_session";
+
+/**
+ * robots.txt'ga bo'ysunmaydigan AI krawlerlari va skreperlarni UA bo'yicha
+ * to'samiz. Bu faqat o'zini deklaratsiya qilgan botlarni ushlaydi — UA'ni
+ * almashtirgan haqiqiy brauzerni bu usul bilan to'sib bo'lmaydi (u uchun
+ * Cloudflare/Vercel bot himoyasi va server tomondagi rate limit kerak).
+ */
+const AI_CRAWLER_UA =
+  /(gptbot|chatgpt-user|oai-searchbot|claudebot|claude-web|anthropic-ai|ccbot|perplexitybot|amazonbot|bytespider|applebot|meta-externalagent|cohere-ai|diffbot|omgilibot|imagesiftbot|youbot|ai2bot)/i;
+
+const BLOCKED_SCRAPER_NAMES = new Set([
+  "SemrushBot",
+  "AhrefsBot",
+  "Majestic",
+  "DotBot",
+  "BlexBot",
+  "DataForSEO",
+  "SeznamBot",
+  "Archive.org",
+]);
+
+function isBlockedCrawler(userAgent: string): boolean {
+  if (AI_CRAWLER_UA.test(userAgent)) return true;
+  const { botName } = classifyUserAgent(userAgent);
+  return botName !== null && BLOCKED_SCRAPER_NAMES.has(botName);
+}
+
+const CRAWLER_403_HEADERS = {
+  "Content-Type": "text/plain; charset=utf-8",
+  "Cache-Control": "no-store",
+  "X-Robots-Tag": "noindex, nofollow, noarchive, noai, noimageai",
+};
 
 /** Pages that must stay reachable without a session (auth flow, landing). */
 const PUBLIC_PATHS = new Set([
@@ -70,6 +108,9 @@ const CSRF_EXEMPT_API = [
   "/api/health",
   "/api/auth/telegram",
   "/api/telegram/webhook",
+  "/api/traffic/hit",
+  "/api/traffic/dwell",
+  "/api/traffic/ping",
 ];
 
 function csrfSecret(): Uint8Array | null {
@@ -210,8 +251,46 @@ async function sessionRole(token: string): Promise<string | null> {
   }
 }
 
-export async function proxy(request: NextRequest) {
+async function handleProxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+
+  const userAgent = request.headers.get("user-agent") ?? "";
+  if (isBlockedCrawler(userAgent)) {
+    return new NextResponse("Forbidden", {
+      status: 403,
+      headers: CRAWLER_403_HEADERS,
+    });
+  }
+
+  // Xatti-harakat asosidagi tekshiruv: tez-tez urinish, ko'p noyob yo'l,
+  // brauzer sarlavhalari/cookie'larining yo'qligi va honeypot yo'llari.
+  const clientIp = getClientIp(request.headers);
+  if (
+    clientIp &&
+    clientIp !== "::1" &&
+    !clientIp.startsWith("127.") &&
+    !pathname.startsWith("/api/traffic/")
+  ) {
+    const guard = inspectRequest({
+      ip: clientIp,
+      userAgent,
+      pathname,
+      method: request.method,
+      hasCookies: request.cookies.getAll().length > 0,
+      acceptLanguage: request.headers.get("accept-language"),
+      secFetchMode: request.headers.get("sec-fetch-mode"),
+      sessionToken: request.cookies.get(SESSION_COOKIE)?.value ?? null,
+    });
+    if (guard.blocked) {
+      return new NextResponse(guard.status === 403 ? "Forbidden" : "Too Many Requests", {
+        status: guard.status,
+        headers: {
+          ...CRAWLER_403_HEADERS,
+          "Retry-After": String(guard.retryAfterSec),
+        },
+      });
+    }
+  }
 
   // State-changing API calls are CSRF-checked here before anything else runs.
   const csrfError = await enforceCsrf(request);
@@ -267,6 +346,108 @@ export async function proxy(request: NextRequest) {
   }
 
   return NextResponse.next();
+}
+
+function isTrackablePage(request: NextRequest): boolean {
+  if (request.method !== "GET") return false;
+  const pathname = request.nextUrl.pathname;
+  if (pathname === "/dashboard") {
+    console.log("[traffic-debug]", JSON.stringify(Object.fromEntries(request.headers.entries())));
+  }
+  if (
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/_next/") ||
+    pathname.startsWith("/uploads/")
+  ) {
+    return false;
+  }
+  if (FILE_EXTENSION.test(pathname)) return false;
+  if (request.headers.get("next-router-prefetch") === "1") return false;
+  if (request.headers.get("next-router-segment-prefetch") === "1") return false;
+  if (request.headers.get("x-middleware-prefetch") === "1") return false;
+  if ((request.headers.get("sec-purpose") ?? "").includes("prefetch")) return false;
+  return true;
+}
+
+function resolveVisitor(request: NextRequest, response: NextResponse): string {
+  const existing = request.cookies.get(TRAFFIC_VISITOR_COOKIE)?.value;
+  if (existing && /^[A-Za-z0-9_-]{8,80}$/.test(existing)) return existing;
+
+  const userAgent = request.headers.get("user-agent") ?? "";
+  const ua = classifyUserAgent(userAgent);
+
+  if (ua.isBot) {
+    const ip = getClientIp(request.headers) ?? "unknown";
+    const day = new Date().toISOString().slice(0, 10);
+    return `bot_${createHash("sha256").update(`${ip}|${userAgent}|${day}`).digest("hex").slice(0, 24)}`;
+  }
+
+  const visitorId = `v_${randomUUID()}`;
+  response.cookies.set(TRAFFIC_VISITOR_COOKIE, visitorId, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+  return visitorId;
+}
+
+async function sendPageHit(request: NextRequest, visitorId: string): Promise<void> {
+  try {
+    const ts = Date.now().toString();
+    const path = request.nextUrl.pathname;
+    const signature = signTrafficHit(ts, visitorId, path);
+    if (!signature) return;
+
+    const headers = new Headers({
+      "x-traffic-ts": ts,
+      "x-traffic-visitor": visitorId,
+      "x-traffic-path": encodeURIComponent(path),
+      "x-traffic-sig": signature,
+      "x-traffic-rsc": request.headers.get("rsc") === "1" ? "1" : "0",
+      "x-traffic-ip": getClientIp(request.headers) ?? "unknown",
+      "x-traffic-ua": (request.headers.get("user-agent") ?? "").slice(0, 512),
+    });
+
+    const query = request.nextUrl.search.replace(/^\?/, "");
+    if (query) headers.set("x-traffic-query", encodeURIComponent(query.slice(0, 500)));
+
+    const referrer = request.headers.get("referer");
+    if (referrer) headers.set("x-traffic-ref", encodeURIComponent(referrer.slice(0, 500)));
+
+    const city = request.headers.get("x-vercel-ip-city");
+    if (city) headers.set("x-traffic-city", city);
+    const region = request.headers.get("x-vercel-ip-country-region");
+    if (region) headers.set("x-traffic-region", region);
+    const country = request.headers.get("x-vercel-ip-country");
+    if (country) headers.set("x-traffic-country", country);
+
+    const sessionCookie = request.cookies.get(SESSION_COOKIE)?.value;
+    if (sessionCookie) headers.set("cookie", `${SESSION_COOKIE}=${sessionCookie}`);
+
+    await fetch(new URL("/api/traffic/hit", request.nextUrl.origin), {
+      method: "POST",
+      headers,
+      cache: "no-store",
+      signal: AbortSignal.timeout(2500),
+    });
+  } catch {
+    void 0;
+  }
+}
+
+export async function proxy(request: NextRequest, event?: NextFetchEvent) {
+  const response = await handleProxy(request);
+
+  if (event && isTrackablePage(request)) {
+    const visitorId = resolveVisitor(request, response);
+    if (response.status === 200) {
+      event.waitUntil(sendPageHit(request, visitorId));
+    }
+  }
+
+  return response;
 }
 
 export const config = {

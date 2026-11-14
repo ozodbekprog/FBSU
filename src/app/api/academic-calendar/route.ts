@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 
-export const createEventSchema = z
+const createEventSchema = z
   .object({
     title: z.string().trim().min(1).max(200),
     type: z.enum(["SEMESTER", "HOLIDAY", "EXAM", "EVENT"]),

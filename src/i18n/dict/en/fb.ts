@@ -153,6 +153,8 @@ export const fb = {
   fbdFocusStartsIn: "Starts in {min} min",
   fbdFocusStarted: "Class finished",
   fbdFocusJoin: "Join class",
+  fbdFocusScan: "Scan QR",
+  fbdFocusLesson: "Lesson",
   fbdFocusOnline: "Online",
   fbdKpiGpa: "Overall GPA",
   fbdKpiGpaFoot: "{credits} credits · {graded} graded",

@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canManageEntry, initialApproval } from "./_helpers";
 import { verifyCsrfFromRequest } from "@/lib/csrf";
 import { hasCapability } from "@/modules/capabilities";
+import { scheduleLine, sendScheduleNotices } from "@/server/telegram/schedule-notify";
 
 const createSchema = z.object({
   groupId: z.string().trim().min(1),
@@ -86,7 +87,10 @@ export async function POST(request: Request) {
   }
   const data = parsed.data;
 
-  const group = await prisma.group.findUnique({ where: { id: data.groupId }, select: { id: true } });
+  const group = await prisma.group.findUnique({
+    where: { id: data.groupId },
+    select: { id: true, name: true },
+  });
   if (!group) {
     return Response.json({ ok: false, error: "Guruh topilmadi" }, { status: 404 });
   }
@@ -145,6 +149,29 @@ export async function POST(request: Request) {
       teacherRef: { select: { id: true, name: true } },
     },
   });
+
+  if (entry.approval === "APPROVED") {
+    await sendScheduleNotices([
+      {
+        groupId: entry.groupId,
+        groupName: group.name,
+        teacherIds: entry.teacherId ? [entry.teacherId] : [],
+        teacherNames: entry.teacher ? [entry.teacher] : [],
+        lines: [
+          scheduleLine({
+            action: "created",
+            dayOfWeek: entry.dayOfWeek,
+            slot: entry.slot,
+            subject: entry.subject,
+            room: entry.room,
+            groupName: group.name,
+            status: entry.status,
+            note: entry.note,
+          }),
+        ],
+      },
+    ]);
+  }
 
   return Response.json({ ok: true, data: entry }, { status: 201 });
 }

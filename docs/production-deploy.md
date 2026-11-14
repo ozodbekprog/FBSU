@@ -86,6 +86,36 @@ uchun merge qilingandan keyin faollashadi. Vercel Pro bo'lsa, GitHub Actions o'r
 
 Vercel cron so'roviga `Authorization: Bearer $CRON_SECRET` avtomatik qo'shiladi.
 
+## @ttpu_uz_bot kunlik kartalari
+
+Bog'langan talaba va o'qituvchilarga har kuni **07:00–08:59** (Toshkent) oralig'ida
+boy HTML-karta yuboriladi: darslar, bugungi imtihonlar va muddatlar, pastda mini-ilova
+tugmalari. Yuborish `GET /api/cron/telegram` orqali, `Authorization: Bearer $CRON_SECRET`
+bilan himoyalangan.
+
+- `.github/workflows/telegram-daily.yml` har kuni **02:00 UTC** (07:00 Tashkent) da
+  endpointni chaqiradi. Workflow default branch'da faollashadi.
+- Qo'lda sinash: GitHub → Actions → **Telegram daily cards** → *Run workflow* →
+  `force` ni yoqish (vaqt oynasini chetlab o'tadi).
+- Yoki lokal terminaldan:
+  `curl -H "Authorization: Bearer $CRON_SECRET" "https://fbsu.vercel.app/api/cron/telegram?force=1"`.
+- `CRON_SECRET` GitHub secret va Vercel env'da bir xil bo'lishi shart.
+
+### Dars tugash eslatmalari
+
+`.github/workflows/telegram-lesson-end.yml` har 5 daqiqada `GET /api/cron/lesson-end`
+ni chaqiradi (`Authorization: Bearer $CRON_SECRET`). Dars tugashidan 10 daqiqa oldin
+va tugagandan 15 daqiqa keyin faol darsdagi talaba/o'qituvchilarga joriy dars va
+keyingi darslar ro'yxati yuboriladi. Takroriy yuborish `AppSetting` dagi
+`telegram:lesson-end:<sana>` kaliti bilan to'siladi.
+
+### Jadval o'zgarishlari
+
+Jadval yaratilgan, tahrirlangan, bekor qilingan yoki tasdiqlangan paytda o'zgarish
+tegishli guruh talabalariga va dars o'qituvchilariga bot orqali yuboriladi. EduPage
+sinxronizatsiyasi ham o'zgarishlarni xuddi shu tarzda xabar qiladi; birinchi to'liq
+importda spam bo'lmasligi uchun ommaviy yaratish xabari yuborilmaydi.
+
 ## PII shifrlash (DATA_ENCRYPTION_KEY)
 
 `src/lib/db-encryption.ts` PII maydonlarini AES-256-GCM bilan shifrlaydi, lekin faqat

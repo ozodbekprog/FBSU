@@ -186,10 +186,20 @@ type LoginResponse = {
   devices?: ApprovalDevice[];
   tempPasswordUsed?: boolean;
   user?: { id: string; name: string; role: string };
-  data?: { twoFactor?: boolean; loginId?: string; verified?: boolean; devices?: ApprovalDevice[] };
+  data?: {
+    twoFactor?: boolean;
+    loginId?: string;
+    verified?: boolean;
+    devices?: ApprovalDevice[];
+    captcha?: CaptchaChallenge;
+  };
 };
 
+type CaptchaChallenge = { token: string; question: string; expiresAt: string };
+
 type OwnerChallenge = { loginId: string; email: string };
+
+const DEMO_LOGIN_ENABLED = process.env.NEXT_PUBLIC_DEMO_LOGIN === "1";
 
 type ApprovalDevice = {
   id: string;
@@ -283,6 +293,8 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [remember, setRemember] = useState(false);
+  const [captcha, setCaptcha] = useState<CaptchaChallenge | null>(null);
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
   const [challenge, setChallenge] = useState<OwnerChallenge | null>(null);
   const [ownerCode, setOwnerCode] = useState("");
   const [approval, setApproval] = useState<ApprovalState | null>(null);
@@ -323,9 +335,17 @@ export default function LoginPage() {
           email: emailValue,
           password: passwordValue,
           remember: rememberValue,
+          captchaToken: captcha?.token,
+          captchaAnswer: captchaAnswer.trim() || undefined,
         }),
       });
       const json = (await res.json().catch(() => null)) as LoginResponse | null;
+      if (json?.code === "CAPTCHA_REQUIRED" && json.data?.captcha) {
+        setCaptcha(json.data.captcha);
+        setCaptchaAnswer("");
+        setError(json.error ?? "Xavfsizlik tekshiruvini bajaring");
+        return;
+      }
       if (json?.code === "DEVICE_APPROVAL_REQUIRED" && json.challengeId) {
         setApproval({
           challengeId: json.challengeId,
@@ -346,6 +366,8 @@ export default function LoginPage() {
         return;
       }
       setApproval(null);
+      setCaptcha(null);
+      setCaptchaAnswer("");
       const loginId = json.data?.loginId;
       if (json.data?.twoFactor === true && typeof loginId === "string") {
         setChallenge({ loginId, email: emailValue.toLowerCase().trim() });
@@ -412,6 +434,21 @@ export default function LoginPage() {
     setChallenge(null);
     setOwnerCode("");
     setError(null);
+  }
+
+  async function refreshCaptcha() {
+    try {
+      const res = await fetch("/api/auth/captcha", { cache: "no-store" });
+      const json = (await res.json().catch(() => null)) as
+        | { ok?: boolean; data?: CaptchaChallenge }
+        | null;
+      if (json?.ok && json.data) {
+        setCaptcha(json.data);
+        setCaptchaAnswer("");
+      }
+    } catch {
+      void 0;
+    }
   }
 
   async function verifyApproval() {
@@ -687,6 +724,37 @@ export default function LoginPage() {
                   </div>
                 </div>
                 {errorNotice}
+                {captcha ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-medium text-amber-900">
+                        Xavfsizlik tekshiruvi:{" "}
+                        <span className="ml-1 inline-block rounded-md bg-white px-2 py-1 font-mono text-sm tracking-wide text-slate-900">
+                          {captcha.question} = ?
+                        </span>
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => void refreshCaptcha()}
+                        className="text-sm font-medium text-brand-700 transition-colors duration-150 hover:text-brand-900 hover:underline"
+                        aria-label="Yangi savol"
+                      >
+                        ↻
+                      </button>
+                    </div>
+                    <Input
+                      className="mt-2"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      value={captchaAnswer}
+                      onChange={(event) =>
+                        setCaptchaAnswer(event.target.value.replace(/[^\d-]/g, "").slice(0, 6))
+                      }
+                      placeholder="Javob"
+                      required
+                    />
+                  </div>
+                ) : null}
                 {approval ? (
                   <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-4">
                     <p className="flex items-center gap-2 text-sm font-semibold text-brand-950">
@@ -830,13 +898,18 @@ export default function LoginPage() {
                   </div>
                 ) : null}
                 {approval ? null : (
-                  <Button type="submit" disabled={loading || !hydrated} size="lg" className="h-11 w-full">
+                  <Button
+                    type="submit"
+                    disabled={loading || !hydrated || (captcha !== null && captchaAnswer.trim() === "")}
+                    size="lg"
+                    className="h-11 w-full"
+                  >
                     {loading ? t("authLoginSubmitting") : t("authLoginSubmit")}
                   </Button>
                 )}
               </form>
             )}
-            {challenge || approval ? null : (
+            {!DEMO_LOGIN_ENABLED || challenge || approval ? null : (
               <div className="mt-8">
                 <div className="flex items-center gap-3">
                   <span className="h-px flex-1 bg-slate-100" />

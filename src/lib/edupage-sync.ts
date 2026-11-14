@@ -1,6 +1,13 @@
 import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
+import {
+  capNoticeLines,
+  scheduleChangeDetails,
+  scheduleLine,
+  sendScheduleNotices,
+} from "@/server/telegram/schedule-notify";
 import {
   EDU_PAGE_SOURCE,
   fetchEduPageTimetable,
@@ -406,10 +413,13 @@ async function runEduPageSync(): Promise<EduPageSyncResult> {
             room: true,
             parity: true,
             subGroup: true,
+            status: true,
+            note: true,
           },
         });
 
   const existingByExternalId = new Map(existing.map((row) => [row.externalId ?? "", row]));
+  const existingById = new Map(existing.map((row) => [row.id, row]));
   const incomingIds = new Set(incoming.map((entry) => entry.externalId));
 
   const toCreate: IncomingEntry[] = [];
@@ -443,9 +453,10 @@ async function runEduPageSync(): Promise<EduPageSyncResult> {
     }
   }
 
-  const removals = existing
-    .filter((row) => !row.externalId || !incomingIds.has(row.externalId))
-    .map((row) => row.id);
+  const removedRows = existing.filter(
+    (row) => !row.externalId || !incomingIds.has(row.externalId),
+  );
+  const removals = removedRows.map((row) => row.id);
 
   for (let index = 0; index < toCreate.length; index += WRITE_CHUNK) {
     await prisma.scheduleEntry.createMany({ data: toCreate.slice(index, index + WRITE_CHUNK) });
@@ -476,14 +487,148 @@ async function runEduPageSync(): Promise<EduPageSyncResult> {
     });
   }
 
-  const manualRemoved =
+  const manualRows =
     groupIds.length === 0
+      ? []
+      : await prisma.scheduleEntry.findMany({
+          where: { groupId: { in: groupIds }, source: null },
+          select: {
+            groupId: true,
+            dayOfWeek: true,
+            slot: true,
+            subject: true,
+            lessonType: true,
+            teacher: true,
+            teacherId: true,
+            room: true,
+            parity: true,
+            subGroup: true,
+            status: true,
+            note: true,
+          },
+        });
+  const manualRemoved =
+    manualRows.length === 0
       ? 0
       : (
           await prisma.scheduleEntry.deleteMany({
             where: { groupId: { in: groupIds }, source: null },
           })
         ).count;
+
+  const groupNameRows =
+    groupIds.length === 0
+      ? []
+      : await prisma.group.findMany({
+          where: { id: { in: groupIds } },
+          select: { id: true, name: true },
+        });
+  const groupNameById = new Map(groupNameRows.map((group) => [group.id, group.name]));
+
+  type NoticeAccumulator = {
+    groupName: string;
+    teacherIds: Set<string>;
+    teacherNames: Set<string>;
+    lines: string[];
+  };
+  const noticeByGroup = new Map<string, NoticeAccumulator>();
+  const addNotice = (
+    row: { groupId: string; teacherId: string | null; teacher: string | null },
+    line: string,
+  ) => {
+    const current =
+      noticeByGroup.get(row.groupId) ??
+      {
+        groupName: groupNameById.get(row.groupId) ?? "",
+        teacherIds: new Set<string>(),
+        teacherNames: new Set<string>(),
+        lines: [],
+      };
+    if (row.teacherId) current.teacherIds.add(row.teacherId);
+    if (row.teacher) current.teacherNames.add(row.teacher);
+    current.lines.push(line);
+    noticeByGroup.set(row.groupId, current);
+  };
+
+  if (!(existing.length === 0 && toCreate.length > 30)) {
+    for (const entry of toCreate) {
+      addNotice(
+        entry,
+        scheduleLine({
+          action: "created",
+          dayOfWeek: entry.dayOfWeek,
+          slot: entry.slot,
+          subject: entry.subject,
+          room: entry.room,
+          groupName: groupNameById.get(entry.groupId) ?? "",
+        }),
+      );
+    }
+  }
+  for (const item of updates) {
+    const before = existingById.get(item.id);
+    if (!before) continue;
+    const details = scheduleChangeDetails(before, item.data);
+    if (details.length === 0) continue;
+    addNotice(
+      item.data,
+      scheduleLine({
+        action: "updated",
+        dayOfWeek: item.data.dayOfWeek,
+        slot: item.data.slot,
+        subject: item.data.subject,
+        room: item.data.room,
+        groupName: groupNameById.get(item.data.groupId) ?? "",
+        status: item.data.status,
+        detail: details.join(" · "),
+      }),
+    );
+  }
+  for (const row of removedRows) {
+    addNotice(
+      row,
+      scheduleLine({
+        action: "removed",
+        dayOfWeek: row.dayOfWeek,
+        slot: row.slot,
+        subject: row.subject,
+        room: row.room,
+        groupName: groupNameById.get(row.groupId) ?? "",
+        note: row.note,
+      }),
+    );
+  }
+  for (const row of manualRows) {
+    addNotice(
+      row,
+      scheduleLine({
+        action: "removed",
+        dayOfWeek: row.dayOfWeek,
+        slot: row.slot,
+        subject: row.subject,
+        room: row.room,
+        groupName: groupNameById.get(row.groupId) ?? "",
+        note: row.note,
+      }),
+    );
+  }
+
+  const notices = [...noticeByGroup.entries()].map(([noticeGroupId, current]) => ({
+    groupId: noticeGroupId,
+    groupName: current.groupName,
+    teacherIds: [...current.teacherIds],
+    teacherNames: [...current.teacherNames],
+    lines: capNoticeLines(current.lines),
+  }));
+  if (notices.length > 0) {
+    const send = () =>
+      sendScheduleNotices(notices, { title: "📢 <b>EduPage jadvalni yangiladi</b>" });
+    try {
+      after(send);
+    } catch {
+      void send();
+    }
+  }
 
   await writeEduPageSyncState({
     at: new Date().toISOString(),

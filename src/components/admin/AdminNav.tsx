@@ -216,6 +216,16 @@ const LINKS: { href: string; label: keyof Dictionary; icon: ReactNode }[] = [
       </svg>
     ),
   },
+  {
+    href: "/admin/traffic",
+    label: "admNavTraffic",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 3v18h18" />
+        <path d="M7 15l4-5 3 3 5-7" />
+      </svg>
+    ),
+  },
 ];
 
 export default function AdminNav({ role }: { role?: string }) {
@@ -235,7 +245,11 @@ export default function AdminNav({ role }: { role?: string }) {
       : role === "REKTOR"
         ? LINKS.filter((link) => link.href === "/admin/settings")
         : LINKS;
-  const visibleLinks = role === "OWNER" ? links : links.filter((link) => link.href !== "/admin/audit");
+  const visibleLinks = links.filter((link) => {
+    if (link.href === "/admin/audit") return role === "OWNER";
+    if (link.href === "/admin/traffic") return role === "ADMIN" || role === "OWNER";
+    return true;
+  });
 
   return (
     <nav className="mb-6 flex w-fit max-w-full flex-wrap items-center gap-1 rounded-2xl border border-slate-200/70 bg-white/95 p-1.5 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_14px_30px_-22px_rgba(29,52,96,0.25)] backdrop-blur">

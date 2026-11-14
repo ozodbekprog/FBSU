@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { notifyGroupStudents } from "@/server/notify";
 import { recordEvent } from "@/modules/events/record";
+import { scheduleLine, sendScheduleNotices } from "@/server/telegram/schedule-notify";
 import { canApproveSchedule } from "../../_helpers";
 
 const STATUS_TITLES = {
@@ -36,8 +37,33 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
     include: {
       subjectRef: { select: { name: true, color: true } },
       teacherRef: { select: { id: true, name: true } },
+      group: { select: { name: true } },
     },
   });
+
+  await sendScheduleNotices(
+    [
+      {
+        groupId: updated.groupId,
+        groupName: updated.group?.name ?? "",
+        teacherIds: updated.teacherId ? [updated.teacherId] : [],
+        teacherNames: updated.teacher ? [updated.teacher] : [],
+        lines: [
+          scheduleLine({
+            action: "approved",
+            dayOfWeek: updated.dayOfWeek,
+            slot: updated.slot,
+            subject: updated.subject,
+            room: updated.room,
+            groupName: updated.group?.name ?? "",
+            status: updated.status,
+            note: updated.note,
+          }),
+        ],
+      },
+    ],
+    { title: "📢 <b>Jadval yangilandi</b>" },
+  );
 
   if (updated.status !== "NORMAL") {
     await notifyGroupStudents(updated.groupId, {

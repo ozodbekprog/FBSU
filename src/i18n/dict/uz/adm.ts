@@ -461,6 +461,7 @@ export const adm = {
   admNavCourses: "Kurslar",
   admNavDictionaries: "Lug'atlar",
   admNavGenerator: "Generator",
+  admNavTraffic: "Trafik",
   admNavStructure: "Struktura",
   admNavDepartments: "Kafedralar",
   admNavImport: "Import",

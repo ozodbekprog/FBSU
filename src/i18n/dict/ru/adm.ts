@@ -461,6 +461,7 @@ export const adm = {
   admNavCourses: "Курсы",
   admNavDictionaries: "Справочники",
   admNavGenerator: "Генератор",
+  admNavTraffic: "Трафик",
   admNavStructure: "Структура",
   admNavDepartments: "Кафедры",
   admNavImport: "Импорт",

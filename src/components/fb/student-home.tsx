@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getStudentBonusOverview, getStudentGpa } from "@/app/api/gpa/data";
 import { isValidFaceDescriptor } from "@/modules/attendance/face";
 import { CheckInForm } from "@/components/attendance/check-in-form";
+import { FocusActions } from "@/components/fb/focus-actions";
 import { GradeTrendChart } from "@/components/charts/GradeTrendChart";
 import { getStudentAnalytics } from "@/app/(app)/dashboard/analytics";
 import { FbMotion } from "@/components/fb/fb-motion";
@@ -443,13 +444,13 @@ export async function StudentHome({
               <i />
               {focus.offset === 0 ? dict.fbdFocusToday : dayName(focusDate.getDay(), locale)}
             </span>
-            <Link className="fb-join-btn" href={`/schedule/lesson/${focus.entry.id}`}>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="m16 10 5-3v10l-5-3" />
-                <rect x="3" y="6" width="13" height="12" rx="2.5" />
-              </svg>
-              {dict.fbdFocusJoin}
-            </Link>
+            <FocusActions
+              href={`/schedule/lesson/${focus.entry.id}`}
+              scanLabel={dict.fbdFocusScan}
+              lessonLabel={dict.fbdFocusLesson}
+              closeLabel={dict.schClose}
+              faceEnrolled={faceEnrolled}
+            />
           </div>
         </section>
       ) : (

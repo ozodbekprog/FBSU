@@ -3,6 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { notifyGroupStudents } from "@/server/notify";
 import { recordEvent } from "@/modules/events/record";
+import {
+  scheduleChangeDetails,
+  scheduleLine,
+  sendScheduleNotices,
+} from "@/server/telegram/schedule-notify";
 import { canManageEntry } from "../_helpers";
 
 const updateSchema = z.object({
@@ -113,8 +118,47 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     include: {
       subjectRef: { select: { name: true, color: true } },
       teacherRef: { select: { id: true, name: true } },
+      group: { select: { name: true } },
     },
   });
+
+  const details = scheduleChangeDetails(entry, updated);
+  if (updated.approval === "APPROVED" && details.length > 0) {
+    const title =
+      data.status !== undefined && data.status !== entry.status
+        ? `📢 <b>${STATUS_TITLES[data.status]}</b>`
+        : "📢 <b>Jadval o'zgardi</b>";
+    const teacherIds = [entry.teacherId, updated.teacherId].filter(
+      (id): id is string => Boolean(id),
+    );
+    const teacherNames = [entry.teacher, updated.teacher].filter(
+      (name): name is string => Boolean(name),
+    );
+    await sendScheduleNotices(
+      [
+        {
+          groupId: updated.groupId,
+          groupName: updated.group?.name ?? "",
+          teacherIds,
+          teacherNames,
+          lines: [
+            scheduleLine({
+              action: "updated",
+              dayOfWeek: updated.dayOfWeek,
+              slot: updated.slot,
+              subject: updated.subject,
+              room: updated.room,
+              groupName: updated.group?.name ?? "",
+              status: updated.status,
+              note: updated.note,
+              detail: details.join(" · "),
+            }),
+          ],
+        },
+      ],
+      { title },
+    );
+  }
 
   if (updated.approval === "APPROVED" && data.status !== undefined && data.status !== entry.status) {
     const parts: string[] = [];
@@ -142,7 +186,7 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
   const { id } = await ctx.params;
   const entry = await prisma.scheduleEntry.findUnique({
     where: { id },
-    select: { id: true, teacher: true, teacherId: true },
+    include: { group: { select: { name: true } } },
   });
   if (!entry) {
     return Response.json({ ok: false, error: "Jadval yozuvi topilmadi" }, { status: 404 });
@@ -153,6 +197,26 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
   }
 
   await prisma.scheduleEntry.delete({ where: { id } });
+
+  await sendScheduleNotices([
+    {
+      groupId: entry.groupId,
+      groupName: entry.group?.name ?? "",
+      teacherIds: entry.teacherId ? [entry.teacherId] : [],
+      teacherNames: entry.teacher ? [entry.teacher] : [],
+      lines: [
+        scheduleLine({
+          action: "removed",
+          dayOfWeek: entry.dayOfWeek,
+          slot: entry.slot,
+          subject: entry.subject,
+          room: entry.room,
+          groupName: entry.group?.name ?? "",
+          note: entry.note,
+        }),
+      ],
+    },
+  ]);
 
   return Response.json({ ok: true, data: { id } });
 }

@@ -18,6 +18,7 @@ import { BugAssistant } from "@/components/bugs/bug-assistant";
 import { OfflineBanner } from "@/components/pwa/OfflineBanner";
 import { TourGuide } from "@/components/tour/tour-guide";
 import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
+import { Watermark } from "@/components/security/watermark";
 
 export default async function AppLayout({
   children,
@@ -181,6 +182,9 @@ export default async function AppLayout({
           : []),
         ...(canViewAnalysis(user.role) ? [{ href: "/reports", label: dictionary.navReports }] : []),
         ...(canViewAnalysis(user.role) ? [{ href: "/workload", label: dictionary.navWorkload }] : []),
+        ...(["ADMIN", "OWNER"].includes(user.role)
+          ? [{ href: "/admin/traffic", label: dictionary.navTraffic }]
+          : []),
         ...(user.role === "ADMIN" ? [{ href: "/admin", label: dictionary.navAdmin }] : []),
         ...(user.role === "OWNER"
           ? [{ href: "/owner/security", label: "Xavfsizlik jurnali" }]
@@ -401,6 +405,7 @@ export default async function AppLayout({
         <BugAssistant />
         <TourGuide role={user.role} />
         <OfflineBanner />
+        <Watermark name={user.name} email={user.email} uid={user.id} />
       </div>
     </LocaleProvider>
   );

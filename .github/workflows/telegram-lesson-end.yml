@@ -1,0 +1,35 @@
+name: Telegram lesson end alerts
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: telegram-lesson-end
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger lesson end alerts
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET GitHub secret sifatida sozlanmagan"
+            exit 1
+          fi
+          base="${APP_URL:-https://fbsu.vercel.app}"
+          http_code=$(curl -sS --max-time 120 -o response.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$base/api/cron/lesson-end")
+          cat response.json
+          if [ "$http_code" != "200" ]; then
+            echo "::error::Dars tugash eslatmalari yuborilmadi (HTTP $http_code)"
+            exit 1
+          fi

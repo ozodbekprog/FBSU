@@ -1,0 +1,45 @@
+name: Telegram daily cards
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Vaqt oynasini chetlab o'tib yuborish"
+        type: boolean
+        default: false
+
+concurrency:
+  group: telegram-daily
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Trigger daily Telegram cards
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          set -euo pipefail
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET GitHub secret sifatida sozlanmagan"
+            exit 1
+          fi
+          base="${APP_URL:-https://fbsu.vercel.app}"
+          url="$base/api/cron/telegram"
+          if [ "$FORCE" = "true" ]; then
+            url="$url?force=1"
+          fi
+          http_code=$(curl -sS --max-time 300 -o response.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$url")
+          cat response.json
+          if [ "$http_code" != "200" ]; then
+            echo "::error::Kunlik Telegram kartalari yuborilmadi (HTTP $http_code)"
+            exit 1
+          fi
